@@ -8,8 +8,8 @@ public class VoxelService
     private byte dirt = 3;
 
     Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
-    Dictionary<string, Dictionary<string, byte>> changes
-        = new Dictionary<string, Dictionary<string, byte>>();
+    Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes
+        = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
 
     public VoxelService()
     {
@@ -17,18 +17,30 @@ public class VoxelService
         types[1] = new BlockType(1, "Grass", true, 0, 0, 0, 0, 0, 0);
         types[2] = new BlockType(2, "Bedrock", true, 0, 0, 0, 0, 0, 0);
         types[3] = new BlockType(3, "Dirt", true, 0, 0, 0, 0, 0, 0);
+
+        for(int z = 0; z < 300; z++)
+        {
+            for (int x = -10; x < 10; x++)
+            {
+                var vp = new VoxelPosition(new Vector3Int(x, z + 1, z));
+                Dictionary<Vector3Int, byte> chunk;
+                if(!changes.TryGetValue(vp.chunk, out chunk))
+                    changes[vp.chunk] = chunk = new Dictionary<Vector3Int, byte>();
+                chunk[vp.local] = 1;
+            }
+        }
     }
 
     public void FillChunk(Vector3Int coordinate, byte[,,] voxels)
     {
         InitiateChunk(coordinate, voxels);
 
-        Dictionary<string, byte> chunkChanges;
-        if (changes.TryGetValue(Vectors.FormatKey(coordinate), out chunkChanges))
+        Dictionary<Vector3Int, byte> chunkChanges;
+        if (changes.TryGetValue(coordinate, out chunkChanges))
         {
             foreach (var change in chunkChanges)
             {
-                var voxel = Vectors.ParseKey(change.Key);
+                var voxel = change.Key;
                 voxels[voxel.x, voxel.y, voxel.z] = change.Value;
             }
         }
@@ -72,11 +84,11 @@ public class VoxelService
 
     public bool IsSolid(VoxelPosition vp)
     {
-        Dictionary<string, byte> chunkChanges;
-        if (changes.TryGetValue(Vectors.FormatKey(vp.chunk), out chunkChanges))
+        Dictionary<Vector3Int, byte> chunkChanges;
+        if (changes.TryGetValue(vp.chunk, out chunkChanges))
         {
             byte type;
-            if (chunkChanges.TryGetValue(Vectors.FormatKey(vp.local), out type))
+            if (chunkChanges.TryGetValue(vp.local, out type))
             {
                 return GetBlockType(type).isSolid;
             }

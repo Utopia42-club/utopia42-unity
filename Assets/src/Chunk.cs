@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Chunk
 {
-    public static readonly int CHUNK_LENGTH = 10;
+    public static readonly int CHUNK_LENGTH = 30;
 
     private readonly byte[,,] voxels = new byte[CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH];
     private World world;

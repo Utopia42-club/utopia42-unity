@@ -11,12 +11,12 @@ public class World : MonoBehaviour
 
     //TODO take care of size/time limit
     //Diactivated chunks are added to this collection for possible future reuse
-    private ConcurrentDictionary<string, Chunk> garbageChunks
-        = new ConcurrentDictionary<string, Chunk>();
-    private readonly ConcurrentDictionary<string, Chunk> chunks = new ConcurrentDictionary<string, Chunk>();
+    private ConcurrentDictionary<Vector3Int, Chunk> garbageChunks
+        = new ConcurrentDictionary<Vector3Int, Chunk>();
+    private readonly ConcurrentDictionary<Vector3Int, Chunk> chunks = new ConcurrentDictionary<Vector3Int, Chunk>();
     //TODO check volatile documentation use sth like lock or semaphore
     private volatile bool creatingChunks = false;
-    private ConcurrentBag<string> chunkRequests = new ConcurrentBag<string>();
+    private ConcurrentBag<Vector3Int> chunkRequests = new ConcurrentBag<Vector3Int>();
 
     // Start is called before the first frame update
     void Start()
@@ -39,12 +39,12 @@ public class World : MonoBehaviour
     IEnumerator CreateChunks()
     {
         creatingChunks = true;
-        string key;
+        Vector3Int key;
         while (chunkRequests.TryTake(out key))
         {
             if (chunks.ContainsKey(key))
                 continue;
-            Chunk ch = new Chunk(Vectors.ParseKey(key), this);
+            Chunk ch = new Chunk(key, this);
             chunks[key] = ch;
             yield return null;
         }
@@ -56,7 +56,7 @@ public class World : MonoBehaviour
         var to = centerChunk + Player.viewDistance;
         var from = centerChunk - Player.viewDistance;
 
-        HashSet<string> unseens = new HashSet<string>(chunks.Keys);
+        var unseens = new HashSet<Vector3Int>(chunks.Keys);
 
         for (int x = from.x; x <= to.x; x++)
         {
@@ -64,7 +64,7 @@ public class World : MonoBehaviour
             {
                 for (int z = from.z; z <= to.z; z++)
                 {
-                    string key = Vectors.FormatKey(x, y, z);
+                    Vector3Int key = new Vector3Int(x, y, z);
                     if (!chunks.ContainsKey(key))
                         chunkRequests.Add(key);
                     unseens.Remove(key);
@@ -73,7 +73,7 @@ public class World : MonoBehaviour
         }
 
 
-        foreach (string key in unseens)
+        foreach (Vector3Int key in unseens)
         {
             Chunk ch;
             chunks.TryRemove(key, out ch);
@@ -88,7 +88,7 @@ public class World : MonoBehaviour
     {
         var vp = new VoxelPosition(pos);
         Chunk chunk;
-        if (chunks.TryGetValue(Vectors.FormatKey(vp.chunk), out chunk))
+        if (chunks.TryGetValue(vp.chunk, out chunk))
             return chunk.GetBlock(vp.local).isSolid;
 
         return service.IsSolid(vp);

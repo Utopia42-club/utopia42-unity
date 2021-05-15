@@ -166,7 +166,7 @@ public class Player : MonoBehaviour
     {
         var center = transform.position + offset;
         return world.IsSolidAt(Vectors.FloorToInt(center))
-            && world.IsSolidAt(Vectors.FloorToInt(center + Vector3.up));
+            || world.IsSolidAt(Vectors.FloorToInt(center + Vector3.up));
     }
 
     private bool CollidesXz(Vector3 offset)
