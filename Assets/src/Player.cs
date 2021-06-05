@@ -10,8 +10,8 @@ public class Player : MonoBehaviour
     public Transform camera;
     public World world;
 
-    public float walkSpeed = 20f;
-    public float sprintSpeed = 12f;
+    public float walkSpeed = 200f;
+    public float sprintSpeed = 300f;
     public float jumpForce = 8f;
     public float gravity = -9.8f;
 
@@ -20,8 +20,6 @@ public class Player : MonoBehaviour
 
     private float horizontal;
     private float vertical;
-    private float mouseHorizontal;
-    private float mouseVertical;
     private Vector3 velocity;
     private float verticalMomentum = 0;
     private bool jumpRequest;
@@ -40,8 +38,6 @@ public class Player : MonoBehaviour
         if (jumpRequest)
             Jump();
 
-        //transform.Rotate(Vector3.up * mouseHorizontal);
-        //camera.Rotate(Vector3.right * -mouseVertical);
         transform.Translate(velocity, Space.World);
     }
 
@@ -102,13 +98,11 @@ public class Player : MonoBehaviour
     {
         horizontal = Input.GetAxis("Horizontal");
         vertical = Input.GetAxis("Vertical");
-        mouseHorizontal = Input.GetAxis("Mouse X");
-        mouseVertical = Input.GetAxis("Mouse Y");
 
-        //if (Input.GetButtonDown("Sprint"))
-        //    sprinting = true;
-        //if (Input.GetButtonUp("Sprint"))
-        sprinting = false;
+        if (Input.GetButtonDown("Sprint"))
+            sprinting = true;
+        if (Input.GetButtonUp("Sprint"))
+            sprinting = false;
 
         if (grounded && Input.GetButtonDown("Jump"))
             jumpRequest = true;

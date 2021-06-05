@@ -45,8 +45,6 @@ public class EthereumClientService
             var land = new Land((int)result.X1, (int)result.Y1, (int)result.X2, (int)result.Y2, (int)result.Time, result.Hash);
             lands.Add(land);
         }
-        consumer.Invoke(lands);
-        yield break;
     }
 
     public IEnumerator getLands(Action<List<Land>> consumer)
