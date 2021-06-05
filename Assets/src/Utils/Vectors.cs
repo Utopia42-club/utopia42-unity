@@ -2,14 +2,18 @@ using UnityEngine;
 
 public static class Vectors
 {
+    public static Vector3Int FloorToInt(float x, float y, float z)
+    {
+        return new Vector3Int(
+           Mathf.FloorToInt(x),
+           Mathf.FloorToInt(y),
+           Mathf.FloorToInt(z)
+           );
+    }
 
     public static Vector3Int FloorToInt(Vector3 vec)
     {
-        return new Vector3Int(
-            Mathf.FloorToInt(vec.x),
-            Mathf.FloorToInt(vec.y),
-            Mathf.FloorToInt(vec.z)
-            );
+        return FloorToInt(vec.x, vec.y, vec.z);
     }
 
     public static Vector3Int ParseKey(string key)

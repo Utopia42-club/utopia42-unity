@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 public class VoxelService
 {
-    //https://utopia42.club/api/v0/cat?arg=/ipfs/QmUxu7k8q9P4huvFXEorhEgzA5wnQnrUFGbj567HkV8FzQ
     private byte air = 0;
     private byte grass = 1;
     private byte bedrock = 2;

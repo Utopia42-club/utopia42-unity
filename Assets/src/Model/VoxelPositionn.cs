@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class VoxelPosition
@@ -9,7 +7,10 @@ public class VoxelPosition
 
     public VoxelPosition(Vector3 position)
     {
-        chunk = Vectors.FloorToInt(position / Chunk.CHUNK_LENGTH);
-        local = Vectors.FloorToInt(position) - (chunk * Chunk.CHUNK_LENGTH);
+        chunk = Vectors.FloorToInt(position.x / Chunk.CHUNK_WIDTH, position.y / Chunk.CHUNK_HEIGHT, position.z / Chunk.CHUNK_WIDTH);
+        local = Vectors.FloorToInt(position);
+        local.x -= chunk.x * Chunk.CHUNK_WIDTH;
+        local.y -= chunk.y * Chunk.CHUNK_HEIGHT;
+        local.z -= chunk.z * Chunk.CHUNK_WIDTH;
     }  
 }

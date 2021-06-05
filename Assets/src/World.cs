@@ -21,6 +21,13 @@ public class World : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        loadLands();
+    }
+
+    void loadLands()
+    {
+        var ie = EthereumClientService.INSTANCE.getLands(l=>Debug.Log(l));
+        StartCoroutine(ie);
     }
 
     // Update is called once per frame
@@ -46,7 +53,7 @@ public class World : MonoBehaviour
                 continue;
             Chunk ch = new Chunk(key, this);
             chunks[key] = ch;
-            yield return null;
+            yield return new WaitForSeconds(.2f); ;
         }
         creatingChunks = false;
     }

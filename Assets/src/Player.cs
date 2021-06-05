@@ -1,10 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public static readonly Vector3Int viewDistance = Vector3Int.one * 2;
+    public static readonly Vector3Int viewDistance = new Vector3Int(2, 1, 2);
 
     private bool grounded;
     private bool sprinting;
@@ -12,9 +10,9 @@ public class Player : MonoBehaviour
     public Transform camera;
     public World world;
 
-    public float walkSpeed = 3f;
-    public float sprintSpeed = 6f;
-    public float jumpForce = 5f;
+    public float walkSpeed = 20f;
+    public float sprintSpeed = 12f;
+    public float jumpForce = 8f;
     public float gravity = -9.8f;
 
     public float playerWidth = 0.15f;
@@ -33,7 +31,7 @@ public class Player : MonoBehaviour
     private void Start()
     {
         transform.position
-            = new Vector3(0, Chunk.CHUNK_LENGTH, 0);
+            = new Vector3(0, Chunk.CHUNK_HEIGHT + 10, 0);
     }
 
     private void FixedUpdate()
@@ -42,8 +40,8 @@ public class Player : MonoBehaviour
         if (jumpRequest)
             Jump();
 
-        transform.Rotate(Vector3.up * mouseHorizontal);
-        camera.Rotate(Vector3.right * -mouseVertical);
+        //transform.Rotate(Vector3.up * mouseHorizontal);
+        //camera.Rotate(Vector3.right * -mouseVertical);
         transform.Translate(velocity, Space.World);
     }
 
@@ -51,7 +49,7 @@ public class Player : MonoBehaviour
     {
         GetPlayerInputs();
 
-        if(lastChunk == null)
+        if (lastChunk == null)
         {
             lastChunk = ComputePosition().chunk;
             world.OnPlayerChunkChanged(lastChunk);

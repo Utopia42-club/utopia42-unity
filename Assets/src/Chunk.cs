@@ -1,16 +1,16 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Chunk
 {
-    public static readonly int CHUNK_LENGTH = 30;
+    public static readonly int CHUNK_WIDTH = 16;
+    public static readonly int CHUNK_HEIGHT = 32;
 
-    private readonly byte[,,] voxels = new byte[CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH];
+    private readonly byte[,,] voxels = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
     private World world;
     public GameObject chunkObject;
 
-
+    public readonly Vector3Int position;
     public readonly Vector3Int coordinate;
     public MeshRenderer meshRenderer;
     public MeshFilter meshFilter;
@@ -24,6 +24,7 @@ public class Chunk
     {
         this.coordinate = coordinate;
         this.world = world;
+        this.position = new Vector3Int(coordinate.x * CHUNK_WIDTH, coordinate.y * CHUNK_HEIGHT, coordinate.z * CHUNK_WIDTH);
 
         chunkObject = new GameObject();
         meshFilter = chunkObject.AddComponent<MeshFilter>();
@@ -51,9 +52,9 @@ public class Chunk
     // Inputs: x,y,z local to this chunk
     private bool IsVoxelInChunk(int x, int y, int z)
     {
-        return x >= 0 && x < CHUNK_LENGTH &&
-                y >= 0 && y < CHUNK_LENGTH &&
-                z >= 0 && z < CHUNK_LENGTH;
+        return x >= 0 && x < voxels.GetLength(0) &&
+                y >= 0 && y < voxels.GetLength(1) &&
+                z >= 0 && z < voxels.GetLength(2);
     }
 
     public BlockType GetBlock(Vector3Int localPos)
@@ -142,13 +143,5 @@ public class Chunk
     {
         get { return chunkObject.activeSelf; }
         set { chunkObject.SetActive(value); }
-    }
-
-    public Vector3Int position
-    {
-        get
-        {
-            return coordinate * CHUNK_LENGTH;
-        }
     }
 }
