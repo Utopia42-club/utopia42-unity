@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class Chunk
 {
-    public static readonly int CHUNK_WIDTH = 16;
+    public static readonly int CHUNK_WIDTH = 20;
     public static readonly int CHUNK_HEIGHT = 32;
 
     private readonly byte[,,] voxels = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
@@ -87,7 +87,6 @@ public class Chunk
         {
             if (!IsPositionSolid(pos + face.direction))
             {
-
                 foreach (int vertIdx in face.triangles)
                 {
                     if (vertsToIdx[vertIdx] == -1)

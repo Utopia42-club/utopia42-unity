@@ -7,8 +7,6 @@ public class World : MonoBehaviour
 {
     public Material material;
     public readonly VoxelService service = new VoxelService();
-
-
     //TODO take care of size/time limit
     //Diactivated chunks are added to this collection for possible future reuse
     private ConcurrentDictionary<Vector3Int, Chunk> garbageChunks
@@ -17,17 +15,10 @@ public class World : MonoBehaviour
     //TODO check volatile documentation use sth like lock or semaphore
     private volatile bool creatingChunks = false;
     private ConcurrentBag<Vector3Int> chunkRequests = new ConcurrentBag<Vector3Int>();
-
     // Start is called before the first frame update
     void Start()
     {
-        loadLands();
-    }
-
-    void loadLands()
-    {
-        var ie = EthereumClientService.INSTANCE.getLands(l=>Debug.Log(l));
-        StartCoroutine(ie);
+        StartCoroutine(service.Initialize());
     }
 
     // Update is called once per frame

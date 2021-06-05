@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
-using UnityEngine;
 
 public class EthereumClientService
 {
@@ -42,9 +41,16 @@ public class EthereumClientService
                 consumer.Invoke(lands);
                 yield break;
             }
-            var land = new Land((int)result.X1, (int)result.Y1, (int)result.X2, (int)result.Y2, (int)result.Time, result.Hash);
+            var land = new Land();
+            land.x1 = result.X1;
+            land.y1 = result.Y1;
+            land.x2 = result.X2;
+            land.y2 = result.Y2;
+            land.ipfsKey = result.Hash;
+            land.time = result.Time;
             lands.Add(land);
         }
+        yield break;
     }
 
     public IEnumerator getLands(Action<List<Land>> consumer)

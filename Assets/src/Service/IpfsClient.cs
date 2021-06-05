@@ -1,15 +1,22 @@
-﻿using UnityEngine.Networking;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
+using UnityEngine.Networking;
+
 public class IpfsClient
 {
     private static readonly string GET_URL = "https://utopia42.club/api/v0/cat?arg=/ipfs/";
 
-    IEnumerator GetFile(string id)
+    public static IpfsClient INSATANCE = new IpfsClient();
+    private IpfsClient()
     {
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(id))
+    }
+
+    public IEnumerator GetLandDetails(string id, Action<LandDetails> consumer)
+    {
+        string url = GET_URL + id;
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
             yield return webRequest.SendWebRequest();
 
@@ -17,16 +24,18 @@ public class IpfsClient
             {
                 case UnityWebRequest.Result.ConnectionError:
                 case UnityWebRequest.Result.DataProcessingError:
-                    Debug.LogError("Error: " + webRequest.error);
+                    Debug.LogError(string.Format("Get for {0} caused Error: {1}", url, webRequest.error));
                     break;
                 case UnityWebRequest.Result.ProtocolError:
-                    Debug.LogError("HTTP Error: " + webRequest.error);
+                    Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
                     break;
                 case UnityWebRequest.Result.Success:
-                    //JsonUtility.FromJson()
+                    var details = JsonConvert.DeserializeObject<LandDetails>(webRequest.downloadHandler.text);
+                    consumer.Invoke(details);
                     break;
             }
         }
+        yield break;
     }
 
 }

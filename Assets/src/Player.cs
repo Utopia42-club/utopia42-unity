@@ -10,8 +10,8 @@ public class Player : MonoBehaviour
     public Transform camera;
     public World world;
 
-    public float walkSpeed = 200f;
-    public float sprintSpeed = 300f;
+    public float walkSpeed = 6f;
+    public float sprintSpeed = 12f;
     public float jumpForce = 8f;
     public float gravity = -9.8f;
 
@@ -29,11 +29,12 @@ public class Player : MonoBehaviour
     private void Start()
     {
         transform.position
-            = new Vector3(0, Chunk.CHUNK_HEIGHT + 10, 0);
+            = new Vector3(0, Chunk.CHUNK_HEIGHT + 100, 0);
     }
 
     private void FixedUpdate()
     {
+        if (world.service == null || !world.service.IsInitialized()) return;
         CalculateVelocity();
         if (jumpRequest)
             Jump();
@@ -43,6 +44,7 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        if (world.service == null || !world.service.IsInitialized()) return;
         GetPlayerInputs();
 
         if (lastChunk == null)

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 public class VoxelService
@@ -6,29 +7,16 @@ public class VoxelService
     private byte grass = 1;
     private byte bedrock = 2;
     private byte dirt = 3;
-
-    Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
-    Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes
-        = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
+    private List<Land> lands;
+    private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
+    private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
 
     public VoxelService()
     {
-        types[0] = new BlockType(0, "Air", false, 0, 0, 0, 0, 0, 0);
-        types[1] = new BlockType(1, "Grass", true, 0, 0, 0, 0, 0, 0);
-        types[2] = new BlockType(2, "Bedrock", true, 0, 0, 0, 0, 0, 0);
-        types[3] = new BlockType(3, "Dirt", true, 0, 0, 0, 0, 0, 0);
-
-        for(int z = 0; z < 300; z++)
-        {
-            for (int x = -10; x < 10; x++)
-            {
-                var vp = new VoxelPosition(new Vector3Int(x, z + 1, z));
-                Dictionary<Vector3Int, byte> chunk;
-                if(!changes.TryGetValue(vp.chunk, out chunk))
-                    changes[vp.chunk] = chunk = new Dictionary<Vector3Int, byte>();
-                chunk[vp.local] = 1;
-            }
-        }
+        types[0] = new BlockType(0, "air", false, 0, 0, 0, 0, 0, 0);
+        types[1] = new BlockType(1, "grass", true, 0, 0, 0, 0, 0, 0);
+        types[2] = new BlockType(2, "bedrock", true, 0, 0, 0, 0, 0, 0);
+        types[3] = new BlockType(3, "dirt", true, 0, 0, 0, 0, 0, 0);
     }
 
     public void FillChunk(Vector3Int coordinate, byte[,,] voxels)
@@ -82,6 +70,17 @@ public class VoxelService
         return types[id];
     }
 
+    public BlockType GetBlockType(string name)
+    {
+        foreach (var entry in types)
+        {
+            if (entry.Value.name.Equals(name))
+                return entry.Value;
+        }
+        Debug.LogError("Invalid block type: " + name);
+        return null;
+    }
+
     public bool IsSolid(VoxelPosition vp)
     {
         Dictionary<Vector3Int, byte> chunkChanges;
@@ -95,5 +94,43 @@ public class VoxelService
         }
 
         return vp.chunk.y <= 0;
+    }
+
+    public IEnumerator Initialize()
+    {
+        if (IsInitialized()) yield break;
+
+        //List<Land> lands = new List<Land>();
+        //yield return EthereumClientService.INSTANCE.getLands(l => lands.AddRange(l));
+
+        //var details = new List<LandDetails>();
+        //foreach (var land in lands)
+        //    if (!string.IsNullOrWhiteSpace(land.ipfsKey))
+        //        yield return IpfsClient.INSATANCE.GetLandDetails(land.ipfsKey, l => details.Add(l));
+
+        var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
+        //foreach (var land in details)
+        //{
+        //    foreach (var entry in land.changes)
+        //    {
+        //        var change = entry.Value;
+        //        var position = new VoxelPosition(change.voxel[0], change.voxel[1], change.voxel[2]);
+
+        //        var type = GetBlockType(change.name);
+        //        if (type == null) continue;
+
+        //        Dictionary<Vector3Int, byte> chunk;
+        //        if (!changes.TryGetValue(position.chunk, out chunk))
+        //            changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
+        //        chunk[position.local] = type.id;
+        //    }
+        //}
+        this.changes = changes;
+        yield break;
+    }
+
+    public bool IsInitialized()
+    {
+        return this.changes != null;
     }
 }
