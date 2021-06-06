@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public static readonly Vector3Int viewDistance = new Vector3Int(2, 1, 2);
+    public static readonly Vector3Int viewDistance = new Vector3Int(5, 5, 5);
 
     private bool grounded;
     private bool sprinting;

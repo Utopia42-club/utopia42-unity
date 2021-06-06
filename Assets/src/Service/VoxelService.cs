@@ -14,9 +14,9 @@ public class VoxelService
     public VoxelService()
     {
         types[0] = new BlockType(0, "air", false, 0, 0, 0, 0, 0, 0);
-        types[1] = new BlockType(1, "grass", true, 0, 0, 0, 0, 0, 0);
-        types[2] = new BlockType(2, "bedrock", true, 0, 0, 0, 0, 0, 0);
-        types[3] = new BlockType(3, "dirt", true, 0, 0, 0, 0, 0, 0);
+        types[1] = new BlockType(1, "grass", true, 2, 2, 2, 2, 1, 7);
+        types[2] = new BlockType(2, "bedrock", true, 9, 9, 9, 9, 9, 9);
+        types[3] = new BlockType(3, "dirt", true, 1, 1, 1, 1, 1, 1);
     }
 
     public void FillChunk(Vector3Int coordinate, byte[,,] voxels)
@@ -100,31 +100,31 @@ public class VoxelService
     {
         if (IsInitialized()) yield break;
 
-        //List<Land> lands = new List<Land>();
-        //yield return EthereumClientService.INSTANCE.getLands(l => lands.AddRange(l));
+        List<Land> lands = new List<Land>();
+        yield return EthereumClientService.INSTANCE.getLands(l => lands.AddRange(l));
 
-        //var details = new List<LandDetails>();
-        //foreach (var land in lands)
-        //    if (!string.IsNullOrWhiteSpace(land.ipfsKey))
-        //        yield return IpfsClient.INSATANCE.GetLandDetails(land.ipfsKey, l => details.Add(l));
+        var details = new List<LandDetails>();
+        foreach (var land in lands)
+            if (!string.IsNullOrWhiteSpace(land.ipfsKey))
+                yield return IpfsClient.INSATANCE.GetLandDetails(land.ipfsKey, l => details.Add(l));
 
         var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
-        //foreach (var land in details)
-        //{
-        //    foreach (var entry in land.changes)
-        //    {
-        //        var change = entry.Value;
-        //        var position = new VoxelPosition(change.voxel[0], change.voxel[1], change.voxel[2]);
+        foreach (var land in details)
+        {
+            foreach (var entry in land.changes)
+            {
+                var change = entry.Value;
+                var position = new VoxelPosition(change.voxel[0], change.voxel[1], change.voxel[2]);
 
-        //        var type = GetBlockType(change.name);
-        //        if (type == null) continue;
+                var type = GetBlockType(change.name);
+                if (type == null) continue;
 
-        //        Dictionary<Vector3Int, byte> chunk;
-        //        if (!changes.TryGetValue(position.chunk, out chunk))
-        //            changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
-        //        chunk[position.local] = type.id;
-        //    }
-        //}
+                Dictionary<Vector3Int, byte> chunk;
+                if (!changes.TryGetValue(position.chunk, out chunk))
+                    changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
+                chunk[position.local] = type.id;
+            }
+        }
         this.changes = changes;
         yield break;
     }

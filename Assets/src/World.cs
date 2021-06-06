@@ -44,7 +44,7 @@ public class World : MonoBehaviour
                 continue;
             Chunk ch = new Chunk(key, this);
             chunks[key] = ch;
-            yield return new WaitForSeconds(.2f); ;
+            yield return null;// new WaitForSeconds(.2f);
         }
         creatingChunks = false;
     }

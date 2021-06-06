@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class Chunk
 {
-    public static readonly int CHUNK_WIDTH = 20;
-    public static readonly int CHUNK_HEIGHT = 32;
+    public static readonly int CHUNK_WIDTH = 16;
+    public static readonly int CHUNK_HEIGHT = 128;
 
     private readonly byte[,,] voxels = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
     private World world;
@@ -75,28 +75,40 @@ public class Chunk
 
     void addVisibleFaces(Vector3Int pos)
     {
-        Vector3Int[] verts = Voxels.GenereateVertices(pos);
+        Vector3Int[] verts = new Vector3Int[] { 
+            Voxels.Vertices[0] + pos,
+            Voxels.Vertices[1] + pos,
+            Voxels.Vertices[2] + pos,
+            Voxels.Vertices[3] + pos,
+            Voxels.Vertices[4] + pos,
+            Voxels.Vertices[5] + pos,
+            Voxels.Vertices[6] + pos,
+            Voxels.Vertices[7] + pos
+        };
 
-        // vertsToIdx maps index of vertex in verts to its index in this.vertices
-        // index of vertex in this.vertices is vertsToIdx[localIdx]
-        int[] vertsToIdx = new int[] { -1, -1, -1, -1, -1, -1, -1, -1 };
-        byte blockID = voxels[pos.x, pos.y, pos.z];
-        if (blockID == 0)
-            return;
+        byte blockId = voxels[pos.x, pos.y, pos.z];
+        var type = world.service.GetBlockType(blockId);
+        if (!type.isSolid) return;
+
         foreach (Voxels.Face face in Voxels.Face.FACES)
         {
             if (!IsPositionSolid(pos + face.direction))
             {
-                foreach (int vertIdx in face.triangles)
-                {
-                    if (vertsToIdx[vertIdx] == -1)
-                    {
-                        vertsToIdx[vertIdx] = vertices.Count;
-                        vertices.Add(verts[vertIdx]);
-                    }
-                    triangles.Add(vertsToIdx[vertIdx]);
-                }
-                //AddTexture(world.blocktypes[blockID].GetTextureID(p));
+                int idx = vertices.Count;
+
+                vertices.Add(verts[face.verts[0]]);
+                vertices.Add(verts[face.verts[1]]);
+                vertices.Add(verts[face.verts[2]]);
+                vertices.Add(verts[face.verts[3]]);
+
+                AddTexture(type.GetTextureID(face));
+
+                triangles.Add(idx);
+                triangles.Add(idx + 1);
+                triangles.Add(idx + 2);
+                triangles.Add(idx + 2);
+                triangles.Add(idx + 1);
+                triangles.Add(idx + 3);
             }
         }
     }
@@ -116,21 +128,18 @@ public class Chunk
 
     void AddTexture(int textureID)
     {
-        //float y = textureID / VoxelData.TextureAtlasSizeInBlocks;
-        //float x = textureID - (y * VoxelData.TextureAtlasSizeInBlocks);
+        float y = textureID / Voxels.TextureAtlasSizeInBlocks;
+        float x = textureID - (y * Voxels.TextureAtlasSizeInBlocks);
 
-        //x *= VoxelData.NormalizedBlockTextureSize;
-        //y *= VoxelData.NormalizedBlockTextureSize;
+        x *= Voxels.NormalizedBlockTextureSize;
+        y *= Voxels.NormalizedBlockTextureSize;
 
-        //y = 1f - y - VoxelData.NormalizedBlockTextureSize;
+        y = 1f - y - Voxels.NormalizedBlockTextureSize;
 
-        uvs.Add(new Vector2(0, 0));
-        uvs.Add(new Vector2(0, 0));
-        uvs.Add(new Vector2(0, 0));
-        uvs.Add(new Vector2(0, 0));
-        //uvs.Add(new Vector2(x, y + VoxelData.NormalizedBlockTextureSize));
-        //uvs.Add(new Vector2(x + VoxelData.NormalizedBlockTextureSize, y));
-        //uvs.Add(new Vector2(x + VoxelData.NormalizedBlockTextureSize, y + VoxelData.NormalizedBlockTextureSize));
+        uvs.Add(new Vector2(x, y));
+        uvs.Add(new Vector2(x, y + Voxels.NormalizedBlockTextureSize));
+        uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize, y));
+        uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize, y + Voxels.NormalizedBlockTextureSize));
     }
 
     private Vector3Int ToGlobal(Vector3Int localPoint)
