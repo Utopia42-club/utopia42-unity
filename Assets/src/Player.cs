@@ -7,11 +7,11 @@ public class Player : MonoBehaviour
     private bool grounded;
     private bool sprinting;
 
-    public Transform camera;
+    public Transform cam;
     public World world;
 
-    public float walkSpeed = 6f;
-    public float sprintSpeed = 12f;
+    public float walkSpeed = 4f;
+    public float sprintSpeed = 8f;
     public float jumpForce = 8f;
     public float gravity = -9.8f;
 
@@ -26,10 +26,15 @@ public class Player : MonoBehaviour
 
     private Vector3Int lastChunk;
 
+    public Transform highlightBlock;
+    public Transform placeBlock;
+    public float castStep = 0.1f;
+    public float reach = 8f;
+
     private void Start()
     {
         transform.position
-            = new Vector3(0, Chunk.CHUNK_HEIGHT + 100, 0);
+            = new Vector3(10, Chunk.CHUNK_HEIGHT + 10, 10);
     }
 
     private void FixedUpdate()
@@ -45,7 +50,9 @@ public class Player : MonoBehaviour
     private void Update()
     {
         if (world.service == null || !world.service.IsInitialized()) return;
+
         GetPlayerInputs();
+        placeCursorBlocks();
 
         if (lastChunk == null)
         {
@@ -109,6 +116,56 @@ public class Player : MonoBehaviour
         if (grounded && Input.GetButtonDown("Jump"))
             jumpRequest = true;
 
+        if (highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))
+        {
+            var vp = new VoxelPosition(highlightBlock.position);
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk != null) chunk.DeleteVoxel(vp);
+        }
+        if (placeBlock.gameObject.activeSelf && Input.GetMouseButtonDown(1))
+        {
+            var vp = new VoxelPosition(placeBlock.position);
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk != null) chunk.PutVoxel(vp, world.service.GetBlockType(1));
+        }
+    }
+
+    private void placeCursorBlocks()
+    {
+        float distance = castStep;
+        Vector3Int lastPos = Vectors.FloorToInt(cam.position);
+
+        while (distance < reach)
+        {
+            Vector3 pos = cam.position + (cam.forward * distance);
+            distance += castStep;
+            Vector3Int posint = Vectors.FloorToInt(pos);
+            var vp = new VoxelPosition(posint);
+
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk == null) break;
+
+            if (chunk.GetBlock(vp.local).isSolid)
+            {
+                highlightBlock.position = posint;
+                highlightBlock.gameObject.SetActive(true);
+
+                var currVox = Vectors.FloorToInt(transform.position);
+                if (lastPos != currVox && lastPos != currVox + Vector3Int.up)
+                {
+                    placeBlock.position = lastPos;
+                    placeBlock.gameObject.SetActive(true);
+                }
+                else
+                    placeBlock.gameObject.SetActive(false);
+                return;
+            }
+
+            lastPos = posint;
+        }
+
+        highlightBlock.gameObject.SetActive(false);
+        placeBlock.gameObject.SetActive(false);
     }
 
     private float ComputeDownSpeed(float downSpeed)

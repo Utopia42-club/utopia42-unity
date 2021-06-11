@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -45,8 +46,8 @@ public class VoxelService
         }
         else if (position.y == 0)
         {
-            body = dirt;
-            top = grass;
+            body = bedrock;
+            top = bedrock;
         }
         else
             body = top = air;
@@ -96,20 +97,11 @@ public class VoxelService
         return vp.chunk.y <= 0;
     }
 
-    public IEnumerator Initialize()
+    public IEnumerator Initialize(GameObject loadingObject)
     {
         if (IsInitialized()) yield break;
-
-        List<Land> lands = new List<Land>();
-        yield return EthereumClientService.INSTANCE.getLands(l => lands.AddRange(l));
-
-        var details = new List<LandDetails>();
-        foreach (var land in lands)
-            if (!string.IsNullOrWhiteSpace(land.ipfsKey))
-                yield return IpfsClient.INSATANCE.GetLandDetails(land.ipfsKey, l => details.Add(l));
-
         var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
-        foreach (var land in details)
+        yield return LoadDetails(loadingObject.GetComponent<Loading>(), land =>
         {
             foreach (var entry in land.changes)
             {
@@ -124,10 +116,39 @@ public class VoxelService
                     changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
                 chunk[position.local] = type.id;
             }
-        }
+        });
+
         this.changes = changes;
+        loadingObject.SetActive(false);
         yield break;
     }
+
+    private IEnumerator LoadDetails(Loading loading, Action<LandDetails> consumer)
+    {
+        List<Land> lands = new List<Land>();
+        loading.UpdateText("Loading Wallets And Lands...");
+        yield return EthereumClientService.INSTANCE.getLands(l => lands.AddRange(l));
+
+        var landsDetails = new LandDetails[lands.Count];
+        var enums = new IEnumerator[lands.Count];
+
+        for (int i = 0; i < lands.Count; i++)
+        {
+            var land = lands[i];
+            var idx = i;
+            if (!string.IsNullOrWhiteSpace(land.ipfsKey))
+                enums[i] = IpfsClient.INSATANCE.GetLandDetails(land.ipfsKey, consumer);
+        }
+
+        List<LandDetails> result = new List<LandDetails>();
+        for (int i = 0; i < lands.Count; i++)
+            if (enums[i] != null)
+            {
+                loading.UpdateText(string.Format("Loading Changes ({0}/{1})...", i, enums.Length));
+                yield return enums[i];
+            }
+    }
+
 
     public bool IsInitialized()
     {

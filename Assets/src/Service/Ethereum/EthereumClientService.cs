@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
+using UnityEngine;
 
 public class EthereumClientService
 {
@@ -50,7 +51,6 @@ public class EthereumClientService
             land.time = result.Time;
             lands.Add(land);
         }
-        yield break;
     }
 
     public IEnumerator getLands(Action<List<Land>> consumer)
@@ -58,11 +58,21 @@ public class EthereumClientService
         var owners = new List<string>();
         yield return getOwners(o => owners.AddRange(o));
 
-        var lands = new List<Land>();
-        foreach (var owner in owners)
+        List<Land>[] ownersLands = new List<Land>[owners.Count];
+        IEnumerator[] enums = new IEnumerator[owners.Count];
+        for (int i = 0; i < owners.Count; i++)
         {
-            yield return getLandsForOwner(owner, ls => lands.AddRange(ls));
+            int idx = i;
+            enums[i] = getLandsForOwner(owners[i], ls => ownersLands[idx] = ls);
         }
+
+        List<Land> lands = new List<Land>();
+        for (int i = 0; i < owners.Count; i++)
+        {
+            yield return enums[i];
+            lands.AddRange(ownersLands[i]);
+        }
+
         consumer.Invoke(lands);
         yield break;
     }

@@ -13,20 +13,22 @@ public class MouseLook : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
         mouseSensitivity = 180;
 
         if (Application.isEditor)
             mouseSensitivity = 400;
     }
 
-    float mx;
-
     // Update is called once per frame
     void Update()
     {
+        bool inited = GameObject.Find("World").GetComponent<World>().service.IsInitialized();
+        if (!inited) return;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
@@ -42,10 +44,4 @@ public class MouseLook : MonoBehaviour
         playerBody.Rotate(Vector3.up * mouseX);
     }
 
-    private void FixedUpdate()
-    {
-        //float mouseX = mx * mouseSensitivity * Time.fixedDeltaTime;
-
-        // playerBody.GetComponent<Rigidbody>().MoveRotation(playerBody.GetComponent<Rigidbody>().rotation *= Quaternion.Euler(0, mouseX, 0));
-    }
 }
