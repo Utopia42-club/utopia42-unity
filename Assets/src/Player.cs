@@ -31,6 +31,8 @@ public class Player : MonoBehaviour
     public float castStep = 0.1f;
     public float reach = 8f;
 
+    public byte selectedBlockId = 1;
+
     private void Start()
     {
         transform.position
@@ -126,7 +128,7 @@ public class Player : MonoBehaviour
         {
             var vp = new VoxelPosition(placeBlock.position);
             var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null) chunk.PutVoxel(vp, world.service.GetBlockType(1));
+            if (chunk != null) chunk.PutVoxel(vp, world.service.GetBlockType(selectedBlockId));
         }
     }
 
@@ -229,7 +231,7 @@ public class Player : MonoBehaviour
         {
             foreach (int zcoef in coef)
             {
-                var delta = new Vector3(xcoef * playerWidth, 0, zcoef * playerWidth);
+                var delta = new Vector3(xcoef * playerWidth / 2, 0, zcoef * playerWidth / 2);//FIXME ?
                 if (world.IsSolidAt(Vectors.FloorToInt(center + delta)))
                     return true;
             }

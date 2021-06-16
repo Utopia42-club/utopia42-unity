@@ -18,6 +18,12 @@ public class VoxelService
         types[1] = new BlockType(1, "grass", true, 2, 2, 2, 2, 1, 7);
         types[2] = new BlockType(2, "bedrock", true, 9, 9, 9, 9, 9, 9);
         types[3] = new BlockType(3, "dirt", true, 1, 1, 1, 1, 1, 1);
+        types[4] = new BlockType(4, "stone", true, 0, 0, 0, 0, 0, 0);
+        types[5] = new BlockType(5, "sand", true, 10, 10, 10, 10, 10, 10);
+        types[6] = new BlockType(6, "bricks", true, 11, 11, 11, 11, 11, 11);
+        types[7] = new BlockType(7, "wood", true, 5, 5, 5, 5, 6, 6);
+        types[8] = new BlockType(8, "planks", true, 4, 4, 4, 4, 4, 4);
+        types[9] = new BlockType(9, "cobblestone", true, 8, 8, 8, 8, 8, 8);
     }
 
     public void FillChunk(Vector3Int coordinate, byte[,,] voxels)
