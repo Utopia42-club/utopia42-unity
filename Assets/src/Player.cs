@@ -173,13 +173,16 @@ public class Player : MonoBehaviour
     private float ComputeDownSpeed(float downSpeed)
     {
         if (grounded = CollidesXz(new Vector3(0, downSpeed, 0)))
-            return 0;
+        {
+            return Mathf.Min(Mathf.FloorToInt(transform.position.y + 0.01f) - transform.position.y, 0);
+        }
+
         return downSpeed;
     }
 
     private float ComputeUpSpeed(float upSpeed)
     {
-        if (CollidesXz(new Vector3(0, 2f + upSpeed, 0)))
+        if (CollidesXz(new Vector3(0, upSpeed + 0.05f, 0)))
             return 0;
         return upSpeed;
     }
@@ -189,7 +192,7 @@ public class Player : MonoBehaviour
 
         get
         {
-            return CollidesY(new Vector3(0, 0, +playerWidth));
+            return CollidesXz(new Vector3(0, 0, +playerWidth));
         }
 
     }
@@ -197,43 +200,44 @@ public class Player : MonoBehaviour
     {
         get
         {
-            return CollidesY(new Vector3(0, 0, -playerWidth));
+            return CollidesXz(new Vector3(0, 0, -playerWidth));
         }
     }
     public bool left
     {
         get
         {
-            return CollidesY(new Vector3(-playerWidth, 0, 0));
+            return CollidesXz(new Vector3(-playerWidth, 0, 0));
         }
     }
     public bool right
     {
         get
         {
-            return CollidesY(new Vector3(+playerWidth, 0, 0));
+            return CollidesXz(new Vector3(+playerWidth, 0, 0));
         }
     }
-
-    private bool CollidesY(Vector3 offset)
-    {
-        var center = transform.position + offset;
-        return world.IsSolidAt(Vectors.FloorToInt(center))
-            || world.IsSolidAt(Vectors.FloorToInt(center + Vector3.up));
-    }
+    //private bool CollidesY(Vector3 offset)
+    //{
+    //    return CollidesXz(offset) || CollidesXz(offset + Vector3.up);
+    //}
 
     private bool CollidesXz(Vector3 offset)
     {
         var center = transform.position + offset;
-
-        int[] coef = new int[] { -1, 1 };
+        float[] dys = new float[] { 0.01f, 0.95f, 1.95f };
+        int[] coef = new int[] { -1, 0, 1 };
         foreach (int xcoef in coef)
         {
             foreach (int zcoef in coef)
             {
-                var delta = new Vector3(xcoef * playerWidth / 2, 0, zcoef * playerWidth / 2);//FIXME ?
-                if (world.IsSolidAt(Vectors.FloorToInt(center + delta)))
-                    return true;
+                foreach (float dy in dys)
+                {
+
+                    var delta = new Vector3(xcoef * playerWidth, dy, zcoef * playerWidth);//FIXME ?
+                    if (world.IsSolidAt(Vectors.FloorToInt(center + delta)))
+                        return true;
+                }
             }
         }
 
