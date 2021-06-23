@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class World : MonoBehaviour
 {
     public Material material;
-    public readonly VoxelService service = new VoxelService();
     //TODO take care of size/time limit
     //Diactivated chunks are added to this collection for possible future reuse
     private Dictionary<Vector3Int, Chunk> garbageChunks
@@ -19,7 +19,6 @@ public class World : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(service.Initialize(GameObject.Find("Loading")));
     }
 
     // Update is called once per frame
@@ -29,15 +28,35 @@ public class World : MonoBehaviour
             debugScreen.SetActive(!debugScreen.activeSelf);
     }
 
-    public void OnPlayerChunkChanged(Vector3Int currChunk)
+    public void Initialize(Vector3Int currChunk)
+    {
+        chunkRequests.Clear();
+
+        foreach (var chunk in garbageChunks.Values)
+            Destroy(chunk.chunkObject);
+        garbageChunks.Clear();
+
+        foreach (var chunk in chunks.Values)
+            Destroy(chunk.chunkObject);
+        chunks.Clear();
+
+        OnPlayerChunkChanged(currChunk, true);
+    }
+
+    private void OnPlayerChunkChanged(Vector3Int currChunk, bool instantly)
     {
         RequestChunkCreation(currChunk);
 
         if (!creatingChunks && chunkRequests.Count > 0)
-            StartCoroutine("CreateChunks");
+            StartCoroutine(CreateChunks(instantly));
     }
 
-    IEnumerator CreateChunks()
+    public void OnPlayerChunkChanged(Vector3Int currChunk)
+    {
+        this.OnPlayerChunkChanged(currChunk, false);
+    }
+
+    IEnumerator CreateChunks(bool instantly)
     {
         creatingChunks = true;
         while (chunkRequests.Count != 0)
@@ -46,7 +65,8 @@ public class World : MonoBehaviour
             if (chunk.IsActive() && !chunk.IsInited())
             {
                 chunk.Init();
-                yield return null;
+                if (!instantly)
+                    yield return null;
             }
             chunkRequests.RemoveAt(0);
         }
@@ -116,6 +136,14 @@ public class World : MonoBehaviour
         Chunk chunk;
         if (chunks.TryGetValue(vp.chunk, out chunk) && chunk.IsInited())
             return chunk.GetBlock(vp.local).isSolid;
-        return service.IsSolid(vp);
+        return VoxelService.INSTANCE.IsSolid(vp);
+    }
+
+    public static World INSTANCE
+    {
+        get
+        {
+            return GameObject.Find("World").GetComponent<World>();
+        }
     }
 }

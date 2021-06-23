@@ -4,13 +4,11 @@ using System.Collections.Generic;
 using UnityEngine;
 public class VoxelService
 {
-    private byte air = 0;
-    private byte grass = 1;
-    private byte bedrock = 2;
-    private byte dirt = 3;
+    public static VoxelService INSTANCE = new VoxelService();
     private List<Land> lands;
     private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
     private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
+    private Dictionary<string, List<Land>> ownersLands;
 
     public VoxelService()
     {
@@ -44,32 +42,61 @@ public class VoxelService
 
     private void InitiateChunk(Vector3Int position, byte[,,] voxels)
     {
+        byte bedrock = GetBlockType("bedrock").id;
         byte body;
         byte top;
+        if (position.y == 0)
+        {
+            InitGroundLevel(position, voxels, bedrock);
+            return;
+        }
         if (position.y < 0)
         {
             top = body = bedrock;
         }
-        else if (position.y == 0)
-        {
-            body = bedrock;
-            top = bedrock;
-        }
         else
-            body = top = air;
+            body = top = GetBlockType("air").id;
 
         for (int x = 0; x < voxels.GetLength(0); x++)
         {
             for (int z = 0; z < voxels.GetLength(2); z++)
             {
-                int maxy = voxels.GetLength(1) - 1;
-
-                voxels[x, maxy, z] = top;
-                for (int y = 0; y < maxy; y++)
-                    voxels[x, y, z] = body;
+                FillAtXY(top, body, x, z, voxels);
             }
         }
+    }
 
+    private void InitGroundLevel(Vector3Int position, byte[,,] voxels, byte bedrock)
+    {
+        byte body, top;
+        byte grass = GetBlockType("grass").id;
+        byte dirt = GetBlockType("dirt").id;
+        var player = Player.INSTANCE;
+        for (var x = 0; x < Chunk.CHUNK_WIDTH; ++x)
+        {
+            for (var z = 0; z < Chunk.CHUNK_WIDTH; ++z)
+            {
+                var owns = player.Owns(
+                    new Vector3Int(x + position.x * Chunk.CHUNK_WIDTH, 0, z + position.z * Chunk.CHUNK_WIDTH)
+                );
+                top = body = bedrock;
+                if (owns)
+                {
+                    top = grass;
+                    body = dirt;
+                }
+                FillAtXY(top, body, x, z, voxels);
+            }
+        }
+    }
+
+    private void FillAtXY(byte top, byte body, int x, int z, byte[,,] voxels)
+    {
+        int maxy = voxels.GetLength(1) - 1;
+
+        voxels[x, maxy, z] = top;
+        for (int y = 0; y < maxy; y++)
+            voxels[x, y, z] = body;
     }
 
     public BlockType GetBlockType(byte id)
@@ -103,11 +130,18 @@ public class VoxelService
         return vp.chunk.y <= 0;
     }
 
-    public IEnumerator Initialize(GameObject loadingObject)
+    public List<Land> getLandsFor(string walletId)
+    {
+        List<Land> res = null;
+        ownersLands.TryGetValue(walletId, out res);
+        return res;
+    }
+
+    public IEnumerator Initialize(Loading loading, Action onDone)
     {
         if (IsInitialized()) yield break;
         var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
-        yield return LoadDetails(loadingObject.GetComponent<Loading>(), land =>
+        yield return LoadDetails(loading, land =>
         {
             foreach (var entry in land.changes)
             {
@@ -125,15 +159,20 @@ public class VoxelService
         });
 
         this.changes = changes;
-        loadingObject.SetActive(false);
+        onDone.Invoke();
         yield break;
     }
 
     private IEnumerator LoadDetails(Loading loading, Action<LandDetails> consumer)
     {
-        List<Land> lands = new List<Land>();
         loading.UpdateText("Loading Wallets And Lands...");
-        yield return EthereumClientService.INSTANCE.getLands(l => lands.AddRange(l));
+        var ownersLands = new Dictionary<string, List<Land>>();
+        yield return EthereumClientService.INSTANCE.getLands(ownersLands);
+        this.ownersLands = ownersLands;
+
+        var lands = new List<Land>();
+        foreach (var val in ownersLands.Values)
+            lands.AddRange(val);
 
         var landsDetails = new LandDetails[lands.Count];
         var enums = new IEnumerator[lands.Count];
@@ -146,7 +185,6 @@ public class VoxelService
                 enums[i] = IpfsClient.INSATANCE.GetLandDetails(land.ipfsKey, consumer);
         }
 
-        List<LandDetails> result = new List<LandDetails>();
         for (int i = 0; i < lands.Count; i++)
             if (enums[i] != null)
             {

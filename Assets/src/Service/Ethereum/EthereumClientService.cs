@@ -53,27 +53,22 @@ public class EthereumClientService
         }
     }
 
-    public IEnumerator getLands(Action<List<Land>> consumer)
+    public IEnumerator getLands(Dictionary<string, List<Land>> ownersLands)
     {
         var owners = new List<string>();
         yield return getOwners(o => owners.AddRange(o));
 
-        List<Land>[] ownersLands = new List<Land>[owners.Count];
         IEnumerator[] enums = new IEnumerator[owners.Count];
         for (int i = 0; i < owners.Count; i++)
         {
             int idx = i;
-            enums[i] = getLandsForOwner(owners[i], ls => ownersLands[idx] = ls);
+            enums[i] = getLandsForOwner(owners[i], ls => ownersLands[owners[idx]] = ls);
         }
 
         List<Land> lands = new List<Land>();
         for (int i = 0; i < owners.Count; i++)
-        {
             yield return enums[i];
-            lands.AddRange(ownersLands[i]);
-        }
 
-        consumer.Invoke(lands);
         yield break;
     }
 }

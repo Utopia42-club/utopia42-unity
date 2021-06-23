@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -26,6 +27,8 @@ public class Player : MonoBehaviour
 
     private Vector3Int lastChunk;
 
+    private List<Land> lands = new List<Land>();
+
     public Transform highlightBlock;
     public Transform placeBlock;
     public float castStep = 0.1f;
@@ -33,15 +36,30 @@ public class Player : MonoBehaviour
 
     public byte selectedBlockId = 1;
 
+
+    public List<Land> GetLands()
+    {
+        return this.lands;
+    }
+
+    public void OnWalletChanged()
+    {
+        List<Land> lands = null;
+
+        string wallet = Settings.WalletId();
+        if (wallet != null)
+            lands = VoxelService.INSTANCE.getLandsFor(wallet);
+        
+        this.lands = lands != null ? lands : new List<Land>();
+    }
+
     private void Start()
     {
-        transform.position
-            = new Vector3(10, Chunk.CHUNK_HEIGHT + 10, 10);
     }
 
     private void FixedUpdate()
     {
-        if (world.service == null || !world.service.IsInitialized()) return;
+        if (GameManager.INSTANCE.GetSTate() != GameManager.State.PLAYING) return;
         CalculateVelocity();
         if (jumpRequest)
             Jump();
@@ -51,8 +69,7 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        if (world.service == null || !world.service.IsInitialized()) return;
-
+        if (GameManager.INSTANCE.GetSTate() != GameManager.State.PLAYING) return;
         GetPlayerInputs();
         placeCursorBlocks();
 
@@ -128,7 +145,7 @@ public class Player : MonoBehaviour
         {
             var vp = new VoxelPosition(placeBlock.position);
             var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null) chunk.PutVoxel(vp, world.service.GetBlockType(selectedBlockId));
+            if (chunk != null) chunk.PutVoxel(vp, VoxelService.INSTANCE.GetBlockType(selectedBlockId));
         }
     }
 
@@ -150,13 +167,14 @@ public class Player : MonoBehaviour
             if (chunk.GetBlock(vp.local).isSolid)
             {
                 highlightBlock.position = posint;
-                highlightBlock.gameObject.SetActive(true);
+
+                highlightBlock.gameObject.SetActive(CanEdit(posint));
 
                 var currVox = Vectors.FloorToInt(transform.position);
                 if (lastPos != currVox && lastPos != currVox + Vector3Int.up)
                 {
                     placeBlock.position = lastPos;
-                    placeBlock.gameObject.SetActive(true);
+                    placeBlock.gameObject.SetActive(CanEdit(lastPos));
                 }
                 else
                     placeBlock.gameObject.SetActive(false);
@@ -168,6 +186,23 @@ public class Player : MonoBehaviour
 
         highlightBlock.gameObject.SetActive(false);
         placeBlock.gameObject.SetActive(false);
+    }
+
+    private bool CanEdit(Vector3Int position)
+    {
+        if (Settings.IsGuest()) return true;
+        return Owns(position);
+    }
+
+    public bool Owns(Vector3Int position)
+    {
+        foreach (var land in lands)
+        {
+            if (land.x1 <= position.x && land.x2 >= position.x
+                && land.y1 <= position.z && land.y2 >= position.z)
+                return true;
+        }
+        return false;
     }
 
     private float ComputeDownSpeed(float downSpeed)
@@ -217,10 +252,6 @@ public class Player : MonoBehaviour
             return CollidesXz(new Vector3(+playerWidth, 0, 0));
         }
     }
-    //private bool CollidesY(Vector3 offset)
-    //{
-    //    return CollidesXz(offset) || CollidesXz(offset + Vector3.up);
-    //}
 
     private bool CollidesXz(Vector3 offset)
     {
@@ -249,4 +280,12 @@ public class Player : MonoBehaviour
         return new VoxelPosition(transform.position);
     }
 
+
+    public static Player INSTANCE
+    {
+        get
+        {
+            return GameObject.Find("Player").GetComponent<Player>();
+        }
+    }
 }

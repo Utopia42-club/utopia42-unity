@@ -43,7 +43,7 @@ public class Chunk
         chunkObject.transform.position = this.position;
         chunkObject.name = "Chunck " + coordinate;
 
-        world.service.FillChunk(this.coordinate, this.voxels);
+        VoxelService.INSTANCE.FillChunk(this.coordinate, this.voxels);
         Draw();
     }
 
@@ -62,7 +62,7 @@ public class Chunk
         for (int y = 0; y < voxels.GetLength(1); y++)
             for (int x = 0; x < voxels.GetLength(0); x++)
                 for (int z = 0; z < voxels.GetLength(2); z++)
-                    if (world.service.GetBlockType(voxels[x, y, z]).isSolid)
+                    if (VoxelService.INSTANCE.GetBlockType(voxels[x, y, z]).isSolid)
                         AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, uvs);
     }
 
@@ -79,7 +79,7 @@ public class Chunk
         if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
             throw new System.ArgumentException("Invalid local position: " + localPos);
 
-        return world.service.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
+        return VoxelService.INSTANCE.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
     }
 
     private bool IsPositionSolid(Vector3Int localPos)
@@ -104,7 +104,7 @@ public class Chunk
         };
 
         byte blockId = voxels[pos.x, pos.y, pos.z];
-        var type = world.service.GetBlockType(blockId);
+        var type = VoxelService.INSTANCE.GetBlockType(blockId);
         if (!type.isSolid) return;
 
         foreach (Voxels.Face face in Voxels.Face.FACES)

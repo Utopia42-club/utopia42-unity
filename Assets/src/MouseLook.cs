@@ -1,34 +1,44 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class MouseLook : MonoBehaviour
 {
     public float mouseSensitivity = 1;
-
     public Transform playerBody;
-
     private float xRotation = 0f;
+    private Action onUpdate = () => { };
 
-    // Start is called before the first frame update
     void Start()
     {
         mouseSensitivity = 180;
 
         if (Application.isEditor)
             mouseSensitivity = 400;
+
+        GameManager.INSTANCE.stateChange.AddListener(state =>
+        {
+            if (state == GameManager.State.PLAYING)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                this.onUpdate = () => this.DoUpdate();
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                this.onUpdate = () => { };
+            }
+        });
     }
 
-    // Update is called once per frame
     void Update()
     {
-        bool inited = GameObject.Find("World").GetComponent<World>().service.IsInitialized();
-        if (!inited) return;
+        onUpdate.Invoke();
+    }
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
-
+    private void DoUpdate()
+    {
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 

@@ -20,7 +20,7 @@ public class Toolbar : MonoBehaviour
 
         foreach (var sp in sprites)
         {
-            var id = world.service.GetBlockType(sp.name).id;
+            var id = VoxelService.INSTANCE.GetBlockType(sp.name).id;
             blockIcons[id] = sp;
         }
 
