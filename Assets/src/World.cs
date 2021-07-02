@@ -28,17 +28,20 @@ public class World : MonoBehaviour
             debugScreen.SetActive(!debugScreen.activeSelf);
     }
 
-    public void Initialize(Vector3Int currChunk)
+    public void Initialize(Vector3Int currChunk, bool clean)
     {
-        chunkRequests.Clear();
+        if (clean)
+        {
+            chunkRequests.Clear();
 
-        foreach (var chunk in garbageChunks.Values)
-            Destroy(chunk.chunkObject);
-        garbageChunks.Clear();
+            foreach (var chunk in garbageChunks.Values)
+                Destroy(chunk.chunkObject);
+            garbageChunks.Clear();
 
-        foreach (var chunk in chunks.Values)
-            Destroy(chunk.chunkObject);
-        chunks.Clear();
+            foreach (var chunk in chunks.Values)
+                Destroy(chunk.chunkObject);
+            chunks.Clear();
+        }
 
         OnPlayerChunkChanged(currChunk, true);
     }
@@ -120,6 +123,12 @@ public class World : MonoBehaviour
             garbageChunks[key] = ch;
         }
 
+        if(garbageChunks.Count > 512)
+        {
+            foreach(var entry in garbageChunks)
+                Destroy(entry.Value.chunkObject);
+            garbageChunks.Clear();
+        }
     }
 
     public Chunk GetChunkIfInited(Vector3Int chunkPos)

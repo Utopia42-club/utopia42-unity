@@ -162,14 +162,18 @@ public class Chunk
     public void DeleteVoxel(VoxelPosition pos)
     {
         voxels[pos.local.x, pos.local.y, pos.local.z] = 0;//FIXME
+        VoxelService.INSTANCE.AddChange(pos, 0);
         OnChanged(pos);
     }
 
     public void PutVoxel(VoxelPosition pos, BlockType type)
     {
         if (type.isSolid)
+        {
             voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
-        OnChanged(pos);
+            VoxelService.INSTANCE.AddChange(pos, type.id);
+            OnChanged(pos);
+        }
     }
 
     private void OnChanged(VoxelPosition pos)

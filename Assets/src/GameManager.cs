@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -10,21 +12,16 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        SetState(State.LOADING);
-        StartCoroutine(VoxelService.INSTANCE.Initialize(Loading.INSTANCE, () => this.SetPlayerPosition()));
+        SetState(State.SETTINGS);
     }
 
-    private void SetPlayerPosition()
+    private void InitPlayerForWallet()
     {
         if (string.IsNullOrWhiteSpace(Settings.WalletId()))
         {
             SetState(State.SETTINGS);
             return;
         }
-        SetState(State.LOADING);
-        Loading.INSTANCE.UpdateText("Initializing the world...");
-
-
 
         var player = Player.INSTANCE;
         player.OnWalletChanged();
@@ -40,11 +37,25 @@ public class GameManager : MonoBehaviour
                  Chunk.CHUNK_HEIGHT + 10,
                  ((float)(land.y1 + land.y2)) / 2);
         }
-        
+
         pos = FindStartingY(pos);
 
-        player.transform.position = pos;
-        World.INSTANCE.Initialize(new VoxelPosition(pos).chunk);
+        StartCoroutine(DoMovePlayerTo(pos, true));
+    }
+
+    public void MovePlayerTo(Vector3 pos)
+    {
+        StartCoroutine(DoMovePlayerTo(pos, false));
+    }
+
+    private IEnumerator DoMovePlayerTo(Vector3 pos, bool clean)
+    {
+        SetState(State.LOADING);
+        Loading.INSTANCE.UpdateText("Creating the world...");
+        yield return null;
+        pos = FindStartingY(pos);
+        Player.INSTANCE.transform.position = pos;
+        World.INSTANCE.Initialize(new VoxelPosition(pos).chunk, clean);
         worldInited = true;
         SetState(State.PLAYING);
     }
@@ -58,7 +69,7 @@ public class GameManager : MonoBehaviour
             bool coll = false;
             for (int i = -1; i < 3; i++)
             {
-                if (coll = service.IsSolid(new VoxelPosition(feet + Vector3Int.up * 1)))
+                if (coll = service.IsSolid(new VoxelPosition(feet + Vector3Int.up * i)))
                 {
                     feet += Vector3Int.up * Math.Max(1, i + 2);
                     break;
@@ -71,14 +82,40 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         bool escape = Input.GetKeyDown(KeyCode.Escape);
-        if (escape && state != State.LOADING)
-            SetState((state == State.SETTINGS && worldInited) ? State.PLAYING : State.SETTINGS);
+        if (escape)
+        {
+            if (state == State.MAP) SetState(State.PLAYING);
+            else if (state != State.LOADING)
+                SetState((state == State.SETTINGS && worldInited) ? State.PLAYING : State.SETTINGS);
+        }
+        else
+        {
+            bool map = Input.GetKeyDown(KeyCode.M);
+            if (map && state == State.MAP) SetState(State.PLAYING);
+            else if (map && state == State.PLAYING)
+                SetState(State.MAP);
+        }
     }
 
     internal void ExitSettings()
     {
         if (worldInited) SetState(State.PLAYING);
-        else SetPlayerPosition();
+        else InitPlayerForWallet();
+    }
+
+    internal void SettingsChanged()
+    {
+        if (!EthereumClientService.INSTANCE.IsInited())
+        {
+            EthereumClientService.INSTANCE.SetNetwork(Settings.Network());
+            SetState(State.LOADING);
+            StartCoroutine(VoxelService.INSTANCE.Initialize(Loading.INSTANCE, () => this.InitPlayerForWallet()));
+        }
+        else
+        {
+            SetState(State.LOADING);
+            InitPlayerForWallet();
+        }
     }
 
     private void SetState(State state)
@@ -92,10 +129,21 @@ public class GameManager : MonoBehaviour
         return state;
     }
 
-    public void WalletChanged()
+    public void Save()
     {
+        var lands = Player.INSTANCE.GetLands();
+        if (lands == null || lands.Count == 0) return;
+        var wallet = Settings.WalletId();
+        List<LandDetails> worldChanges = VoxelService.INSTANCE.GetLandsChanges(wallet, lands);
         SetState(State.LOADING);
-        SetPlayerPosition();
+        Loading.INSTANCE.UpdateText("Saving Changes To Files...");
+        StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, ids =>
+        {
+            string url = "http://104.207.144.107:5002/save/" + string.Join(",", ids) + "?wallet=" + wallet + "&networkId=" + EthereumClientService.INSTANCE.GetNetwork().id;
+            Application.OpenURL(url);
+            //GUIUtility.systemCopyBuffer = url;
+            SetState(State.PLAYING);
+        }));
     }
 
     public static GameManager INSTANCE
@@ -108,6 +156,6 @@ public class GameManager : MonoBehaviour
 
     public enum State
     {
-        LOADING, SETTINGS, PLAYING
+        LOADING, SETTINGS, PLAYING, MAP
     }
 }

@@ -3,10 +3,10 @@
 [System.Serializable]
 public class Land
 {
-    public BigInteger x1;
-    public BigInteger y1;
-    public BigInteger x2;
-    public BigInteger y2;
+    public long x1;
+    public long y1;
+    public long x2;
+    public long y2;
     public string ipfsKey;
-    public BigInteger time;
+    public long time;
 }

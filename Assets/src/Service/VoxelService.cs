@@ -193,6 +193,61 @@ public class VoxelService
             }
     }
 
+    public List<LandDetails> GetLandsChanges(string wallet, List<Land> lands)
+    {
+        var regionChanges = new List<LandDetails>();
+        foreach (var l in lands)
+        {
+            var ld = new LandDetails();
+            ld.changes = new Dictionary<string, VoxelChange>();
+            ld.region = l;
+            ld.v = "0.0.0";
+            ld.wallet = wallet;
+            regionChanges.Add(ld);
+        }
+
+
+        foreach (var chunkEntry in changes)
+        {
+            var cpos = chunkEntry.Key;
+            var chunkChanges = chunkEntry.Value;
+            foreach (var voxelEntry in chunkChanges)
+            {
+                var vpos = voxelEntry.Key;
+                var worldPos = VoxelPosition.ToWorld(cpos, vpos);
+                for (int landIdx = 0; landIdx < lands.Count; landIdx++)
+                {
+                    var land = lands[landIdx];
+                    if (land.x1 <= worldPos.x && worldPos.x <= land.x2 && land.y1 <= worldPos.z && worldPos.z <= land.y2)
+                    {
+                        var key = string.Format("{0}_{1}_{2}", worldPos.x, worldPos.y, worldPos.z);
+                        var change = new VoxelChange();
+                        change.name = VoxelService.INSTANCE.GetBlockType(voxelEntry.Value).name;
+                        change.voxel = new int[] { worldPos.x, worldPos.y, worldPos.z };
+                        regionChanges[landIdx].changes[key] = change;
+                        break;
+                    }
+                }
+            }
+        }
+        return regionChanges;
+    }
+
+    public void AddChange(VoxelPosition pos, byte id)
+    {
+        Dictionary<Vector3Int, byte> vc;
+        if (!changes.TryGetValue(pos.chunk, out vc))
+        {
+            vc = new Dictionary<Vector3Int, byte>();
+            changes[pos.chunk] = vc;
+        }
+        vc[pos.local] = id;
+    }
+
+    public Dictionary<string, List<Land>> GetOwnersLands()
+    {
+        return ownersLands;
+    }
 
     public bool IsInitialized()
     {

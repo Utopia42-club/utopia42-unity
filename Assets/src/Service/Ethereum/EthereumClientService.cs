@@ -4,25 +4,34 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
-using UnityEngine;
 
 public class EthereumClientService
 {
-    public static EthereumClientService INSTANCE = new EthereumClientService("https://mainnet.infura.io/v3/b12c1b1e6b2e4f58af559a67fe46104e"
-        , "0x56040d44f407fa6f33056d4f352d2e919a0d99fb");
-
-    private readonly string url;
-    private readonly string contract;
-    private EthereumClientService(string url, string contract)
+    public static EthereumClientService INSTANCE = new EthereumClientService();
+    private EthNetwork network;
+    private EthereumClientService()
     {
-        this.url = url;
-        this.contract = contract;
+    }
+
+    public bool IsInited()
+    {
+        return network != null;
+    }
+
+    public EthNetwork GetNetwork()
+    {
+        return network;
+    }
+
+    public void SetNetwork(EthNetwork network)
+    {
+        this.network = network;
     }
 
     public IEnumerator getOwners(Action<List<string>> consumer)
     {
-        var request = new QueryUnityRequest<GetOwnersFunction, GetOwnersOutputDTOBase>(url, contract);
-        yield return request.Query(new GetOwnersFunction() { }, contract);
+        var request = new QueryUnityRequest<GetOwnersFunction, GetOwnersOutputDTOBase>(network.provider, network.contractAddress);
+        yield return request.Query(new GetOwnersFunction() { }, network.contractAddress);
         consumer.Invoke(request.Result.ReturnValue1);
         yield break;
     }
@@ -33,8 +42,8 @@ public class EthereumClientService
         BigInteger index = 0;
         while (true)
         {
-            var request = new QueryUnityRequest<GetLandFunction, GetLandOutputDTO>(url, contract);
-            yield return request.Query(new GetLandFunction() { Owner = owner, Index = index }, contract);
+            var request = new QueryUnityRequest<GetLandFunction, GetLandOutputDTO>(network.provider, network.contractAddress);
+            yield return request.Query(new GetLandFunction() { Owner = owner, Index = index }, network.contractAddress);
             index++;
             var result = request.Result;
             if (result == null || result.Time <= 0)
@@ -43,12 +52,12 @@ public class EthereumClientService
                 yield break;
             }
             var land = new Land();
-            land.x1 = result.X1;
-            land.y1 = result.Y1;
-            land.x2 = result.X2;
-            land.y2 = result.Y2;
+            land.x1 = (long)result.X1;
+            land.y1 = (long)result.Y1;
+            land.x2 = (long)result.X2;
+            land.y2 = (long)result.Y2;
             land.ipfsKey = result.Hash;
-            land.time = result.Time;
+            land.time = (long)result.Time;
             lands.Add(land);
         }
     }

@@ -18,4 +18,16 @@ public class VoxelPosition
         local.z -= chunk.z * Chunk.CHUNK_WIDTH;
     }
 
+    public Vector3Int ToWorld()
+    {
+        return ToWorld(chunk, local);
+    }
+
+    public static Vector3Int ToWorld(Vector3Int chunk, Vector3Int local)
+    {
+        return new Vector3Int(chunk.x * Chunk.CHUNK_WIDTH + local.x,
+            chunk.y * Chunk.CHUNK_HEIGHT + local.y,
+            chunk.z * Chunk.CHUNK_WIDTH + local.z);
+    }
+
 }

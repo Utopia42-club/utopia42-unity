@@ -8,7 +8,9 @@ public class Loading : MonoBehaviour
 
     private void Start()
     {
-        GameManager.INSTANCE.stateChange.AddListener(state =>
+        var manager = GameManager.INSTANCE;
+        this.gameObject.SetActive(manager.GetSTate() == GameManager.State.LOADING);
+        manager.stateChange.AddListener(state =>
             this.gameObject.SetActive(state == GameManager.State.LOADING)
         );
     }
