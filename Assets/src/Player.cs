@@ -49,7 +49,7 @@ public class Player : MonoBehaviour
         string wallet = Settings.WalletId();
         if (wallet != null)
             lands = VoxelService.INSTANCE.getLandsFor(wallet);
-        
+
         this.lands = lands != null ? lands : new List<Land>();
     }
 
@@ -132,7 +132,8 @@ public class Player : MonoBehaviour
         if (Input.GetButtonUp("Sprint"))
             sprinting = false;
 
-        if (grounded && Input.GetButtonDown("Jump"))
+        //if (grounded && Input.GetButtonDown("Jump"))
+        if (Input.GetButtonDown("Jump"))
             jumpRequest = true;
 
         if (highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))
