@@ -10,36 +10,77 @@ public class TargetLines : MonoBehaviour
     [SerializeField]
     Text positionText;
     [SerializeField]
-    RectTransform landRect;
+    RectPane landRect;
     private bool dragging = false;
     private Vector3 lastDragPos;
+    private Vector3Int startDrawPos;
+    private bool drawing = false;
+    private GameObject drawingObject;
 
     void Update()
     {
         var mousePos = Input.mousePosition;
         var mousePosInt = Vectors.FloorToInt(mousePos);
-        var realPosition = Vectors.FloorToInt(mousePos - landRect.position);
+        var realPosition = Vectors.FloorToInt(mousePos - landRect.GetComponent<RectTransform>().position);
         positionText.text = string.Format("{0} {1}", realPosition.x, realPosition.y);
 
-        if (!dragging && Input.GetMouseButtonDown(0))
+        if (!drawing && !dragging && Input.GetMouseButtonDown(0))
         {
-            lastDragPos = mousePosInt;
-            dragging = true;
+            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
+                || Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand))
+                StartDraw(realPosition);
+            else
+                StartDrag(mousePosInt);
         }
 
-        if (!Input.GetMouseButton(0)) dragging = false;
+        if (!Input.GetMouseButton(0))
+            dragging = drawing = false;
 
         if (dragging)
-        {
-            landRect.localPosition += mousePosInt - lastDragPos;
-            lastDragPos = mousePosInt;
-        }
+            Drag(mousePosInt);
+        else if (drawing)
+            Draw(realPosition);
+
         if (Input.GetMouseButtonDown(1))
-        {
             GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
-        }
 
         SetLinesPos(mousePosInt);
+    }
+
+    private void Draw(Vector3Int mousePos)
+    {
+        var drawingRect = drawingObject.GetComponent<RectTransform>();
+        var rectPos = startDrawPos;
+        float x2 = Mathf.Max(rectPos.x, mousePos.x);
+        float x1 = Mathf.Min(rectPos.x, mousePos.x);
+        float y2 = Mathf.Max(rectPos.y, mousePos.y);
+        float y1 = Mathf.Min(rectPos.y, mousePos.y);
+        var rect = new Rect(x1, y1, x2 - x1, y2 - y1);
+        if (!landRect.OverlapsOthers(drawingObject, rect))
+        {
+            drawingRect.localPosition = new Vector3(x1, y1, 0);
+            drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rect.height);
+            drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rect.width);
+        }
+    }
+
+    private void StartDrag(Vector3Int mousePosInt)
+    {
+        dragging = true;
+        lastDragPos = mousePosInt;
+    }
+
+    private void Drag(Vector3Int mousePosInt)
+    {
+        landRect.GetComponent<RectTransform>().localPosition += mousePosInt - lastDragPos;
+        lastDragPos = mousePosInt;
+    }
+
+    private void StartDraw(Vector3Int pos)
+    {
+        startDrawPos = pos;
+        drawing = true;
+        drawingObject = landRect.DrawAt(pos.x, pos.y);
     }
 
     private void SetLinesPos(Vector3 mousePos)

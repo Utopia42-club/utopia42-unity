@@ -7,7 +7,8 @@ public class RectPane : MonoBehaviour
 {
     [SerializeField]
     private RectTransform playerPosIndicator;
-    private readonly List<GameObject> landIndicators = new List<GameObject>();
+    private readonly HashSet<GameObject> landIndicators = new HashSet<GameObject>();
+    private readonly HashSet<GameObject> drawnLandIndicators = new HashSet<GameObject>();
 
     void Start()
     {
@@ -19,11 +20,6 @@ public class RectPane : MonoBehaviour
             if (s == GameManager.State.MAP) Init();
             else DestroyRects();
         });
-    }
-
-    void Update()
-    {
-
     }
 
     private void Init()
@@ -38,9 +34,9 @@ public class RectPane : MonoBehaviour
 
         foreach (var entry in service.GetOwnersLands())
         {
-            bool owned = entry.Key.Equals(Settings.WalletId());
+            Color c = entry.Key.Equals(Settings.WalletId()) ? Color.green : Color.gray;
             foreach (var land in entry.Value)
-                Add(land, owned);
+                Add(land.x1, land.x2, land.y1, land.y2, c);
         }
     }
 
@@ -51,7 +47,7 @@ public class RectPane : MonoBehaviour
         landIndicators.Clear();
     }
 
-    private void Add(Land land, bool owned)
+    private GameObject Add(long x1, long x2, long y1, long y2, Color color)
     {
         var landObject = new GameObject();
         var transform = landObject.AddComponent<RectTransform>();
@@ -59,10 +55,33 @@ public class RectPane : MonoBehaviour
         transform.SetParent(this.transform);
         transform.SetAsFirstSibling();
         transform.pivot = new Vector2(0, 0);
-        transform.localPosition = new Vector3(land.x1, land.y1, 0);
-        transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, land.y2 - land.y1);
-        transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, land.x2 - land.x1);
+        transform.localPosition = new Vector3(x1, y1, 0);
+        transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y2 - y1);
+        transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x2 - x1);
         landObject.AddComponent<CanvasRenderer>();
-        landObject.AddComponent<Image>().color = owned ? Color.green : Color.gray;
+        landObject.AddComponent<Image>().color = color;
+        landIndicators.Add(landObject);
+        return landObject;
+    }
+
+    internal GameObject DrawAt(long x, long y)
+    {
+        GameObject obj = Add(x, x, y, y, Color.blue);
+        drawnLandIndicators.Add(obj);
+        return obj;
+    }
+
+    internal bool OverlapsOthers(GameObject landIndicator, Rect rect)
+    {
+        foreach (var li in landIndicators)
+        {
+            if (li != landIndicator)
+            {
+                var transform = li.GetComponent<RectTransform>();
+                var r = transform.rect;
+                if (new Rect(transform.localPosition.x, transform.localPosition.y, r.width, r.height).Overlaps(rect)) return true;
+            }
+        }
+        return false;
     }
 }

@@ -4094,7 +4094,7 @@ MonoBehaviour:
   vertical: {fileID: 2015532234}
   horizontal: {fileID: 721501780}
   positionText: {fileID: 907688334}
-  landRect: {fileID: 1022591946}
+  landRect: {fileID: 1022591947}
 --- !u!1 &1403063242
 GameObject:
   m_ObjectHideFlags: 0

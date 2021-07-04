@@ -13,7 +13,7 @@ public class World : MonoBehaviour
     private readonly Dictionary<Vector3Int, Chunk> chunks = new Dictionary<Vector3Int, Chunk>();
     //TODO check volatile documentation use sth like lock or semaphore
     private volatile bool creatingChunks = false;
-    private List<Chunk> chunkRequests = new List<Chunk>();
+    private HashSet<Chunk> chunkRequests = new HashSet<Chunk>();
     // Start is called before the first frame update
     public GameObject debugScreen;
 
@@ -28,22 +28,53 @@ public class World : MonoBehaviour
             debugScreen.SetActive(!debugScreen.activeSelf);
     }
 
-    public void Initialize(Vector3Int currChunk, bool clean)
+    private Chunk PopRequest()
     {
+        var iter = chunkRequests.GetEnumerator();
+        iter.MoveNext();
+        var chunk = iter.Current;
+        chunkRequests.Remove(chunk);
+        return chunk;
+    }
+
+    public bool Initialize(Vector3Int currChunk, bool clean)
+    {
+        if (clean) chunkRequests.Clear();
+        else
+        {
+            while (0 != chunkRequests.Count)
+            {
+                var chunk = PopRequest();
+                if (chunks.ContainsKey(chunk.coordinate))
+                    chunks.Remove(chunk.coordinate);
+            }
+        }
+        if (creatingChunks) return false;
         if (clean)
         {
+            foreach (var chunk in chunkRequests)
+            {
+                if (chunk.chunkObject != null)
+                {
+                    Destroy(chunk.chunkObject);
+                    chunk.chunkObject = null;
+                }
+            }
             chunkRequests.Clear();
 
             foreach (var chunk in garbageChunks.Values)
-                Destroy(chunk.chunkObject);
+                if (chunk.chunkObject != null)
+                    Destroy(chunk.chunkObject);
             garbageChunks.Clear();
 
             foreach (var chunk in chunks.Values)
-                Destroy(chunk.chunkObject);
+                if (chunk.chunkObject != null)
+                    Destroy(chunk.chunkObject);
             chunks.Clear();
         }
 
         OnPlayerChunkChanged(currChunk, true);
+        return true;
     }
 
     private void OnPlayerChunkChanged(Vector3Int currChunk, bool instantly)
@@ -64,14 +95,13 @@ public class World : MonoBehaviour
         creatingChunks = true;
         while (chunkRequests.Count != 0)
         {
-            var chunk = chunkRequests[0];
+            var chunk = PopRequest();
             if (chunk.IsActive() && !chunk.IsInited())
             {
                 chunk.Init();
                 if (!instantly)
                     yield return null;
             }
-            chunkRequests.RemoveAt(0);
         }
         creatingChunks = false;
         yield break;
@@ -90,9 +120,9 @@ public class World : MonoBehaviour
                 for (int z = from.z; z <= to.z; z++)
                 {
                     Vector3Int key = new Vector3Int(x, y, z);
-                    if (!chunks.ContainsKey(key))
+                    Chunk chunk;
+                    if (!chunks.TryGetValue(key, out chunk))
                     {
-                        Chunk chunk;
                         if (garbageChunks.TryGetValue(key, out chunk))
                         {
                             chunk.SetActive(true);
@@ -102,9 +132,10 @@ public class World : MonoBehaviour
                         else
                         {
                             chunks[key] = chunk = new Chunk(key, this);
-                            chunkRequests.Add(chunk);
+                            chunk.SetActive(true);
                         }
                     }
+                    if (!chunk.IsInited()) chunkRequests.Add(chunk);
                     unseens.Remove(key);
                 }
             }
@@ -120,14 +151,20 @@ public class World : MonoBehaviour
                 chunks.Remove(key);
             }
             ch.SetActive(false);
-            garbageChunks[key] = ch;
+            if (ch.IsInited())
+                garbageChunks[key] = ch;
         }
 
-        if(garbageChunks.Count > 512)
+        if (garbageChunks.Count > 5000)
         {
-            foreach(var entry in garbageChunks)
-                Destroy(entry.Value.chunkObject);
-            garbageChunks.Clear();
+            while (garbageChunks.Count > 2500)
+            {
+                var iter = garbageChunks.Keys.GetEnumerator();
+                iter.MoveNext();
+                var key = iter.Current;
+                Destroy(garbageChunks[key].chunkObject);
+                garbageChunks.Remove(key);
+            }
         }
     }
 

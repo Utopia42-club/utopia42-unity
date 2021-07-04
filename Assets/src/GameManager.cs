@@ -55,7 +55,8 @@ public class GameManager : MonoBehaviour
         yield return null;
         pos = FindStartingY(pos);
         Player.INSTANCE.transform.position = pos;
-        World.INSTANCE.Initialize(new VoxelPosition(pos).chunk, clean);
+        var world = World.INSTANCE;
+        while (!world.Initialize(new VoxelPosition(pos).chunk, clean)) yield return null;
         worldInited = true;
         SetState(State.PLAYING);
     }

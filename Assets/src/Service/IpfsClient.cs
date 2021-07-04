@@ -15,7 +15,7 @@ public class IpfsClient
     }
 
     public IEnumerator GetLandDetails(string id, Action<LandDetails> consumer)
-    {
+    {   
         string url = SERVER_URL + "/cat?arg=/ipfs/" + id;
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
