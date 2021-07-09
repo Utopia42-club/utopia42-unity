@@ -42,7 +42,7 @@ public class Player : MonoBehaviour
         return this.lands;
     }
 
-    public void OnWalletChanged()
+    public void ResetLands()
     {
         List<Land> lands = null;
 

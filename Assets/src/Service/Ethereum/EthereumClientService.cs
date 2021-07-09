@@ -36,7 +36,7 @@ public class EthereumClientService
         yield break;
     }
 
-    IEnumerator getLandsForOwner(string owner, Action<List<Land>> consumer)
+    public IEnumerator getLandsForOwner(string owner, Action<List<Land>> consumer)
     {
         var lands = new List<Land>();
         BigInteger index = 0;

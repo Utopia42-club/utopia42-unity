@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -24,7 +24,7 @@ public class GameManager : MonoBehaviour
         }
 
         var player = Player.INSTANCE;
-        player.OnWalletChanged();
+        player.ResetLands();
 
         var pos = new Vector3(10, Chunk.CHUNK_HEIGHT + 10, 10);
 
@@ -51,10 +51,18 @@ public class GameManager : MonoBehaviour
     private IEnumerator DoMovePlayerTo(Vector3 pos, bool clean)
     {
         SetState(State.LOADING);
-        Loading.INSTANCE.UpdateText("Creating the world...");
+        Loading.INSTANCE.UpdateText("Positioning the player...");
         yield return null;
         pos = FindStartingY(pos);
         Player.INSTANCE.transform.position = pos;
+        yield return InitWorld(pos, clean);
+    }
+
+    private IEnumerator InitWorld(Vector3 pos, bool clean)
+    {
+        SetState(State.LOADING);
+        Loading.INSTANCE.UpdateText("Creating the world...");
+        yield return null;
         var world = World.INSTANCE;
         while (!world.Initialize(new VoxelPosition(pos).chunk, clean)) yield return null;
         worldInited = true;
@@ -140,11 +148,36 @@ public class GameManager : MonoBehaviour
         Loading.INSTANCE.UpdateText("Saving Changes To Files...");
         StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, ids =>
         {
-            string url = "http://104.207.144.107:5002/save/" + string.Join(",", ids) + "?wallet=" + wallet + "&networkId=" + EthereumClientService.INSTANCE.GetNetwork().id;
-            Application.OpenURL(url);
-            //GUIUtility.systemCopyBuffer = url;
-            SetState(State.PLAYING);
+            SetState(State.BROWSER_CONNECTION);
+            Action done = () => SetState(State.PLAYING);
+            BrowserConnector.INSTANCE.Call("save", string.Join(",", ids), done, done);
         }));
+    }
+
+    public void Buy(List<Land> lands)
+    {
+        List<long> parameters = new List<long>();
+        foreach (var l in lands)
+        {
+            parameters.Add(l.x1);
+            parameters.Add(l.y1);
+            parameters.Add(l.x2);
+            parameters.Add(l.y2);
+        }
+        SetState(State.BROWSER_CONNECTION);
+        BrowserConnector.INSTANCE.Call("buy", string.Join(",", parameters),
+            () => StartCoroutine(ReloadOwnerLands()),
+            () => SetState(State.PLAYING));
+    }
+
+    private IEnumerator ReloadOwnerLands()
+    {
+        SetState(State.LOADING);
+        Loading.INSTANCE.UpdateText("Reloading Your Lands...");
+        yield return VoxelService.INSTANCE.ReloadLandsFor(Settings.WalletId());
+        var player = Player.INSTANCE;
+        player.ResetLands();
+        yield return InitWorld(player.transform.position, true);
     }
 
     public static GameManager INSTANCE
@@ -157,6 +190,6 @@ public class GameManager : MonoBehaviour
 
     public enum State
     {
-        LOADING, SETTINGS, PLAYING, MAP
+        LOADING, SETTINGS, PLAYING, MAP, BROWSER_CONNECTION
     }
 }

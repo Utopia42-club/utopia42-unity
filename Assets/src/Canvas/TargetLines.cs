@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,7 +35,10 @@ public class TargetLines : MonoBehaviour
         }
 
         if (!Input.GetMouseButton(0))
-            dragging = drawing = false;
+        {
+            if (drawing) FinishDraw();
+            dragging = false;
+        }
 
         if (dragging)
             Drag(mousePosInt);
@@ -45,6 +49,16 @@ public class TargetLines : MonoBehaviour
             GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
 
         SetLinesPos(mousePosInt);
+    }
+
+    private void FinishDraw()
+    {
+        drawing = false;
+
+        var drawingRect = drawingObject.GetComponent<RectTransform>();
+        var rect = drawingRect.rect;
+        if ((long)rect.xMin == (long)rect.xMax || (long)rect.yMin == (long)rect.yMax)
+            landRect.Delete(drawingObject);
     }
 
     private void Draw(Vector3Int mousePos)

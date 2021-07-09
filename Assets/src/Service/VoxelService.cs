@@ -201,7 +201,7 @@ public class VoxelService
             var ld = new LandDetails();
             ld.changes = new Dictionary<string, VoxelChange>();
             ld.region = l;
-            ld.v = "0.0.0";
+            ld.v = "0.0.1";
             ld.wallet = wallet;
             regionChanges.Add(ld);
         }
@@ -252,5 +252,10 @@ public class VoxelService
     public bool IsInitialized()
     {
         return this.changes != null;
+    }
+
+    public IEnumerator ReloadLandsFor(string wallet)
+    {
+        yield return EthereumClientService.INSTANCE.getLandsForOwner(wallet, lands => ownersLands[wallet] = lands);
     }
 }

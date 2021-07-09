@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,6 +46,7 @@ public class RectPane : MonoBehaviour
         foreach (var lo in landIndicators)
             Destroy(lo);
         landIndicators.Clear();
+        drawnLandIndicators.Clear();
     }
 
     private GameObject Add(long x1, long x2, long y1, long y2, Color color)
@@ -62,6 +64,13 @@ public class RectPane : MonoBehaviour
         landObject.AddComponent<Image>().color = color;
         landIndicators.Add(landObject);
         return landObject;
+    }
+
+    internal void Delete(GameObject drawingObject)
+    {
+        Destroy(drawingObject);
+        drawnLandIndicators.Remove(drawingObject);
+        landIndicators.Remove(drawingObject);
     }
 
     internal GameObject DrawAt(long x, long y)
@@ -83,5 +92,28 @@ public class RectPane : MonoBehaviour
             }
         }
         return false;
+    }
+
+    internal List<Land> GetDrawn()
+    {
+        var drawn = new List<Land>();
+        foreach (var indicator in drawnLandIndicators)
+        {
+            var transform = indicator.GetComponent<RectTransform>();
+            var r = transform.rect;
+            var land = new Land();
+            land.x1 = (long)transform.localPosition.x;
+            land.y1 = (long)transform.localPosition.y;
+            land.x2 = land.x1 + (long)r.width;
+            land.y2 = land.y1 + (long)r.height;
+            drawn.Add(land);
+        }
+
+        return drawn;
+    }
+
+    internal bool HasDrawn()
+    {
+        return drawnLandIndicators.Count != 0;
     }
 }
