@@ -1,11 +1,6 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
-
-class Keys
-{
-    public static readonly string WALLET = "WALLET";
-    public static readonly string NETWORK = "NETWORK";
-}
 
 public class Settings : MonoBehaviour
 {
@@ -30,6 +25,19 @@ public class Settings : MonoBehaviour
             ResetInputs();
             gameObject.SetActive(state == GameManager.State.SETTINGS);
         });
+        if (WebBridge.IsPresent())
+        {
+            WebBridge.CallAsync<ConnectionInformation>("connectMetamask", "", (ci) =>
+            {
+                Debug.Log("Connection response received network:" + ci.network + ", wallet:" + ci.wallet);
+                if (ci.network.HasValue && ci.wallet != null)
+                {
+                    PlayerPrefs.SetInt(Keys.NETWORK, ci.network.Value);
+                    PlayerPrefs.SetString(Keys.WALLET, ci.wallet);
+                    ResetInputs();
+                }
+            });
+        }
     }
 
     private void ResetInputs()
@@ -75,14 +83,8 @@ public class Settings : MonoBehaviour
     private void DoSubmit(string walletId)
     {
         if (networkInput.interactable)
-        {
             PlayerPrefs.SetInt(Keys.NETWORK, EthNetwork.NETWORKS[networkInput.value].id);
-            PlayerPrefs.SetString(Keys.WALLET, walletId);
-            GameManager.INSTANCE.SettingsChanged();
-            return;
-        }
-
-        if (Equals(WalletId(), walletId))
+        else if (Equals(WalletId(), walletId))
         {
             GameManager.INSTANCE.ExitSettings();
             return;
@@ -106,4 +108,17 @@ public class Settings : MonoBehaviour
     {
         return EthNetwork.GetById(PlayerPrefs.GetInt(Keys.NETWORK, EthNetwork.NETWORKS[0].id));
     }
+}
+
+[Serializable]
+class ConnectionInformation
+{
+    public string wallet;
+    public int? network;
+}
+
+class Keys
+{
+    public static readonly string WALLET = "WALLET";
+    public static readonly string NETWORK = "NETWORK";
 }

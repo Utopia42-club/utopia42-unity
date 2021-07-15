@@ -150,22 +150,14 @@ public class GameManager : MonoBehaviour
         {
             SetState(State.BROWSER_CONNECTION);
             Action done = () => SetState(State.PLAYING);
-            BrowserConnector.INSTANCE.Call("save", string.Join(",", ids), done, done);
+            BrowserConnector.INSTANCE.Save(ids, done, done);
         }));
     }
 
     public void Buy(List<Land> lands)
     {
-        List<long> parameters = new List<long>();
-        foreach (var l in lands)
-        {
-            parameters.Add(l.x1);
-            parameters.Add(l.y1);
-            parameters.Add(l.x2);
-            parameters.Add(l.y2);
-        }
         SetState(State.BROWSER_CONNECTION);
-        BrowserConnector.INSTANCE.Call("buy", string.Join(",", parameters),
+        BrowserConnector.INSTANCE.Buy(lands,
             () => StartCoroutine(ReloadOwnerLands()),
             () => SetState(State.PLAYING));
     }
