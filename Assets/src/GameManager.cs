@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
         var player = Player.INSTANCE;
         player.ResetLands();
 
-        var pos = new Vector3(10, Chunk.CHUNK_HEIGHT + 10, 10);
+        var pos = new Vector3(0, Chunk.CHUNK_HEIGHT + 10, 0);
 
         var lands = player.GetLands();
         if (lands.Count > 0)

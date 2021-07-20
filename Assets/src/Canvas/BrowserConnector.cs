@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class BrowserConnector : MonoBehaviour
 {
-    private static string WEB_APP_URL = "http://app.utopia42.club";
+    private static string WEB_APP_URL = "http://app.utopia42.club/home";
     private string currentUrl;
     [SerializeField]
     private Button doneButton;
@@ -45,14 +45,9 @@ public class BrowserConnector : MonoBehaviour
         }
         else
         {
-            List<long> parameters = new List<long>();
+            List<string> parameters = new List<string>();
             foreach (var l in lands)
-            {
-                parameters.Add(l.x1);
-                parameters.Add(l.y1);
-                parameters.Add(l.x2);
-                parameters.Add(l.y2);
-            }
+                parameters.Add(string.Join("_", new long[] { l.x1, l.y1, l.x2, l.y2 }));
             CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
         }
     }
@@ -61,7 +56,7 @@ public class BrowserConnector : MonoBehaviour
     {
         var wallet = Settings.WalletId();
         int network = EthereumClientService.INSTANCE.GetNetwork().id;
-        currentUrl = string.Format("{0}/{1}/{2}?wallet={3}&networkId={4}", WEB_APP_URL, method, parameters, wallet, network);
+        currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}", WEB_APP_URL, method, parameters, wallet, network);
         Application.OpenURL(currentUrl);
         ResetButtons(onDone, onCancel);
     }

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,7 +26,7 @@ public class Settings : MonoBehaviour
         });
         if (WebBridge.IsPresent())
         {
-            WebBridge.CallAsync<ConnectionInformation>("connectMetamask", "", (ci) =>
+            WebBridge.CallAsync<ConnectionDetail>("connectMetamask", "", (ci) =>
             {
                 Debug.Log("Connection response received network:" + ci.network + ", wallet:" + ci.wallet);
                 if (ci.network.HasValue && ci.wallet != null)
@@ -108,13 +107,14 @@ public class Settings : MonoBehaviour
     {
         return EthNetwork.GetById(PlayerPrefs.GetInt(Keys.NETWORK, EthNetwork.NETWORKS[0].id));
     }
-}
 
-[Serializable]
-class ConnectionInformation
-{
-    public string wallet;
-    public int? network;
+    public static ConnectionDetail ConnectionDetail()
+    {
+        var detail = new ConnectionDetail();
+        detail.wallet = WalletId();
+        detail.network = Network().id;
+        return detail;
+    }
 }
 
 class Keys

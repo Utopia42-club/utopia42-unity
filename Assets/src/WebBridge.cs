@@ -19,10 +19,19 @@ public class WebBridge : MonoBehaviour
         return Application.platform == RuntimePlatform.WebGLPlayer && isBridgePresent();
     }
 
+    public static string PrepareParameters(object parameter)
+    {
+        var req = new Request<object>();
+        req.connection = Settings.ConnectionDetail();
+        req.body = parameter;
+
+        return JsonConvert.SerializeObject(req);
+    }
+
     public static T Call<T>(string function, object parameter)
     {
-        string paramStr = JsonConvert.SerializeObject(parameter);
-        var result = callOnBridge(function, paramStr);
+        string requestStr = PrepareParameters(parameter);
+        var result = callOnBridge(function, requestStr);
         if (result != null)
             return JsonConvert.DeserializeObject<T>(result);
         return default(T);
@@ -63,4 +72,11 @@ class Response
 {
     public string callId;
     public string body;
+}
+
+[Serializable]
+class Request<T>
+{
+    public T body;
+    public ConnectionDetail connection;
 }
