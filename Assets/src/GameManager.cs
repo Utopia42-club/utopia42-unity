@@ -72,7 +72,7 @@ public class GameManager : MonoBehaviour
     private Vector3 FindStartingY(Vector3 pos)
     {
         var service = VoxelService.INSTANCE;
-        var feet = Vectors.FloorToInt(pos);
+        var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, 0f, .5f);
         while (true)
         {
             bool coll = false;

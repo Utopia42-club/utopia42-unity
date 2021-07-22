@@ -44,6 +44,7 @@ internal class GridLine : MonoBehaviour
     {
         if (this.index == index) return;
         this.index = index;
+        gameObject.GetComponent<Image>().color = index == 0 ? Color.red : Color.green;
         gameObject.name = index + " " + vertical;
         rectTransform.localPosition = (vertical ? Vector3.right : Vector3.up) * SPACE * index;
     }
