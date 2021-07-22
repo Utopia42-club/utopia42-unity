@@ -90,18 +90,15 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        bool escape = Input.GetKeyDown(KeyCode.Escape);
-        if (escape)
+        if (Input.GetButtonDown("Cancel") && worldInited && (state == State.MAP || state == State.SETTINGS))
+            SetState(State.PLAYING);
+        else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
+            SetState(State.SETTINGS);
+        else if (Input.GetButtonDown("Map"))
         {
-            if (state == State.MAP) SetState(State.PLAYING);
-            else if (state != State.LOADING)
-                SetState((state == State.SETTINGS && worldInited) ? State.PLAYING : State.SETTINGS);
-        }
-        else
-        {
-            bool map = Input.GetKeyDown(KeyCode.M);
-            if (map && state == State.MAP) SetState(State.PLAYING);
-            else if (map && state == State.PLAYING)
+            if (state == State.MAP)
+                SetState(State.PLAYING);
+            else if (state == State.PLAYING)
                 SetState(State.MAP);
         }
     }

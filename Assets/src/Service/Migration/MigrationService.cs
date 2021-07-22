@@ -3,11 +3,10 @@ using System.Collections.Generic;
 
 public class MigrationService
 {
-    private List<Migration> migrators = new();
+    private List<Migration> migrators = new List<Migration>();
 
     public MigrationService()
     {
-        migrators.Add();
     }
 
 }

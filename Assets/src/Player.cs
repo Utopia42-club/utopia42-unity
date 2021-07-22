@@ -24,6 +24,7 @@ public class Player : MonoBehaviour
     private Vector3 velocity;
     private float verticalMomentum = 0;
     private bool jumpRequest;
+    private bool floating = false;
 
     private Vector3Int lastChunk;
 
@@ -99,7 +100,7 @@ public class Player : MonoBehaviour
     private void CalculateVelocity()
     {
         // Affect vertical momentum with gravity.
-        if (verticalMomentum > gravity)
+        if (!floating && verticalMomentum > gravity)
             verticalMomentum += Time.fixedDeltaTime * gravity;
 
         // if we're sprinting, use the sprint multiplier.
@@ -110,6 +111,8 @@ public class Player : MonoBehaviour
 
         // Apply vertical momentum (falling/jumping).
         velocity += Vector3.up * verticalMomentum * Time.fixedDeltaTime;
+        if (floating)
+            verticalMomentum = 0;
 
         if ((velocity.z > 0 && front) || (velocity.z < 0 && back))
             velocity.z = 0;
@@ -132,8 +135,10 @@ public class Player : MonoBehaviour
         if (Input.GetButtonUp("Sprint"))
             sprinting = false;
 
+        if (Input.GetButtonDown("Toggle Floating"))
+            floating = !floating;
         //if (grounded && Input.GetButtonDown("Jump"))
-        if (Input.GetButtonDown("Jump"))
+        if (Input.GetButton("Jump"))
             jumpRequest = true;
 
         if (highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))

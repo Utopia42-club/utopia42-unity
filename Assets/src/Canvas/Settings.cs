@@ -28,7 +28,6 @@ public class Settings : MonoBehaviour
         {
             WebBridge.CallAsync<ConnectionDetail>("connectMetamask", "", (ci) =>
             {
-                Debug.Log("Connection response received network:" + ci.network + ", wallet:" + ci.wallet);
                 if (ci.network.HasValue && ci.wallet != null)
                 {
                     PlayerPrefs.SetInt(Keys.NETWORK, ci.network.Value);

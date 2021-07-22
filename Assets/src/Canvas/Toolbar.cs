@@ -36,8 +36,8 @@ public class Toolbar : MonoBehaviour
 
     private void Update()
     {
-        bool dec = Input.GetKeyDown(KeyCode.Q);
-        bool inc = Input.GetKeyDown(KeyCode.E);
+        bool dec = Input.GetButtonDown("Select Left");
+        bool inc = Input.GetButtonDown("Select Right");
         if (dec || inc)
         {
             if (dec) selectedSlot--;

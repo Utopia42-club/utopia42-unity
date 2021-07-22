@@ -146,7 +146,8 @@ public class VoxelService
             foreach (var entry in land.changes)
             {
                 var change = entry.Value;
-                var position = new VoxelPosition(change.voxel[0], change.voxel[1], change.voxel[2]);
+                var coords = entry.Key.Split('_');
+                var position = new VoxelPosition(float.Parse(coords[0]), float.Parse(coords[1]), float.Parse(coords[2]));
 
                 var type = GetBlockType(change.name);
                 if (type == null) continue;
