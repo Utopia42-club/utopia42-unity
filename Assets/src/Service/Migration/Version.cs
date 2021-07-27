@@ -1,21 +1,21 @@
 using System;
 
-internal class ApplicationVersion : IComparable<ApplicationVersion>
+internal class Version : IComparable<Version>
 {
     private readonly int[] parts;
 
-    public ApplicationVersion(int p1, int p2, int p3)
+    public Version(int p1, int p2, int p3)
     {
         parts = new int[] { p1, p2, p3 };
     }
 
-    public ApplicationVersion(string str)
+    public Version(string str)
     {
         var strParts = str.Split('.');
         parts = new int[] { int.Parse(strParts[0]), int.Parse(strParts[1]), int.Parse(strParts[2]) };
     }
 
-    public int CompareTo(ApplicationVersion other)
+    public int CompareTo(Version other)
     {
         if (other == null) return 1;
 
@@ -33,7 +33,7 @@ internal class ApplicationVersion : IComparable<ApplicationVersion>
         if ((obj == null) || !this.GetType().Equals(obj.GetType()))
             return false;
 
-        return CompareTo((ApplicationVersion)obj) == 0;
+        return CompareTo((Version)obj) == 0;
     }
 
     public override int GetHashCode()

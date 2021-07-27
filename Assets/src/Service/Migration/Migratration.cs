@@ -2,21 +2,21 @@ using System.Collections.Generic;
 
 internal abstract class Migration
 {
-    private readonly HashSet<ApplicationVersion> sourceVersions;
-    private readonly ApplicationVersion targetVersion;
+    private readonly HashSet<Version> sourceVersions;
+    private readonly Version targetVersion;
 
-    protected Migration(ApplicationVersion[] sourceVersions, ApplicationVersion targetVersion)
+    protected Migration(Version[] sourceVersions, Version targetVersion)
     {
-        this.sourceVersions = new HashSet<ApplicationVersion>(sourceVersions);
+        this.sourceVersions = new HashSet<Version>(sourceVersions);
         this.targetVersion = targetVersion;
     }
 
-    public bool Accepts(ApplicationVersion version)
+    public bool Accepts(Version version)
     {
         return sourceVersions.Contains(version);
     }
 
-    public ApplicationVersion GetTarget()
+    public Version GetTarget()
     {
         return targetVersion;
     }
