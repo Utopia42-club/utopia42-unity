@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 internal class GridLine : MonoBehaviour
 {
-    public static int SPACE = 100;
+    public static int SPACE = 50;
     private static int THICKNESS = 1;
     private RectTransform rectTransform;
     private bool vertical;
