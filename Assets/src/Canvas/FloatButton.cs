@@ -2,13 +2,17 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ActionButton : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
+public class FloatButton : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 {
     private bool pressed;
+    private bool selected;
+
     private Image image;
     private Color orgColor;
-    
+
     [SerializeField] public Color pressedColor = Color.gray;
+    [SerializeField] public Color selectedColor = Color.green;
+
 
     // Start is called before the first frame update
     void Start()
@@ -32,12 +36,18 @@ public class ActionButton : MonoBehaviour, IPointerUpHandler, IPointerDownHandle
     public void OnPointerUp(PointerEventData eventData)
     {
         pressed = false;
-        image.color = orgColor;
+        selected = !selected;
+        image.color = selected ? selectedColor : orgColor;
     }
 
     public bool isPressed()
     {
         return pressed;
+    }
+
+    public bool isSelected()
+    {
+        return selected;
     }
 
 }
