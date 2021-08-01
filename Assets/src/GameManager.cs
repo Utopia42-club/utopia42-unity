@@ -101,6 +101,13 @@ public class GameManager : MonoBehaviour
             else if (state == State.PLAYING)
                 SetState(State.MAP);
         }
+        else if (Input.GetButtonDown("Inventory"))
+        {
+            if (state == State.INVENTORY)
+                SetState(State.PLAYING);
+            else if (state == State.PLAYING)
+                SetState(State.INVENTORY);
+        }
     }
 
     internal void ExitSettings()
@@ -179,6 +186,6 @@ public class GameManager : MonoBehaviour
 
     public enum State
     {
-        LOADING, SETTINGS, PLAYING, MAP, BROWSER_CONNECTION
+        LOADING, SETTINGS, PLAYING, MAP, BROWSER_CONNECTION, INVENTORY
     }
 }

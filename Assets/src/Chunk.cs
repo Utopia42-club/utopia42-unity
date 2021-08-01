@@ -152,11 +152,11 @@ public class Chunk
         y *= Voxels.NormalizedBlockTextureSize;
 
         y = 1f - y - Voxels.NormalizedBlockTextureSize;
-
-        uvs.Add(new Vector2(x, y));
-        uvs.Add(new Vector2(x, y + Voxels.NormalizedBlockTextureSize));
-        uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize, y));
-        uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize, y + Voxels.NormalizedBlockTextureSize));
+        float eps = 0.01f;
+        uvs.Add(new Vector2(x + eps, y + eps));
+        uvs.Add(new Vector2(x + eps, y + Voxels.NormalizedBlockTextureSize - eps));
+        uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize - eps, y + eps));
+        uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize - eps, y + Voxels.NormalizedBlockTextureSize - eps));
     }
 
     public void DeleteVoxel(VoxelPosition pos)

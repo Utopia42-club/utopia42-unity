@@ -17,8 +17,16 @@ public class World : MonoBehaviour
     // Start is called before the first frame update
     public GameObject debugScreen;
 
+    public GameObject inventory;
+    public GameObject cursorSlot;
+
     void Start()
     {
+        GameManager.INSTANCE.stateChange.AddListener(state =>
+        {
+            inventory.SetActive(state == GameManager.State.INVENTORY);
+            cursorSlot.SetActive(state == GameManager.State.INVENTORY);
+        });
     }
 
     // Update is called once per frame

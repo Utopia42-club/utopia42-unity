@@ -4,31 +4,29 @@ using UnityEngine.UI;
 
 public class Toolbar : MonoBehaviour
 {
-    private Dictionary<byte, Sprite> blockIcons = new Dictionary<byte, Sprite>();
-    private World world;
     private int selectedSlot = 0;
 
     public Player player;
     public RectTransform highlight;
-    public ItemSlot[] slots;
-    public Sprite[] sprites;
 
+    public GameObject slotPrefab;
+
+    private ItemSlotUI[] slots = new ItemSlotUI[9];
 
     private void Start()
     {
-        world = GameObject.Find("World").GetComponent<World>();
-
-        foreach (var sp in sprites)
+        HorizontalLayoutGroup layout = GetComponentInChildren<HorizontalLayoutGroup>();
+        for (int i = 1; i < 10; i++)
         {
-            var id = VoxelService.INSTANCE.GetBlockType(sp.name).id;
-            blockIcons[id] = sp;
-        }
+            GameObject newSlot = Instantiate(slotPrefab, layout.transform);
 
-        foreach (var slot in slots)
-        {
-            var id = slot.itemId;
-            slot.icon.sprite = blockIcons[id];
-            slot.icon.enabled = true;
+            ItemStack stack = new ItemStack((byte)i, Random.Range(2, 65));
+            ItemSlot slot = new ItemSlot();
+            slot.SetStack(stack);
+            var ui = newSlot.GetComponent<ItemSlotUI>();
+            slot.SetUi(ui);
+            slot.SetFromInventory(false);
+            slots[i - 1] = ui;
         }
 
         SelectedChanged();
@@ -43,21 +41,14 @@ public class Toolbar : MonoBehaviour
             if (dec) selectedSlot--;
             if (inc) selectedSlot++;
             selectedSlot = (selectedSlot + slots.Length) % slots.Length;
-            SelectedChanged();
         }
+        SelectedChanged();
     }
 
     private void SelectedChanged()
     {
-        highlight.position = slots[selectedSlot].icon.transform.position;
-        player.selectedBlockId = slots[selectedSlot].itemId;
+        highlight.position = slots[selectedSlot].transform.position;
+        player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
     }
 
-}
-
-[System.Serializable]
-public class ItemSlot
-{
-    public byte itemId;
-    public Image icon;
 }
