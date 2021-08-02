@@ -60,7 +60,7 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (GameManager.INSTANCE.GetSTate() != GameManager.State.PLAYING) return;
+        if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
         CalculateVelocity();
         if (jumpRequest)
             Jump();
@@ -70,7 +70,7 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        if (GameManager.INSTANCE.GetSTate() != GameManager.State.PLAYING) return;
+        if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
         GetPlayerInputs();
         placeCursorBlocks();
 

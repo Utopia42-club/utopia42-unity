@@ -18,7 +18,7 @@ public class BrowserConnector : MonoBehaviour
     void Start()
     {
         var manager = GameManager.INSTANCE;
-        gameObject.SetActive(manager.GetSTate() == GameManager.State.BROWSER_CONNECTION);
+        gameObject.SetActive(manager.GetState() == GameManager.State.BROWSER_CONNECTION);
         manager.stateChange.AddListener(state =>
             gameObject.SetActive(state == GameManager.State.BROWSER_CONNECTION)
         );

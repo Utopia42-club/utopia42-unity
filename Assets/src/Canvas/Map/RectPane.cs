@@ -14,7 +14,7 @@ public class RectPane : MonoBehaviour
     void Start()
     {
         var manager = GameManager.INSTANCE;
-        if (manager.GetSTate() == GameManager.State.MAP) Init();
+        if (manager.GetState() == GameManager.State.MAP) Init();
 
         manager.stateChange.AddListener(s =>
         {

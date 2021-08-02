@@ -137,7 +137,7 @@ public class GameManager : MonoBehaviour
         stateChange.Invoke(state);
     }
 
-    public State GetSTate()
+    public State GetState()
     {
         return state;
     }

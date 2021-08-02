@@ -34,6 +34,7 @@ public class Toolbar : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
         bool dec = Input.GetButtonDown("Select Left");
         bool inc = Input.GetButtonDown("Select Right");
         if (dec || inc)
@@ -48,7 +49,9 @@ public class Toolbar : MonoBehaviour
     private void SelectedChanged()
     {
         highlight.position = slots[selectedSlot].transform.position;
-        player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
+        if (slots[selectedSlot].GetItemSlot().GetStack() != null)
+            player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
+        else player.selectedBlockId = 0;
     }
 
 }

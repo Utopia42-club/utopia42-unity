@@ -1,17 +1,18 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class DragAndDropHandler : MonoBehaviour
 {
     [SerializeField] public ItemSlotUI cursorSlot = null;
     private ItemSlot cursorItemSlot;
 
-    [SerializeField] private GraphicRaycaster m_Raycaster = null;
-    private PointerEventData m_PointerEventData;
-    [SerializeField] private EventSystem m_EventSystem = null;
+    [SerializeField]
+    private GraphicRaycaster raycaster = null;
+    private PointerEventData pointerEventData;
+    [SerializeField]
+    private EventSystem eventSystem = null;
 
     World world;
 
@@ -23,7 +24,7 @@ public class DragAndDropHandler : MonoBehaviour
 
     private void Update()
     {
-        if (GameManager.INSTANCE.GetSTate() != GameManager.State.INVENTORY) return;
+        if (GameManager.INSTANCE.GetState() != GameManager.State.INVENTORY) return;
 
         cursorSlot.transform.position = Input.mousePosition;
 
@@ -74,11 +75,11 @@ public class DragAndDropHandler : MonoBehaviour
 
     private ItemSlotUI CheckForSlot()
     {
-        m_PointerEventData = new PointerEventData(m_EventSystem);
-        m_PointerEventData.position = Input.mousePosition;
+        pointerEventData = new PointerEventData(eventSystem);
+        pointerEventData.position = Input.mousePosition;
 
         List<RaycastResult> results = new List<RaycastResult>();
-        m_Raycaster.Raycast(m_PointerEventData, results);
+        raycaster.Raycast(pointerEventData, results);
 
         foreach (RaycastResult result in results)
         {
