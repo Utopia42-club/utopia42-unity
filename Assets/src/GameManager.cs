@@ -65,6 +65,13 @@ public class GameManager : MonoBehaviour
         yield return null;
         var world = World.INSTANCE;
         while (!world.Initialize(new VoxelPosition(pos).chunk, clean)) yield return null;
+        float total = world.CountChunksToCreate();
+        while (world.CountChunksToCreate() > 0)
+        {
+            var perc = ((total - world.CountChunksToCreate()) / total) * 100;
+            Loading.INSTANCE.UpdateText(string.Format("Creating the world {0}%", Mathf.FloorToInt(perc)));
+            yield return null;
+        }
         worldInited = true;
         SetState(State.PLAYING);
     }
@@ -94,6 +101,8 @@ public class GameManager : MonoBehaviour
             SetState(State.PLAYING);
         else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
             SetState(State.SETTINGS);
+        else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
+            SetState(State.PLAYING);
         else if (Input.GetButtonDown("Map"))
         {
             if (state == State.MAP)

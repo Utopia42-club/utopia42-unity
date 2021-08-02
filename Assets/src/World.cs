@@ -90,7 +90,7 @@ public class World : MonoBehaviour
         RequestChunkCreation(currChunk);
 
         if (!creatingChunks && chunkRequests.Count > 0)
-            StartCoroutine(CreateChunks(instantly));
+            StartCoroutine(CreateChunks(instantly ? 50 : 1));
     }
 
     public void OnPlayerChunkChanged(Vector3Int currChunk)
@@ -98,21 +98,31 @@ public class World : MonoBehaviour
         this.OnPlayerChunkChanged(currChunk, false);
     }
 
-    IEnumerator CreateChunks(bool instantly)
+    IEnumerator CreateChunks(int chunksPerFrame)
     {
         creatingChunks = true;
+        int todo = chunksPerFrame;
         while (chunkRequests.Count != 0)
         {
             var chunk = PopRequest();
             if (chunk.IsActive() && !chunk.IsInited())
             {
                 chunk.Init();
-                if (!instantly)
+                todo--;
+                if (todo <= 0)
+                {
+                    todo = chunksPerFrame;
                     yield return null;
+                }
             }
         }
         creatingChunks = false;
         yield break;
+    }
+
+    public int CountChunksToCreate()
+    {
+        return chunkRequests.Count;
     }
 
     private void RequestChunkCreation(Vector3Int centerChunk)

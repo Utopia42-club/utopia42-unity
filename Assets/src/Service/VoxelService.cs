@@ -165,14 +165,17 @@ public class VoxelService
     public IEnumerator Initialize(Loading loading, Action onDone)
     {
         if (IsInitialized()) yield break;
+        var migrationService = new MigrationService();
+        if (!migrationService.GetLatestVersion().Equals("0.1.0"))
+            throw new Exception("Unsupported migration latest verison.");
         var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
         yield return LoadDetails(loading, land =>
         {
+            land = migrationService.Migrate(land);
             foreach (var entry in land.changes)
             {
                 var change = entry.Value;
-                var coords = entry.Key.Split('_');
-                var position = new VoxelPosition(float.Parse(coords[0]), float.Parse(coords[1]), float.Parse(coords[2]));
+                var position = new VoxelPosition(LandDetails.PraseKey(entry.Key));
 
                 var type = GetBlockType(change.name);
                 if (type == null) continue;
@@ -200,7 +203,6 @@ public class VoxelService
         foreach (var val in ownersLands.Values)
             lands.AddRange(val);
 
-        var landsDetails = new LandDetails[lands.Count];
         var enums = new IEnumerator[lands.Count];
 
         for (int i = 0; i < lands.Count; i++)
@@ -227,7 +229,7 @@ public class VoxelService
             var ld = new LandDetails();
             ld.changes = new Dictionary<string, VoxelChange>();
             ld.region = l;
-            ld.v = "0.0.1";
+            ld.v = "0.1.0";
             ld.wallet = wallet;
             regionChanges.Add(ld);
         }
@@ -246,10 +248,9 @@ public class VoxelService
                     var land = lands[landIdx];
                     if (land.x1 <= worldPos.x && worldPos.x <= land.x2 && land.y1 <= worldPos.z && worldPos.z <= land.y2)
                     {
-                        var key = string.Format("{0}_{1}_{2}", worldPos.x, worldPos.y, worldPos.z);
+                        var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
                         var change = new VoxelChange();
-                        change.name = VoxelService.INSTANCE.GetBlockType(voxelEntry.Value).name;
-                        change.voxel = new int[] { worldPos.x, worldPos.y, worldPos.z };
+                        change.name = GetBlockType(voxelEntry.Value).name;
                         regionChanges[landIdx].changes[key] = change;
                         break;
                     }

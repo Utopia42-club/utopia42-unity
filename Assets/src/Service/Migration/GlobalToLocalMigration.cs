@@ -1,20 +1,29 @@
+using System.Collections.Generic;
+using UnityEngine;
+
 internal class GlobalToLocalMigration : Migration
 {
     public GlobalToLocalMigration()
-        : base(new ApplicationVersion[] { new ApplicationVersion(0, 0, 0), new ApplicationVersion(0, 0, 1) },
-            new ApplicationVersion(0, 1, 0))
+        : base(new Version[] { new Version(0, 0, 0), new Version(0, 0, 1) },
+            new Version(0, 1, 0))
     {
     }
 
     public override LandDetails Migrate(LandDetails details)
     {
-        //var x1 = details.region.x1;
-        //var y1 = details.region.y1;
+        var pivot = new Vector3Int((int)details.region.x1, 0, (int)details.region.y1);
 
-        //foreach(var change in details.changes)
-        //{
-        //    change.
-        //}
-        return null;
+        var newChanges = new Dictionary<string, VoxelChange>();
+
+        foreach (var change in details.changes)
+        {
+            var globalPos = LandDetails.PraseKey(change.Key);
+            var local = globalPos - pivot;
+            newChanges[LandDetails.FormatKey(local)] = change.Value;
+        }
+
+        details.changes = newChanges;
+        details.v = GetTarget().ToString();
+        return details;
     }
 }

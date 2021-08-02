@@ -504,8 +504,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cam: {fileID: 963194228}
   world: {fileID: 1828913042}
-  walkSpeed: 8
-  sprintSpeed: 15
+  walkSpeed: 6
+  sprintSpeed: 12
   jumpForce: 5
   gravity: -9.8
   playerWidth: 0.15
