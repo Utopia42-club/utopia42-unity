@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-
 public class MigrationService
 {
     private readonly Version latestVersion;
@@ -14,8 +13,7 @@ public class MigrationService
     public LandDetails Migrate(LandDetails details)
     {
         var version = new Version(details.v);
-
-        while (!latestVersion.Equals(latestVersion))
+        while (!version.Equals(latestVersion))
         {
             foreach (var m in migrations)
             {

@@ -21,7 +21,7 @@ internal class Version : IComparable<Version>
 
         for (int i = 0; i < 3; i++)
         {
-            var diff = parts[0] - other.parts[0];
+            var diff = parts[i] - other.parts[i];
             if (diff != 0) return diff;
         }
         return 0;

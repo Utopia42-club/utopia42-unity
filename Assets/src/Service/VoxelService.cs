@@ -13,7 +13,7 @@ public class VoxelService
     public VoxelService()
     {
         types[0] = new BlockType(0, "air", false, 0, 0, 0, 0, 0, 0);
-        types[1] = new BlockType(1, "grass", true, 10, 10, 10, 10, 7, 11) ;
+        types[1] = new BlockType(1, "grass", true, 10, 10, 10, 10, 7, 11);
         types[2] = new BlockType(2, "bedrock", true, 0, 0, 0, 0, 0, 0);
         types[3] = new BlockType(3, "dirt", true, 7, 7, 7, 7, 7, 7);
         types[4] = new BlockType(4, "stone", true, 29, 29, 29, 29, 29, 29);
@@ -175,15 +175,18 @@ public class VoxelService
             foreach (var entry in land.changes)
             {
                 var change = entry.Value;
-                var position = new VoxelPosition(LandDetails.PraseKey(entry.Key));
+                var pos = LandDetails.PraseKey(entry.Key) + new Vector3Int((int)land.region.x1, 0, (int)land.region.y1);
+                var position = new VoxelPosition(pos);
+                if (isPositionInLand(ref pos, land.region))
+                {
+                    var type = GetBlockType(change.name);
+                    if (type == null) continue;
 
-                var type = GetBlockType(change.name);
-                if (type == null) continue;
-
-                Dictionary<Vector3Int, byte> chunk;
-                if (!changes.TryGetValue(position.chunk, out chunk))
-                    changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
-                chunk[position.local] = type.id;
+                    Dictionary<Vector3Int, byte> chunk;
+                    if (!changes.TryGetValue(position.chunk, out chunk))
+                        changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
+                    chunk[position.local] = type.id;
+                }
             }
         });
 
@@ -246,7 +249,7 @@ public class VoxelService
                 for (int landIdx = 0; landIdx < lands.Count; landIdx++)
                 {
                     var land = lands[landIdx];
-                    if (land.x1 <= worldPos.x && worldPos.x <= land.x2 && land.y1 <= worldPos.z && worldPos.z <= land.y2)
+                    if (isPositionInLand(ref worldPos, land))
                     {
                         var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
                         var change = new VoxelChange();
@@ -258,6 +261,11 @@ public class VoxelService
             }
         }
         return regionChanges;
+    }
+
+    private static bool isPositionInLand(ref Vector3Int worldPos, Land land)
+    {
+        return land.x1 <= worldPos.x && worldPos.x <= land.x2 && land.y1 <= worldPos.z && worldPos.z <= land.y2;
     }
 
     public void AddChange(VoxelPosition pos, byte id)
