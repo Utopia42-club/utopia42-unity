@@ -147,13 +147,13 @@ public class Player : MonoBehaviour
         {
             var vp = new VoxelPosition(highlightBlock.position);
             var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null) chunk.DeleteVoxel(vp);
+            if (chunk != null) chunk.DeleteVoxel(vp, highlightLand);
         }
         if (placeBlock.gameObject.activeSelf && Input.GetMouseButtonDown(1))
         {
             var vp = new VoxelPosition(placeBlock.position);
             var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null) chunk.PutVoxel(vp, VoxelService.INSTANCE.GetBlockType(selectedBlockId));
+            if (chunk != null) chunk.PutVoxel(vp, VoxelService.INSTANCE.GetBlockType(selectedBlockId), placeLand);
         }
     }
 
