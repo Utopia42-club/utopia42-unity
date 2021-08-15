@@ -25,6 +25,8 @@ public class Player : MonoBehaviour
     private float verticalMomentum = 0;
     private bool jumpRequest;
     private bool floating = false;
+    private string highlightLand;
+    private string placeLand;
 
     private Vector3Int lastChunk;
 
@@ -174,13 +176,13 @@ public class Player : MonoBehaviour
             {
                 highlightBlock.position = posint;
 
-                highlightBlock.gameObject.SetActive(CanEdit(posint));
+                highlightBlock.gameObject.SetActive(CanEdit(posint, out highlightLand));
 
                 var currVox = Vectors.FloorToInt(transform.position);
                 if (lastPos != currVox && lastPos != currVox + Vector3Int.up)
                 {
                     placeBlock.position = lastPos;
-                    placeBlock.gameObject.SetActive(CanEdit(lastPos));
+                    placeBlock.gameObject.SetActive(CanEdit(lastPos, out placeLand));
                 }
                 else
                     placeBlock.gameObject.SetActive(false);
@@ -194,21 +196,26 @@ public class Player : MonoBehaviour
         placeBlock.gameObject.SetActive(false);
     }
 
-    private bool CanEdit(Vector3Int position)
+    private bool CanEdit(Vector3Int position, out string landId)
     {
-        if (Settings.IsGuest()) return true;
-        return Owns(position);
+        if (Settings.IsGuest())
+        {
+            landId = null;
+            return true;
+        }
+        landId = FindLand(position);
+        return landId == null;
     }
 
-    public bool Owns(Vector3Int position)
+    public string FindLand(Vector3Int position)
     {
         foreach (var land in lands)
         {
             if (land.x1 <= position.x && land.x2 >= position.x
                 && land.y1 <= position.z && land.y2 >= position.z)
-                return true;
+                return land.ipfsKey;
         }
-        return false;
+        return null;
     }
 
     private float ComputeDownSpeed(float downSpeed)

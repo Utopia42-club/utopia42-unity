@@ -39,17 +39,15 @@ public class IpfsClient
         yield break;
     }
 
-    public IEnumerator Upload(List<LandDetails> details, Action<List<string>> success)
+    public IEnumerator Upload(Dictionary<int, LandDetails> details, Action<Dictionary<int, string>> success)
     {
-        var result = new List<string>();
+        var result = new Dictionary<int, string>();
         string url = SERVER_URL + "/add?stream-channels=true&progress=false";
-        foreach (var detail in details)
+        foreach (var entry in details)
         {
+            var detail = entry.Value;
             if (string.IsNullOrWhiteSpace(detail.region.ipfsKey) && detail.changes.Count == 0)
-            {
-                result.Add(detail.region.ipfsKey);
                 continue;
-            }
 
             string data = JsonConvert.SerializeObject(detail);
             var form = new List<IMultipartFormSection>();
@@ -63,15 +61,15 @@ public class IpfsClient
                     case UnityWebRequest.Result.ConnectionError:
                     case UnityWebRequest.Result.DataProcessingError:
                         Debug.LogError(string.Format("Posing data for {0} caused Error: {1}", url, webRequest.error));
-                        result.Add(detail.region.ipfsKey);
+                        //result.Add(detail.region.ipfsKey);
                         break;
                     case UnityWebRequest.Result.ProtocolError:
                         Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
-                        result.Add(detail.region.ipfsKey);
+                        //result.Add(detail.region.ipfsKey);
                         break;
                     case UnityWebRequest.Result.Success:
                         var response = JsonConvert.DeserializeObject<IpfsResponse>(webRequest.downloadHandler.text);
-                        result.Add(response.hash);
+                        result[entry.Key] = response.hash;
                         break;
                 }
             }

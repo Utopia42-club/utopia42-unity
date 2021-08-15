@@ -9,6 +9,7 @@ public class VoxelService
     private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
     private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
     private Dictionary<string, List<Land>> ownersLands;
+    private HashSet<string> changedLands = new HashSet<string>();
 
     public VoxelService()
     {
@@ -96,9 +97,9 @@ public class VoxelService
         {
             for (var z = 0; z < Chunk.CHUNK_WIDTH; ++z)
             {
-                var owns = player.Owns(
+                var owns = player.FindLand(
                     new Vector3Int(x + position.x * Chunk.CHUNK_WIDTH, 0, z + position.z * Chunk.CHUNK_WIDTH)
-                );
+                ) != null;
                 top = body = bedrock;
                 if (owns)
                 {
@@ -177,7 +178,7 @@ public class VoxelService
                 var change = entry.Value;
                 var pos = LandDetails.PraseKey(entry.Key) + new Vector3Int((int)land.region.x1, 0, (int)land.region.y1);
                 var position = new VoxelPosition(pos);
-                if (isPositionInLand(ref pos, land.region))
+                if (IsPositionInLand(ref pos, land.region))
                 {
                     var type = GetBlockType(change.name);
                     if (type == null) continue;
@@ -224,17 +225,23 @@ public class VoxelService
             }
     }
 
-    public List<LandDetails> GetLandsChanges(string wallet, List<Land> lands)
+    public Dictionary<int, LandDetails> GetLandsChanges(string wallet, List<Land> lands)
     {
+        var result = new Dictionary<int, LandDetails>();
         var regionChanges = new List<LandDetails>();
-        foreach (var l in lands)
+        for (int i = 0; i < lands.Count; i++)
         {
-            var ld = new LandDetails();
-            ld.changes = new Dictionary<string, VoxelChange>();
-            ld.region = l;
-            ld.v = "0.1.0";
-            ld.wallet = wallet;
-            regionChanges.Add(ld);
+            var l = lands[i];
+            if (changedLands.Contains(l.ipfsKey))
+            {
+                var ld = new LandDetails();
+                ld.changes = new Dictionary<string, VoxelChange>();
+                ld.region = l;
+                ld.v = "0.1.0";
+                ld.wallet = wallet;
+                regionChanges.Add(ld);
+                result[i] = ld;
+            }
         }
 
 
@@ -249,7 +256,7 @@ public class VoxelService
                 for (int landIdx = 0; landIdx < lands.Count; landIdx++)
                 {
                     var land = lands[landIdx];
-                    if (isPositionInLand(ref worldPos, land))
+                    if (IsPositionInLand(ref worldPos, land))
                     {
                         var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
                         var change = new VoxelChange();
@@ -260,15 +267,16 @@ public class VoxelService
                 }
             }
         }
-        return regionChanges;
+
+        return result;
     }
 
-    private static bool isPositionInLand(ref Vector3Int worldPos, Land land)
+    private static bool IsPositionInLand(ref Vector3Int worldPos, Land land)
     {
         return land.x1 <= worldPos.x && worldPos.x <= land.x2 && land.y1 <= worldPos.z && worldPos.z <= land.y2;
     }
 
-    public void AddChange(VoxelPosition pos, byte id)
+    public void AddChange(VoxelPosition pos, byte id, string landId)
     {
         Dictionary<Vector3Int, byte> vc;
         if (!changes.TryGetValue(pos.chunk, out vc))
@@ -277,6 +285,7 @@ public class VoxelService
             changes[pos.chunk] = vc;
         }
         vc[pos.local] = id;
+        this.changedLands.Add(landId);
     }
 
     public Dictionary<string, List<Land>> GetOwnersLands()

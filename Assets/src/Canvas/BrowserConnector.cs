@@ -25,15 +25,21 @@ public class BrowserConnector : MonoBehaviour
         //copyUrlButton.onClick.AddListener(() => GUIUtility.systemCopyBuffer = currentUrl);
     }
 
-    public void Save(List<string> lands, Action onDone, Action onCancel)
+    public void Save(Dictionary<int, string> data, Action onDone, Action onCancel)
     {
+        if (data.Count == 0) onDone();
         if (WebBridge.IsPresent())
         {
-            WebBridge.Call<object>("save", lands);
+            WebBridge.Call<object>("save", data);
             ResetButtons(onDone, onCancel);
         }
         else
-            CallUrl("save", string.Join(",", lands), onDone, onCancel);
+        {
+            var values = new List<string>();
+            foreach (var d in data)
+                values.Add(string.Join("_", d.Key, d.Value));
+            CallUrl("save", string.Join(",", values), onDone, onCancel);
+        }
     }
 
     public void Buy(List<Land> lands, Action onDone, Action onCancel)

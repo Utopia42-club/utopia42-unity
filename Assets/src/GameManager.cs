@@ -156,14 +156,16 @@ public class GameManager : MonoBehaviour
         var lands = Player.INSTANCE.GetLands();
         if (lands == null || lands.Count == 0) return;
         var wallet = Settings.WalletId();
-        List<LandDetails> worldChanges = VoxelService.INSTANCE.GetLandsChanges(wallet, lands);
+
+        var worldChanges = VoxelService.INSTANCE.GetLandsChanges(wallet, lands);
         SetState(State.LOADING);
         Loading.INSTANCE.UpdateText("Saving Changes To Files...");
-        StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, ids =>
+        StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, result =>
         {
             SetState(State.BROWSER_CONNECTION);
             Action done = () => SetState(State.PLAYING);
-            BrowserConnector.INSTANCE.Save(ids, done, done);
+            //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
+            BrowserConnector.INSTANCE.Save(result, done, done);
         }));
     }
 
