@@ -177,6 +177,24 @@ public class GameManager : MonoBehaviour
             () => SetState(State.PLAYING));
     }
 
+    public void Transfer(int landIndex)
+    {
+        SetState(State.BROWSER_CONNECTION);
+        BrowserConnector.INSTANCE.Transfer(landIndex,
+            () => StartCoroutine(ReloadLands()),
+            () => SetState(State.PLAYING));
+    }
+
+    private IEnumerator ReloadLands()
+    {
+        SetState(State.LOADING);
+        Loading.INSTANCE.UpdateText("Reloading Lands...");
+        yield return VoxelService.INSTANCE.ReloadLands();
+        var player = Player.INSTANCE;
+        player.ResetLands();
+        yield return InitWorld(player.transform.position, true);
+    }
+
     private IEnumerator ReloadOwnerLands()
     {
         SetState(State.LOADING);

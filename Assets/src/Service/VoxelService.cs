@@ -298,6 +298,16 @@ public class VoxelService
         return this.changes != null;
     }
 
+
+    public IEnumerator ReloadLands()
+    {
+        var wallets = new List<string>(ownersLands.Keys);
+        foreach (var wallet in wallets)
+        {
+            yield return ReloadLandsFor(wallet);
+        }
+    }
+
     public IEnumerator ReloadLandsFor(string wallet)
     {
         yield return EthereumClientService.INSTANCE.getLandsForOwner(wallet, lands => ownersLands[wallet] = lands);
