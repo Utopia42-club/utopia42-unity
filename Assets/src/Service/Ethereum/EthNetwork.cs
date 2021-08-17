@@ -5,7 +5,7 @@ public class EthNetwork
         //new EthNetwork(3, "0x9344CdEc9cf176E3162758D23d1FC806a0AE08cf", "Ropsten Test Network", "ropsten"),
         new EthNetwork(4, "0x801fC75707BEB6d2aE8863D7A3B66047A705ffc0", "Rinkeby Test Network", "rinkeby"),
         //new EthNetwork(97, "0x044630826A56C768D3FAC17f907EA38aE90BE2B3", "Binance Smart Chain Test", "bsctest", "https://data-seed-prebsc-1-s1.binance.org:8545")
-        new EthNetwork(97, "0xf4315D6Ab7B18A5903d22f9dc17358C7bBA85b8F", "Binance Smart Chain Test", "bsctest", "https://data-seed-prebsc-1-s1.binance.org:8545")
+        new EthNetwork(97, "0xf4315D6Ab7B18A5903d22f9dc17358C7bBA85b8F", "Binance Smart Chain Test", "bsctest", "https://data-seed-prebsc-1-s2.binance.org:8545")
     };
 
     public readonly int id;

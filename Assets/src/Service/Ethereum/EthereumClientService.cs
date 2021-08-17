@@ -66,7 +66,6 @@ public class EthereumClientService
     {
         var owners = new List<string>();
         yield return getOwners(o => owners.AddRange(o));
-
         IEnumerator[] enums = new IEnumerator[owners.Count];
         for (int i = 0; i < owners.Count; i++)
         {

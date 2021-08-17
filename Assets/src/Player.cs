@@ -204,7 +204,7 @@ public class Player : MonoBehaviour
             return true;
         }
         landId = FindLand(position);
-        return landId == null;
+        return landId != null;
     }
 
     public string FindLand(Vector3Int position)
