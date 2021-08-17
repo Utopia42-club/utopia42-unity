@@ -11,6 +11,11 @@ public class RectPane : MonoBehaviour
     private readonly HashSet<GameObject> landIndicators = new HashSet<GameObject>();
     private readonly HashSet<GameObject> drawnLandIndicators = new HashSet<GameObject>();
 
+    [SerializeField] public GameObject landPrefab;
+    [SerializeField] public Button transferButton;
+
+    public TransferHandler selectedLand;
+
     void Start()
     {
         var manager = GameManager.INSTANCE;
@@ -21,6 +26,13 @@ public class RectPane : MonoBehaviour
             if (s == GameManager.State.MAP) Init();
             else DestroyRects();
         });
+
+        transferButton.onClick.AddListener(DoTransfer);
+    }
+
+    private void DoTransfer()
+    {
+        GameManager.INSTANCE.Transfer(selectedLand.landIndex);
     }
 
     private void Init()
@@ -36,8 +48,9 @@ public class RectPane : MonoBehaviour
         foreach (var entry in service.GetOwnersLands())
         {
             Color c = entry.Key.Equals(Settings.WalletId()) ? Color.green : Color.gray;
+            int index = 0;
             foreach (var land in entry.Value)
-                Add(land.x1, land.x2, land.y1, land.y2, c);
+                Add(land.x1, land.x2, land.y1, land.y2, c, index++, entry.Key);
         }
     }
 
@@ -49,10 +62,23 @@ public class RectPane : MonoBehaviour
         drawnLandIndicators.Clear();
     }
 
-    private GameObject Add(long x1, long x2, long y1, long y2, Color color)
+
+    internal void setSelected(TransferHandler transferHandler)
     {
-        var landObject = new GameObject();
-        var transform = landObject.AddComponent<RectTransform>();
+        if (selectedLand != null && transferHandler != selectedLand)
+            selectedLand.setSelected(false, true);
+        selectedLand = transferHandler;
+        transferButton.gameObject.SetActive(selectedLand != null && selectedLand.walletId.Equals(Settings.WalletId()));
+    }
+
+    private GameObject Add(long x1, long x2, long y1, long y2, Color color, int index, string walletId)
+    {
+        var landObject = Instantiate(landPrefab);
+        var transform = landObject.GetComponent<RectTransform>();
+        TransferHandler transferHandler = landObject.GetComponent<TransferHandler>();
+        transferHandler.landIndex = index;
+        transferHandler.walletId = walletId;
+        transferHandler.rectPane = this;
 
         transform.SetParent(this.transform);
         transform.SetAsFirstSibling();
@@ -60,8 +86,7 @@ public class RectPane : MonoBehaviour
         transform.localPosition = new Vector3(x1, y1, 0);
         transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y2 - y1);
         transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x2 - x1);
-        landObject.AddComponent<CanvasRenderer>();
-        landObject.AddComponent<Image>().color = color;
+        landObject.GetComponent<Image>().color = color;
         landIndicators.Add(landObject);
         return landObject;
     }
@@ -75,7 +100,7 @@ public class RectPane : MonoBehaviour
 
     internal GameObject DrawAt(long x, long y)
     {
-        GameObject obj = Add(x, x, y, y, Color.blue);
+        GameObject obj = Add(x, x, y, y, Color.blue, -1, Settings.WalletId());
         drawnLandIndicators.Add(obj);
         return obj;
     }
