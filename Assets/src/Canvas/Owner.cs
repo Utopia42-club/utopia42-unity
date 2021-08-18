@@ -9,6 +9,8 @@ public class Owner : MonoBehaviour
 
     public GameObject profileDialog;
 
+    public ActionButton closeButton;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -16,6 +18,18 @@ public class Owner : MonoBehaviour
         GameManager.INSTANCE.stateChange.AddListener(state =>
         {
             profileDialog.SetActive(state == GameManager.State.PROFILE);
+        });
+
+        openProfileButton.AddListener(() =>
+        {
+            if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
+                GameManager.INSTANCE.SetState(GameManager.State.PROFILE);
+        });
+
+        closeButton.AddListener(() =>
+        {
+            if (GameManager.INSTANCE.GetState() == GameManager.State.PROFILE)
+                GameManager.INSTANCE.SetState(GameManager.State.PLAYING);
         });
     }
 
@@ -30,9 +44,6 @@ public class Owner : MonoBehaviour
             else if (state == GameManager.State.PLAYING && IsOwned()) 
                 GameManager.INSTANCE.SetState(GameManager.State.PROFILE);
         }
-
-        if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING && openProfileButton.isPressed())
-            GameManager.INSTANCE.SetState(GameManager.State.PROFILE);
     }
 
     private bool IsOwned()

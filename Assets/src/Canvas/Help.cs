@@ -3,11 +3,14 @@ using UnityEngine.UI;
 
 public class Help : MonoBehaviour
 {
-    [SerializeField]
-    private Button okButton;
+    public ActionButton closeButton;
 
     void Start()
     {
-        okButton.onClick.AddListener(() => GameManager.INSTANCE.SetState(GameManager.State.PLAYING));
+        closeButton.AddListener(() =>
+        {
+            if (GameManager.INSTANCE.GetState() == GameManager.State.HELP)
+                GameManager.INSTANCE.SetState(GameManager.State.PLAYING);
+        });
     }
 }
