@@ -159,19 +159,19 @@ public class Chunk
         uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize - eps, y + Voxels.NormalizedBlockTextureSize - eps));
     }
 
-    public void DeleteVoxel(VoxelPosition pos, string landId)
+    public void DeleteVoxel(VoxelPosition pos, Land land)
     {
         voxels[pos.local.x, pos.local.y, pos.local.z] = 0;//FIXME
-        VoxelService.INSTANCE.AddChange(pos, 0, landId);
+        VoxelService.INSTANCE.AddChange(pos, 0, land);
         OnChanged(pos);
     }
 
-    public void PutVoxel(VoxelPosition pos, BlockType type, string landId)
+    public void PutVoxel(VoxelPosition pos, BlockType type, Land land)
     {
         if (type.isSolid)
         {
             voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
-            VoxelService.INSTANCE.AddChange(pos, type.id, landId);
+            VoxelService.INSTANCE.AddChange(pos, type.id, land);
             OnChanged(pos);
         }
     }

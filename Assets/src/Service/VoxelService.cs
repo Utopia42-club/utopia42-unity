@@ -9,7 +9,7 @@ public class VoxelService
     private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
     private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
     private Dictionary<string, List<Land>> ownersLands;
-    private HashSet<string> changedLands = new HashSet<string>();
+    private HashSet<Land> changedLands = new HashSet<Land>();
 
     public VoxelService()
     {
@@ -228,18 +228,16 @@ public class VoxelService
     public Dictionary<int, LandDetails> GetLandsChanges(string wallet, List<Land> lands)
     {
         var result = new Dictionary<int, LandDetails>();
-        var regionChanges = new List<LandDetails>();
         for (int i = 0; i < lands.Count; i++)
         {
             var l = lands[i];
-            if (changedLands.Contains(l.ipfsKey))
+            if (changedLands.Contains(l))
             {
                 var ld = new LandDetails();
                 ld.changes = new Dictionary<string, VoxelChange>();
                 ld.region = l;
                 ld.v = "0.1.0";
                 ld.wallet = wallet;
-                regionChanges.Add(ld);
                 result[i] = ld;
             }
         }
@@ -253,15 +251,15 @@ public class VoxelService
             {
                 var vpos = voxelEntry.Key;
                 var worldPos = VoxelPosition.ToWorld(cpos, vpos);
-                for (int landIdx = 0; landIdx < lands.Count; landIdx++)
+                foreach (var entry in result)
                 {
-                    var land = lands[landIdx];
+                    var land = entry.Value.region;
                     if (IsPositionInLand(ref worldPos, land))
                     {
                         var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
                         var change = new VoxelChange();
                         change.name = GetBlockType(voxelEntry.Value).name;
-                        regionChanges[landIdx].changes[key] = change;
+                        entry.Value.changes[key] = change;
                         break;
                     }
                 }
@@ -276,7 +274,7 @@ public class VoxelService
         return land.x1 <= worldPos.x && worldPos.x <= land.x2 && land.y1 <= worldPos.z && worldPos.z <= land.y2;
     }
 
-    public void AddChange(VoxelPosition pos, byte id, string landId)
+    public void AddChange(VoxelPosition pos, byte id, Land land)
     {
         Dictionary<Vector3Int, byte> vc;
         if (!changes.TryGetValue(pos.chunk, out vc))
@@ -285,7 +283,27 @@ public class VoxelService
             changes[pos.chunk] = vc;
         }
         vc[pos.local] = id;
-        this.changedLands.Add(landId);
+        changedLands.Add(land);
+    }
+
+    internal void RefreshChangedLands(List<Land> ownerLands)
+    {
+        var oldChanges = changedLands;
+        changedLands = new HashSet<Land>();
+        if (ownerLands == null) return;
+        foreach (var land in ownerLands)
+        {
+            foreach (var change in oldChanges)
+            {
+                if (land.Equals(change) && Equals(change.ipfsKey, land.ipfsKey))
+                    changedLands.Add(land);
+            }
+        }
+    }
+
+    public bool HasChange()
+    {
+        return changedLands.Count > 0;
     }
 
     public Dictionary<string, List<Land>> GetOwnersLands()
@@ -301,11 +319,10 @@ public class VoxelService
 
     public IEnumerator ReloadLands()
     {
-        var wallets = new List<string>(ownersLands.Keys);
-        foreach (var wallet in wallets)
-        {
-            yield return ReloadLandsFor(wallet);
-        }
+        var ownersLands = new Dictionary<string, List<Land>>();
+        yield return EthereumClientService.INSTANCE.getLands(ownersLands);
+        this.ownersLands = ownersLands;
+        yield break;
     }
 
     public IEnumerator ReloadLandsFor(string wallet)

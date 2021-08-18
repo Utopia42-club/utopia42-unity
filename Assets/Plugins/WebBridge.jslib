@@ -6,7 +6,6 @@ mergeInto(LibraryManager.library, {
     callOnBridge: function (fn, p) {
         var functionName = Pointer_stringify(fn);
         var parameter = JSON.parse(Pointer_stringify(p));
-
         var r = window.bridge[functionName](parameter);
 
         if (r) {

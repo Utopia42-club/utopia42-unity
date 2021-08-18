@@ -97,7 +97,8 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetButtonDown("Cancel") && worldInited && (state == State.MAP || state == State.SETTINGS))
+        if (Input.GetButtonDown("Cancel") && worldInited &&
+            (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY))
             SetState(State.PLAYING);
         else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
             SetState(State.SETTINGS);
@@ -116,13 +117,6 @@ public class GameManager : MonoBehaviour
                 SetState(State.PLAYING);
             else if (state == State.PLAYING)
                 SetState(State.INVENTORY);
-        }
-        else if (Input.GetButtonDown("Help"))
-        {
-            if (state == State.HELP)
-                SetState(State.PLAYING);
-            else if (state == State.PLAYING)
-                SetState(State.HELP);
         }
     }
 
@@ -163,16 +157,18 @@ public class GameManager : MonoBehaviour
         var lands = Player.INSTANCE.GetLands();
         if (lands == null || lands.Count == 0) return;
         var wallet = Settings.WalletId();
+        var service = VoxelService.INSTANCE;
+        if (!service.HasChange()) return;
 
-        var worldChanges = VoxelService.INSTANCE.GetLandsChanges(wallet, lands);
+        var worldChanges = service.GetLandsChanges(wallet, lands);
         SetState(State.LOADING);
         Loading.INSTANCE.UpdateText("Saving Changes To Files...");
         StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, result =>
         {
             SetState(State.BROWSER_CONNECTION);
-            Action done = () => SetState(State.PLAYING);
             //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
-            BrowserConnector.INSTANCE.Save(result, done, done);
+            BrowserConnector.INSTANCE.Save(result, () => StartCoroutine(ReloadOwnerLands()),
+                () => SetState(State.PLAYING));
         }));
     }
 

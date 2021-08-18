@@ -25,8 +25,8 @@ public class Player : MonoBehaviour
     private float verticalMomentum = 0;
     private bool jumpRequest;
     private bool floating = false;
-    private string highlightLand;
-    private string placeLand;
+    private Land highlightLand;
+    private Land placeLand;
 
     private Vector3Int lastChunk;
 
@@ -48,10 +48,13 @@ public class Player : MonoBehaviour
     public void ResetLands()
     {
         List<Land> lands = null;
-
         string wallet = Settings.WalletId();
         if (wallet != null)
-            lands = VoxelService.INSTANCE.getLandsFor(wallet);
+        {
+            var service = VoxelService.INSTANCE;
+            lands = service.getLandsFor(wallet);
+            service.RefreshChangedLands(lands);
+        }
 
         this.lands = lands != null ? lands : new List<Land>();
     }
@@ -196,24 +199,24 @@ public class Player : MonoBehaviour
         placeBlock.gameObject.SetActive(false);
     }
 
-    private bool CanEdit(Vector3Int position, out string landId)
+    private bool CanEdit(Vector3Int position, out Land land)
     {
         if (Settings.IsGuest())
         {
-            landId = null;
+            land = null;
             return true;
         }
-        landId = FindLand(position);
-        return landId != null;
+        land = FindLand(position);
+        return land != null;
     }
 
-    public string FindLand(Vector3Int position)
+    public Land FindLand(Vector3Int position)
     {
         foreach (var land in lands)
         {
             if (land.x1 <= position.x && land.x2 >= position.x
                 && land.y1 <= position.z && land.y2 >= position.z)
-                return land.ipfsKey;
+                return land;
         }
         return null;
     }
