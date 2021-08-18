@@ -147,7 +147,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void SetState(State state)
+    public void SetState(State state)
     {
         this.state = state;
         stateChange.Invoke(state);
@@ -222,6 +222,6 @@ public class GameManager : MonoBehaviour
 
     public enum State
     {
-        LOADING, SETTINGS, PLAYING, MAP, BROWSER_CONNECTION, INVENTORY, HELP
+        LOADING, SETTINGS, PLAYING, MAP, BROWSER_CONNECTION, INVENTORY, HELP, PROFILE
     }
 }
