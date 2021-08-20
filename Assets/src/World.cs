@@ -1,26 +1,31 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.UI;
+using static Profile;
+using static Profile.Link;
 
 public class World : MonoBehaviour
 {
     public Material material;
+
     //TODO take care of size/time limit
     //Diactivated chunks are added to this collection for possible future reuse
-    private Dictionary<Vector3Int, Chunk> garbageChunks
-        = new Dictionary<Vector3Int, Chunk>();
+    private Dictionary<Vector3Int, Chunk> garbageChunks = new Dictionary<Vector3Int, Chunk>();
     private readonly Dictionary<Vector3Int, Chunk> chunks = new Dictionary<Vector3Int, Chunk>();
+
     //TODO check volatile documentation use sth like lock or semaphore
     private volatile bool creatingChunks = false;
     private HashSet<Chunk> chunkRequests = new HashSet<Chunk>();
-    // Start is called before the first frame update
-    public GameObject debugScreen;
 
+    public GameObject debugScreen;
     public GameObject inventory;
     public GameObject cursorSlot;
-
     public GameObject help;
+    public Owner owner;
+    public Player player;
+
+    private string currentLandOwner;
 
     void Start()
     {
@@ -37,6 +42,45 @@ public class World : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.F3))
             debugScreen.SetActive(!debugScreen.activeSelf);
+
+        var newOwner = FindLandOwner(player.transform.position);
+
+        if (newOwner != currentLandOwner)
+        {
+            currentLandOwner = newOwner;
+            owner.gameObject.SetActive(currentLandOwner != null);
+            if (currentLandOwner != null)
+            {
+                Profile profile = new Profile(); //FIXME load profile from server
+                profile.name = "Cool Username";
+                profile.walletId = currentLandOwner;
+                profile.links = new List<Link>();
+                profile.bio = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+                profile.imageUrl = "https://picsum.photos/200";
+                Link telegram = new Link();
+                telegram.link = "https://www.google.com/";
+                telegram.media = Media.TELEGRAM;
+                profile.links.Add(telegram);
+                Link twitter = new Link();
+                twitter.link = "https://www.google.com/";
+                twitter.media = Media.TWITTER;
+                profile.links.Add(twitter);
+                owner.setOwner(profile);
+                HorizontalLayoutGroup layout = owner.GetComponent<HorizontalLayoutGroup>();
+                LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)layout.transform);
+            }
+        }
+    }
+
+    private string FindLandOwner(Vector3 position)
+    {
+        var ownerLands = VoxelService.INSTANCE.GetOwnersLands();
+        if (ownerLands != null)
+            foreach (var landPair in ownerLands)
+                foreach (var land in landPair.Value)
+                    if (land.x2 >= position.x && land.y1 <= position.z && land.y2 >= position.z)
+                        return landPair.Key;
+        return null;
     }
 
     private Chunk PopRequest()

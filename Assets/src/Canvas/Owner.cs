@@ -1,20 +1,21 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Owner : MonoBehaviour
 {
-    private ActionButton openProfileButton;
+    public TextMeshProUGUI label;
+
+    public ActionButton openProfileButton;
 
     public GameObject profileDialog;
 
     public ActionButton closeButton;
 
+    private Profile owner;
+
     // Start is called before the first frame update
     void Start()
     {
-        openProfileButton = GetComponent<ActionButton>();
         GameManager.INSTANCE.stateChange.AddListener(state =>
         {
             profileDialog.SetActive(state == GameManager.State.PROFILE);
@@ -41,13 +42,19 @@ public class Owner : MonoBehaviour
             var state = GameManager.INSTANCE.GetState();
             if (state == GameManager.State.PROFILE)
                 GameManager.INSTANCE.SetState(GameManager.State.PLAYING);
-            else if (state == GameManager.State.PLAYING && IsOwned()) 
+            else if (state == GameManager.State.PLAYING && owner != null)
                 GameManager.INSTANCE.SetState(GameManager.State.PROFILE);
         }
     }
 
-    private bool IsOwned()
+    public void setOwner(Profile profile)
     {
-        return false; // FIXME check if this land is owned
+        owner = profile;
+        label.SetText(profile.name);
+    }
+
+    public Profile getOwner()
+    {
+        return owner;
     }
 }
