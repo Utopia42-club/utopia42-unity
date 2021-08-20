@@ -44,7 +44,6 @@ public class World : MonoBehaviour
             debugScreen.SetActive(!debugScreen.activeSelf);
 
         var newOwner = FindLandOwner(player.transform.position);
-
         if (newOwner != currentLandOwner)
         {
             currentLandOwner = newOwner;
@@ -52,7 +51,7 @@ public class World : MonoBehaviour
             if (currentLandOwner != null)
             {
                 Profile profile = new Profile(); //FIXME load profile from server
-                profile.name = "Cool Username";
+                profile.name = currentLandOwner;
                 profile.walletId = currentLandOwner;
                 profile.links = new List<Link>();
                 profile.bio = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
@@ -78,7 +77,8 @@ public class World : MonoBehaviour
         if (ownerLands != null)
             foreach (var landPair in ownerLands)
                 foreach (var land in landPair.Value)
-                    if (land.x2 >= position.x && land.y1 <= position.z && land.y2 >= position.z)
+                    if (land.x2 >= position.x && land.x1 <= position.x 
+                        && land.y1 <= position.y && land.y2 >= position.y)
                         return landPair.Key;
         return null;
     }
