@@ -17,24 +17,27 @@ public class ProfileDialog : MonoBehaviour
 
     public SocialLink socialLinkPrefab;
 
+    public GameObject editButton;
+
     // Start is called before the first frame update
     void Start()
     {
-        var profile = owner.getOwner();
+        var profile = owner.GetOwner();
         nameLabel.SetText(profile.name);
         bioLabel.SetText(profile.bio);
-        profileImage.url = profile.imageUrl;
+        profileImage.SetUrl(RestClient.SERVER_URL + "profile/avatar/" + profile.imageUrl);
         foreach (var link in profile.links)
         {
             SocialLink socialLink = Instantiate(socialLinkPrefab, socialLinks.transform);
             socialLink.link = link.link;
-            socialLink.media = link.media;
+            socialLink.media = link.GetMedia();
         }
+        editButton.SetActive(profile.walletId.Equals(Settings.WalletId()));
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

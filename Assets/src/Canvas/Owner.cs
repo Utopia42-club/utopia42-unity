@@ -11,6 +11,8 @@ public class Owner : MonoBehaviour
 
     public ActionButton closeButton;
 
+    public ActionButton editButton;
+
     private Profile owner;
 
     // Start is called before the first frame update
@@ -32,6 +34,15 @@ public class Owner : MonoBehaviour
             if (GameManager.INSTANCE.GetState() == GameManager.State.PROFILE)
                 GameManager.INSTANCE.SetState(GameManager.State.PLAYING);
         });
+
+        editButton.AddListener(() =>
+        {
+            BrowserConnector.INSTANCE.EditProfile(() =>
+            {
+                GameManager.INSTANCE.SetState(GameManager.State.PLAYING);
+                World.INSTANCE.OnOwnerChanged();
+            }, () => { });
+        });
     }
 
     // Update is called once per frame
@@ -47,13 +58,13 @@ public class Owner : MonoBehaviour
         }
     }
 
-    public void setOwner(Profile profile)
+    public void SetOwner(Profile profile)
     {
         owner = profile;
         label.SetText(profile.name);
     }
 
-    public Profile getOwner()
+    public Profile GetOwner()
     {
         return owner;
     }

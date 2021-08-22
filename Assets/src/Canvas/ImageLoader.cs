@@ -6,12 +6,18 @@ using UnityEngine.UI;
 
 public class ImageLoader : MonoBehaviour
 {
-    public string url = "";
+    private string url = "";
 
     // automatically called when game started
     void Start()
     {
-        StartCoroutine(LoadFromLikeCoroutine()); // execute the section independently
+        
+    }
+
+    public void SetUrl(string url)
+    {
+        this.url = url;
+        StartCoroutine(LoadFromLikeCoroutine());
     }
 
     // this section will be run independently

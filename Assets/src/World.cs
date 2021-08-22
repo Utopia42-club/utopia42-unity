@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using static Profile;
-using static Profile.Link;
 
 public class World : MonoBehaviour
 {
@@ -47,27 +45,26 @@ public class World : MonoBehaviour
         if (newOwner != currentLandOwner)
         {
             currentLandOwner = newOwner;
-            owner.gameObject.SetActive(currentLandOwner != null);
-            if (currentLandOwner != null)
-            {
-                Profile profile = new Profile(); //FIXME load profile from server
-                profile.name = currentLandOwner;
-                profile.walletId = currentLandOwner;
-                profile.links = new List<Link>();
-                profile.bio = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-                profile.imageUrl = "https://picsum.photos/200";
-                Link telegram = new Link();
-                telegram.link = "https://www.google.com/";
-                telegram.media = Media.TELEGRAM;
-                profile.links.Add(telegram);
-                Link twitter = new Link();
-                twitter.link = "https://www.google.com/";
-                twitter.media = Media.TWITTER;
-                profile.links.Add(twitter);
-                owner.setOwner(profile);
-                HorizontalLayoutGroup layout = owner.GetComponent<HorizontalLayoutGroup>();
-                LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)layout.transform);
-            }
+            OnOwnerChanged();
+        }
+    }
+
+    public void OnOwnerChanged()
+    {
+        owner.gameObject.SetActive(false);
+        if (currentLandOwner != null)
+        {
+            StartCoroutine(RestClient.INSATANCE.GetProfile(currentLandOwner,
+                (profile) =>
+                {
+                    owner.gameObject.SetActive(profile != null);
+                    if (profile != null)
+                    {
+                        owner.SetOwner(profile);
+                        HorizontalLayoutGroup layout = owner.GetComponentInChildren<HorizontalLayoutGroup>();
+                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)layout.transform);
+                    }
+                }));
         }
     }
 
@@ -77,7 +74,7 @@ public class World : MonoBehaviour
         if (ownerLands != null)
             foreach (var landPair in ownerLands)
                 foreach (var land in landPair.Value)
-                    if (land.x2 >= position.x && land.x1 <= position.x 
+                    if (land.x2 >= position.x && land.x1 <= position.x
                         && land.y1 <= position.y && land.y2 >= position.y)
                         return landPair.Key;
         return null;

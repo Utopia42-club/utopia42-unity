@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
+using UnityEngine;
 
 [System.Serializable]
 public class Profile
@@ -26,8 +27,22 @@ public class Profile
 
     public class Link
     {
+        private static Dictionary<string, Media> medias = new Dictionary<string, Media>(){
+                {"TELEGRAM",Media.TELEGRAM},
+                {"DISCORD",Media.DISCORD},
+                {"FACEBOOK",Media.FACEBOOK},
+                {"TWITTER",Media.TWITTER},
+                {"INSTAGRAM",Media.INSTAGRAM},
+                {"OTHER",Media.OTHER},
+            };
+
         public string link;
-        public Media media;
+        public string media;
+
+        public Media GetMedia()
+        {
+            return medias[media];
+        }
 
         public class Media
         {
