@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    public GameObject slotPrefab;   
+    public GameObject slotPrefab;
 
     public ItemSlotUI cursorSlot;
 
@@ -12,6 +12,8 @@ public class Inventory : MonoBehaviour
 
     private void Start()
     {
+        var manager = GameManager.INSTANCE;
+
         for (int i = 1; i < VoxelService.INSTANCE.GetBlockTypesCount(); i++)
         {
             GameObject newSlot = Instantiate(slotPrefab, transform);
@@ -23,7 +25,7 @@ public class Inventory : MonoBehaviour
             slot.SetFromInventory(true);
         }
 
-        GameManager.INSTANCE.stateChange.AddListener(state =>
+        manager.stateChange.AddListener(state =>
         {
             if (state != GameManager.State.INVENTORY)
                 cursorSlot.GetItemSlot().SetStack(null);
@@ -31,8 +33,8 @@ public class Inventory : MonoBehaviour
 
         closeButton.AddListener(() =>
         {
-            if (GameManager.INSTANCE.GetState() == GameManager.State.INVENTORY)
-                GameManager.INSTANCE.SetState(GameManager.State.PLAYING);
+            if (manager.GetState() == GameManager.State.INVENTORY)
+                manager.ReturnToGame();
         });
     }
 }

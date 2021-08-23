@@ -212,12 +212,13 @@ public class Player : MonoBehaviour
 
     public Land FindLand(Vector3Int position)
     {
+        if (highlightLand != null && highlightLand.Contains(ref position))
+            return highlightLand;
+        if (placeLand != null && placeLand.Contains(ref position))
+            return placeLand;
         foreach (var land in lands)
-        {
-            if (land.x1 <= position.x && land.x2 >= position.x
-                && land.y1 <= position.z && land.y2 >= position.z)
+            if (land.Contains(ref position))
                 return land;
-        }
         return null;
     }
 

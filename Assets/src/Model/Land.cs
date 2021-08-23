@@ -23,4 +23,21 @@ public class Land
         var land = (Land)obj;
         return x1 == land.x1 && x2 == land.x2 && y1 == land.y1 && y2 == land.y2;
     }
+
+
+    public bool Contains(ref UnityEngine.Vector3Int position)
+    {
+        return Contains(position.x, position.z);
+    }
+
+    public bool Contains(ref UnityEngine.Vector3 position)
+    {
+        return Contains(position.x, position.z);
+    }
+
+    public bool Contains(float x, float z)
+    {
+        return x1 <= x && x2 >= x
+                && y1 <= z && y2 >= z;
+    }
 }

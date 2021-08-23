@@ -177,7 +177,7 @@ public class VoxelService
                 var change = entry.Value;
                 var pos = LandDetails.PraseKey(entry.Key) + new Vector3Int((int)land.region.x1, 0, (int)land.region.y1);
                 var position = new VoxelPosition(pos);
-                if (IsPositionInLand(ref pos, land.region))
+                if (land.region.Contains(ref pos))
                 {
                     var type = GetBlockType(change.name);
                     if (type == null) continue;
@@ -253,7 +253,7 @@ public class VoxelService
                 foreach (var entry in result)
                 {
                     var land = entry.Value.region;
-                    if (IsPositionInLand(ref worldPos, land))
+                    if (land.Contains(ref worldPos))
                     {
                         var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
                         var change = new VoxelChange();
@@ -266,11 +266,6 @@ public class VoxelService
         }
 
         return result;
-    }
-
-    private static bool IsPositionInLand(ref Vector3Int worldPos, Land land)
-    {
-        return land.x1 <= worldPos.x && worldPos.x <= land.x2 && land.y1 <= worldPos.z && worldPos.z <= land.y2;
     }
 
     public void AddChange(VoxelPosition pos, byte id, Land land)

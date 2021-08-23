@@ -136,8 +136,19 @@ public class Chunk
         Mesh mesh = new Mesh();
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
-        mesh.uv = uvs.ToArray();
+        //mesh.uv = uvs.ToArray();
+        //var sb = new UnityEngine.Rendering.SubMeshDescriptor();
+        //sb.firstVertex = 0;
 
+        Color[] colors = new Color[vertices.Count];
+
+        for (int i = 0; i < vertices.Count; i++)
+            colors[i] = Color.Lerp(Color.red, Color.green, vertices[i].y);
+
+        // assign the array of colors to the Mesh.
+        mesh.colors = colors;
+
+        //mesh.SetSubMesh(0, );
         mesh.RecalculateNormals();
 
         meshFilter.mesh = mesh;

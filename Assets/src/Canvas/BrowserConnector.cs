@@ -29,8 +29,18 @@ public class BrowserConnector : MonoBehaviour
     {
         if (WebBridge.IsPresent())
         {
+            //var orig = WebGLInput.captureAllKeyboardInput;
+            //WebGLInput.captureAllKeyboardInput = false;
             WebBridge.Call<object>("editProfile", null);
-            ResetButtons(onDone, onCancel);
+            ResetButtons(() =>
+            {
+                //WebGLInput.captureAllKeyboardInput = orig;
+                onDone();
+            }, () =>
+            {
+                //WebGLInput.captureAllKeyboardInput = orig;
+                onCancel();
+            });
         }
         else
             CallUrl("editProfile", onDone, onCancel);

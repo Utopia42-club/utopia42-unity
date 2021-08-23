@@ -10,7 +10,7 @@ public class Help : MonoBehaviour
         closeButton.AddListener(() =>
         {
             if (GameManager.INSTANCE.GetState() == GameManager.State.HELP)
-                GameManager.INSTANCE.SetState(GameManager.State.PLAYING);
+                GameManager.INSTANCE.ReturnToGame();
         });
     }
 }

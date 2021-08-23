@@ -43,6 +43,12 @@ public class GameManager : MonoBehaviour
         StartCoroutine(DoMovePlayerTo(pos, true));
     }
 
+    internal void Help()
+    {
+        if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
+            SetState(State.HELP);
+    }
+
     public void MovePlayerTo(Vector3 pos)
     {
         StartCoroutine(DoMovePlayerTo(pos, false));
@@ -97,9 +103,8 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetButtonDown("Cancel") && worldInited &&
-            (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY))
-            SetState(State.PLAYING);
+        if (Input.GetButtonDown("Cancel"))
+            ReturnToGame();
         else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
             SetState(State.SETTINGS);
         else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
@@ -118,6 +123,14 @@ public class GameManager : MonoBehaviour
             else if (state == State.PLAYING)
                 SetState(State.INVENTORY);
         }
+    }
+
+    public void ReturnToGame()
+    {
+        if (worldInited &&
+            (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
+            || state == State.PROFILE))
+            SetState(State.PLAYING);
     }
 
     internal void ExitSettings()
@@ -141,7 +154,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void SetState(State state)
+    private void SetState(State state)
     {
         this.state = state;
         stateChange.Invoke(state);
@@ -186,6 +199,38 @@ public class GameManager : MonoBehaviour
         BrowserConnector.INSTANCE.Transfer(landIndex,
             () => StartCoroutine(ReloadLands()),
             () => SetState(State.PLAYING));
+    }
+
+    public void ShowUserProfile()
+    {
+        if (GetState() == GameManager.State.PLAYING || GetState() == State.SETTINGS)
+        {
+            SetState(State.LOADING);
+            Loading.INSTANCE.UpdateText("Loading profile");
+            Owner.INSTANCE.UserProfile(profile => {
+                SetState(GameManager.State.PROFILE);
+                ProfileDialog.INSTANCE.SetProfile(profile);
+            }, () => SetState(State.PLAYING));
+        }
+    }
+
+    public void ShowProfile(Profile profile)
+    {
+        if (GetState() == GameManager.State.PLAYING || GetState() == State.SETTINGS)
+        {
+            SetState(GameManager.State.PROFILE);
+            ProfileDialog.INSTANCE.SetProfile(profile);
+        }
+    }
+
+    public void EditProfile()
+    {
+        SetState(State.BROWSER_CONNECTION);
+        BrowserConnector.INSTANCE.EditProfile(() =>
+        {
+            SetState(GameManager.State.PLAYING);
+            Owner.INSTANCE.OnProfileEdited();
+        }, () => { });
     }
 
     private IEnumerator ReloadLands()

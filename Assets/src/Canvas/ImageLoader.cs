@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -7,17 +6,16 @@ using UnityEngine.UI;
 public class ImageLoader : MonoBehaviour
 {
     private string url = "";
-
-    // automatically called when game started
-    void Start()
-    {
-        
-    }
+    [SerializeField]
+    private Sprite emptySprite;
 
     public void SetUrl(string url)
     {
         this.url = url;
-        StartCoroutine(LoadFromLikeCoroutine());
+        if (url == null)
+            GetComponent<Image>().overrideSprite = emptySprite;
+        else
+            StartCoroutine(LoadFromLikeCoroutine());
     }
 
     // this section will be run independently
@@ -26,7 +24,7 @@ public class ImageLoader : MonoBehaviour
         UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
         yield return request.SendWebRequest();
         if (request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.ConnectionError)
-            Debug.Log(request.error);
+            GetComponent<Image>().overrideSprite = emptySprite;
         else
         {
             // ImageComponent.texture = ((DownloadHandlerTexture) request.downloadHandler).texture;

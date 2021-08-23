@@ -8,6 +8,7 @@ public class Settings : MonoBehaviour
     public Dropdown networkInput;
     public Button submitButton;
     public Button saveGameButton;
+    public Button editProfileButton;
     public Button helpButton;
 
     void Start()
@@ -16,12 +17,13 @@ public class Settings : MonoBehaviour
             networkInput.options.Add(new Dropdown.OptionData(net.name));
 
         ResetInputs();
-
-        saveGameButton.onClick.AddListener(() => GameManager.INSTANCE.Save());
-        helpButton.onClick.AddListener(() => GameManager.INSTANCE.SetState(GameManager.State.HELP));
+        var manager = GameManager.INSTANCE;
+        saveGameButton.onClick.AddListener(() => manager.Save());
+        editProfileButton.onClick.AddListener(() => manager.ShowUserProfile());
+        helpButton.onClick.AddListener(() => manager.Help());
         walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
 
-        GameManager.INSTANCE.stateChange.AddListener(state =>
+        manager.stateChange.AddListener(state =>
         {
             ResetInputs();
             gameObject.SetActive(state == GameManager.State.SETTINGS);
@@ -56,7 +58,10 @@ public class Settings : MonoBehaviour
         }
         networkInput.interactable = !EthereumClientService.INSTANCE.IsInited();
         saveGameButton.interactable = !IsGuest() && VoxelService.INSTANCE.HasChange();
+        editProfileButton.interactable = !IsGuest();
+
         saveGameButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
+        editProfileButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
         helpButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
     }
 
