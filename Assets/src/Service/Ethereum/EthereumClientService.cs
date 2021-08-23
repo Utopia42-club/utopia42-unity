@@ -1,9 +1,8 @@
 ﻿using Nethereum.JsonRpc.UnityClient;
-using Smart_contracts.Contracts.Utopia.ContractDefinition;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
+using Utopia.Contracts.Utopia.ContractDefinition;
 
 public class EthereumClientService
 {
@@ -38,34 +37,30 @@ public class EthereumClientService
 
     public IEnumerator getLandsForOwner(string owner, Action<List<Land>> consumer)
     {
-        var lands = new List<Land>();
-        BigInteger index = 0;
-        while (true)
-        {
-            var request = new QueryUnityRequest<GetLandFunction, GetLandOutputDTO>(network.provider, network.contractAddress);
-            yield return request.Query(new GetLandFunction() { Owner = owner, Index = index }, network.contractAddress);
-            index++;
-            var result = request.Result;
-            if (result == null || result.Time <= 0)
+        List<Land> lands = new List<Land>();
+        var request = new QueryUnityRequest<GetLandsFunction, GetLandsOutputDTO>(network.provider, network.contractAddress);
+        yield return request.Query(new GetLandsFunction() { Owner = owner }, network.contractAddress);
+        var results = request.Result.ReturnValue1;
+        if (results != null)
+            foreach (var result in results)
             {
-                consumer.Invoke(lands);
-                yield break;
+                var land = new Land();
+                land.x1 = (long)result.X1;
+                land.y1 = (long)result.Y1;
+                land.x2 = (long)result.X2;
+                land.y2 = (long)result.Y2;
+                land.ipfsKey = result.Hash;
+                land.time = (long)result.Time;
+                lands.Add(land);
             }
-            var land = new Land();
-            land.x1 = (long)result.X1;
-            land.y1 = (long)result.Y1;
-            land.x2 = (long)result.X2;
-            land.y2 = (long)result.Y2;
-            land.ipfsKey = result.Hash;
-            land.time = (long)result.Time;
-            lands.Add(land);
-        }
+        consumer(lands);
     }
 
     public IEnumerator getLands(Dictionary<string, List<Land>> ownersLands)
     {
         var owners = new List<string>();
         yield return getOwners(o => owners.AddRange(o));
+
         IEnumerator[] enums = new IEnumerator[owners.Count];
         for (int i = 0; i < owners.Count; i++)
         {
