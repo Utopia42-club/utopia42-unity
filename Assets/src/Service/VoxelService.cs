@@ -5,7 +5,6 @@ using UnityEngine;
 public class VoxelService
 {
     public static VoxelService INSTANCE = new VoxelService();
-    private List<Land> lands;
     private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
     private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
     private Dictionary<string, List<Land>> ownersLands;

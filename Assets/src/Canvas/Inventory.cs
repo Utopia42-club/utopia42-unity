@@ -8,7 +8,7 @@ public class Inventory : MonoBehaviour
 
     public ItemSlotUI cursorSlot;
 
-    List<ItemSlot> slots = new List<ItemSlot>();
+    public ActionButton closeButton;
 
     private void Start()
     {
@@ -27,6 +27,12 @@ public class Inventory : MonoBehaviour
         {
             if (state != GameManager.State.INVENTORY)
                 cursorSlot.GetItemSlot().SetStack(null);
+        });
+
+        closeButton.AddListener(() =>
+        {
+            if (GameManager.INSTANCE.GetState() == GameManager.State.INVENTORY)
+                GameManager.INSTANCE.SetState(GameManager.State.PLAYING);
         });
     }
 }

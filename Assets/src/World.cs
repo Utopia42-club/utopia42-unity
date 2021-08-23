@@ -1,26 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.UI;
 
 public class World : MonoBehaviour
 {
     public Material material;
+
     //TODO take care of size/time limit
     //Diactivated chunks are added to this collection for possible future reuse
-    private Dictionary<Vector3Int, Chunk> garbageChunks
-        = new Dictionary<Vector3Int, Chunk>();
+    private Dictionary<Vector3Int, Chunk> garbageChunks = new Dictionary<Vector3Int, Chunk>();
     private readonly Dictionary<Vector3Int, Chunk> chunks = new Dictionary<Vector3Int, Chunk>();
+
     //TODO check volatile documentation use sth like lock or semaphore
     private volatile bool creatingChunks = false;
     private HashSet<Chunk> chunkRequests = new HashSet<Chunk>();
-    // Start is called before the first frame update
-    public GameObject debugScreen;
 
+    public GameObject debugScreen;
     public GameObject inventory;
     public GameObject cursorSlot;
-
     public GameObject help;
+    public Owner owner;
+    public Player player;
+
+    private string currentLandOwner;
 
     void Start()
     {
@@ -37,6 +40,44 @@ public class World : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.F3))
             debugScreen.SetActive(!debugScreen.activeSelf);
+
+        var newOwner = FindLandOwner(player.transform.position);
+        if (newOwner != currentLandOwner)
+        {
+            currentLandOwner = newOwner;
+            OnOwnerChanged();
+        }
+    }
+
+    public void OnOwnerChanged()
+    {
+        owner.gameObject.SetActive(false);
+        if (currentLandOwner != null)
+        {
+            StartCoroutine(RestClient.INSATANCE.GetProfile(currentLandOwner,
+                (profile) =>
+                {
+                    owner.gameObject.SetActive(profile != null);
+                    if (profile != null)
+                    {
+                        owner.SetOwner(profile);
+                        HorizontalLayoutGroup layout = owner.GetComponentInChildren<HorizontalLayoutGroup>();
+                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)layout.transform);
+                    }
+                }));
+        }
+    }
+
+    private string FindLandOwner(Vector3 position)
+    {
+        var ownerLands = VoxelService.INSTANCE.GetOwnersLands();
+        if (ownerLands != null)
+            foreach (var landPair in ownerLands)
+                foreach (var land in landPair.Value)
+                    if (land.x2 >= position.x && land.x1 <= position.x
+                        && land.y1 <= position.y && land.y2 >= position.y)
+                        return landPair.Key;
+        return null;
     }
 
     private Chunk PopRequest()

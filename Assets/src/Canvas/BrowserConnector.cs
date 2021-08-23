@@ -25,6 +25,17 @@ public class BrowserConnector : MonoBehaviour
         //copyUrlButton.onClick.AddListener(() => GUIUtility.systemCopyBuffer = currentUrl);
     }
 
+    public void EditProfile(Action onDone, Action onCancel)
+    {
+        if (WebBridge.IsPresent())
+        {
+            WebBridge.Call<object>("editProfile", null);
+            ResetButtons(onDone, onCancel);
+        }
+        else
+            CallUrl("editProfile", onDone, onCancel);
+    }
+
     public void Transfer(int landIndex, Action onDone, Action onCancel)
     {
         if (WebBridge.IsPresent())
@@ -73,9 +84,18 @@ public class BrowserConnector : MonoBehaviour
     {
         var wallet = Settings.WalletId();
         int network = EthereumClientService.INSTANCE.GetNetwork().id;
-        currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}", WEB_APP_URL, method, parameters, wallet, network);
+        if (parameters != null)
+            currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}", WEB_APP_URL, method, parameters, wallet, network);
+        else
+            currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", WEB_APP_URL, method, wallet, network);
+
         Application.OpenURL(currentUrl);
         ResetButtons(onDone, onCancel);
+    }
+
+    private void CallUrl(string method, Action onDone, Action onCancel)
+    {
+        CallUrl(method, null, onDone, onCancel);
     }
 
     private void ResetButtons(Action onDone, Action onCancel)
