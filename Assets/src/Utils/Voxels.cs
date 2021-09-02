@@ -26,11 +26,11 @@ public static class Voxels
         }
 
         public static Face[] FACES = new Face[6];
-        public static Face BACK = new Face(0, Vector3Int.back, new int[] { 0, 3, 1, 2 });
+        public static Face BACK = new Face(0, Vector3Int.forward, new int[] { 5, 6, 4, 7 });
         public static Face RIGHT = new Face(1, Vector3Int.right, new int[] { 1, 2, 5, 6 });
-        public static Face FRONT = new Face(2, Vector3Int.forward, new int[] { 5, 6, 4, 7 });
+        public static Face FRONT = new Face(2, Vector3Int.back, new int[] { 0, 3, 1, 2 });
         public static Face LEFT = new Face(3, Vector3Int.left, new int[] { 4, 7, 0, 3 });
-        public static Face BOTTOM = new Face(4, Vector3Int.down, new int[] { 1, 5, 0, 4 });
+        public static Face BOTTOM = new Face(4, Vector3Int.down, new int[] { 4, 0, 5, 1 });
         public static Face TOP = new Face(5, Vector3Int.up, new int[] { 3, 7, 2, 6 });
     }
 

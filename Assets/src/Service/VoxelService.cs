@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ public class VoxelService
     public static VoxelService INSTANCE = new VoxelService();
     private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
     private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
+    private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
     private Dictionary<string, List<Land>> ownersLands;
     private HashSet<Land> changedLands = new HashSet<Land>();
 
@@ -42,6 +44,14 @@ public class VoxelService
         types[27] = new BlockType(27, "red_wool", true, 26, 26, 26, 26, 26, 26);
         types[28] = new BlockType(28, "snow", true, 28, 28, 28, 28, 28, 28);
         types[29] = new BlockType(29, "stone_bricks", true, 30, 30, 30, 30, 30, 30);
+        types[30] = new ImageBlockTpe(30);
+    }
+
+    public Dictionary<Vector3Int, MetaBlock> GetMetaBlocks(Vector3Int coordinate)
+    {
+        Dictionary<Vector3Int, MetaBlock> blocks;
+        metaBlocks.TryGetValue(coordinate, out blocks);
+        return blocks;
     }
 
     public void FillChunk(Vector3Int coordinate, byte[,,] voxels)
@@ -140,6 +150,21 @@ public class VoxelService
         return types.Values.Count;
     }
 
+    public MetaBlock GetMetaAt(VoxelPosition vp)
+    {
+        Dictionary<Vector3Int, MetaBlock> chunk;
+        if (metaBlocks.TryGetValue(vp.chunk, out chunk))
+        {
+            MetaBlock block;
+            if (chunk.TryGetValue(vp.local, out block))
+            {
+                return block;
+            }
+        }
+
+        return null;
+    }
+
     public bool IsSolid(VoxelPosition vp)
     {
         Dictionary<Vector3Int, byte> chunkChanges;
@@ -169,30 +194,69 @@ public class VoxelService
         if (!migrationService.GetLatestVersion().Equals("0.1.0"))
             throw new Exception("Unsupported migration latest verison.");
         var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
+        var metaBlocks = new Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>>();
+
         yield return LoadDetails(loading, land =>
         {
             land = migrationService.Migrate(land);
-            foreach (var entry in land.changes)
-            {
-                var change = entry.Value;
-                var pos = LandDetails.PraseKey(entry.Key) + new Vector3Int((int)land.region.x1, 0, (int)land.region.y1);
-                var position = new VoxelPosition(pos);
-                if (land.region.Contains(ref pos))
-                {
-                    var type = GetBlockType(change.name);
-                    if (type == null) continue;
-
-                    Dictionary<Vector3Int, byte> chunk;
-                    if (!changes.TryGetValue(position.chunk, out chunk))
-                        changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
-                    chunk[position.local] = type.id;
-                }
-            }
+            var met = new Metadata();
+            if (land.metadata != null)
+                ReadMetadata(land, metaBlocks);
+            if (land.changes != null)
+                ReadChanges(land, changes);
         });
 
         this.changes = changes;
+        this.metaBlocks = metaBlocks;
         onDone.Invoke();
         yield break;
+    }
+
+    private void ReadChanges(LandDetails land, Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes)
+    {
+        foreach (var entry in land.changes)
+        {
+            var change = entry.Value;
+            var pos = LandDetails.PraseKey(entry.Key) + new Vector3Int((int)land.region.x1, 0, (int)land.region.y1);
+            var position = new VoxelPosition(pos);
+            if (land.region.Contains(ref pos))
+            {
+                var type = GetBlockType(change.name);
+                if (type == null) continue;
+
+                Dictionary<Vector3Int, byte> chunk;
+                if (!changes.TryGetValue(position.chunk, out chunk))
+                    changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
+                chunk[position.local] = type.id;
+            }
+        }
+    }
+
+    private void ReadMetadata(LandDetails land, Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks)
+    {
+        foreach (var entry in land.metadata)
+        {
+            var meta = entry.Value;
+            var pos = LandDetails.PraseKey(entry.Key) + new Vector3Int((int)land.region.x1, 0, (int)land.region.y1);
+            var position = new VoxelPosition(pos);
+            if (land.region.Contains(ref pos))
+            {
+                var type = (MetaBlockType)GetBlockType(meta.type);
+                if (type == null) continue;
+                try
+                {
+                    var block = type.New(meta.properties);
+                    Dictionary<Vector3Int, MetaBlock> chunk;
+                    if (!metaBlocks.TryGetValue(position.chunk, out chunk))
+                        metaBlocks[position.chunk] = chunk = new Dictionary<Vector3Int, MetaBlock>();
+                    chunk[position.local] = block;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("Exception occured while parsing meta props. " + ex);
+                }
+            }
+        }
     }
 
     private IEnumerator LoadDetails(Loading loading, Action<LandDetails> consumer)
@@ -234,6 +298,7 @@ public class VoxelService
             {
                 var ld = new LandDetails();
                 ld.changes = new Dictionary<string, VoxelChange>();
+                ld.metadata = new Dictionary<string, Metadata>();
                 ld.region = l;
                 ld.v = "0.1.0";
                 ld.wallet = wallet;
@@ -241,31 +306,71 @@ public class VoxelService
             }
         }
 
+        Convert(result, changes, (key, type, land) =>
+        {
+            var change = new VoxelChange();
+            change.name = GetBlockType(type).name;
+            land.changes[key] = change;
+        }, m => true);//Filter can check if the block is default
+        Convert(result, metaBlocks, (key, metaBlock, land) =>
+        {
+            var properties = metaBlock.GetProps();
+            if (properties == null) return;
+            var metadata = new Metadata();
+            metadata.properties = JsonConvert.SerializeObject(properties);
+            metadata.type = metaBlock.type.name;
+            land.metadata[key] = metadata;
+        }, m => m.GetProps() != null);
 
-        foreach (var chunkEntry in changes)
+        return result;
+    }
+
+    private void Convert<T>(Dictionary<int, LandDetails> lands, Dictionary<Vector3Int, Dictionary<Vector3Int, T>> values,
+        Action<string, T, LandDetails> consumer, Func<T, bool> filter)
+    {
+        foreach (var chunkEntry in values)
         {
             var cpos = chunkEntry.Key;
-            var chunkChanges = chunkEntry.Value;
-            foreach (var voxelEntry in chunkChanges)
+            var chunkValues = chunkEntry.Value;
+            foreach (var voxelEntry in chunkValues)
             {
-                var vpos = voxelEntry.Key;
-                var worldPos = VoxelPosition.ToWorld(cpos, vpos);
-                foreach (var entry in result)
+                if (filter(voxelEntry.Value))
                 {
-                    var land = entry.Value.region;
-                    if (land.Contains(ref worldPos))
+                    var vpos = voxelEntry.Key;
+                    var worldPos = VoxelPosition.ToWorld(cpos, vpos);
+                    foreach (var entry in lands)
                     {
-                        var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
-                        var change = new VoxelChange();
-                        change.name = GetBlockType(voxelEntry.Value).name;
-                        entry.Value.changes[key] = change;
-                        break;
+                        var land = entry.Value.region;
+                        if (land.Contains(ref worldPos))
+                        {
+                            var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
+                            consumer(key, voxelEntry.Value, entry.Value);
+                            break;
+                        }
                     }
                 }
             }
         }
+    }
 
-        return result;
+
+    public void MarkLandChanged(Land land)
+    {
+        changedLands.Add(land);
+    }
+
+    public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, byte id, Land land)
+    {
+        Dictionary<Vector3Int, MetaBlock> metas;
+        if (!metaBlocks.TryGetValue(pos.chunk, out metas))
+        {
+            metas = new Dictionary<Vector3Int, MetaBlock>();
+            metaBlocks[pos.chunk] = metas;
+        }
+        metas[pos.local] = ((MetaBlockType)GetBlockType(id)).New("");
+        changedLands.Add(land);
+
+        return metas;
     }
 
     public void AddChange(VoxelPosition pos, byte id, Land land)

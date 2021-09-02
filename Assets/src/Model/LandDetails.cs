@@ -6,6 +6,7 @@ public class LandDetails
 {
     public string v;
     public string wallet;
+    public Dictionary<string, Metadata> metadata;
     public Land region;
     public Dictionary<string, VoxelChange> changes;
 

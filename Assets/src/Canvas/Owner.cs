@@ -6,12 +6,11 @@ using UnityEngine.UI;
 
 public class Owner : MonoBehaviour
 {
+    private static Owner instance;
     private readonly static Profile NO_PROFILE = new Profile();
     private Dictionary<string, Profile> profileCache = new Dictionary<string, Profile>();
     public TextMeshProUGUI label;
     public ActionButton openProfileButton;
-    public ActionButton closeButton;
-    public ActionButton editButton;
     [SerializeField]
     private GameObject view;
     [SerializeField]
@@ -26,10 +25,9 @@ public class Owner : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        instance = this;
         manager = GameManager.INSTANCE;
         openProfileButton.AddListener(() => manager.ShowProfile(currentProfile));
-        closeButton.AddListener(() => manager.ReturnToGame());
-        editButton.AddListener(() => manager.EditProfile());
     }
 
     // Update is called once per frame
@@ -150,7 +148,7 @@ public class Owner : MonoBehaviour
     {
         get
         {
-            return GameObject.Find("Owner").GetComponent<Owner>();
+            return instance;
         }
     }
 

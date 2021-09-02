@@ -57,7 +57,7 @@ public class RectPane : MonoBehaviour
     private void DestroyRects()
     {
         foreach (var lo in landIndicators)
-            Destroy(lo);
+            DestroyImmediate(lo);
         landIndicators.Clear();
         drawnLandIndicators.Clear();
     }
@@ -93,7 +93,7 @@ public class RectPane : MonoBehaviour
 
     internal void Delete(GameObject drawingObject)
     {
-        Destroy(drawingObject);
+        DestroyImmediate(drawingObject);
         drawnLandIndicators.Remove(drawingObject);
         landIndicators.Remove(drawingObject);
     }

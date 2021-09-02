@@ -10,21 +10,13 @@ public class ItemSlotUI : MonoBehaviour
     public Image slotIcon;
     public Text slotAmount;
 
-    Blocks blocks;
-
-    private void Awake()
-    {
-        blocks = GameObject.Find("Blocks").GetComponent<Blocks>();
-    }
-
-
     public void SetItemSlot(ItemSlot itemSlot)
     {
         this.itemSlot = itemSlot;
 
         if (itemSlot != null && itemSlot.GetStack() != null)
         {
-            slotIcon.sprite = blocks.blockIcons[itemSlot.GetStack().id];
+            slotIcon.sprite = VoxelService.INSTANCE.GetBlockType(itemSlot.GetStack().id).GetIcon();
             slotAmount.text = "";
             slotAmount.enabled = true;
             slotIcon.enabled = true;

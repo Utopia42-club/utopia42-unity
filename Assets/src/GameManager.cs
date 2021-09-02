@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     private bool worldInited = false;
     public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
     private State state = State.LOADING;
+    private List<Dialog> dialogs = new List<Dialog>();
 
     void Start()
     {
@@ -131,6 +132,8 @@ public class GameManager : MonoBehaviour
             (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
             || state == State.PROFILE))
             SetState(State.PLAYING);
+        if(state == State.DIALOG && dialogs.Count > 0)
+            CloseDialog(dialogs[dialogs.Count-1]);
     }
 
     internal void ExitSettings()
@@ -207,7 +210,8 @@ public class GameManager : MonoBehaviour
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Loading profile");
-            Owner.INSTANCE.UserProfile(profile => {
+            Owner.INSTANCE.UserProfile(profile =>
+            {
                 SetState(GameManager.State.PROFILE);
                 ProfileDialog.INSTANCE.SetProfile(profile);
             }, () => SetState(State.PLAYING));
@@ -253,6 +257,23 @@ public class GameManager : MonoBehaviour
         yield return InitWorld(player.transform.position, true);
     }
 
+    public Dialog OpenDialog()
+    {
+        var go = Instantiate(Resources.Load<GameObject>("Dialog/Dialog"), GameObject.Find("Canvas").transform);
+        SetState(State.DIALOG);
+        var dialog = go.GetComponent<Dialog>();
+        dialogs.Add(dialog);
+        return dialog;
+    }
+
+    public void CloseDialog(Dialog dialog)
+    {
+        Destroy(dialog.gameObject);
+        dialogs.Remove(dialog);
+        if (dialogs.Count == 0)
+            SetState(State.PLAYING);
+    }
+
     public static GameManager INSTANCE
     {
         get
@@ -263,6 +284,6 @@ public class GameManager : MonoBehaviour
 
     public enum State
     {
-        LOADING, SETTINGS, PLAYING, MAP, BROWSER_CONNECTION, INVENTORY, HELP, PROFILE
+        LOADING, SETTINGS, PLAYING, MAP, BROWSER_CONNECTION, INVENTORY, HELP, PROFILE, DIALOG
     }
 }

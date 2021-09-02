@@ -28,4 +28,9 @@ public class BlockType
     {
         return textures[face.index];
     }
+
+    public UnityEngine.Sprite GetIcon()
+    {
+        return UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/" + name);
+    }
 }

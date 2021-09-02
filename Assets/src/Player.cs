@@ -34,15 +34,21 @@ public class Player : MonoBehaviour
 
     public Transform highlightBlock;
     public Transform placeBlock;
+    public MetaBlock focusedMetaBlock;
     public float castStep = 0.1f;
     public float reach = 8f;
 
     public byte selectedBlockId = 1;
 
 
+    private void Start()
+    {
+        Snack.INSTANCE.ShowObject("Owner", null);
+    }
+
     public List<Land> GetLands()
     {
-        return this.lands;
+        return lands;
     }
 
     public void ResetLands()
@@ -57,10 +63,6 @@ public class Player : MonoBehaviour
         }
 
         this.lands = lands != null ? lands : new List<Land>();
-    }
-
-    private void Start()
-    {
     }
 
     private void FixedUpdate()
@@ -156,7 +158,14 @@ public class Player : MonoBehaviour
         {
             var vp = new VoxelPosition(placeBlock.position);
             var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null) chunk.PutVoxel(vp, VoxelService.INSTANCE.GetBlockType(selectedBlockId), placeLand);
+            if (chunk != null)
+            {
+                var type = VoxelService.INSTANCE.GetBlockType(selectedBlockId);
+                if (typeof(MetaBlockType).IsAssignableFrom(type.GetType()))
+                    chunk.PutMeta(vp, type, placeLand);
+                else
+                    chunk.PutVoxel(vp, type, placeLand);
+            }
         }
     }
 
@@ -165,7 +174,9 @@ public class Player : MonoBehaviour
         float distance = castStep;
         Vector3Int lastPos = Vectors.FloorToInt(cam.position);
 
-        while (distance < reach)
+        MetaBlock metaToFocus = null;
+        bool foundSolid = false;
+        while (distance < reach && !foundSolid)
         {
             Vector3 pos = cam.position + (cam.forward * distance);
             distance += castStep;
@@ -175,31 +186,56 @@ public class Player : MonoBehaviour
             var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk == null) break;
 
-            if (chunk.GetBlock(vp.local).isSolid)
+            if (metaToFocus == null)
+                metaToFocus = chunk.GetMetaAt(vp);
+
+
+            if (foundSolid = chunk.GetBlock(vp.local).isSolid)
             {
                 highlightBlock.position = posint;
-
                 highlightBlock.gameObject.SetActive(CanEdit(posint, out highlightLand));
 
-                var currVox = Vectors.FloorToInt(transform.position);
-                if (lastPos != currVox && lastPos != currVox + Vector3Int.up)
+                if (typeof(MetaBlockType).IsAssignableFrom(VoxelService.INSTANCE.GetBlockType(selectedBlockId).GetType()))
                 {
-                    placeBlock.position = lastPos;
-                    placeBlock.gameObject.SetActive(CanEdit(lastPos, out placeLand));
+                    if (chunk.GetMetaAt(vp) == null)
+                    {
+                        placeBlock.position = posint;
+                        placeBlock.gameObject.SetActive(CanEdit(posint, out placeLand));
+                    }
+                    else
+                        placeBlock.gameObject.SetActive(false);
                 }
                 else
-                    placeBlock.gameObject.SetActive(false);
-                return;
+                {
+                    var currVox = Vectors.FloorToInt(transform.position);
+                    if (lastPos != currVox && lastPos != currVox + Vector3Int.up)
+                    {
+                        placeBlock.position = lastPos;
+                        placeBlock.gameObject.SetActive(CanEdit(lastPos, out placeLand));
+                    }
+                    else
+                        placeBlock.gameObject.SetActive(false);
+                }
             }
 
             lastPos = posint;
         }
 
-        highlightBlock.gameObject.SetActive(false);
-        placeBlock.gameObject.SetActive(false);
+
+        if (focusedMetaBlock != metaToFocus && focusedMetaBlock != null)
+            focusedMetaBlock.UnFocus();
+        focusedMetaBlock = metaToFocus;
+        if (focusedMetaBlock != null)
+            focusedMetaBlock.Focus();
+
+        if (!foundSolid)
+        {
+            highlightBlock.gameObject.SetActive(false);
+            placeBlock.gameObject.SetActive(false);
+        }
     }
 
-    private bool CanEdit(Vector3Int position, out Land land)
+    public bool CanEdit(Vector3Int position, out Land land)
     {
         if (Settings.IsGuest())
         {

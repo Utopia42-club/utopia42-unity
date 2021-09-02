@@ -6,6 +6,7 @@ public class Chunk
     public static readonly int CHUNK_WIDTH = 16;
     public static readonly int CHUNK_HEIGHT = 32;
 
+    private Dictionary<Vector3Int, MetaBlock> metaBlocks;
     private readonly byte[,,] voxels = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
     private World world;
     public GameObject chunkObject;
@@ -40,14 +41,27 @@ public class Chunk
 
         meshRenderer.material = world.material;
         chunkObject.transform.SetParent(world.transform);
-        chunkObject.transform.position = this.position;
+        chunkObject.transform.position = position;
         chunkObject.name = "Chunck " + coordinate;
 
-        VoxelService.INSTANCE.FillChunk(this.coordinate, this.voxels);
-        Draw();
+        VoxelService.INSTANCE.FillChunk(coordinate, voxels);
+        metaBlocks = VoxelService.INSTANCE.GetMetaBlocks(coordinate);
+        DrawVoxels();
+        DrawMetaBlocks();
+        //var block = new ImageBlockTpe(50).New("{front:{height:5, width:5, url:\"https://www.wpbeginner.com/wp-content/uploads/2020/03/ultimate-small-business-resource-180x180.png\"}}");
+        //block.RenderAt(chunkObject.transform, position+new Vector3Int(0, 32, 0));
     }
 
-    private void Draw()
+    private void DrawMetaBlocks()
+    {
+        if (metaBlocks != null)
+        {
+            foreach (var entry in metaBlocks)
+                entry.Value.RenderAt(chunkObject.transform, entry.Key, this);
+        }
+    }
+
+    private void DrawVoxels()
     {
         List<Vector3> vertices = new List<Vector3>();
         List<int> triangles = new List<int>();
@@ -80,6 +94,17 @@ public class Chunk
             throw new System.ArgumentException("Invalid local position: " + localPos);
 
         return VoxelService.INSTANCE.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
+    }
+
+    public MetaBlock GetMetaAt(VoxelPosition vp)
+    {
+        if (metaBlocks == null) return null;
+
+        MetaBlock block;
+        if (metaBlocks.TryGetValue(vp.local, out block))
+            return block;
+
+        return null;
     }
 
     private bool IsPositionSolid(Vector3Int localPos)
@@ -136,19 +161,8 @@ public class Chunk
         Mesh mesh = new Mesh();
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
-        //mesh.uv = uvs.ToArray();
-        //var sb = new UnityEngine.Rendering.SubMeshDescriptor();
-        //sb.firstVertex = 0;
+        mesh.uv = uvs.ToArray();
 
-        Color[] colors = new Color[vertices.Count];
-
-        for (int i = 0; i < vertices.Count; i++)
-            colors[i] = Color.Lerp(Color.red, Color.green, vertices[i].y);
-
-        // assign the array of colors to the Mesh.
-        mesh.colors = colors;
-
-        //mesh.SetSubMesh(0, );
         mesh.RecalculateNormals();
 
         meshFilter.mesh = mesh;
@@ -186,23 +200,35 @@ public class Chunk
             OnChanged(pos);
         }
     }
+    public void PutMeta(VoxelPosition pos, BlockType type, Land land)
+    {
+        metaBlocks = VoxelService.INSTANCE.AddMetaBlock(pos, type.id, land);
+        metaBlocks[pos.local].RenderAt(chunkObject.transform, pos.local, this);
+    }
+
+    public void DeleteMeta(VoxelPosition pos)
+    {
+        var block = metaBlocks[pos.local];
+        metaBlocks.Remove(pos.local);
+        block.Destroy();
+    }
 
     private void OnChanged(VoxelPosition pos)
     {
-        Draw();
+        DrawVoxels();
         if (pos.local.x == voxels.GetLength(0) - 1)
-            world.GetChunkIfInited(pos.chunk + Vector3Int.right).Draw();
+            world.GetChunkIfInited(pos.chunk + Vector3Int.right).DrawVoxels();
         if (pos.local.y == voxels.GetLength(1) - 1)
-            world.GetChunkIfInited(pos.chunk + Vector3Int.up).Draw();
+            world.GetChunkIfInited(pos.chunk + Vector3Int.up).DrawVoxels();
         if (pos.local.z == voxels.GetLength(2) - 1)
-            world.GetChunkIfInited(pos.chunk + Vector3Int.forward).Draw();
+            world.GetChunkIfInited(pos.chunk + Vector3Int.forward).DrawVoxels();
 
         if (pos.local.x == 0)
-            world.GetChunkIfInited(pos.chunk + Vector3Int.left).Draw();
+            world.GetChunkIfInited(pos.chunk + Vector3Int.left).DrawVoxels();
         if (pos.local.y == 0)
-            world.GetChunkIfInited(pos.chunk + Vector3Int.down).Draw();
+            world.GetChunkIfInited(pos.chunk + Vector3Int.down).DrawVoxels();
         if (pos.local.z == 0)
-            world.GetChunkIfInited(pos.chunk + Vector3Int.back).Draw();
+            world.GetChunkIfInited(pos.chunk + Vector3Int.back).DrawVoxels();
     }
 
     private Vector3Int ToGlobal(Vector3Int localPoint)

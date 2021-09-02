@@ -4,15 +4,18 @@ using UnityEngine;
 
 public class Blocks : MonoBehaviour
 {
-    public Dictionary<byte, Sprite> blockIcons = new Dictionary<byte, Sprite>();
+    public static Dictionary<byte, Sprite> blockIcons = new Dictionary<byte, Sprite>();
     public Sprite[] sprites;
 
     void Start()
     {
-        foreach (var sp in sprites)
+        if(blockIcons == null)
         {
-            var id = VoxelService.INSTANCE.GetBlockType(sp.name).id;
-            blockIcons[id] = sp;
+            foreach (var sp in sprites)
+            {
+                var id = VoxelService.INSTANCE.GetBlockType(sp.name).id;
+                blockIcons[id] = sp;
+            }
         }
     }
 

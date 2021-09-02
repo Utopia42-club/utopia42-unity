@@ -9,6 +9,7 @@ public class ProfileDialog : MonoBehaviour
     public ImageLoader profileImage;
     public GameObject socialLinks;
     public SocialLink socialLinkPrefab;
+    public ActionButton closeButton;
     public GameObject editButton;
     private readonly List<GameObject> links = new List<GameObject>();
     private GameManager manager;
@@ -17,6 +18,8 @@ public class ProfileDialog : MonoBehaviour
     void Start()
     {
         manager = GameManager.INSTANCE;
+        closeButton.AddListener(() => manager.ReturnToGame());
+        editButton.GetComponent<ActionButton>().AddListener(() => manager.EditProfile());
         manager.stateChange.AddListener(s =>
         {
             if (s != GameManager.State.PROFILE)
@@ -26,7 +29,7 @@ public class ProfileDialog : MonoBehaviour
                 profileImage.SetUrl(null);
                 if (links.Count > 0)
                 {
-                    foreach (var link in links) Destroy(link);
+                    foreach (var link in links) DestroyImmediate(link);
                     links.Clear();
                 }
             }
