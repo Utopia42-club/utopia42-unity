@@ -30,7 +30,7 @@ public class ImageBlockObject : MetaBlockObject
         if (snackItem != null) snackItem.Remove();
         var lines = new List<string>();
         lines.Add("Press Z for details");
-        lines.Add("Press P to toggle preview");
+        lines.Add("Press T to toggle preview");
         lines.Add("Press X to delete");
         snackItem = Snack.INSTANCE.ShowLines(lines, () =>
         {
@@ -38,7 +38,7 @@ public class ImageBlockObject : MetaBlockObject
                 EditProps();
             if (Input.GetKeyDown(KeyCode.X))
                 GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
-            if (Input.GetKeyDown(KeyCode.P))
+            if (Input.GetKeyDown(KeyCode.T))
                 GetIconObject().SetActive(!GetIconObject().activeSelf);
         });
     }

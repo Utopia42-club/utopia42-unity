@@ -44,7 +44,8 @@ public class VoxelService
         types[27] = new BlockType(27, "red_wool", true, 26, 26, 26, 26, 26, 26);
         types[28] = new BlockType(28, "snow", true, 28, 28, 28, 28, 28, 28);
         types[29] = new BlockType(29, "stone_bricks", true, 30, 30, 30, 30, 30, 30);
-        types[30] = new ImageBlockTpe(30);
+        types[30] = new ImageBlockType(30);
+        types[31] = new VideoBlockType(31);
     }
 
     public Dictionary<Vector3Int, MetaBlock> GetMetaBlocks(Vector3Int coordinate)
