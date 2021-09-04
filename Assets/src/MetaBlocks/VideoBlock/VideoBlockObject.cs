@@ -1,18 +1,25 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class VideoBlockObject : MetaBlockObject
 {
-    private readonly List<GameObject> videos = new List<GameObject>();
+    private readonly Dictionary<Voxels.Face, VideoFace> videos = new Dictionary<Voxels.Face, VideoFace>();
     private SnackItem snackItem;
     private Land land;
     private bool canEdit;
+    private Voxels.Face focusedFace;
+    private bool ready = false;
 
     private void Start()
     {
         if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
             CreateIcon();
+        ready = true;
+    }
+
+    public override bool IsReady()
+    {
+        return ready;
     }
 
     public override void OnDataUpdate()
@@ -25,71 +32,81 @@ public class VideoBlockObject : MetaBlockObject
         RenderFaces();
     }
 
-    public override void Focus()
+    public override void Focus(Voxels.Face face)
     {
-        UpdateSnacksAndIconObject();
+        focusedFace = face;
+        UpdateSnacksAndIconObject(face);
     }
 
-    private void Play()
+    private void TogglePlay(Voxels.Face face)
     {
-        foreach (var vid in videos)
-            vid.GetComponent<VideoFace>().TogglePlaying();
-        UpdateSnacksAndIconObject();
+        VideoFace video;
+        if (videos.TryGetValue(face, out video) && video.IsPrepared())
+            video.TogglePlaying();
+        UpdateSnacksAndIconObject(face);
     }
 
-    private void UpdateSnacksAndIconObject()
+    private void UpdateSnacksAndIconObject(Voxels.Face face)
     {
-        bool isPlaying = false;
-        foreach (var vid in videos)
+        if (snackItem != null) snackItem.Remove();
+        var lines = new List<string>();
+        VideoFace video;
+        if (videos.TryGetValue(face, out video))
         {
-            if (vid.GetComponent<VideoFace>().IsPlaying())
+            if (!video.IsPrepared())
+                lines.Add("Loading Video...");
+            else if (video.IsPlaying())
+                lines.Add("Press P to pause");
+            else
+                lines.Add("Press P to play");
+        }
+
+        if (GetIconObject() != null)
+        {
+            GetIconObject().SetActive(true);
+            foreach (var vid in videos.Values)
             {
-                isPlaying = true;
-                break;
+                if (vid.IsPlaying())
+                {
+                    GetIconObject().SetActive(false);
+                    break;
+                }
             }
         }
 
-        if (snackItem != null) snackItem.Remove();
-        var lines = new List<string>();
-        if (isPlaying)
-            lines.Add("Press P to pause");
-        else
-            lines.Add("Press P to play");
-
-        var icon = GetIconObject();
-        if(icon != null)
-            icon.SetActive(!isPlaying);
-
         if (!canEdit)
         {
-            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
+            if (video != null)
             {
-                if (Input.GetKeyDown(KeyCode.P))
-                    Play();
-            });
+                snackItem = Snack.INSTANCE.ShowLines(lines, () =>
+                {
+                    if (Input.GetKeyDown(KeyCode.P))
+                        TogglePlay(face);
+                });
+            }
         }
         else
         {
             lines.Add("Press Z for details");
             lines.Add("Press T to toggle preview");
             lines.Add("Press X to delete");
-
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
-                    EditProps();
+                    EditProps(face);
                 if (Input.GetKeyDown(KeyCode.X))
                     GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetKeyDown(KeyCode.P))
-                    Play();
+                    TogglePlay(face);
             });
         }
     }
 
     public override void UnFocus()
     {
+        focusedFace = null;
         if (snackItem != null)
         {
             snackItem.Remove();
@@ -99,8 +116,8 @@ public class VideoBlockObject : MetaBlockObject
 
     private void RenderFaces()
     {
-        foreach (var vid in videos)
-            DestroyImmediate(vid);
+        foreach (var vid in videos.Values)
+            DestroyImmediate(vid.gameObject);
         videos.Clear();
 
         MediaBlockProperties properties = (MediaBlockProperties)GetBlock().GetProps();
@@ -121,12 +138,16 @@ public class VideoBlockObject : MetaBlockObject
         var go = new GameObject();
         go.transform.parent = transform;
         go.transform.localPosition = Vector3.zero + ((Vector3)face.direction) * 0.1f;
-        var imgFace = go.AddComponent<VideoFace>();
-        imgFace.Init(face, props.url, props.width, props.height);
-        videos.Add(go);
+        var vidFace = go.AddComponent<VideoFace>();
+        vidFace.Init(face, props.url, props.width, props.height);
+        videos[face] = vidFace;
+        vidFace.loading.AddListener(l =>
+        {
+            if (focusedFace == face) UpdateSnacksAndIconObject(face);
+        });
     }
 
-    private void EditProps()
+    private void EditProps(Voxels.Face face)
     {
         var manager = GameManager.INSTANCE;
         var dialog = manager.OpenDialog();
@@ -134,10 +155,18 @@ public class VideoBlockObject : MetaBlockObject
             .WithTitle("Video Block Properties")
             .WithContent(MediaBlockEditor.PREFAB);
         var editor = dialog.GetContent().GetComponent<MediaBlockEditor>();
-        editor.SetValue(GetBlock().GetProps() as MediaBlockProperties);
+
+        var props = GetBlock().GetProps();
+        editor.SetValue(props == null ? null : (props as MediaBlockProperties).GetFaceProps(face));
         dialog.WithAction("Submit", () =>
         {
-            GetBlock().SetProps(editor.GetValue(), land);
+            var value = editor.GetValue();
+            var props = new MediaBlockProperties(GetBlock().GetProps() as MediaBlockProperties);
+
+            props.SetFaceProps(face, value);
+            if (props.IsEmpty()) props = null;
+
+            GetBlock().SetProps(props, land);
             manager.CloseDialog(dialog);
         });
     }

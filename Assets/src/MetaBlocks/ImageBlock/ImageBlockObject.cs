@@ -7,11 +7,18 @@ public class ImageBlockObject : MetaBlockObject
     private SnackItem snackItem;
     private Land land;
     private bool canEdit;
-
+    private bool ready = false;
+    
     private void Start()
     {
         if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
             CreateIcon();
+        ready = true;
+    }
+
+    public override bool IsReady()
+    {
+        return ready;
     }
 
     public override void OnDataUpdate()
@@ -24,7 +31,7 @@ public class ImageBlockObject : MetaBlockObject
         RenderFaces();
     }
 
-    public override void Focus()
+    public override void Focus(Voxels.Face face)
     {
         if (!canEdit) return;
         if (snackItem != null) snackItem.Remove();
@@ -35,7 +42,7 @@ public class ImageBlockObject : MetaBlockObject
         snackItem = Snack.INSTANCE.ShowLines(lines, () =>
         {
             if (Input.GetKeyDown(KeyCode.Z))
-                EditProps();
+                EditProps(face);
             if (Input.GetKeyDown(KeyCode.X))
                 GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
             if (Input.GetKeyDown(KeyCode.T))
@@ -81,7 +88,7 @@ public class ImageBlockObject : MetaBlockObject
         images.Add(go);
     }
 
-    private void EditProps()
+    private void EditProps(Voxels.Face face)
     {
         var manager = GameManager.INSTANCE;
         var dialog = manager.OpenDialog();
@@ -89,10 +96,18 @@ public class ImageBlockObject : MetaBlockObject
             .WithTitle("Image Block Properties")
             .WithContent(MediaBlockEditor.PREFAB);
         var editor = dialog.GetContent().GetComponent<MediaBlockEditor>();
-        editor.SetValue(GetBlock().GetProps() as MediaBlockProperties);
+
+        var props = GetBlock().GetProps();
+        editor.SetValue(props == null ? null : (props as MediaBlockProperties).GetFaceProps(face));
         dialog.WithAction("Submit", () =>
         {
-            GetBlock().SetProps(editor.GetValue(), land);
+            var value = editor.GetValue();
+            var props = new MediaBlockProperties(GetBlock().GetProps() as MediaBlockProperties);
+
+            props.SetFaceProps(face, value);
+            if (props.IsEmpty()) props = null;
+
+            GetBlock().SetProps(props, land);
             manager.CloseDialog(dialog);
         });
     }

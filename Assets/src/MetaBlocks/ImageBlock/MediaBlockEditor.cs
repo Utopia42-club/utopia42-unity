@@ -1,41 +1,38 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MediaBlockEditor : MonoBehaviour
 {
     public static readonly string PREFAB = "MetaBlocks/MediaBlockEditor";
     [SerializeField]
-    private MediaFaceEditor top;
+    public InputField url;
     [SerializeField]
-    private MediaFaceEditor bottom;
+    public InputField width;
     [SerializeField]
-    private MediaFaceEditor left;
-    [SerializeField]
-    private MediaFaceEditor right;
-    [SerializeField]
-    private MediaFaceEditor front;
-    [SerializeField]
-    private MediaFaceEditor back;
+    public InputField height;
 
-    public void SetValue(MediaBlockProperties props)
+    public MediaBlockProperties.FaceProps GetValue()
     {
-        top.SetValue(props == null ? null : props.top);
-        bottom.SetValue(props == null ? null : props.bottom);
-        left.SetValue(props == null ? null : props.left);
-        right.SetValue(props == null ? null : props.right);
-        front.SetValue(props == null ? null : props.front);
-        back.SetValue(props == null ? null : props.back);
+        if (HasValue(url) && HasValue(width) && HasValue(height))
+        {
+            var props = new MediaBlockProperties.FaceProps();
+            props.url = url.text;
+            props.width = int.Parse(width.text);
+            props.height = int.Parse(height.text);
+            return props;
+        }
+        return null;
+    }
+    public void SetValue(MediaBlockProperties.FaceProps value)
+    {
+        url.text = value == null ? "" : value.url;
+        width.text = value == null ? "" : value.width.ToString();
+        height.text = value == null ? "" : value.height.ToString();
     }
 
-    public MediaBlockProperties GetValue()
+    private bool HasValue(InputField f)
     {
-        var props = new MediaBlockProperties();
-        props.top = top.GetValue();
-        props.bottom = bottom.GetValue();
-        props.left = left.GetValue();
-        props.right = right.GetValue();
-        props.front = front.GetValue();
-        props.back = back.GetValue();
-        return props;
+        return f.text != null && f.text.Length > 0;
     }
 }
 

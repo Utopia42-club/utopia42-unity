@@ -34,7 +34,9 @@ public class Player : MonoBehaviour
 
     public Transform highlightBlock;
     public Transform placeBlock;
-    public MetaBlock focusedMetaBlock;
+    private MetaBlock focusedMetaBlock;
+    private Voxels.Face focusedMetaFace;
+
     public float castStep = 0.1f;
     public float reach = 8f;
 
@@ -79,7 +81,7 @@ public class Player : MonoBehaviour
     {
         if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
         GetPlayerInputs();
-        placeCursorBlocks();
+        PlaceCursorBlocks();
 
         if (lastChunk == null)
         {
@@ -169,7 +171,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void placeCursorBlocks()
+    private void PlaceCursorBlocks()
     {
         float distance = castStep;
         Vector3Int lastPos = Vectors.FloorToInt(cam.position);
@@ -188,7 +190,6 @@ public class Player : MonoBehaviour
 
             if (metaToFocus == null)
                 metaToFocus = chunk.GetMetaAt(vp);
-
 
             if (foundSolid = chunk.GetBlock(vp.local).isSolid)
             {
@@ -220,19 +221,81 @@ public class Player : MonoBehaviour
 
             lastPos = posint;
         }
+        Voxels.Face faceToFocus = null;
+        if (metaToFocus != null)
+        {
+            if (!metaToFocus.IsPositioned()) metaToFocus = null;
+            else
+            {
+                faceToFocus = FindFocusedFace(metaToFocus.GetPosition());
+                if (faceToFocus == null) metaToFocus = null;
+            }
+        }
 
-
-        if (focusedMetaBlock != metaToFocus && focusedMetaBlock != null)
-            focusedMetaBlock.UnFocus();
-        focusedMetaBlock = metaToFocus;
-        if (focusedMetaBlock != null)
-            focusedMetaBlock.Focus();
+        if (focusedMetaBlock != metaToFocus || faceToFocus != focusedMetaFace)
+        {
+            if (focusedMetaBlock != null)
+                focusedMetaBlock.UnFocus();
+            focusedMetaBlock = metaToFocus;
+            focusedMetaFace = faceToFocus;
+            if (focusedMetaBlock != null)
+            {
+                if (!focusedMetaBlock.Focus(focusedMetaFace))
+                {
+                    focusedMetaBlock = null;
+                    focusedMetaFace = null;
+                }
+            }
+        }
 
         if (!foundSolid)
         {
             highlightBlock.gameObject.SetActive(false);
             placeBlock.gameObject.SetActive(false);
         }
+    }
+
+
+    private Voxels.Face FindFocusedFace(Vector3 pos)
+    {
+        var localPos = cam.position - pos;
+
+        if (IsAimedAt(localPos.x, localPos.z, cam.forward.x, cam.forward.z) &&
+                IsAimedAt(localPos.x, localPos.y, cam.forward.x, cam.forward.y))
+            return Voxels.Face.LEFT;
+
+        if (IsAimedAt(localPos.z, localPos.x, cam.forward.z, cam.forward.x) &&
+                IsAimedAt(localPos.z, localPos.y, cam.forward.z, cam.forward.y))
+            return Voxels.Face.BACK;
+
+        if (IsAimedAt(localPos.y, localPos.z, cam.forward.y, cam.forward.z) &&
+                IsAimedAt(localPos.y, localPos.x, cam.forward.y, cam.forward.x))
+            return Voxels.Face.BOTTOM;
+
+
+        localPos -= Vector3.one;
+        if (IsAimedAt(-localPos.y, -localPos.z, -cam.forward.y, -cam.forward.z) &&
+                IsAimedAt(-localPos.y, -localPos.x, -cam.forward.y, -cam.forward.x))
+            return Voxels.Face.TOP;
+
+
+        if (IsAimedAt(-localPos.x, -localPos.z, -cam.forward.x, -cam.forward.z) &&
+                IsAimedAt(-localPos.x, -localPos.y, -cam.forward.x, -cam.forward.y))
+            return Voxels.Face.RIGHT;
+
+        if (IsAimedAt(-localPos.z, -localPos.x, -cam.forward.z, -cam.forward.x) &&
+                IsAimedAt(-localPos.z, -localPos.y, -cam.forward.z, -cam.forward.y))
+            return Voxels.Face.FRONT;
+        return null;
+    }
+
+    private bool IsAimedAt(float posX, float posZ, float forwardX, float forwardZ)
+    {
+        var pos2d = new Vector2(posX, posZ);
+        var lower = Vector2.SignedAngle(Vector2.right, -pos2d);
+        var upper = Vector2.SignedAngle(Vector2.right, Vector2.up - pos2d);
+        var actual = Vector2.SignedAngle(Vector2.right, new Vector2(forwardX, forwardZ));
+        return lower < upper && lower < actual && upper > actual;
     }
 
     public bool CanEdit(Vector3Int position, out Land land)

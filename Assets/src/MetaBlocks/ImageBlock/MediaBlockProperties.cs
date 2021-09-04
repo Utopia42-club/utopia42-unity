@@ -8,6 +8,24 @@ public class MediaBlockProperties
     public FaceProps top;
     public FaceProps bottom;
 
+    public MediaBlockProperties()
+    {
+
+    }
+
+    public MediaBlockProperties(MediaBlockProperties obj)
+    {
+        if (obj != null)
+        {
+            left = obj.left;
+            right = obj.right;
+            top = obj.right;
+            bottom = obj.bottom;
+            front = obj.front;
+            back = obj.back;
+        }
+    }
+
     public override bool Equals(object obj)
     {
         if (obj == this) return true;
@@ -19,6 +37,33 @@ public class MediaBlockProperties
             Equals(left, prop.left) && Equals(right, prop.right);
     }
 
+    public FaceProps GetFaceProps(Voxels.Face face)
+    {
+        if (face == Voxels.Face.BACK) return back;
+        if (face == Voxels.Face.FRONT) return front;
+        if (face == Voxels.Face.RIGHT) return right;
+        if (face == Voxels.Face.LEFT) return left;
+        if (face == Voxels.Face.TOP) return top;
+        if (face == Voxels.Face.BOTTOM) return bottom;
+        return null;
+    }
+
+    public void SetFaceProps(Voxels.Face face, FaceProps props)
+    {
+        if (face == Voxels.Face.BACK) back = props;
+        if (face == Voxels.Face.FRONT) front = props;
+        if (face == Voxels.Face.RIGHT) right = props;
+        if (face == Voxels.Face.LEFT) left = props;
+        if (face == Voxels.Face.TOP) top = props;
+        if (face == Voxels.Face.BOTTOM) bottom = props;
+    }
+
+    public bool IsEmpty()
+    {
+        return back == null && front == null &&
+            right == null && left == null &&
+            top == null && bottom == null;
+    }
 
     [System.Serializable]
     public class FaceProps

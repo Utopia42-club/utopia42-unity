@@ -35,7 +35,7 @@ public abstract class SnackItem
 
     public class Text : SnackItem
     {
-        readonly string text;
+        private string text;
         private readonly GameObject textPanel;
         private readonly GameObject textObject;
 
@@ -55,6 +55,12 @@ public abstract class SnackItem
         internal override void Show()
         {
             textPanel.SetActive(true);
+            textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
+        }
+
+        public void UpdateText(string newText)
+        {
+            text = newText;
             textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
         }
     }

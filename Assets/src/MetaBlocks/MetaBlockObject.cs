@@ -12,11 +12,13 @@ public abstract class MetaBlockObject : MonoBehaviour
         DoInitialize();
     }
 
+    public abstract bool IsReady();
+
     protected abstract void DoInitialize();
 
     public abstract void OnDataUpdate();
 
-    public abstract void Focus();
+    public abstract void Focus(Voxels.Face face);
 
     public abstract void UnFocus();
 

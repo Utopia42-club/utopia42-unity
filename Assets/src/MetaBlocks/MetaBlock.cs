@@ -22,9 +22,24 @@ public class MetaBlock
         blockObject.Initialize(this, chunk);
     }
 
-    public void Focus()
+    public bool IsPositioned()
     {
-        if (blockObject != null) blockObject.Focus();
+        return blockObject != null;
+    }
+
+    public Vector3 GetPosition()
+    {
+        return blockObject.transform.position;
+    }
+
+    public bool Focus(Voxels.Face face)
+    {
+        if (blockObject != null && blockObject.IsReady())
+        {
+            blockObject.Focus(face);
+            return true;
+        }
+        return false;
     }
 
     public void UnFocus()
