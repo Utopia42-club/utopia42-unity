@@ -1,12 +1,7 @@
 [System.Serializable]
 public class LinkBlockProperties
 {
-    public FaceProps front;
-    public FaceProps back;
-    public FaceProps right;
-    public FaceProps left;
-    public FaceProps top;
-    public FaceProps bottom;
+    public FaceProps faceProps;
 
     public LinkBlockProperties()
     {
@@ -17,12 +12,7 @@ public class LinkBlockProperties
     {
         if (obj != null)
         {
-            left = obj.left;
-            right = obj.right;
-            top = obj.right;
-            bottom = obj.bottom;
-            front = obj.front;
-            back = obj.back;
+            faceProps = obj.faceProps;
         }
     }
 
@@ -32,37 +22,22 @@ public class LinkBlockProperties
         if ((obj == null) || !this.GetType().Equals(obj.GetType()))
             return false;
         var prop = obj as LinkBlockProperties;
-        return Equals(front, prop.front) && Equals(back, prop.back) &&
-            Equals(top, prop.top) && Equals(bottom, prop.bottom) &&
-            Equals(left, prop.left) && Equals(right, prop.right);
+        return Equals(faceProps, prop.faceProps);
     }
 
-    public FaceProps GetFaceProps(Voxels.Face face)
+    public FaceProps GetFaceProps()
     {
-        if (face == Voxels.Face.BACK) return back;
-        if (face == Voxels.Face.FRONT) return front;
-        if (face == Voxels.Face.RIGHT) return right;
-        if (face == Voxels.Face.LEFT) return left;
-        if (face == Voxels.Face.TOP) return top;
-        if (face == Voxels.Face.BOTTOM) return bottom;
-        return null;
+        return faceProps;
     }
 
-    public void SetFaceProps(Voxels.Face face, FaceProps props)
+    public void SetFaceProps(FaceProps props)
     {
-        if (face == Voxels.Face.BACK) back = props;
-        if (face == Voxels.Face.FRONT) front = props;
-        if (face == Voxels.Face.RIGHT) right = props;
-        if (face == Voxels.Face.LEFT) left = props;
-        if (face == Voxels.Face.TOP) top = props;
-        if (face == Voxels.Face.BOTTOM) bottom = props;
+        faceProps = props;
     }
 
     public bool IsEmpty()
     {
-        return back == null && front == null &&
-            right == null && left == null &&
-            top == null && bottom == null;
+        return faceProps == null;
     }
 
     [System.Serializable]

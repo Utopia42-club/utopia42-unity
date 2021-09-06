@@ -10,8 +10,8 @@ public class LinkBlockObject : MetaBlockObject
 
     private void Start()
     {
-        if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-            CreateIcon();
+        canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
+        CreateIcon();
         ready = true;
     }
 
@@ -31,17 +31,20 @@ public class LinkBlockObject : MetaBlockObject
 
     public override void Focus(Voxels.Face face)
     {
-        if (!canEdit) return;
-        UpdaetSnacks(face);
+        UpdaetSnacks();
     }
 
-    private void UpdaetSnacks(Voxels.Face face)
+    private void UpdaetSnacks()
     {
         if (snackItem != null) snackItem.Remove();
         var lines = new List<string>();
-        lines.Add("Press Z for details");
+        if (canEdit)
+        {
+            lines.Add("Press Z for details");
+            lines.Add("Press X to delete");
+        }
 
-        LinkBlockProperties.FaceProps faceProps = GetFaceProps(face);
+        LinkBlockProperties.FaceProps faceProps = GetFaceProps();
         if (faceProps != null)
         {
             if (faceProps.type == 0)
@@ -49,34 +52,35 @@ public class LinkBlockObject : MetaBlockObject
             else if (faceProps.type == 1)
                 lines.Add("Press O to open this game link");
         }
-
-        lines.Add("Press X to delete");
         snackItem = Snack.INSTANCE.ShowLines(lines, () =>
         {
-            if (Input.GetKeyDown(KeyCode.Z))
-                EditProps(face);
-            if (Input.GetKeyDown(KeyCode.X))
-                GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+            if (canEdit)
+            {
+                if (Input.GetKeyDown(KeyCode.Z))
+                    EditProps();
+                if (Input.GetKeyDown(KeyCode.X))
+                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+            }
             if (faceProps != null && Input.GetKeyDown(KeyCode.O))
-                OpenLink(face);
+                OpenLink();
         });
     }
 
-    private void OpenLink(Voxels.Face face)
+    private void OpenLink()
     {
-        LinkBlockProperties.FaceProps faceProps = GetFaceProps(face);
+        LinkBlockProperties.FaceProps faceProps = GetFaceProps();
         if (faceProps.type == 0)
             Application.OpenURL(faceProps.url);
         else if (faceProps.type == 1)
             GameManager.INSTANCE.MovePlayerTo(new Vector3(faceProps.x, faceProps.y, faceProps.z));
     }
 
-    private LinkBlockProperties.FaceProps GetFaceProps(Voxels.Face face)
+    private LinkBlockProperties.FaceProps GetFaceProps()
     {
         LinkBlockProperties properties = (LinkBlockProperties)GetBlock().GetProps();
         if (properties != null)
         {
-            LinkBlockProperties.FaceProps faceProps = properties.GetFaceProps(face);
+            LinkBlockProperties.FaceProps faceProps = properties.GetFaceProps();
             return faceProps;
         }
         return null;
@@ -91,7 +95,7 @@ public class LinkBlockObject : MetaBlockObject
         }
     }
 
-    private void EditProps(Voxels.Face face)
+    private void EditProps()
     {
         var manager = GameManager.INSTANCE;
         var dialog = manager.OpenDialog();
@@ -101,18 +105,18 @@ public class LinkBlockObject : MetaBlockObject
         var editor = dialog.GetContent().GetComponent<LinkBlockEditor>();
 
         var props = GetBlock().GetProps();
-        editor.SetValue(props == null ? null : (props as LinkBlockProperties).GetFaceProps(face));
+        editor.SetValue(props == null ? null : (props as LinkBlockProperties).GetFaceProps());
         dialog.WithAction("Submit", () =>
         {
             var value = editor.GetValue();
             var props = new LinkBlockProperties(GetBlock().GetProps() as LinkBlockProperties);
 
-            props.SetFaceProps(face, value);
+            props.SetFaceProps(value);
             if (props.IsEmpty()) props = null;
 
             GetBlock().SetProps(props, land);
             manager.CloseDialog(dialog);
-            UpdaetSnacks(face);
+            UpdaetSnacks();
         });
     }
 }
