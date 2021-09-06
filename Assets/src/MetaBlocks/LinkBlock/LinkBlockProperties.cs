@@ -1,18 +1,19 @@
 [System.Serializable]
 public class LinkBlockProperties
 {
-    public FaceProps faceProps;
+    public string url;
+    public int[] pos;
 
     public LinkBlockProperties()
     {
-
     }
 
     public LinkBlockProperties(LinkBlockProperties obj)
     {
         if (obj != null)
         {
-            faceProps = obj.faceProps;
+            url = obj.url;
+            pos = obj.pos;
         }
     }
 
@@ -21,42 +22,16 @@ public class LinkBlockProperties
         if (obj == this) return true;
         if ((obj == null) || !this.GetType().Equals(obj.GetType()))
             return false;
-        var prop = obj as LinkBlockProperties;
-        return Equals(faceProps, prop.faceProps);
-    }
 
-    public FaceProps GetFaceProps()
-    {
-        return faceProps;
-    }
-
-    public void SetFaceProps(FaceProps props)
-    {
-        faceProps = props;
+        return obj is LinkBlockProperties props &&
+               url == props.url &&
+               pos[0] == props.pos[0] &&
+               pos[1] == props.pos[1] &&
+               pos[2] == props.pos[2];
     }
 
     public bool IsEmpty()
     {
-        return faceProps == null;
-    }
-
-    [System.Serializable]
-    public class FaceProps
-    {
-        public int type;
-        public string url;
-        public int x;
-        public int y;
-        public int z;
-
-        public override bool Equals(object obj)
-        {
-            return obj is FaceProps props &&
-                   type == props.type &&
-                   url == props.url &&
-                   x == props.x &&
-                   y == props.y &&
-                   z == props.z;
-        }
+        return (url == null || url.Length == 0) && pos == null;
     }
 }

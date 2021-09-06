@@ -1,6 +1,6 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class LinkBlockEditor : MonoBehaviour
 {
@@ -22,7 +22,7 @@ public class LinkBlockEditor : MonoBehaviour
     }
 
 
-    public LinkBlockProperties.FaceProps GetValue()
+    public LinkBlockProperties GetValue()
     {
         int value = type.value;
 
@@ -30,9 +30,8 @@ public class LinkBlockEditor : MonoBehaviour
         {
             if (HasValue(url))
             {
-                var props = new LinkBlockProperties.FaceProps();
+                var props = new LinkBlockProperties();
                 props.url = url.text;
-                props.type = 0;
                 return props;
             }
         }
@@ -40,24 +39,31 @@ public class LinkBlockEditor : MonoBehaviour
         {
             if (HasValue(x) && HasValue(y) && HasValue(z))
             {
-                var props = new LinkBlockProperties.FaceProps();
-                props.type = 1;
-                props.x = int.Parse(x.text);
-                props.y = int.Parse(y.text);
-                props.z = int.Parse(z.text);
+                var props = new LinkBlockProperties();
+                props.pos = new int[] { int.Parse(x.text), int.Parse(y.text), int.Parse(z.text) };
                 return props;
             }
         }
         return null;
     }
 
-    public void SetValue(LinkBlockProperties.FaceProps value)
+    public void SetValue(LinkBlockProperties value)
     {
-        type.value = value == null ? 1 : value.type;
+        type.value = (value == null || value.pos != null) ? 1 : 0;
         url.text = value == null ? "" : value.url;
-        x.text = value == null ? "" : value.x.ToString();
-        y.text = value == null ? "" : value.y.ToString();
-        z.text = value == null ? "" : value.z.ToString();
+        bool noPos = value == null || value.pos == null;
+        if (noPos)
+        {
+            x.text = null;
+            y.text = null;
+            z.text = null;
+        }
+        else
+        {
+            x.text = value.pos[0].ToString();
+            y.text = value.pos[1].ToString();
+            z.text = value.pos[2].ToString();
+        }
     }
 
     private bool HasValue(InputField f)

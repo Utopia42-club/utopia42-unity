@@ -31,10 +31,10 @@ public class LinkBlockObject : MetaBlockObject
 
     public override void Focus(Voxels.Face face)
     {
-        UpdaetSnacks();
+        UpdateSnacks();
     }
 
-    private void UpdaetSnacks()
+    private void UpdateSnacks()
     {
         if (snackItem != null) snackItem.Remove();
         var lines = new List<string>();
@@ -44,13 +44,13 @@ public class LinkBlockObject : MetaBlockObject
             lines.Add("Press X to delete");
         }
 
-        LinkBlockProperties.FaceProps faceProps = GetFaceProps();
-        if (faceProps != null)
+        LinkBlockProperties props = GetProps();
+        if (props != null && !props.IsEmpty())
         {
-            if (faceProps.type == 0)
-                lines.Add("Press O to open this web link");
-            else if (faceProps.type == 1)
-                lines.Add("Press O to open this game link");
+            if (props.pos == null)
+                lines.Add("Press O to open in web");
+            else
+                lines.Add("Press O to transport");
         }
         snackItem = Snack.INSTANCE.ShowLines(lines, () =>
         {
@@ -61,29 +61,23 @@ public class LinkBlockObject : MetaBlockObject
                 if (Input.GetKeyDown(KeyCode.X))
                     GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
             }
-            if (faceProps != null && Input.GetKeyDown(KeyCode.O))
+            if (props != null && !props.IsEmpty() && Input.GetKeyDown(KeyCode.O))
                 OpenLink();
         });
     }
 
     private void OpenLink()
     {
-        LinkBlockProperties.FaceProps faceProps = GetFaceProps();
-        if (faceProps.type == 0)
+        LinkBlockProperties faceProps = GetProps();
+        if (faceProps.pos == null)
             Application.OpenURL(faceProps.url);
-        else if (faceProps.type == 1)
-            GameManager.INSTANCE.MovePlayerTo(new Vector3(faceProps.x, faceProps.y, faceProps.z));
+        else
+            GameManager.INSTANCE.MovePlayerTo(new Vector3(faceProps.pos[0], faceProps.pos[1], faceProps.pos[2]));
     }
 
-    private LinkBlockProperties.FaceProps GetFaceProps()
+    private LinkBlockProperties GetProps()
     {
-        LinkBlockProperties properties = (LinkBlockProperties)GetBlock().GetProps();
-        if (properties != null)
-        {
-            LinkBlockProperties.FaceProps faceProps = properties.GetFaceProps();
-            return faceProps;
-        }
-        return null;
+        return (LinkBlockProperties)GetBlock().GetProps();
     }
 
     public override void UnFocus()
@@ -105,18 +99,18 @@ public class LinkBlockObject : MetaBlockObject
         var editor = dialog.GetContent().GetComponent<LinkBlockEditor>();
 
         var props = GetBlock().GetProps();
-        editor.SetValue(props == null ? null : (props as LinkBlockProperties).GetFaceProps());
+        editor.SetValue(props as LinkBlockProperties);
         dialog.WithAction("Submit", () =>
         {
             var value = editor.GetValue();
-            var props = new LinkBlockProperties(GetBlock().GetProps() as LinkBlockProperties);
-
-            props.SetFaceProps(value);
-            if (props.IsEmpty()) props = null;
-
-            GetBlock().SetProps(props, land);
+            Debug.Log(value.url);
+            Debug.Log(value.pos);
+            if (value.pos != null) value.url = null;
+            if (value.IsEmpty()) value = null;
+            Debug.Log(value);
+            GetBlock().SetProps(value, land);
             manager.CloseDialog(dialog);
-            UpdaetSnacks();
+            UpdateSnacks();
         });
     }
 }

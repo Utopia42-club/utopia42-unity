@@ -50,6 +50,7 @@ public class IpfsClient
                 continue;
 
             string data = JsonConvert.SerializeObject(detail);
+            Debug.Log(data);
             var form = new List<IMultipartFormSection>();
             form.Add(new MultipartFormDataSection("file", data));
             using (UnityWebRequest webRequest = UnityWebRequest.Post(url, form))
