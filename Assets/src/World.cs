@@ -104,7 +104,7 @@ public class World : MonoBehaviour
 
     IEnumerator CreateChunks(int chunksPerFrame)
     {
-        creatingChunks = true;
+       // creatingChunks = true;
         int todo = chunksPerFrame;
         while (chunkRequests.Count != 0)
         {

@@ -120,7 +120,7 @@ public class VideoBlockObject : MetaBlockObject
             DestroyImmediate(vid.gameObject);
         videos.Clear();
 
-        MediaBlockProperties properties = (MediaBlockProperties)GetBlock().GetProps();
+        VideoBlockProperties properties = (VideoBlockProperties)GetBlock().GetProps();
         if (properties != null)
         {
             AddFace(Voxels.Face.BACK, properties.back);
@@ -132,14 +132,14 @@ public class VideoBlockObject : MetaBlockObject
         }
     }
 
-    private void AddFace(Voxels.Face face, MediaBlockProperties.FaceProps props)
+    private void AddFace(Voxels.Face face, VideoBlockProperties.FaceProps props)
     {
         if (props == null) return;
         var go = new GameObject();
         go.transform.parent = transform;
         go.transform.localPosition = Vector3.zero + ((Vector3)face.direction) * 0.1f;
         var vidFace = go.AddComponent<VideoFace>();
-        vidFace.Init(face, props.url, props.width, props.height);
+        vidFace.Init(face, props.url, props.width, props.height, props.previewTime);
         videos[face] = vidFace;
         vidFace.loading.AddListener(l =>
         {
@@ -153,15 +153,15 @@ public class VideoBlockObject : MetaBlockObject
         var dialog = manager.OpenDialog();
         dialog
             .WithTitle("Video Block Properties")
-            .WithContent(MediaBlockEditor.PREFAB);
-        var editor = dialog.GetContent().GetComponent<MediaBlockEditor>();
+            .WithContent(VideoBlockEditor.PREFAB);
+        var editor = dialog.GetContent().GetComponent<VideoBlockEditor>();
 
         var props = GetBlock().GetProps();
-        editor.SetValue(props == null ? null : (props as MediaBlockProperties).GetFaceProps(face));
+        editor.SetValue(props == null ? null : (props as VideoBlockProperties).GetFaceProps(face));
         dialog.WithAction("Submit", () =>
         {
             var value = editor.GetValue();
-            var props = new MediaBlockProperties(GetBlock().GetProps() as MediaBlockProperties);
+            var props = new VideoBlockProperties(GetBlock().GetProps() as VideoBlockProperties);
 
             props.SetFaceProps(face, value);
             if (props.IsEmpty()) props = null;

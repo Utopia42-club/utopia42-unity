@@ -6,8 +6,7 @@ public class MetaFace : MonoBehaviour
     {
         var meshRenderer = gameObject.AddComponent<MeshRenderer>();
         var meshFilter = gameObject.AddComponent<MeshFilter>();
-
-        meshRenderer.material = new Material(Shader.Find("Standard"));
+        meshRenderer.material = new Material(Shader.Find("Unlit/Texture"));
 
         if (face == Voxels.Face.FRONT || face == Voxels.Face.BACK)
             transform.localScale = new Vector3(width, height, 1);
@@ -22,14 +21,18 @@ public class MetaFace : MonoBehaviour
 
         var mesh = new Mesh();
         mesh.vertices = vertices;
-        mesh.triangles = new int[6] { 0, 1, 2, 2, 1, 3 };
+        mesh.triangles = new int[12] { 0, 1, 2, 2, 1, 3,  2, 1, 0, 3, 1, 2, };
 
         Vector2[] uv = new Vector2[4]
         {
-            new Vector2(1, 0),
-            new Vector2(1, 1),
+          //  new Vector2(1, 0),
+           // new Vector2(1, 1),
+           // new Vector2(0, 0),
+           // new Vector2(0, 1)
             new Vector2(0, 0),
-            new Vector2(0, 1)
+            new Vector2(0, 1),
+            new Vector2(1, 0),
+            new Vector2(1, 1)
         };
         mesh.uv = uv;
 
