@@ -265,7 +265,7 @@ public class VoxelService
     {
         loading.UpdateText("Loading Wallets And Lands...");
         var ownersLands = new Dictionary<string, List<Land>>();
-        yield return EthereumClientService.INSTANCE.getLands(ownersLands);
+        yield return EthereumClientService.INSTANCE.GetLands(ownersLands);
         this.ownersLands = ownersLands;
 
         var lands = new List<Land>();
@@ -421,13 +421,13 @@ public class VoxelService
     public IEnumerator ReloadLands()
     {
         var ownersLands = new Dictionary<string, List<Land>>();
-        yield return EthereumClientService.INSTANCE.getLands(ownersLands);
+        yield return EthereumClientService.INSTANCE.GetLands(ownersLands);
         this.ownersLands = ownersLands;
         yield break;
     }
 
     public IEnumerator ReloadLandsFor(string wallet)
     {
-        yield return EthereumClientService.INSTANCE.getLandsForOwner(wallet, lands => ownersLands[wallet] = lands);
+        yield return EthereumClientService.INSTANCE.GetLandsForOwner(wallet, lands => ownersLands[wallet] = lands);
     }
 }

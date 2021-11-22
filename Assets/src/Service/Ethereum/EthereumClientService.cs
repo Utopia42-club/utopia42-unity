@@ -1,13 +1,16 @@
-﻿using Nethereum.JsonRpc.UnityClient;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
+using Nethereum.JsonRpc.UnityClient;
+using UnityEngine;
 using Utopia.Contracts.Utopia.ContractDefinition;
 
 public class EthereumClientService
 {
     public static EthereumClientService INSTANCE = new EthereumClientService();
     private EthNetwork network;
+
     private EthereumClientService()
     {
     }
@@ -27,51 +30,83 @@ public class EthereumClientService
         this.network = network;
     }
 
-    public IEnumerator getOwners(Action<List<string>> consumer)
+    public IEnumerator GetLastLandId(Action<BigInteger> consumer)
     {
-        var request = new QueryUnityRequest<GetOwnersFunction, GetOwnersOutputDTOBase>(network.provider, network.contractAddress);
-        yield return request.Query(new GetOwnersFunction() { }, network.contractAddress);
-        consumer.Invoke(request.Result.ReturnValue1);
-        yield break;
+        var request =
+            new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(network.provider, network.contractAddress);
+        yield return request.Query(new LastLandIdFunction() { }, network.contractAddress);
+        consumer(request.Result.ReturnValue1);
     }
 
-    public IEnumerator getLandsForOwner(string owner, Action<List<Land>> consumer)
+    public IEnumerator GetLandsForOwner(string owner, Action<List<Land>> consumer)
     {
-        List<Land> lands = new List<Land>();
-        var request = new QueryUnityRequest<GetLandsFunction, GetLandsOutputDTO>(network.provider, network.contractAddress);
-        yield return request.Query(new GetLandsFunction() { Owner = owner }, network.contractAddress);
-        var results = request.Result.ReturnValue1;
-        if (results != null)
-            foreach (var result in results)
+        var request =
+            new QueryUnityRequest<GetLandsFunction, GetLandsOutputDTO>(network.provider, network.contractAddress);
+        yield return request.Query(new GetLandsFunction() {Owner = owner}, network.contractAddress);
+        consumer(MapLands(request.Result.Lands));
+    }
+
+    public IEnumerator GetLandsByIds(List<BigInteger> ids, Action<List<Land>> consumer)
+    {
+        var request =
+            new QueryUnityRequest<GetLandsByIdsFunction, GetLandsByIdsOutputDTO>(network.provider,
+                network.contractAddress);
+        yield return request.Query(new GetLandsByIdsFunction() {Ids = ids}, network.contractAddress);
+        consumer(MapLands(request.Result.Lands));
+    }
+
+    private static List<Land> MapLands(List<Utopia.Contracts.Utopia.ContractDefinition.Land> contractLands)
+    {
+        List<Land> resultLands = new List<Land>();
+        if (contractLands != null)
+            foreach (var contractLand in contractLands)
             {
                 var land = new Land();
-                land.x1 = (long)result.X1;
-                land.y1 = (long)result.Y1;
-                land.x2 = (long)result.X2;
-                land.y2 = (long)result.Y2;
-                land.ipfsKey = result.Hash;
-                land.time = (long)result.Time;
-                lands.Add(land);
+                land.id = (long) contractLand.Id;
+                land.x1 = (long) contractLand.X1;
+                land.y1 = (long) contractLand.Y1;
+                land.x2 = (long) contractLand.X2;
+                land.y2 = (long) contractLand.Y2;
+                land.ipfsKey = contractLand.Hash;
+                land.time = (long) contractLand.Time;
+                land.isNft = contractLand.IsNFT;
+                land.owner = contractLand.Owner;
+                land.ownerIndex = (long) contractLand.OwnerIndex;
+                resultLands.Add(land);
             }
-        consumer(lands);
+
+        return resultLands;
     }
 
-    public IEnumerator getLands(Dictionary<string, List<Land>> ownersLands)
+    public IEnumerator GetLands(Dictionary<string, List<Land>> ownersLands)
     {
-        var owners = new List<string>();
-        yield return getOwners(o => owners.AddRange(o));
+        BigInteger lastId = 0;
+        yield return GetLastLandId(result => lastId = result);
 
-        IEnumerator[] enums = new IEnumerator[owners.Count];
-        for (int i = 0; i < owners.Count; i++)
+        var pageSize = (lastId + 1) < 50 ? (int) lastId + 1 : 50;
+        var ids = new List<BigInteger>(pageSize);
+        for (var i = 0; i < pageSize; i++) ids.Add(i);
+        BigInteger total = 0;
+
+        while (true)
         {
-            int idx = i;
-            enums[i] = getLandsForOwner(owners[i], ls => ownersLands[owners[idx]] = ls);
+            if (ids.Count == 0) yield break;
+            yield return GetLandsByIds(ids, lands =>
+            {
+                foreach (var land in lands)
+                {
+                    if (land.owner == null || land.owner.Length == 0)
+                        continue;
+                    List<Land> ol;
+                    if (!ownersLands.TryGetValue(land.owner, out ol))
+                        ownersLands[land.owner] = ol = new List<Land>();
+                    ol.Add(land);
+                }
+            });
+            var cl = ids[ids.Count - 1];
+            if (cl + pageSize > lastId)
+                ids = ids.GetRange(0, (int) (lastId - cl));
+            for (var i = 1; i <= ids.Count; i++) ids[i] = i + cl;
         }
-
-        List<Land> lands = new List<Land>();
-        for (int i = 0; i < owners.Count; i++)
-            yield return enums[i];
-
-        yield break;
     }
 }
