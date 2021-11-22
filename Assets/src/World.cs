@@ -6,6 +6,9 @@ public class World : MonoBehaviour
 {
     public Material material;
 
+    public int seed = 20;
+    public BiomeAttributes biome;
+
     //TODO take care of size/time limit
     //Diactivated chunks are added to this collection for possible future reuse
     private Dictionary<Vector3Int, Chunk> garbageChunks = new Dictionary<Vector3Int, Chunk>();
@@ -104,7 +107,7 @@ public class World : MonoBehaviour
 
     IEnumerator CreateChunks(int chunksPerFrame)
     {
-       // creatingChunks = true;
+        // creatingChunks = true;
         int todo = chunksPerFrame;
         while (chunkRequests.Count != 0)
         {
@@ -123,6 +126,33 @@ public class World : MonoBehaviour
         creatingChunks = false;
         yield break;
     }
+
+    public int GetVoxel(Vector3 pos)
+    {
+
+        int yPos = Mathf.FloorToInt(pos.y);
+        if (yPos >= 500 || yPos < -500) return 0;
+        // If bottom block of chunk, return bedrock.
+        if (yPos == 0)
+            return 1;
+
+        /* BASIC TERRAIN PASS */
+
+        int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DPerlin(new Vector2(pos.x, pos.z), 0, biome.terrainScale)) + biome.solidGroundHeight;
+        if (yPos > terrainHeight)
+            return 0;
+        //return 1;
+        var bid = biome.lodes[Random.Range(0, biome.lodes.Length)].blockID;
+        return (int) (Random.Range(0, Chunk.MAT_COUNT) + Chunk.MAT_COUNT * bid);
+        //foreach (Lode lode in biome.lodes)
+        //{
+        //    x++;
+        //    //if (yPos > lode.minHeight && yPos < lode.maxHeight)
+        //        if (Noise.Get3DPerlin(pos, 1, 1, 1-x/(float)biome.lodes.Length))
+        //            return lode.blockID;
+        //}
+    }
+
 
     public int CountChunksToCreate()
     {

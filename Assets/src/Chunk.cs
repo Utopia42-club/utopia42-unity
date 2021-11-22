@@ -3,11 +3,12 @@ using UnityEngine;
 
 public class Chunk
 {
+    public static int MAT_COUNT = 5;
     public static readonly int CHUNK_WIDTH = 16;
     public static readonly int CHUNK_HEIGHT = 32;
 
     private Dictionary<Vector3Int, MetaBlock> metaBlocks;
-    private readonly byte[,,] voxels = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
+    private readonly int[,,] voxels = new int[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
     private World world;
     public GameObject chunkObject;
 
@@ -17,6 +18,8 @@ public class Chunk
     public MeshFilter meshFilter;
     private bool inited = false;
     private bool active = true;
+
+    private int matOffset = 0;
 
     public Chunk(Vector3Int coordinate, World world)
     {
@@ -39,13 +42,16 @@ public class Chunk
         meshFilter = chunkObject.AddComponent<MeshFilter>();
         meshRenderer = chunkObject.AddComponent<MeshRenderer>();
 
-        meshRenderer.material = world.material;
+        //meshRenderer.materials = world.material;
         chunkObject.transform.SetParent(world.transform);
         chunkObject.transform.position = position;
         chunkObject.name = "Chunck " + coordinate;
 
         VoxelService.INSTANCE.FillChunk(coordinate, voxels);
         metaBlocks = VoxelService.INSTANCE.GetMetaBlocks(coordinate);
+
+        matOffset = Random.Range(0, 650 - MAT_COUNT);
+
         DrawVoxels();
         DrawMetaBlocks();
         //var block = new ImageBlockTpe(50).New("{front:{height:5, width:5, url:\"https://www.wpbeginner.com/wp-content/uploads/2020/03/ultimate-small-business-resource-180x180.png\"}}");
@@ -63,21 +69,36 @@ public class Chunk
 
     private void DrawVoxels()
     {
-        List<Vector3> vertices = new List<Vector3>();
-        List<int> triangles = new List<int>();
-        List<Vector2> uvs = new List<Vector2>();
+        var vertices = new List<Vector3>();
+        var uvs = new List<Vector2>();
+        var triangles = new Dictionary<int, List<int>>();
 
         CreateMeshData(vertices, triangles, uvs);
         CreateMesh(vertices, triangles, uvs);
     }
 
-    void CreateMeshData(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+    void CreateMeshData(List<Vector3> vertices, Dictionary<int, List<int>> triangles, List<Vector2> uvs)
     {
         for (int y = 0; y < voxels.GetLength(1); y++)
+        {
             for (int x = 0; x < voxels.GetLength(0); x++)
+            {
                 for (int z = 0; z < voxels.GetLength(2); z++)
-                    if (VoxelService.INSTANCE.GetBlockType(voxels[x, y, z]).isSolid)
-                        AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, uvs);
+                {
+                    var bId = ((int)voxels[x, y, z]) / MAT_COUNT;
+
+                    if (VoxelService.INSTANCE.GetBlockType(bId).isSolid)
+                    {
+                        var matId = ((int)voxels[x, y, z]) % MAT_COUNT + matOffset;
+                        List<int> tris;
+
+                        if (!triangles.TryGetValue(matId, out tris))
+                            triangles[matId] = tris = new List<int>();
+                        AddVisibleFaces(new Vector3Int(x, y, z), vertices, tris, uvs);
+                    }
+                }
+            }
+        }
     }
 
     // Inputs: x,y,z local to this chunk
@@ -88,12 +109,21 @@ public class Chunk
                 z >= 0 && z < voxels.GetLength(2);
     }
 
+
+    public int GetId(Vector3Int localPos)
+    {
+        if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
+            throw new System.ArgumentException("Invalid local position: " + localPos);
+
+        return (voxels[localPos.x, localPos.y, localPos.z] / MAT_COUNT);
+    }
+
     public BlockType GetBlock(Vector3Int localPos)
     {
         if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
             throw new System.ArgumentException("Invalid local position: " + localPos);
 
-        return VoxelService.INSTANCE.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
+        return VoxelService.INSTANCE.GetBlockType(GetId(localPos));
     }
 
     public MetaBlock GetMetaAt(VoxelPosition vp)
@@ -128,7 +158,7 @@ public class Chunk
             Voxels.Vertices[7] + pos
         };
 
-        byte blockId = voxels[pos.x, pos.y, pos.z];
+        int blockId = GetId(pos);
         var type = VoxelService.INSTANCE.GetBlockType(blockId);
         if (!type.isSolid) return;
 
@@ -155,16 +185,33 @@ public class Chunk
         }
     }
 
-    void CreateMesh(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+    void CreateMesh(List<Vector3> vertices, Dictionary<int, List<int>> triangles, List<Vector2> uvs)
     {
 
         Mesh mesh = new Mesh();
+        mesh.subMeshCount = triangles.Keys.Count;
+        var keys = new List<int>(triangles.Keys);
         mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
+        //mesh.triangles = tris.ToArray();
         mesh.uv = uvs.ToArray();
 
-        mesh.RecalculateNormals();
+        var mats = new Material[mesh.subMeshCount];
+        int i = 0;
+        foreach (var key in keys)
+        {
+            mesh.SetTriangles(triangles[key].ToArray(), i);
 
+            var mat = new Material(Shader.Find("Unlit/Texture"));
+            var fn = (key + 1).ToString();
+            if (fn.Length == 1) fn = "0" + fn;
+
+            mat.mainTexture = Resources.Load<Texture2D>("ImagePack/" + fn);
+            mats[i] = mat;
+            i++;
+        }
+
+        mesh.RecalculateNormals();
+        meshRenderer.materials = mats;
         meshFilter.mesh = mesh;
     }
 
@@ -195,7 +242,7 @@ public class Chunk
     {
         if (type.isSolid)
         {
-            voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
+            voxels[pos.local.x, pos.local.y, pos.local.z] = (int) (type.id * MAT_COUNT + Random.Range(0, MAT_COUNT));
             VoxelService.INSTANCE.AddChange(pos, type.id, land);
             OnChanged(pos);
         }

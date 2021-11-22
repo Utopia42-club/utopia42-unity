@@ -1,6 +1,6 @@
 public class LinkBlockType : MetaBlockType
 {
-    public LinkBlockType(byte id) : base(id, "link", typeof(LinkBlockObject), typeof(LinkBlockProperties))
+    public LinkBlockType(int id) : base(id, "link", typeof(LinkBlockObject), typeof(LinkBlockProperties))
     {
     }
 }

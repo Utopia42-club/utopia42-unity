@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Blocks : MonoBehaviour
 {
-    public static Dictionary<byte, Sprite> blockIcons = new Dictionary<byte, Sprite>();
+    public static Dictionary<int, Sprite> blockIcons = new Dictionary<int, Sprite>();
     public Sprite[] sprites;
 
     void Start()

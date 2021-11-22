@@ -3,12 +3,12 @@ using static Voxels.Face;
 
 public class BlockType
 {
-    public readonly byte id;
+    public readonly int id;
     public readonly string name;
     public readonly bool isSolid;
     public readonly int[] textures = new int[FACES.Length];
 
-    public BlockType(byte id, string name, bool isSolid,
+    public BlockType(int id, string name, bool isSolid,
         int backTexture, int rightTexture,
         int frontTexture, int leftTexture,
         int bottomTexture, int topTexture)

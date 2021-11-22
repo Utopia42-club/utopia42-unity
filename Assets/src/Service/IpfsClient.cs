@@ -17,25 +17,25 @@ public class IpfsClient
     public IEnumerator GetLandDetails(string id, Action<LandDetails> consumer)
     {
         string url = SERVER_URL + "/cat?arg=/ipfs/" + id;
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
-        {
-            yield return webRequest.SendWebRequest();
+        //using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+        //{
+        //    yield return webRequest.SendWebRequest();
 
-            switch (webRequest.result)
-            {
-                case UnityWebRequest.Result.ConnectionError:
-                case UnityWebRequest.Result.DataProcessingError:
-                    Debug.LogError(string.Format("Get for {0} caused Error: {1}", url, webRequest.error));
-                    break;
-                case UnityWebRequest.Result.ProtocolError:
-                    Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
-                    break;
-                case UnityWebRequest.Result.Success:
-                    var details = JsonConvert.DeserializeObject<LandDetails>(webRequest.downloadHandler.text);
-                    consumer.Invoke(details);
-                    break;
-            }
-        }
+        //    switch (webRequest.result)
+        //    {
+        //        case UnityWebRequest.Result.ConnectionError:
+        //        case UnityWebRequest.Result.DataProcessingError:
+        //            Debug.LogError(string.Format("Get for {0} caused Error: {1}", url, webRequest.error));
+        //            break;
+        //        case UnityWebRequest.Result.ProtocolError:
+        //            Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
+        //            break;
+        //        case UnityWebRequest.Result.Success:
+        //            var details = JsonConvert.DeserializeObject<LandDetails>(webRequest.downloadHandler.text);
+        //            consumer.Invoke(details);
+        //            break;
+        //    }
+        //}
         yield break;
     }
 

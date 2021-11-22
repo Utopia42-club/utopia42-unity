@@ -1,6 +1,6 @@
 public class ImageBlockType : MetaBlockType
 {
-    public ImageBlockType(byte id) : base(id, "image", typeof(ImageBlockObject), typeof(MediaBlockProperties))
+    public ImageBlockType(int id) : base(id, "image", typeof(ImageBlockObject), typeof(MediaBlockProperties))
     {
     }
 }

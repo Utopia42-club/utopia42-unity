@@ -6,8 +6,8 @@ using UnityEngine;
 public class VoxelService
 {
     public static VoxelService INSTANCE = new VoxelService();
-    private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
-    private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
+    private Dictionary<int, BlockType> types = new Dictionary<int, BlockType>();
+    private Dictionary<Vector3Int, Dictionary<Vector3Int, int>> changes = null;
     private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
     private Dictionary<string, List<Land>> ownersLands;
     private HashSet<Land> changedLands = new HashSet<Land>();
@@ -56,11 +56,11 @@ public class VoxelService
         return blocks;
     }
 
-    public void FillChunk(Vector3Int coordinate, byte[,,] voxels)
+    public void FillChunk(Vector3Int coordinate, int[,,] voxels)
     {
         InitiateChunk(coordinate, voxels);
 
-        Dictionary<Vector3Int, byte> chunkChanges;
+        Dictionary<Vector3Int, int> chunkChanges;
         if (changes.TryGetValue(coordinate, out chunkChanges))
         {
             foreach (var change in chunkChanges)
@@ -72,11 +72,27 @@ public class VoxelService
     }
 
 
-    private void InitiateChunk(Vector3Int position, byte[,,] voxels)
+    private void InitiateChunk(Vector3Int position, int[,,] voxels)
     {
-        byte bedrock = GetBlockType("bedrock").id;
-        byte body;
-        byte top;
+
+        for(int x= 0; x < Chunk.CHUNK_WIDTH; x++)
+        {
+            for (int y = 0; y < Chunk.CHUNK_HEIGHT; y++)
+            {
+                for (int z = 0; z < Chunk.CHUNK_WIDTH; z++)
+                {
+                    voxels[x, y, z] = World.INSTANCE.GetVoxel(new Vector3Int(x + position.x * Chunk.CHUNK_WIDTH,
+                        y + position.y * Chunk.CHUNK_HEIGHT, z + position.z * Chunk.CHUNK_WIDTH));
+                }
+            }
+        }
+        return;
+
+
+
+        int bedrock = GetBlockType("bedrock").id;
+        int body;
+        int top;
         if (position.y == 0)
         {
             InitGroundLevel(position, voxels, bedrock);
@@ -98,11 +114,11 @@ public class VoxelService
         }
     }
 
-    private void InitGroundLevel(Vector3Int position, byte[,,] voxels, byte bedrock)
+    private void InitGroundLevel(Vector3Int position, int[,,] voxels, int bedrock)
     {
-        byte body, top;
-        byte grass = GetBlockType("grass").id;
-        byte dirt = GetBlockType("dirt").id;
+        int body, top;
+        int grass = GetBlockType("grass").id;
+        int dirt = GetBlockType("dirt").id;
         var player = Player.INSTANCE;
         for (var x = 0; x < Chunk.CHUNK_WIDTH; ++x)
         {
@@ -122,16 +138,17 @@ public class VoxelService
         }
     }
 
-    private void FillAtXY(byte top, byte body, int x, int z, byte[,,] voxels)
+    private void FillAtXY(int top, int body, int x, int z, int[,,] voxels)
     {
         int maxy = voxels.GetLength(1) - 1;
 
         voxels[x, maxy, z] = top;
         for (int y = 0; y < maxy; y++)
             voxels[x, y, z] = body;
+
     }
 
-    public BlockType GetBlockType(byte id)
+    public BlockType GetBlockType(int id)
     {
         return types[id];
     }
@@ -169,15 +186,17 @@ public class VoxelService
 
     public bool IsSolid(VoxelPosition vp)
     {
-        Dictionary<Vector3Int, byte> chunkChanges;
+        Dictionary<Vector3Int, int> chunkChanges;
         if (changes.TryGetValue(vp.chunk, out chunkChanges))
         {
-            byte type;
+            int type;
             if (chunkChanges.TryGetValue(vp.local, out type))
             {
                 return GetBlockType(type).isSolid;
             }
         }
+
+        return World.INSTANCE.GetVoxel(vp.ToWorld()) > 0;
 
         return vp.chunk.y <= 0;
     }
@@ -195,7 +214,7 @@ public class VoxelService
         var migrationService = new MigrationService();
         if (!migrationService.GetLatestVersion().Equals("0.1.0"))
             throw new Exception("Unsupported migration latest verison.");
-        var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
+        var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, int>>();
         var metaBlocks = new Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>>();
 
         yield return LoadDetails(loading, land =>
@@ -214,7 +233,7 @@ public class VoxelService
         yield break;
     }
 
-    private void ReadChanges(LandDetails land, Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes)
+    private void ReadChanges(LandDetails land, Dictionary<Vector3Int, Dictionary<Vector3Int, int>> changes)
     {
         foreach (var entry in land.changes)
         {
@@ -226,9 +245,9 @@ public class VoxelService
                 var type = GetBlockType(change.name);
                 if (type == null) continue;
 
-                Dictionary<Vector3Int, byte> chunk;
+                Dictionary<Vector3Int, int> chunk;
                 if (!changes.TryGetValue(position.chunk, out chunk))
-                    changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
+                    changes[position.chunk] = chunk = new Dictionary<Vector3Int, int>();
                 chunk[position.local] = type.id;
             }
         }
@@ -361,7 +380,7 @@ public class VoxelService
         changedLands.Add(land);
     }
 
-    public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, byte id, Land land)
+    public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, int id, Land land)
     {
         Dictionary<Vector3Int, MetaBlock> metas;
         if (!metaBlocks.TryGetValue(pos.chunk, out metas))
@@ -375,12 +394,12 @@ public class VoxelService
         return metas;
     }
 
-    public void AddChange(VoxelPosition pos, byte id, Land land)
+    public void AddChange(VoxelPosition pos, int id, Land land)
     {
-        Dictionary<Vector3Int, byte> vc;
+        Dictionary<Vector3Int, int> vc;
         if (!changes.TryGetValue(pos.chunk, out vc))
         {
-            vc = new Dictionary<Vector3Int, byte>();
+            vc = new Dictionary<Vector3Int, int>();
             changes[pos.chunk] = vc;
         }
         vc[pos.local] = id;

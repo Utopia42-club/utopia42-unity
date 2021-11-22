@@ -18,7 +18,7 @@ public class Inventory : MonoBehaviour
         {
             GameObject newSlot = Instantiate(slotPrefab, transform);
 
-            ItemStack stack = new ItemStack((byte)i, 64);
+            ItemStack stack = new ItemStack(i, 64);
             ItemSlot slot = new ItemSlot();
             slot.SetStack(stack);
             slot.SetUi(newSlot.GetComponent<ItemSlotUI>());

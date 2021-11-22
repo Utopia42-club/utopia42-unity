@@ -76,10 +76,10 @@ public class ItemSlot
 
 public class ItemStack
 {
-    public byte id;
+    public int id;
     public int amount;
 
-    public ItemStack(byte id, int amount)
+    public ItemStack(int id, int amount)
     {
         this.id = id;
         this.amount = amount;

@@ -20,7 +20,7 @@ public class Toolbar : MonoBehaviour
         {
             GameObject newSlot = Instantiate(slotPrefab, layout.transform);
 
-            ItemStack stack = new ItemStack((byte)i, Random.Range(2, 65));
+            ItemStack stack = new ItemStack(i, Random.Range(2, 65));
             ItemSlot slot = new ItemSlot();
             slot.SetStack(stack);
             var ui = newSlot.GetComponent<ItemSlotUI>();

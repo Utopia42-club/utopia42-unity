@@ -40,7 +40,7 @@ public class Player : MonoBehaviour
     public float castStep = 0.1f;
     public float reach = 8f;
 
-    public byte selectedBlockId = 1;
+    public int selectedBlockId = 1;
 
 
     private void Start()
@@ -190,12 +190,10 @@ public class Player : MonoBehaviour
 
             if (metaToFocus == null)
                 metaToFocus = chunk.GetMetaAt(vp);
-
             if (foundSolid = chunk.GetBlock(vp.local).isSolid)
             {
                 highlightBlock.position = posint;
                 highlightBlock.gameObject.SetActive(CanEdit(posint, out highlightLand));
-
                 if (typeof(MetaBlockType).IsAssignableFrom(VoxelService.INSTANCE.GetBlockType(selectedBlockId).GetType()))
                 {
                     if (chunk.GetMetaAt(vp) == null)

@@ -4,12 +4,13 @@ using UnityEngine.UI;
 public class Settings : MonoBehaviour
 {
     private static readonly string GUEST = "guest";
-    public InputField walletInput;
     public Dropdown networkInput;
     public Button submitButton;
     public Button saveGameButton;
     public Button editProfileButton;
     public Button helpButton;
+    public Slider slider;
+    public Text text;
 
     void Start()
     {
@@ -21,7 +22,6 @@ public class Settings : MonoBehaviour
         saveGameButton.onClick.AddListener(() => manager.Save());
         editProfileButton.onClick.AddListener(() => manager.ShowUserProfile());
         helpButton.onClick.AddListener(() => manager.Help());
-        walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
 
         manager.stateChange.AddListener(state =>
         {
@@ -44,7 +44,6 @@ public class Settings : MonoBehaviour
 
     private void ResetInputs()
     {
-        walletInput.text = IsGuest() ? null : WalletId();
         var net = Network();
         networkInput.value = -1;
 
@@ -67,23 +66,22 @@ public class Settings : MonoBehaviour
 
     private void ResetButtonsState()
     {
-        submitButton.interactable = !string.IsNullOrEmpty(walletInput.text);
     }
 
     void Update()
     {
+        text.text = string.Format("Textures: {0}, Block Types: {1}", slider.value, slider.value*29);
         ResetButtonsState();
     }
 
     public void SetGuest()
     {
+        Chunk.MAT_COUNT = (int)slider.value;
         DoSubmit(GUEST);
     }
 
     public void Submit()
     {
-        if (string.IsNullOrWhiteSpace(walletInput.text)) return;
-        DoSubmit(walletInput.text);
     }
 
     private void DoSubmit(string walletId)
