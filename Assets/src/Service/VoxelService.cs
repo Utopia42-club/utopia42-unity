@@ -290,9 +290,9 @@ public class VoxelService
             }
     }
 
-    public Dictionary<int, LandDetails> GetLandsChanges(string wallet, List<Land> lands)
+    public List<LandDetails> GetLandsChanges(string wallet, List<Land> lands)
     {
-        var result = new Dictionary<int, LandDetails>();
+        var result = new List<LandDetails>();
         for (int i = 0; i < lands.Count; i++)
         {
             var l = lands[i];
@@ -304,17 +304,17 @@ public class VoxelService
                 ld.region = l;
                 ld.v = "0.1.0";
                 ld.wallet = wallet;
-                result[i] = ld;
+                result.Add(ld);
             }
         }
 
-        Convert(result, changes, (key, type, land) =>
+        Stream(result, changes, (key, type, land) =>
         {
             var change = new VoxelChange();
             change.name = GetBlockType(type).name;
             land.changes[key] = change;
         }, m => true);//Filter can check if the block is default
-        Convert(result, metaBlocks, (key, metaBlock, land) =>
+        Stream(result, metaBlocks, (key, metaBlock, land) =>
         {
             var properties = metaBlock.GetProps();
             if (properties == null) return;
@@ -327,7 +327,12 @@ public class VoxelService
         return result;
     }
 
-    private void Convert<T>(Dictionary<int, LandDetails> lands, Dictionary<Vector3Int, Dictionary<Vector3Int, T>> values,
+    /*
+     * vlues: chunk pos -> (voxel pos -> data)
+     *
+     *  For each item in the values that passes the filter, finds the corresponding land and calls the consumer with: position key, value, land
+     */
+    private void Stream<T>(List<LandDetails> lands, Dictionary<Vector3Int, Dictionary<Vector3Int, T>> values,
         Action<string, T, LandDetails> consumer, Func<T, bool> filter)
     {
         foreach (var chunkEntry in values)
@@ -340,13 +345,13 @@ public class VoxelService
                 {
                     var vpos = voxelEntry.Key;
                     var worldPos = VoxelPosition.ToWorld(cpos, vpos);
-                    foreach (var entry in lands)
+                    foreach (var landDetails in lands)
                     {
-                        var land = entry.Value.region;
+                        var land = landDetails.region;
                         if (land.Contains(ref worldPos))
                         {
                             var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
-                            consumer(key, voxelEntry.Value, entry.Value);
+                            consumer(key, voxelEntry.Value, landDetails);
                             break;
                         }
                     }

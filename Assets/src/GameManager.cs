@@ -196,10 +196,10 @@ public class GameManager : MonoBehaviour
             () => SetState(State.PLAYING));
     }
 
-    public void Transfer(int landIndex)
+    public void Transfer(long landId)
     {
         SetState(State.BROWSER_CONNECTION);
-        BrowserConnector.INSTANCE.Transfer(landIndex,
+        BrowserConnector.INSTANCE.Transfer(landId,
             () => StartCoroutine(ReloadLands()),
             () => SetState(State.PLAYING));
     }

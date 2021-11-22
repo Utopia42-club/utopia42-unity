@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -10,6 +10,7 @@ public class IpfsClient
     private static readonly string SERVER_URL = "https://utopia42.club/api/v0";
 
     public static IpfsClient INSATANCE = new IpfsClient();
+
     private IpfsClient()
     {
     }
@@ -36,28 +37,27 @@ public class IpfsClient
                     break;
             }
         }
+
         yield break;
     }
 
-    public IEnumerator Upload(Dictionary<int, LandDetails> details, Action<Dictionary<int, string>> success)
+    public IEnumerator Upload(List<LandDetails> details, Action<Dictionary<long, string>> success)
     {
-        var result = new Dictionary<int, string>();
+        var result = new Dictionary<long, string>();
         string url = SERVER_URL + "/add?stream-channels=true&progress=false";
-        foreach (var entry in details)
+        foreach (var landDetail in details)
         {
-            var detail = entry.Value;
-            if (string.IsNullOrWhiteSpace(detail.region.ipfsKey) && detail.changes.Count == 0)
+            if (string.IsNullOrWhiteSpace(landDetail.region.ipfsKey) && landDetail.changes.Count == 0)
                 continue;
 
-            string data = JsonConvert.SerializeObject(detail);
-            Debug.Log(data);
+            string data = JsonConvert.SerializeObject(landDetail);
             var form = new List<IMultipartFormSection>();
             form.Add(new MultipartFormDataSection("file", data));
             using (UnityWebRequest webRequest = UnityWebRequest.Post(url, form))
             {
                 yield return webRequest.SendWebRequest();
 
-                switch (webRequest.result)//FIXME add proper error handling
+                switch (webRequest.result) //FIXME add proper error handling
                 {
                     case UnityWebRequest.Result.ConnectionError:
                     case UnityWebRequest.Result.DataProcessingError:
@@ -70,19 +70,19 @@ public class IpfsClient
                         break;
                     case UnityWebRequest.Result.Success:
                         var response = JsonConvert.DeserializeObject<IpfsResponse>(webRequest.downloadHandler.text);
-                        result[entry.Key] = response.hash;
+                        result[landDetail.region.id] = response.hash;
                         break;
                 }
             }
         }
+
         success.Invoke(result);
         yield break;
     }
-
 }
 
 
-[System.Serializable]
+[Serializable]
 class IpfsResponse
 {
     public string name;

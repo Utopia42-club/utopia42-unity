@@ -46,18 +46,18 @@ public class BrowserConnector : MonoBehaviour
             CallUrl("editProfile", onDone, onCancel);
     }
 
-    public void Transfer(int landIndex, Action onDone, Action onCancel)
+    public void Transfer(long landId, Action onDone, Action onCancel)
     {
         if (WebBridge.IsPresent())
         {
-            WebBridge.Call<object>("transfer", landIndex);
+            WebBridge.Call<object>("transfer", landId);
             ResetButtons(onDone, onCancel);
         }
         else
-            CallUrl("transfer", landIndex.ToString(), onDone, onCancel);
+            CallUrl("transfer", landId.ToString(), onDone, onCancel);
     }
 
-    public void Save(Dictionary<int, string> data, Action onDone, Action onCancel)
+    public void Save(Dictionary<long, string> data, Action onDone, Action onCancel)
     {
         if (data.Count == 0) onDone();
         if (WebBridge.IsPresent())
