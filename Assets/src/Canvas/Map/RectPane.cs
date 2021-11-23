@@ -51,9 +51,9 @@ public class RectPane : MonoBehaviour
 
         foreach (var entry in service.GetOwnersLands())
         {
-            Color c = entry.Key.Equals(Settings.WalletId()) ? Color.green : Color.gray;
+            bool owner = entry.Key.Equals(Settings.WalletId());
             foreach (var land in entry.Value)
-                Add(land.x1, land.x2, land.y1, land.y2, land.isNft ? new Color(250, 237, 95) : c, land, entry.Key);
+                Add(land.x1, land.x2, land.y1, land.y2, owner ? land.isNft ? new Color(250, 237, 95) : Color.green : Color.gray, land, entry.Key);
         }
     }
 
