@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Nethereum.JsonRpc.UnityClient;
 using UnityEngine;
-using Utopia.Contracts.Utopia.ContractDefinition;
+using Utopia.Ethereum.UtopiaContract.ContractDefinition;
 
 public class EthereumClientService
 {
@@ -38,11 +38,28 @@ public class EthereumClientService
         consumer(request.Result.ReturnValue1);
     }
 
+
+    public IEnumerator ABS(Action<BigInteger> consumer)
+    {
+        var request =
+            new QueryUnityRequest<AbsFunction, AbsOutputDTO>(network.provider, network.contractAddress);
+        yield return request.Query(new AbsFunction() {X = -22}, network.contractAddress);
+        // Debug.Log(request.Exception);
+        // Debug.Log(request.DefaultAccount);
+        // Debug.Log(request.Result.ReturnValue1);
+        consumer(request.Result.ReturnValue1);
+        // consumer(MapLands(request.Result.Lands));
+    }
+
     public IEnumerator GetLandsForOwner(string owner, Action<List<Land>> consumer)
     {
         var request =
             new QueryUnityRequest<GetLandsFunction, GetLandsOutputDTO>(network.provider, network.contractAddress);
         yield return request.Query(new GetLandsFunction() {Owner = owner}, network.contractAddress);
+        Debug.Log(request.Exception);
+        Debug.Log(request.DefaultAccount);
+        Debug.Log(request.Result.Lands);
+        Debug.Log(request.Result.Lands.Count);
         consumer(MapLands(request.Result.Lands));
     }
 
@@ -55,7 +72,7 @@ public class EthereumClientService
         consumer(MapLands(request.Result.Lands));
     }
 
-    private static List<Land> MapLands(List<Utopia.Contracts.Utopia.ContractDefinition.Land> contractLands)
+    private static List<Land> MapLands(List<Utopia.Ethereum.UtopiaContract.ContractDefinition.Land> contractLands)
     {
         List<Land> resultLands = new List<Land>();
         if (contractLands != null)
@@ -70,7 +87,7 @@ public class EthereumClientService
                 land.ipfsKey = contractLand.Hash;
                 land.time = (long) contractLand.Time;
                 land.isNft = contractLand.IsNFT;
-                land.owner = contractLand.Owner;
+                land.owner = contractLand.Owner.ToLower();
                 land.ownerIndex = (long) contractLand.OwnerIndex;
                 resultLands.Add(land);
             }
@@ -85,8 +102,7 @@ public class EthereumClientService
 
         var pageSize = (lastId + 1) < 50 ? (int) lastId + 1 : 50;
         var ids = new List<BigInteger>(pageSize);
-        for (var i = 0; i < pageSize; i++) ids.Add(i);
-        BigInteger total = 0;
+        for (var i = 1; i < pageSize; i++) ids.Add(i);
 
         while (true)
         {

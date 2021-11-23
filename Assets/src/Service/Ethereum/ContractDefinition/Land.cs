@@ -5,7 +5,7 @@ using System.Numerics;
 using Nethereum.Hex.HexTypes;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
-namespace Utopia.Contracts.Utopia.ContractDefinition
+namespace Utopia.Ethereum.UtopiaContract.ContractDefinition
 {
     public partial class Land : LandBase { }
 
