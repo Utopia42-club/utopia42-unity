@@ -8,7 +8,7 @@ public class TransferHandler : MonoBehaviour, IPointerDownHandler
 {
     public GameObject transformButton;
     public RectPane rectPane;
-    public long landId;
+    public Land land;
     public string walletId;
 
     private bool selected;
@@ -29,7 +29,7 @@ public class TransferHandler : MonoBehaviour, IPointerDownHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (landId >= 0)
+        if (land != null)
             setSelected(!selected, false);
     }
 

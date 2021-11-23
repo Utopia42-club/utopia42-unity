@@ -132,8 +132,8 @@ public class GameManager : MonoBehaviour
             (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
             || state == State.PROFILE))
             SetState(State.PLAYING);
-        if(state == State.DIALOG && dialogs.Count > 0)
-            CloseDialog(dialogs[dialogs.Count-1]);
+        if (state == State.DIALOG && dialogs.Count > 0)
+            CloseDialog(dialogs[dialogs.Count - 1]);
     }
 
     internal void ExitSettings()
@@ -196,10 +196,18 @@ public class GameManager : MonoBehaviour
             () => SetState(State.PLAYING));
     }
 
-    public void Transfer(long landId)
+    public void Transfer(long landId, bool isNft)
     {
         SetState(State.BROWSER_CONNECTION);
-        BrowserConnector.INSTANCE.Transfer(landId,
+        BrowserConnector.INSTANCE.Transfer(landId, isNft,
+            () => StartCoroutine(ReloadLands()),
+            () => SetState(State.PLAYING));
+    }
+
+    public void SetNFT(long landId, bool value)
+    {
+        SetState(State.BROWSER_CONNECTION);
+        BrowserConnector.INSTANCE.SetNft(landId, value,
             () => StartCoroutine(ReloadLands()),
             () => SetState(State.PLAYING));
     }

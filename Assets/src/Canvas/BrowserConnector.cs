@@ -46,15 +46,32 @@ public class BrowserConnector : MonoBehaviour
             CallUrl("editProfile", onDone, onCancel);
     }
 
-    public void Transfer(long landId, Action onDone, Action onCancel)
+    public void Transfer(long landId, bool isNft, Action onDone, Action onCancel)
     {
         if (WebBridge.IsPresent())
         {
+            Dictionary<string, string> data = new Dictionary<string, string>();
+            data.Add("landId", landId.ToString());
+            data.Add("isNft", isNft.ToString());
             WebBridge.Call<object>("transfer", landId);
             ResetButtons(onDone, onCancel);
         }
         else
-            CallUrl("transfer", landId.ToString(), onDone, onCancel);
+            CallUrl("transfer", landId.ToString() + "_" + isNft, onDone, onCancel);
+    }
+
+    public void SetNft(long landId, bool value, Action onDone, Action onCancel)
+    {
+        if (WebBridge.IsPresent())
+        {
+            Dictionary<string, string> data = new Dictionary<string, string>();
+            data.Add("landId", landId.ToString());
+            data.Add("isNft", value.ToString());
+            WebBridge.Call<object>("SetNft", data);
+            ResetButtons(onDone, onCancel);
+        }
+        else
+            CallUrl("SetNft", landId.ToString() + "_" + value, onDone, onCancel);
     }
 
     public void Save(Dictionary<long, string> data, Action onDone, Action onCancel)

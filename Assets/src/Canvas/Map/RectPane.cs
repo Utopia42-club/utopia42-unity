@@ -10,6 +10,7 @@ public class RectPane : MonoBehaviour
 
     [SerializeField] public GameObject landPrefab;
     [SerializeField] public Button transferButton;
+    [SerializeField] public Button toggleNftButton;
 
     public TransferHandler selectedLand;
 
@@ -25,11 +26,17 @@ public class RectPane : MonoBehaviour
         });
 
         transferButton.onClick.AddListener(DoTransfer);
+        toggleNftButton.onClick.AddListener(DoToggleNft);
     }
 
     private void DoTransfer()
     {
-        GameManager.INSTANCE.Transfer(selectedLand.landId);
+        GameManager.INSTANCE.Transfer(selectedLand.land.id, selectedLand.land.isNft);
+    }
+
+    private void DoToggleNft()
+    {
+        GameManager.INSTANCE.SetNFT(selectedLand.land.id, !selectedLand.land.isNft);
     }
 
     private void Init()
@@ -46,7 +53,7 @@ public class RectPane : MonoBehaviour
         {
             Color c = entry.Key.Equals(Settings.WalletId()) ? Color.green : Color.gray;
             foreach (var land in entry.Value)
-                Add(land.x1, land.x2, land.y1, land.y2, c, land.id, entry.Key);
+                Add(land.x1, land.x2, land.y1, land.y2, land.isNft ? new Color(250, 237, 95) : c, land, entry.Key);
         }
     }
 
@@ -65,14 +72,19 @@ public class RectPane : MonoBehaviour
             selectedLand.setSelected(false, true);
         selectedLand = transferHandler;
         transferButton.gameObject.SetActive(selectedLand != null && selectedLand.walletId.Equals(Settings.WalletId()));
+        toggleNftButton.gameObject.SetActive(selectedLand != null && selectedLand.walletId.Equals(Settings.WalletId()));
+        if (toggleNftButton.gameObject.activeSelf)
+        {
+            toggleNftButton.gameObject.GetComponentInChildren<Text>().text = selectedLand.land.isNft ? "Remove NFT" : "Create NFT";
+        }
     }
 
-    private GameObject Add(long x1, long x2, long y1, long y2, Color color, long landId, string walletId)
+    private GameObject Add(long x1, long x2, long y1, long y2, Color color, Land land, string walletId)
     {
         var landObject = Instantiate(landPrefab);
         var transform = landObject.GetComponent<RectTransform>();
         TransferHandler transferHandler = landObject.GetComponent<TransferHandler>();
-        transferHandler.landId = landId;
+        transferHandler.land = land;
         transferHandler.walletId = walletId;
         transferHandler.rectPane = this;
 
@@ -96,7 +108,7 @@ public class RectPane : MonoBehaviour
 
     internal GameObject DrawAt(long x, long y)
     {
-        GameObject obj = Add(x, x, y, y, Color.blue, -1, Settings.WalletId());
+        GameObject obj = Add(x, x, y, y, Color.blue, null, Settings.WalletId());
         drawnLandIndicators.Add(obj);
         return obj;
     }
@@ -125,10 +137,10 @@ public class RectPane : MonoBehaviour
             var transform = indicator.GetComponent<RectTransform>();
             var r = transform.rect;
             var land = new Land();
-            land.x1 = (long) transform.localPosition.x;
-            land.y1 = (long) transform.localPosition.y;
-            land.x2 = land.x1 + (long) r.width;
-            land.y2 = land.y1 + (long) r.height;
+            land.x1 = (long)transform.localPosition.x;
+            land.y1 = (long)transform.localPosition.y;
+            land.x2 = land.x1 + (long)r.width;
+            land.y2 = land.y1 + (long)r.height;
             drawn.Add(land);
         }
 
