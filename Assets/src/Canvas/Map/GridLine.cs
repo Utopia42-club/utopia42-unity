@@ -23,7 +23,7 @@ namespace src.Canvas.Map
                 : RectTransform.Axis.Vertical, THICKNESS);
 
             gameObject.AddComponent<CanvasRenderer>();
-            gameObject.AddComponent<Image>().color = Color.green;
+            gameObject.AddComponent<Image>().color = new Color(39, 174, 96);
 
             this.index = index + 1;
             SetIndex(index);

@@ -57,7 +57,8 @@ namespace src.Canvas.Map
             {
                 bool owner = entry.Key.Equals(Settings.WalletId());
                 foreach (var land in entry.Value)
-                    Add(land.x1, land.x2, land.y1, land.y2, owner ? land.isNft ? new Color(250, 237, 95) : Color.green : Color.gray, land, entry.Key);
+                    Add(land.x1, land.x2, land.y1, land.y2,
+                        owner ? land.isNft ? new Color(250, 237, 95) : Color.green : Color.gray, land, entry.Key);
             }
         }
 
@@ -75,11 +76,14 @@ namespace src.Canvas.Map
             if (selectedLand != null && transferHandler != selectedLand)
                 selectedLand.setSelected(false, true);
             selectedLand = transferHandler;
-            transferButton.gameObject.SetActive(selectedLand != null && selectedLand.walletId.Equals(Settings.WalletId()));
-            toggleNftButton.gameObject.SetActive(selectedLand != null && selectedLand.walletId.Equals(Settings.WalletId()));
+            transferButton.gameObject.SetActive(selectedLand != null &&
+                                                selectedLand.walletId.Equals(Settings.WalletId()));
+            toggleNftButton.gameObject.SetActive(selectedLand != null &&
+                                                 selectedLand.walletId.Equals(Settings.WalletId()));
             if (toggleNftButton.gameObject.activeSelf)
             {
-                toggleNftButton.gameObject.GetComponentInChildren<Text>().text = selectedLand.land.isNft ? "Remove NFT" : "Create NFT";
+                toggleNftButton.gameObject.GetComponentInChildren<Text>().text =
+                    selectedLand.land.isNft ? "Remove NFT" : "Create NFT";
             }
         }
 
@@ -119,13 +123,18 @@ namespace src.Canvas.Map
 
         internal bool OverlapsOthers(GameObject landIndicator, Rect rect)
         {
+            // int x1 = (int) rect.x;
+            // int y1 = (int) rect.y;
+            // int x2 = x1 + (int) rect.width;
+            // int y2 = y1 + (int) rect.height;
             foreach (var li in landIndicators)
             {
                 if (li != landIndicator)
                 {
                     var transform = li.GetComponent<RectTransform>();
                     var r = transform.rect;
-                    if (new Rect(transform.localPosition.x, transform.localPosition.y, r.width, r.height).Overlaps(rect))
+                    if (new Rect(transform.localPosition.x, transform.localPosition.y, r.width, r.height)
+                        .Overlaps(rect))
                         return true;
                 }
             }
@@ -141,10 +150,10 @@ namespace src.Canvas.Map
                 var transform = indicator.GetComponent<RectTransform>();
                 var r = transform.rect;
                 var land = new Land();
-                land.x1 = (long)transform.localPosition.x;
-                land.y1 = (long)transform.localPosition.y;
-                land.x2 = land.x1 + (long)r.width;
-                land.y2 = land.y1 + (long)r.height;
+                land.x1 = (long) transform.localPosition.x;
+                land.y1 = (long) transform.localPosition.y;
+                land.x2 = land.x1 + (long) r.width;
+                land.y2 = land.y1 + (long) r.height;
                 drawn.Add(land);
             }
 

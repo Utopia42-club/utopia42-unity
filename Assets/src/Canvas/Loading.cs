@@ -1,12 +1,11 @@
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace src.Canvas
 {
     public class Loading : MonoBehaviour
     {
-        [SerializeField]
-        private Text textComponent;
+        [SerializeField] private TextMeshProUGUI textComponent;
 
         private void Start()
         {
@@ -24,10 +23,7 @@ namespace src.Canvas
 
         public static Loading INSTANCE
         {
-            get
-            {
-                return GameObject.Find("Loading").GetComponent<Loading>();
-            }
+            get { return GameObject.Find("Loading").GetComponent<Loading>(); }
         }
     }
 }

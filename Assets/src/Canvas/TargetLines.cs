@@ -1,20 +1,16 @@
 using src.Canvas.Map;
 using src.Utils;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace src.Canvas
 {
     public class TargetLines : MonoBehaviour
     {
-        [SerializeField]
-        RectTransform vertical;
-        [SerializeField]
-        RectTransform horizontal;
-        [SerializeField]
-        Text positionText;
-        [SerializeField]
-        RectPane landRect;
+        [SerializeField] RectTransform vertical;
+        [SerializeField] RectTransform horizontal;
+        [SerializeField] TextMeshProUGUI positionText;
+        [SerializeField] RectPane landRect;
         private bool dragging = false;
         private Vector3 lastDragPos;
         private Vector3Int startDrawPos;
@@ -31,7 +27,8 @@ namespace src.Canvas
             if (!drawing && !dragging && Input.GetMouseButtonDown(0))
             {
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
-                                                      || Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand))
+                                                      || Input.GetKey(KeyCode.LeftCommand) ||
+                                                      Input.GetKey(KeyCode.RightCommand))
                     StartDraw(realPosition);
                 else
                     StartDrag(mousePosInt);
@@ -60,18 +57,22 @@ namespace src.Canvas
 
             var drawingRect = drawingObject.GetComponent<RectTransform>();
             var rect = drawingRect.rect;
-            if ((long)rect.xMin == (long)rect.xMax || (long)rect.yMin == (long)rect.yMax)
+            if ((long) rect.xMin == (long) rect.xMax || (long) rect.yMin == (long) rect.yMax)
                 landRect.Delete(drawingObject);
+
+            //TODO open buy dialog
         }
 
         private void Draw(Vector3Int mousePos)
         {
             var drawingRect = drawingObject.GetComponent<RectTransform>();
+            var mouseX = Round(mousePos.x);
+            var mouseY = Round(mousePos.y);
             var rectPos = startDrawPos;
-            float x2 = Mathf.Max(rectPos.x, mousePos.x);
-            float x1 = Mathf.Min(rectPos.x, mousePos.x);
-            float y2 = Mathf.Max(rectPos.y, mousePos.y);
-            float y1 = Mathf.Min(rectPos.y, mousePos.y);
+            float x2 = Mathf.Max(rectPos.x, mouseX);
+            float x1 = Mathf.Min(rectPos.x, mouseX);
+            float y2 = Mathf.Max(rectPos.y, mouseY);
+            float y1 = Mathf.Min(rectPos.y, mouseY);
             var rect = new Rect(x1, y1, x2 - x1, y2 - y1);
             if (!landRect.OverlapsOthers(drawingObject, rect))
             {
@@ -79,6 +80,16 @@ namespace src.Canvas
                 drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rect.height);
                 drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rect.width);
             }
+        }
+
+        private static Vector3Int Round(Vector3 v)
+        {
+            return new Vector3Int(Round(v.x), Round(v.y), Round(v.z));
+        }
+
+        private static int Round(float x)
+        {
+            return 5 * (int) Mathf.Floor(x / 5);
         }
 
         private void StartDrag(Vector3Int mousePosInt)
@@ -95,7 +106,7 @@ namespace src.Canvas
 
         private void StartDraw(Vector3Int pos)
         {
-            startDrawPos = pos;
+            startDrawPos = Round(pos);
             drawing = true;
             drawingObject = landRect.DrawAt(pos.x, pos.y);
         }
