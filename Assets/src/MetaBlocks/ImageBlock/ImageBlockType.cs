@@ -1,6 +1,9 @@
-public class ImageBlockType : MetaBlockType
+namespace src.MetaBlocks.ImageBlock
 {
-    public ImageBlockType(byte id) : base(id, "image", typeof(ImageBlockObject), typeof(MediaBlockProperties))
+    public class ImageBlockType : MetaBlockType
     {
+        public ImageBlockType(byte id) : base(id, "image", typeof(ImageBlockObject), typeof(MediaBlockProperties))
+        {
+        }
     }
 }

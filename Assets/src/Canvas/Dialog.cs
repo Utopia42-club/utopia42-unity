@@ -4,53 +4,56 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class Dialog : MonoBehaviour
+namespace src.Canvas
 {
-    [SerializeField]
-    private GameObject actionPrefab;
-    [SerializeField]
-    private TextMeshProUGUI headerLabel;
-    [SerializeField]
-    private ActionButton closeButton;
-    [SerializeField]
-    private GameObject contentWrapper;
-    [SerializeField]
-    private GameObject footer;
-    private List<UnityAction> onCloseActions = new List<UnityAction>();
-    private GameObject content;
-
-    void Start()
+    public class Dialog : MonoBehaviour
     {
-        closeButton.AddListener(Close);
-    }
+        [SerializeField]
+        private GameObject actionPrefab;
+        [SerializeField]
+        private TextMeshProUGUI headerLabel;
+        [SerializeField]
+        private ActionButton closeButton;
+        [SerializeField]
+        private GameObject contentWrapper;
+        [SerializeField]
+        private GameObject footer;
+        private List<UnityAction> onCloseActions = new List<UnityAction>();
+        private GameObject content;
 
-    public Dialog WithTitle(string title)
-    {
-        headerLabel.text = title;
-        return this;
-    }
+        void Start()
+        {
+            closeButton.AddListener(Close);
+        }
 
-    public Dialog WithContent(string prefab)
-    {
-        content = Instantiate(Resources.Load<GameObject>(prefab), contentWrapper.transform);
-        return this;
-    }
+        public Dialog WithTitle(string title)
+        {
+            headerLabel.text = title;
+            return this;
+        }
 
-    public GameObject GetContent()
-    {
-        return content;
-    }
+        public Dialog WithContent(string prefab)
+        {
+            content = Instantiate(Resources.Load<GameObject>(prefab), contentWrapper.transform);
+            return this;
+        }
 
-    public Dialog WithAction(string text, UnityAction action)
-    {
-        GameObject go = Instantiate(actionPrefab, footer.transform);
-        go.GetComponent<Button>().onClick.AddListener(action);
-        go.GetComponentInChildren<TextMeshProUGUI>().text = text;
-        return this;
-    }
+        public GameObject GetContent()
+        {
+            return content;
+        }
 
-    private void Close()
-    {
-        GameManager.INSTANCE.CloseDialog(this);
+        public Dialog WithAction(string text, UnityAction action)
+        {
+            GameObject go = Instantiate(actionPrefab, footer.transform);
+            go.GetComponent<Button>().onClick.AddListener(action);
+            go.GetComponentInChildren<TextMeshProUGUI>().text = text;
+            return this;
+        }
+
+        private void Close()
+        {
+            GameManager.INSTANCE.CloseDialog(this);
+        }
     }
 }

@@ -1,36 +1,39 @@
-using static Voxels;
-using static Voxels.Face;
+using static src.Utils.Voxels;
+using static src.Utils.Voxels.Face;
 
-public class BlockType
+namespace src.Model
 {
-    public readonly byte id;
-    public readonly string name;
-    public readonly bool isSolid;
-    public readonly int[] textures = new int[FACES.Length];
-
-    public BlockType(byte id, string name, bool isSolid,
-        int backTexture, int rightTexture,
-        int frontTexture, int leftTexture,
-        int bottomTexture, int topTexture)
+    public class BlockType
     {
-        this.id = id;
-        this.name = name;
-        this.isSolid = isSolid;
-        textures[BACK.index] = backTexture;
-        textures[RIGHT.index] = rightTexture;
-        textures[FRONT.index] = frontTexture;
-        textures[LEFT.index] = leftTexture;
-        textures[BOTTOM.index] = bottomTexture;
-        textures[TOP.index] = topTexture;
-    }
+        public readonly byte id;
+        public readonly string name;
+        public readonly bool isSolid;
+        public readonly int[] textures = new int[FACES.Length];
 
-    public int GetTextureID(Face face)
-    {
-        return textures[face.index];
-    }
+        public BlockType(byte id, string name, bool isSolid,
+            int backTexture, int rightTexture,
+            int frontTexture, int leftTexture,
+            int bottomTexture, int topTexture)
+        {
+            this.id = id;
+            this.name = name;
+            this.isSolid = isSolid;
+            textures[BACK.index] = backTexture;
+            textures[RIGHT.index] = rightTexture;
+            textures[FRONT.index] = frontTexture;
+            textures[LEFT.index] = leftTexture;
+            textures[BOTTOM.index] = bottomTexture;
+            textures[TOP.index] = topTexture;
+        }
 
-    public UnityEngine.Sprite GetIcon()
-    {
-        return UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/" + name);
+        public int GetTextureID(Face face)
+        {
+            return textures[face.index];
+        }
+
+        public UnityEngine.Sprite GetIcon()
+        {
+            return UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/" + name);
+        }
     }
 }

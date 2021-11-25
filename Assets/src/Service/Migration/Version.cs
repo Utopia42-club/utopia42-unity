@@ -1,54 +1,57 @@
 using System;
 
-internal class Version : IComparable<Version>
+namespace src.Service.Migration
 {
-    private readonly int[] parts;
-
-    public Version(int p1, int p2, int p3)
+    internal class Version : IComparable<Version>
     {
-        parts = new int[] { p1, p2, p3 };
-    }
+        private readonly int[] parts;
 
-    public Version(string str)
-    {
-        var strParts = str.Split('.');
-        parts = new int[] { int.Parse(strParts[0]), int.Parse(strParts[1]), int.Parse(strParts[2]) };
-    }
-
-    public int CompareTo(Version other)
-    {
-        if (other == null) return 1;
-
-        for (int i = 0; i < 3; i++)
+        public Version(int p1, int p2, int p3)
         {
-            var diff = parts[i] - other.parts[i];
-            if (diff != 0) return diff;
+            parts = new int[] { p1, p2, p3 };
         }
-        return 0;
-    }
 
-    public override bool Equals(object obj)
-    {
-        if (obj == this) return true;
-        if ((obj == null) || !this.GetType().Equals(obj.GetType()))
-            return false;
-
-        return CompareTo((Version)obj) == 0;
-    }
-
-    public override int GetHashCode()
-    {
-        int hc = parts.Length;
-        foreach (int val in parts)
+        public Version(string str)
         {
-            hc = unchecked(hc * 314159 + val);
+            var strParts = str.Split('.');
+            parts = new int[] { int.Parse(strParts[0]), int.Parse(strParts[1]), int.Parse(strParts[2]) };
         }
-        return hc;
-    }
 
-    public override string ToString()
-    {
-        return string.Join(".", parts);
-    }
+        public int CompareTo(Version other)
+        {
+            if (other == null) return 1;
 
+            for (int i = 0; i < 3; i++)
+            {
+                var diff = parts[i] - other.parts[i];
+                if (diff != 0) return diff;
+            }
+            return 0;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return true;
+            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+                return false;
+
+            return CompareTo((Version)obj) == 0;
+        }
+
+        public override int GetHashCode()
+        {
+            int hc = parts.Length;
+            foreach (int val in parts)
+            {
+                hc = unchecked(hc * 314159 + val);
+            }
+            return hc;
+        }
+
+        public override string ToString()
+        {
+            return string.Join(".", parts);
+        }
+
+    }
 }

@@ -1,51 +1,56 @@
+using src.Utils;
 using UnityEngine;
-public abstract class MetaBlockObject : MonoBehaviour
+
+namespace src.MetaBlocks
 {
-    private MetaBlock block;
-    private Chunk chunk;
-    private GameObject iconObject;
-
-    public void Initialize(MetaBlock block, Chunk chunk)
+    public abstract class MetaBlockObject : MonoBehaviour
     {
-        this.block = block;
-        this.chunk = chunk;
-        DoInitialize();
-    }
+        private MetaBlock block;
+        private Chunk chunk;
+        private GameObject iconObject;
 
-    public abstract bool IsReady();
+        public void Initialize(MetaBlock block, Chunk chunk)
+        {
+            this.block = block;
+            this.chunk = chunk;
+            DoInitialize();
+        }
 
-    protected abstract void DoInitialize();
+        public abstract bool IsReady();
 
-    public abstract void OnDataUpdate();
+        protected abstract void DoInitialize();
 
-    public abstract void Focus(Voxels.Face face);
+        public abstract void OnDataUpdate();
 
-    public abstract void UnFocus();
+        public abstract void Focus(Voxels.Face face);
 
-    private void OnDestroy()
-    {
-        UnFocus();
-        block.OnObjectDestroyed();
-    }
+        public abstract void UnFocus();
 
-    protected MetaBlock GetBlock()
-    {
-        return block;
-    }
-    protected Chunk GetChunk()
-    {
-        return chunk;
-    }
-    protected void CreateIcon()
-    {
-        iconObject = Instantiate(Resources.Load("MetaBlocks/MetaBlock") as GameObject, transform);
-        var renderers = iconObject.GetComponentsInChildren<Renderer>();
-        foreach (var r in renderers)
-            r.material.mainTexture = block.type.GetIcon().texture;
-    }
+        private void OnDestroy()
+        {
+            UnFocus();
+            block.OnObjectDestroyed();
+        }
 
-    protected GameObject GetIconObject()
-    {
-        return iconObject;
+        protected MetaBlock GetBlock()
+        {
+            return block;
+        }
+        protected Chunk GetChunk()
+        {
+            return chunk;
+        }
+        protected void CreateIcon()
+        {
+            iconObject = Instantiate(Resources.Load("MetaBlocks/MetaBlock") as GameObject, transform);
+            var renderers = iconObject.GetComponentsInChildren<Renderer>();
+            foreach (var r in renderers)
+                r.material.mainTexture = block.type.GetIcon().texture;
+        }
+
+        protected GameObject GetIconObject()
+        {
+            return iconObject;
+        }
     }
 }

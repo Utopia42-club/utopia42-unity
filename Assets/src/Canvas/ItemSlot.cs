@@ -3,85 +3,88 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ItemSlot
+namespace src.Canvas
 {
-    private ItemStack stack = null;
-    private ItemSlotUI ui = null;
-    private bool fromInventory = false;
-
-    public void SetStack(ItemStack stack)
+    public class ItemSlot
     {
-        this.stack = stack;
-        if (ui)
-            ui.UpdateView();
-    }
+        private ItemStack stack = null;
+        private ItemSlotUI ui = null;
+        private bool fromInventory = false;
 
-    public ItemStack GetStack()
-    {
-        return stack;
-    }
-
-
-    public ItemStack HandOverStack()
-    {
-        var st = stack;
-        this.stack = null;
-        if (ui)
-            ui.UpdateView();
-        return st;
-    }
-
-    public void SetUi(ItemSlotUI ui)
-    {
-        this.ui = ui;
-        ui.SetItemSlot(this);
-    }
-
-    public ItemSlotUI GetUI()
-    {
-        return this.ui;
-    }
-
-    public void SetFromInventory(bool b)
-    {
-        fromInventory = b;
-    }
-
-    public bool GetFromInventory()
-    {
-        return fromInventory;
-    }
-
-    public int Take(int amt)
-    {
-        if (amt >= stack.amount)
+        public void SetStack(ItemStack stack)
         {
-            int _amt = stack.amount;
-            Clear();
-            return _amt;
+            this.stack = stack;
+            if (ui)
+                ui.UpdateView();
         }
-        else
+
+        public ItemStack GetStack()
         {
-            stack.amount -= amt;
-            ui.UpdateView();
-            return amt;
+            return stack;
+        }
+
+
+        public ItemStack HandOverStack()
+        {
+            var st = stack;
+            this.stack = null;
+            if (ui)
+                ui.UpdateView();
+            return st;
+        }
+
+        public void SetUi(ItemSlotUI ui)
+        {
+            this.ui = ui;
+            ui.SetItemSlot(this);
+        }
+
+        public ItemSlotUI GetUI()
+        {
+            return this.ui;
+        }
+
+        public void SetFromInventory(bool b)
+        {
+            fromInventory = b;
+        }
+
+        public bool GetFromInventory()
+        {
+            return fromInventory;
+        }
+
+        public int Take(int amt)
+        {
+            if (amt >= stack.amount)
+            {
+                int _amt = stack.amount;
+                Clear();
+                return _amt;
+            }
+            else
+            {
+                stack.amount -= amt;
+                ui.UpdateView();
+                return amt;
+            }
+        }
+
+        private void Clear()
+        {
+            this.ui.SetItemSlot(null);
         }
     }
 
-    private void Clear()
+    public class ItemStack
     {
-        this.ui.SetItemSlot(null);
-    }
-}
+        public byte id;
+        public int amount;
 
-public class ItemStack
-{
-    public byte id;
-    public int amount;
-
-    public ItemStack(byte id, int amount)
-    {
-        this.id = id;
-        this.amount = amount;
+        public ItemStack(byte id, int amount)
+        {
+            this.id = id;
+            this.amount = amount;
+        }
     }
 }

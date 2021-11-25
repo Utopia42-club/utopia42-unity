@@ -1,143 +1,144 @@
 using System;
 using System.Collections.Generic;
+using src.Model;
+using src.Service.Ethereum;
 using UnityEngine;
 using UnityEngine.UI;
 
-
-public class BrowserConnector : MonoBehaviour
+namespace src.Canvas
 {
-    private static string WEB_APP_URL = "http://app.utopia42.club/home";
-    private string currentUrl;
-    [SerializeField]
-    private Button doneButton;
-    [SerializeField]
-    private Button cancelButton;
-    //[SerializeField]
-    //private Button copyUrlButton;
-
-    void Start()
+    public class BrowserConnector : MonoBehaviour
     {
-        var manager = GameManager.INSTANCE;
-        gameObject.SetActive(manager.GetState() == GameManager.State.BROWSER_CONNECTION);
-        manager.stateChange.AddListener(state =>
-            gameObject.SetActive(state == GameManager.State.BROWSER_CONNECTION)
-        );
-        //copyUrlButton.onClick.AddListener(() => GUIUtility.systemCopyBuffer = currentUrl);
-    }
+        private static string WEB_APP_URL = "http://app.utopia42.club/home";
+        private string currentUrl;
+        [SerializeField] private Button doneButton;
 
-    public void EditProfile(Action onDone, Action onCancel)
-    {
-        if (WebBridge.IsPresent())
+        [SerializeField] private Button cancelButton;
+        //[SerializeField]
+        //private Button copyUrlButton;
+
+        void Start()
         {
-            //var orig = WebGLInput.captureAllKeyboardInput;
-            //WebGLInput.captureAllKeyboardInput = false;
-            WebBridge.Call<object>("editProfile", null);
-            ResetButtons(() =>
+            var manager = GameManager.INSTANCE;
+            gameObject.SetActive(manager.GetState() == GameManager.State.BROWSER_CONNECTION);
+            manager.stateChange.AddListener(state =>
+                gameObject.SetActive(state == GameManager.State.BROWSER_CONNECTION)
+            );
+            //copyUrlButton.onClick.AddListener(() => GUIUtility.systemCopyBuffer = currentUrl);
+        }
+
+        public void EditProfile(Action onDone, Action onCancel)
+        {
+            if (WebBridge.IsPresent())
             {
-                //WebGLInput.captureAllKeyboardInput = orig;
-                onDone();
-            }, () =>
+                //var orig = WebGLInput.captureAllKeyboardInput;
+                //WebGLInput.captureAllKeyboardInput = false;
+                WebBridge.Call<object>("editProfile", null);
+                ResetButtons(() =>
+                {
+                    //WebGLInput.captureAllKeyboardInput = orig;
+                    onDone();
+                }, () =>
+                {
+                    //WebGLInput.captureAllKeyboardInput = orig;
+                    onCancel();
+                });
+            }
+            else
+                CallUrl("editProfile", onDone, onCancel);
+        }
+
+        public void Transfer(long landId, bool isNft, Action onDone, Action onCancel)
+        {
+            if (WebBridge.IsPresent())
             {
-                //WebGLInput.captureAllKeyboardInput = orig;
-                onCancel();
-            });
+                var data = new Dictionary<string, object>();
+                data.Add("landId", landId);
+                data.Add("isNft", isNft);
+                WebBridge.Call<object>("transfer", landId);
+                ResetButtons(onDone, onCancel);
+            }
+            else
+                CallUrl("transfer", $"{landId}_{isNft.ToString().ToLower()}", onDone, onCancel);
         }
-        else
-            CallUrl("editProfile", onDone, onCancel);
-    }
 
-    public void Transfer(long landId, bool isNft, Action onDone, Action onCancel)
-    {
-        if (WebBridge.IsPresent())
+        public void SetNft(long landId, bool value, Action onDone, Action onCancel)
         {
-            Dictionary<string, string> data = new Dictionary<string, string>();
-            data.Add("landId", landId.ToString());
-            data.Add("isNft", isNft.ToString());
-            WebBridge.Call<object>("transfer", landId);
+            if (WebBridge.IsPresent())
+            {
+                var data = new Dictionary<string, object>();
+                data.Add("landId", landId);
+                data.Add("nft", value);
+                WebBridge.Call<object>("setNft", data);
+                ResetButtons(onDone, onCancel);
+            }
+            else
+                CallUrl("setNft", $"{landId}_{value}", onDone, onCancel);
+        }
+
+        public void Save(Dictionary<long, string> data, Action onDone, Action onCancel)
+        {
+            if (data.Count == 0) onDone();
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("save", data);
+                ResetButtons(onDone, onCancel);
+            }
+            else
+            {
+                var values = new List<string>();
+                foreach (var d in data)
+                    values.Add(string.Join("_", d.Key, d.Value));
+                CallUrl("save", string.Join(",", values), onDone, onCancel);
+            }
+        }
+
+        public void Buy(List<Land> lands, Action onDone, Action onCancel)
+        {
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("buy", lands);
+                ResetButtons(onDone, onCancel);
+            }
+            else
+            {
+                List<string> parameters = new List<string>();
+                foreach (var l in lands)
+                    parameters.Add(string.Join("_", new long[] {l.x1, l.y1, l.x2, l.y2}));
+                CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
+            }
+        }
+
+        private void CallUrl(string method, string parameters, Action onDone, Action onCancel)
+        {
+            var wallet = Settings.WalletId();
+            int network = EthereumClientService.INSTANCE.GetNetwork().id;
+            if (parameters != null)
+                currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}", WEB_APP_URL, method,
+                    parameters, wallet, network);
+            else
+                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", WEB_APP_URL, method, wallet, network);
+
+            Application.OpenURL(currentUrl);
             ResetButtons(onDone, onCancel);
         }
-        else
-            CallUrl("transfer", landId.ToString() + "_" + isNft, onDone, onCancel);
-    }
 
-    public void SetNft(long landId, bool value, Action onDone, Action onCancel)
-    {
-        if (WebBridge.IsPresent())
+        private void CallUrl(string method, Action onDone, Action onCancel)
         {
-            Dictionary<string, string> data = new Dictionary<string, string>();
-            data.Add("landId", landId.ToString());
-            data.Add("isNft", value.ToString());
-            WebBridge.Call<object>("SetNft", data);
-            ResetButtons(onDone, onCancel);
+            CallUrl(method, null, onDone, onCancel);
         }
-        else
-            CallUrl("SetNft", landId.ToString() + "_" + value, onDone, onCancel);
-    }
 
-    public void Save(Dictionary<long, string> data, Action onDone, Action onCancel)
-    {
-        if (data.Count == 0) onDone();
-        if (WebBridge.IsPresent())
+        private void ResetButtons(Action onDone, Action onCancel)
         {
-            WebBridge.Call<object>("save", data);
-            ResetButtons(onDone, onCancel);
+            cancelButton.onClick.RemoveAllListeners();
+            doneButton.onClick.RemoveAllListeners();
+            doneButton.onClick.AddListener(() => onDone.Invoke());
+            cancelButton.onClick.AddListener(() => onCancel.Invoke());
         }
-        else
+
+        public static BrowserConnector INSTANCE
         {
-            var values = new List<string>();
-            foreach (var d in data)
-                values.Add(string.Join("_", d.Key, d.Value));
-            CallUrl("save", string.Join(",", values), onDone, onCancel);
-        }
-    }
-
-    public void Buy(List<Land> lands, Action onDone, Action onCancel)
-    {
-        if (WebBridge.IsPresent())
-        {
-            WebBridge.Call<object>("buy", lands);
-            ResetButtons(onDone, onCancel);
-        }
-        else
-        {
-            List<string> parameters = new List<string>();
-            foreach (var l in lands)
-                parameters.Add(string.Join("_", new long[] { l.x1, l.y1, l.x2, l.y2 }));
-            CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
-        }
-    }
-
-    private void CallUrl(string method, string parameters, Action onDone, Action onCancel)
-    {
-        var wallet = Settings.WalletId();
-        int network = EthereumClientService.INSTANCE.GetNetwork().id;
-        if (parameters != null)
-            currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}", WEB_APP_URL, method, parameters, wallet, network);
-        else
-            currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", WEB_APP_URL, method, wallet, network);
-
-        Application.OpenURL(currentUrl);
-        ResetButtons(onDone, onCancel);
-    }
-
-    private void CallUrl(string method, Action onDone, Action onCancel)
-    {
-        CallUrl(method, null, onDone, onCancel);
-    }
-
-    private void ResetButtons(Action onDone, Action onCancel)
-    {
-        cancelButton.onClick.RemoveAllListeners();
-        doneButton.onClick.RemoveAllListeners();
-        doneButton.onClick.AddListener(() => onDone.Invoke());
-        cancelButton.onClick.AddListener(() => onCancel.Invoke());
-    }
-
-    public static BrowserConnector INSTANCE
-    {
-        get
-        {
-            return GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>();
+            get { return GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>(); }
         }
     }
 }

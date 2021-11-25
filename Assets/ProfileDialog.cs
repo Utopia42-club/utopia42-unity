@@ -1,4 +1,8 @@
 using System.Collections.Generic;
+using src;
+using src.Canvas;
+using src.Model;
+using src.Service;
 using TMPro;
 using UnityEngine;
 

@@ -1,25 +1,29 @@
 using System.Collections.Generic;
+using src.Model;
 
-internal abstract class Migration
+namespace src.Service.Migration
 {
-    private readonly HashSet<Version> sourceVersions;
-    private readonly Version targetVersion;
-
-    protected Migration(Version[] sourceVersions, Version targetVersion)
+    internal abstract class Migration
     {
-        this.sourceVersions = new HashSet<Version>(sourceVersions);
-        this.targetVersion = targetVersion;
-    }
+        private readonly HashSet<Version> sourceVersions;
+        private readonly Version targetVersion;
 
-    public bool Accepts(Version version)
-    {
-        return sourceVersions.Contains(version);
-    }
+        protected Migration(Version[] sourceVersions, Version targetVersion)
+        {
+            this.sourceVersions = new HashSet<Version>(sourceVersions);
+            this.targetVersion = targetVersion;
+        }
 
-    public Version GetTarget()
-    {
-        return targetVersion;
-    }
+        public bool Accepts(Version version)
+        {
+            return sourceVersions.Contains(version);
+        }
 
-    public abstract LandDetails Migrate(LandDetails details);
+        public Version GetTarget()
+        {
+            return targetVersion;
+        }
+
+        public abstract LandDetails Migrate(LandDetails details);
+    }
 }

@@ -1,49 +1,51 @@
-using System.Collections.Generic;
+using src.Service;
 using UnityEngine;
 using UnityEngine.UI;
 
-
-public class ItemSlotUI : MonoBehaviour
+namespace src.Canvas
 {
-    public ItemSlot itemSlot;
-    public Image slotImage;
-    public Image slotIcon;
-    public Text slotAmount;
-
-    public void SetItemSlot(ItemSlot itemSlot)
+    public class ItemSlotUI : MonoBehaviour
     {
-        this.itemSlot = itemSlot;
+        public ItemSlot itemSlot;
+        public Image slotImage;
+        public Image slotIcon;
+        public Text slotAmount;
 
-        if (itemSlot != null && itemSlot.GetStack() != null)
+        public void SetItemSlot(ItemSlot itemSlot)
         {
-            slotIcon.sprite = VoxelService.INSTANCE.GetBlockType(itemSlot.GetStack().id).GetIcon();
-            slotAmount.text = "";
-            slotAmount.enabled = true;
-            slotIcon.enabled = true;
+            this.itemSlot = itemSlot;
+
+            if (itemSlot != null && itemSlot.GetStack() != null)
+            {
+                slotIcon.sprite = VoxelService.INSTANCE.GetBlockType(itemSlot.GetStack().id).GetIcon();
+                slotAmount.text = "";
+                slotAmount.enabled = true;
+                slotIcon.enabled = true;
+            }
+            else
+            {
+                slotIcon.sprite = null;
+                slotAmount.text = "";
+                slotAmount.enabled = false;
+                slotIcon.enabled = false;
+            }
         }
-        else
+
+        public ItemSlot GetItemSlot()
         {
-            slotIcon.sprite = null;
-            slotAmount.text = "";
-            slotAmount.enabled = false;
-            slotIcon.enabled = false;
+            return itemSlot;
         }
-    }
 
-    public ItemSlot GetItemSlot()
-    {
-        return itemSlot;
-    }
+        public bool HasItem()
+        {
+            return itemSlot != null && itemSlot.GetStack() != null;
+        }
 
-    public bool HasItem()
-    {
-        return itemSlot != null && itemSlot.GetStack() != null;   
-    }
+        public void UpdateView()
+        {
+            SetItemSlot(this.itemSlot);
+        }
 
-    public void UpdateView()
-    {
-        SetItemSlot(this.itemSlot);
-    }
 
-  
+    }
 }

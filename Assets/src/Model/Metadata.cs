@@ -1,6 +1,9 @@
-[System.Serializable]
-public class Metadata
+namespace src.Model
 {
-    public string type;
-    public string properties;
+    [System.Serializable]
+    public class Metadata
+    {
+        public string type;
+        public string properties;
+    }
 }

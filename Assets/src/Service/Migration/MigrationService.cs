@@ -1,35 +1,40 @@
 using System.Collections.Generic;
-public class MigrationService
+using src.Model;
+
+namespace src.Service.Migration
 {
-    private readonly Version latestVersion;
-    private readonly List<Migration> migrations = new List<Migration>();
-
-    public MigrationService()
+    public class MigrationService
     {
-        migrations.Add(new GlobalToLocalMigration());
-        latestVersion = new Version(0, 1, 0);
-    }
+        private readonly Version latestVersion;
+        private readonly List<global::src.Service.Migration.Migration> migrations = new List<global::src.Service.Migration.Migration>();
 
-    public LandDetails Migrate(LandDetails details)
-    {
-        var version = new Version(details.v);
-        while (!version.Equals(latestVersion))
+        public MigrationService()
         {
-            foreach (var m in migrations)
-            {
-                if (m.Accepts(version))
-                {
-                    details = m.Migrate(details);
-                    version = m.GetTarget();
-                }
-            }
+            migrations.Add(new GlobalToLocalMigration());
+            latestVersion = new Version(0, 1, 0);
         }
 
-        return details;
-    }
+        public LandDetails Migrate(LandDetails details)
+        {
+            var version = new Version(details.v);
+            while (!version.Equals(latestVersion))
+            {
+                foreach (var m in migrations)
+                {
+                    if (m.Accepts(version))
+                    {
+                        details = m.Migrate(details);
+                        version = m.GetTarget();
+                    }
+                }
+            }
 
-    public string GetLatestVersion()
-    {
-        return latestVersion.ToString();
+            return details;
+        }
+
+        public string GetLatestVersion()
+        {
+            return latestVersion.ToString();
+        }
     }
 }

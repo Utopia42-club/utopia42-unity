@@ -1,6 +1,9 @@
-public class LinkBlockType : MetaBlockType
+namespace src.MetaBlocks.LinkBlock
 {
-    public LinkBlockType(byte id) : base(id, "link", typeof(LinkBlockObject), typeof(LinkBlockProperties))
+    public class LinkBlockType : MetaBlockType
     {
+        public LinkBlockType(byte id) : base(id, "link", typeof(LinkBlockObject), typeof(LinkBlockProperties))
+        {
+        }
     }
 }

@@ -1,99 +1,102 @@
 using System;
 using UnityEngine;
 
-public abstract class SnackItem
+namespace src.Canvas
 {
-    private readonly Snack snack;
-    private readonly Action onUpdate;
-    private bool expired;
-
-    protected SnackItem(Snack snack, Action onUpdate)
+    public abstract class SnackItem
     {
-        this.snack = snack;
-        this.onUpdate = onUpdate;
-    }
+        private readonly Snack snack;
+        private readonly Action onUpdate;
+        private bool expired;
 
-    public virtual void Remove()
-    {
-        snack.Remove(this);
-        expired = true;
-    }
-
-    public bool IsExpired()
-    {
-        return expired;
-    }
-
-    internal void Update()
-    {
-        if (onUpdate != null)
-            onUpdate();
-    }
-
-    internal abstract void Hide();
-    internal abstract void Show();
-
-    public class Text : SnackItem
-    {
-        private string text;
-        private readonly GameObject textPanel;
-        private readonly GameObject textObject;
-
-        public Text(Snack snack, Action onUpdate, string text, GameObject textPanel, GameObject textObject)
-            : base(snack, onUpdate)
+        protected SnackItem(Snack snack, Action onUpdate)
         {
-            this.text = text;
-            this.textPanel = textPanel;
-            this.textObject = textObject;
+            this.snack = snack;
+            this.onUpdate = onUpdate;
         }
 
-        internal override void Hide()
+        public virtual void Remove()
         {
-            textPanel.SetActive(false);
+            snack.Remove(this);
+            expired = true;
         }
 
-        internal override void Show()
+        public bool IsExpired()
         {
-            textPanel.SetActive(true);
-            textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
+            return expired;
         }
 
-        public void UpdateText(string newText)
+        internal void Update()
         {
-            text = newText;
-            textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
-        }
-    }
-
-    public class Graphic : SnackItem
-    {
-        private GameObject gameObject;
-        public readonly string prefab;
-
-        public Graphic(Snack snack, Action onUpdate, string prefab) : base(snack, onUpdate)
-        {
-            this.prefab = prefab;
+            if (onUpdate != null)
+                onUpdate();
         }
 
+        internal abstract void Hide();
+        internal abstract void Show();
 
-        public override void Remove()
+        public class Text : SnackItem
         {
-            base.Remove();
-            if (gameObject != null)
-                UnityEngine.Object.DestroyImmediate(gameObject);
+            private string text;
+            private readonly GameObject textPanel;
+            private readonly GameObject textObject;
+
+            public Text(Snack snack, Action onUpdate, string text, GameObject textPanel, GameObject textObject)
+                : base(snack, onUpdate)
+            {
+                this.text = text;
+                this.textPanel = textPanel;
+                this.textObject = textObject;
+            }
+
+            internal override void Hide()
+            {
+                textPanel.SetActive(false);
+            }
+
+            internal override void Show()
+            {
+                textPanel.SetActive(true);
+                textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
+            }
+
+            public void UpdateText(string newText)
+            {
+                text = newText;
+                textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
+            }
         }
 
-        internal override void Hide()
+        public class Graphic : SnackItem
         {
-            if (gameObject != null)
-                gameObject.SetActive(false);
-        }
+            private GameObject gameObject;
+            public readonly string prefab;
 
-        internal override void Show()
-        {
-            if (gameObject == null)
-                gameObject = UnityEngine.Object.Instantiate(Resources.Load(prefab), snack.transform) as GameObject;
-            gameObject.SetActive(true);
+            public Graphic(Snack snack, Action onUpdate, string prefab) : base(snack, onUpdate)
+            {
+                this.prefab = prefab;
+            }
+
+
+            public override void Remove()
+            {
+                base.Remove();
+                if (gameObject != null)
+                    UnityEngine.Object.DestroyImmediate(gameObject);
+            }
+
+            internal override void Hide()
+            {
+                if (gameObject != null)
+                    gameObject.SetActive(false);
+            }
+
+            internal override void Show()
+            {
+                if (gameObject == null)
+                    gameObject = UnityEngine.Object.Instantiate(Resources.Load(prefab), snack.transform) as GameObject;
+                gameObject.SetActive(true);
+            }
         }
     }
 }

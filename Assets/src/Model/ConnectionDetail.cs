@@ -1,8 +1,11 @@
 using System;
 
-[Serializable]
-public class ConnectionDetail
+namespace src.Model
 {
-    public string wallet;
-    public int? network;
+    [Serializable]
+    public class ConnectionDetail
+    {
+        public string wallet;
+        public int? network;
+    }
 }

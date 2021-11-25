@@ -1,32 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using TMPro;
 
-public class ClickableLink : MonoBehaviour, IPointerClickHandler
+namespace src.Canvas
 {
-    private TextMeshProUGUI textMeshProUGUI;
-
-    public void OnPointerClick(PointerEventData eventData)
+    public class ClickableLink : MonoBehaviour, IPointerClickHandler
     {
-        int index = TMP_TextUtilities.FindIntersectingLink(textMeshProUGUI, Input.mousePosition, null);
-        if (index > -1)
+        private TextMeshProUGUI textMeshProUGUI;
+
+        public void OnPointerClick(PointerEventData eventData)
         {
-            TMP_LinkInfo linkInfo = textMeshProUGUI.textInfo.linkInfo[index];
-            Application.OpenURL(linkInfo.GetLinkID());
+            int index = TMP_TextUtilities.FindIntersectingLink(textMeshProUGUI, Input.mousePosition, null);
+            if (index > -1)
+            {
+                TMP_LinkInfo linkInfo = textMeshProUGUI.textInfo.linkInfo[index];
+                Application.OpenURL(linkInfo.GetLinkID());
+            }
         }
-    }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        textMeshProUGUI = GetComponent<TextMeshProUGUI>();
-    }
+        // Start is called before the first frame update
+        void Start()
+        {
+            textMeshProUGUI = GetComponent<TextMeshProUGUI>();
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
+        // Update is called once per frame
+        void Update()
+        {
 
+        }
     }
 }

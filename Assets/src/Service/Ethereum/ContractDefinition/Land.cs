@@ -1,11 +1,7 @@
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Numerics;
-using Nethereum.Hex.HexTypes;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
-namespace Utopia.Ethereum.UtopiaContract.ContractDefinition
+namespace src.Service.Ethereum.ContractDefinition
 {
     public partial class Land : LandBase { }
 

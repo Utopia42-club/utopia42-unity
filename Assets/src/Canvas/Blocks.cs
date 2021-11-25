@@ -1,22 +1,25 @@
-using System.Collections;
 using System.Collections.Generic;
+using src.Service;
 using UnityEngine;
 
-public class Blocks : MonoBehaviour
+namespace src.Canvas
 {
-    public static Dictionary<byte, Sprite> blockIcons = new Dictionary<byte, Sprite>();
-    public Sprite[] sprites;
-
-    void Start()
+    public class Blocks : MonoBehaviour
     {
-        if(blockIcons == null)
+        public static Dictionary<byte, Sprite> blockIcons = new Dictionary<byte, Sprite>();
+        public Sprite[] sprites;
+
+        void Start()
         {
-            foreach (var sp in sprites)
+            if(blockIcons == null)
             {
-                var id = VoxelService.INSTANCE.GetBlockType(sp.name).id;
-                blockIcons[id] = sp;
+                foreach (var sp in sprites)
+                {
+                    var id = VoxelService.INSTANCE.GetBlockType(sp.name).id;
+                    blockIcons[id] = sp;
+                }
             }
         }
-    }
 
+    }
 }

@@ -1,40 +1,42 @@
-using System.Collections;
-using System.Collections.Generic;
+using src.Service;
 using UnityEngine;
 
-public class Inventory : MonoBehaviour
+namespace src.Canvas
 {
-    public GameObject slotPrefab;
-
-    public ItemSlotUI cursorSlot;
-
-    public ActionButton closeButton;
-
-    private void Start()
+    public class Inventory : MonoBehaviour
     {
-        var manager = GameManager.INSTANCE;
+        public GameObject slotPrefab;
 
-        for (int i = 1; i < VoxelService.INSTANCE.GetBlockTypesCount(); i++)
+        public ItemSlotUI cursorSlot;
+
+        public ActionButton closeButton;
+
+        private void Start()
         {
-            GameObject newSlot = Instantiate(slotPrefab, transform);
+            var manager = GameManager.INSTANCE;
 
-            ItemStack stack = new ItemStack((byte)i, 64);
-            ItemSlot slot = new ItemSlot();
-            slot.SetStack(stack);
-            slot.SetUi(newSlot.GetComponent<ItemSlotUI>());
-            slot.SetFromInventory(true);
+            for (int i = 1; i < VoxelService.INSTANCE.GetBlockTypesCount(); i++)
+            {
+                GameObject newSlot = Instantiate(slotPrefab, transform);
+
+                ItemStack stack = new ItemStack((byte)i, 64);
+                ItemSlot slot = new ItemSlot();
+                slot.SetStack(stack);
+                slot.SetUi(newSlot.GetComponent<ItemSlotUI>());
+                slot.SetFromInventory(true);
+            }
+
+            manager.stateChange.AddListener(state =>
+            {
+                if (state != GameManager.State.INVENTORY)
+                    cursorSlot.GetItemSlot().SetStack(null);
+            });
+
+            closeButton.AddListener(() =>
+            {
+                if (manager.GetState() == GameManager.State.INVENTORY)
+                    manager.ReturnToGame();
+            });
         }
-
-        manager.stateChange.AddListener(state =>
-        {
-            if (state != GameManager.State.INVENTORY)
-                cursorSlot.GetItemSlot().SetStack(null);
-        });
-
-        closeButton.AddListener(() =>
-        {
-            if (manager.GetState() == GameManager.State.INVENTORY)
-                manager.ReturnToGame();
-        });
     }
 }

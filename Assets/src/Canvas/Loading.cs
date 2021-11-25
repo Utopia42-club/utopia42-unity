@@ -1,30 +1,33 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Loading : MonoBehaviour
+namespace src.Canvas
 {
-    [SerializeField]
-    private Text textComponent;
-
-    private void Start()
+    public class Loading : MonoBehaviour
     {
-        var manager = GameManager.INSTANCE;
-        this.gameObject.SetActive(manager.GetState() == GameManager.State.LOADING);
-        manager.stateChange.AddListener(state =>
-            this.gameObject.SetActive(state == GameManager.State.LOADING)
-        );
-    }
+        [SerializeField]
+        private Text textComponent;
 
-    public void UpdateText(string text)
-    {
-        this.textComponent.text = text;
-    }
-
-    public static Loading INSTANCE
-    {
-        get
+        private void Start()
         {
-            return GameObject.Find("Loading").GetComponent<Loading>();
+            var manager = GameManager.INSTANCE;
+            this.gameObject.SetActive(manager.GetState() == GameManager.State.LOADING);
+            manager.stateChange.AddListener(state =>
+                this.gameObject.SetActive(state == GameManager.State.LOADING)
+            );
+        }
+
+        public void UpdateText(string text)
+        {
+            this.textComponent.text = text;
+        }
+
+        public static Loading INSTANCE
+        {
+            get
+            {
+                return GameObject.Find("Loading").GetComponent<Loading>();
+            }
         }
     }
 }

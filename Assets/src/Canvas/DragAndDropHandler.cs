@@ -3,90 +3,93 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class DragAndDropHandler : MonoBehaviour
+namespace src.Canvas
 {
-    [SerializeField] public ItemSlotUI cursorSlot = null;
-    private ItemSlot cursorItemSlot;
-
-    [SerializeField]
-    private GraphicRaycaster raycaster = null;
-    private PointerEventData pointerEventData;
-    [SerializeField]
-    private EventSystem eventSystem = null;
-
-    World world;
-
-    private void Start()
+    public class DragAndDropHandler : MonoBehaviour
     {
-        cursorItemSlot = new ItemSlot();
-        cursorItemSlot.SetUi(cursorSlot);
-    }
+        [SerializeField] public ItemSlotUI cursorSlot = null;
+        private ItemSlot cursorItemSlot;
 
-    private void Update()
-    {
-        if (GameManager.INSTANCE.GetState() != GameManager.State.INVENTORY) return;
+        [SerializeField]
+        private GraphicRaycaster raycaster = null;
+        private PointerEventData pointerEventData;
+        [SerializeField]
+        private EventSystem eventSystem = null;
 
-        cursorSlot.transform.position = Input.mousePosition;
+        World world;
 
-        if (Input.GetMouseButtonDown(0))
+        private void Start()
         {
-            HandleSlotClick(CheckForSlot());
-        }
-    }
-
-    private void HandleSlotClick(ItemSlotUI clickedSlot)
-    {
-        if (clickedSlot == null)
-            return;
-
-        if (!cursorSlot.HasItem() && !clickedSlot.HasItem())
-            return;
-
-        if (clickedSlot.itemSlot.GetFromInventory())
-        {
-            cursorItemSlot.SetStack(clickedSlot.itemSlot.GetStack());
-            return;
+            cursorItemSlot = new ItemSlot();
+            cursorItemSlot.SetUi(cursorSlot);
         }
 
-        if (!cursorSlot.HasItem() && clickedSlot.HasItem())
+        private void Update()
         {
-            cursorItemSlot.SetStack(clickedSlot.itemSlot.HandOverStack());
-            return;
-        }
+            if (GameManager.INSTANCE.GetState() != GameManager.State.INVENTORY) return;
 
-        if (cursorSlot.HasItem() && !clickedSlot.HasItem())
-        {
-            clickedSlot.itemSlot.SetStack(cursorItemSlot.HandOverStack());
-            return;
-        }
+            cursorSlot.transform.position = Input.mousePosition;
 
-        if (cursorSlot.HasItem() && clickedSlot.HasItem())
-        {
-            if (cursorSlot.itemSlot.GetStack().id != clickedSlot.itemSlot.GetStack().id)
+            if (Input.GetMouseButtonDown(0))
             {
-                ItemStack oldCursorSlot = cursorSlot.itemSlot.HandOverStack();
-                ItemStack oldSlot = clickedSlot.itemSlot.HandOverStack();
-
-                clickedSlot.itemSlot.SetStack(oldCursorSlot);
-                cursorSlot.itemSlot.SetStack(oldSlot);
+                HandleSlotClick(CheckForSlot());
             }
         }
-    }
 
-    private ItemSlotUI CheckForSlot()
-    {
-        pointerEventData = new PointerEventData(eventSystem);
-        pointerEventData.position = Input.mousePosition;
-
-        List<RaycastResult> results = new List<RaycastResult>();
-        raycaster.Raycast(pointerEventData, results);
-
-        foreach (RaycastResult result in results)
+        private void HandleSlotClick(ItemSlotUI clickedSlot)
         {
-            if (result.gameObject.tag == "ItemSlotUI")
-                return result.gameObject.GetComponent<ItemSlotUI>();
+            if (clickedSlot == null)
+                return;
+
+            if (!cursorSlot.HasItem() && !clickedSlot.HasItem())
+                return;
+
+            if (clickedSlot.itemSlot.GetFromInventory())
+            {
+                cursorItemSlot.SetStack(clickedSlot.itemSlot.GetStack());
+                return;
+            }
+
+            if (!cursorSlot.HasItem() && clickedSlot.HasItem())
+            {
+                cursorItemSlot.SetStack(clickedSlot.itemSlot.HandOverStack());
+                return;
+            }
+
+            if (cursorSlot.HasItem() && !clickedSlot.HasItem())
+            {
+                clickedSlot.itemSlot.SetStack(cursorItemSlot.HandOverStack());
+                return;
+            }
+
+            if (cursorSlot.HasItem() && clickedSlot.HasItem())
+            {
+                if (cursorSlot.itemSlot.GetStack().id != clickedSlot.itemSlot.GetStack().id)
+                {
+                    ItemStack oldCursorSlot = cursorSlot.itemSlot.HandOverStack();
+                    ItemStack oldSlot = clickedSlot.itemSlot.HandOverStack();
+
+                    clickedSlot.itemSlot.SetStack(oldCursorSlot);
+                    cursorSlot.itemSlot.SetStack(oldSlot);
+                }
+            }
         }
 
-        return null;
+        private ItemSlotUI CheckForSlot()
+        {
+            pointerEventData = new PointerEventData(eventSystem);
+            pointerEventData.position = Input.mousePosition;
+
+            List<RaycastResult> results = new List<RaycastResult>();
+            raycaster.Raycast(pointerEventData, results);
+
+            foreach (RaycastResult result in results)
+            {
+                if (result.gameObject.tag == "ItemSlotUI")
+                    return result.gameObject.GetComponent<ItemSlotUI>();
+            }
+
+            return null;
+        }
     }
 }

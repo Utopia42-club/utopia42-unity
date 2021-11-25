@@ -1,73 +1,76 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-internal class GridLine : MonoBehaviour
+namespace src.Canvas.Map
 {
-    public static int SPACE = 50;
-    private static int THICKNESS = 1;
-    private RectTransform rectTransform;
-    private bool vertical;
-    private int index;
-
-    private void Init(Transform parent, bool vertical, int index)
+    internal class GridLine : MonoBehaviour
     {
-        this.vertical = vertical;
-        rectTransform = gameObject.AddComponent<RectTransform>();
+        public static int SPACE = 50;
+        private static int THICKNESS = 1;
+        private RectTransform rectTransform;
+        private bool vertical;
+        private int index;
 
-        rectTransform.SetParent(parent);
-        rectTransform.pivot = new Vector2(0, 0);
+        private void Init(Transform parent, bool vertical, int index)
+        {
+            this.vertical = vertical;
+            rectTransform = gameObject.AddComponent<RectTransform>();
 
-        rectTransform.SetSizeWithCurrentAnchors(vertical ? RectTransform.Axis.Horizontal
-            : RectTransform.Axis.Vertical, THICKNESS);
+            rectTransform.SetParent(parent);
+            rectTransform.pivot = new Vector2(0, 0);
 
-        gameObject.AddComponent<CanvasRenderer>();
-        gameObject.AddComponent<Image>().color = Color.green;
+            rectTransform.SetSizeWithCurrentAnchors(vertical ? RectTransform.Axis.Horizontal
+                : RectTransform.Axis.Vertical, THICKNESS);
 
-        this.index = index + 1;
-        SetIndex(index);
-    }
+            gameObject.AddComponent<CanvasRenderer>();
+            gameObject.AddComponent<Image>().color = Color.green;
 
-    void Update()
-    {
-        UpdateLength();
-    }
+            this.index = index + 1;
+            SetIndex(index);
+        }
 
-    private void UpdateLength()
-    {
-        if (vertical)
-            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Screen.height);
-        else
-            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Screen.width);
-    }
+        void Update()
+        {
+            UpdateLength();
+        }
 
-    internal void SetIndex(int index)
-    {
-        if (this.index == index) return;
-        this.index = index;
-        gameObject.GetComponent<Image>().color = index == 0 ? Color.red : Color.green;
-        gameObject.name = index + " " + vertical;
-        rectTransform.localPosition = (vertical ? Vector3.right : Vector3.up) * SPACE * index;
-    }
+        private void UpdateLength()
+        {
+            if (vertical)
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Screen.height);
+            else
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Screen.width);
+        }
 
-    internal int GetIndex()
-    {
-        return index;
-    }
+        internal void SetIndex(int index)
+        {
+            if (this.index == index) return;
+            this.index = index;
+            gameObject.GetComponent<Image>().color = index == 0 ? Color.red : Color.green;
+            gameObject.name = index + " " + vertical;
+            rectTransform.localPosition = (vertical ? Vector3.right : Vector3.up) * SPACE * index;
+        }
 
-    internal void SetPos(float center)
-    {
-        Vector3 pos = rectTransform.localPosition;
-        if (vertical)
-            pos.y = center;
-        else pos.x = center;
-        rectTransform.localPosition = pos;
-    }
+        internal int GetIndex()
+        {
+            return index;
+        }
 
-    static internal GridLine create(Transform parent, bool vertical, int index)
-    {
-        var gameObject = new GameObject();
-        var res = gameObject.AddComponent<GridLine>();
-        res.Init(parent, vertical, index);
-        return res;
+        internal void SetPos(float center)
+        {
+            Vector3 pos = rectTransform.localPosition;
+            if (vertical)
+                pos.y = center;
+            else pos.x = center;
+            rectTransform.localPosition = pos;
+        }
+
+        static internal GridLine create(Transform parent, bool vertical, int index)
+        {
+            var gameObject = new GameObject();
+            var res = gameObject.AddComponent<GridLine>();
+            res.Init(parent, vertical, index);
+            return res;
+        }
     }
 }

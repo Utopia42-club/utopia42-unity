@@ -1,28 +1,31 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Map : MonoBehaviour
+namespace src.Canvas.Map
 {
-    [SerializeField]
-    private Button saveButton;
-    [SerializeField]
-    private RectPane pane;
-
-    void Start()
+    public class Map : MonoBehaviour
     {
-        GameManager.INSTANCE.stateChange.AddListener(
-            state => gameObject.SetActive(state == GameManager.State.MAP)
-        );
-        saveButton.onClick.AddListener(DoSave);
-    }
+        [SerializeField]
+        private Button saveButton;
+        [SerializeField]
+        private RectPane pane;
 
-    private void Update()
-    {
-        saveButton.gameObject.SetActive(pane.HasDrawn());
-    }
+        void Start()
+        {
+            GameManager.INSTANCE.stateChange.AddListener(
+                state => gameObject.SetActive(state == GameManager.State.MAP)
+            );
+            saveButton.onClick.AddListener(DoSave);
+        }
 
-    private void DoSave()
-    {
-        GameManager.INSTANCE.Buy(pane.GetDrawn());
+        private void Update()
+        {
+            saveButton.gameObject.SetActive(pane.HasDrawn());
+        }
+
+        private void DoSave()
+        {
+            GameManager.INSTANCE.Buy(pane.GetDrawn());
+        }
     }
 }

@@ -1,10 +1,13 @@
-﻿[System.Serializable]
-public class VoxelChange
+﻿namespace src.Model
 {
-    public string name;
-
-    public override string ToString()
+    [System.Serializable]
+    public class VoxelChange
     {
-        return name;
+        public string name;
+
+        public override string ToString()
+        {
+            return name;
+        }
     }
 }

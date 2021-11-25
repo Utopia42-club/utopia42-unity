@@ -1,6 +1,9 @@
-public class VideoBlockType : MetaBlockType
+namespace src.MetaBlocks.VideoBlock
 {
-    public VideoBlockType(byte id) : base(id, "video", typeof(VideoBlockObject), typeof(VideoBlockProperties))
+    public class VideoBlockType : MetaBlockType
     {
+        public VideoBlockType(byte id) : base(id, "video", typeof(VideoBlockObject), typeof(VideoBlockProperties))
+        {
+        }
     }
 }

@@ -1,23 +1,26 @@
 using UnityEngine;
 
-public class StateAware : MonoBehaviour
+namespace src.Canvas
 {
-    [SerializeField]
-    private GameManager.State[] states;
-
-    void Start()
+    public class StateAware : MonoBehaviour
     {
-        GameManager.INSTANCE.stateChange.AddListener(s =>
+        [SerializeField]
+        private GameManager.State[] states;
+
+        void Start()
         {
-            foreach (var state in states)
+            GameManager.INSTANCE.stateChange.AddListener(s =>
             {
-                if (s == state)
+                foreach (var state in states)
                 {
-                    gameObject.SetActive(true);
-                    return;
+                    if (s == state)
+                    {
+                        gameObject.SetActive(true);
+                        return;
+                    }
                 }
-            }
-            gameObject.SetActive(false);
-        });
+                gameObject.SetActive(false);
+            });
+        }
     }
 }

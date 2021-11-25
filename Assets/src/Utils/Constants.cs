@@ -1,4 +1,7 @@
-public static class Constants
+namespace src.Utils
 {
-    
+    public static class Constants
+    {
+
+    }
 }

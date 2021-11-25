@@ -1,52 +1,54 @@
-using System.Collections;
-using System.Collections.Generic;
+using src.Model;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class TransferHandler : MonoBehaviour, IPointerDownHandler
+namespace src.Canvas.Map
 {
-    public GameObject transformButton;
-    public RectPane rectPane;
-    public Land land;
-    public string walletId;
-
-    private bool selected;
-    private Color orgColor;
-    private Image image;
-
-    // Start is called before the first frame update
-    void Start()
+    public class TransferHandler : MonoBehaviour, IPointerDownHandler
     {
-        image = GetComponent<Image>();
-    }
+        public GameObject transformButton;
+        public RectPane rectPane;
+        public Land land;
+        public string walletId;
 
-    // Update is called once per frame
-    void Update()
-    {
+        private bool selected;
+        private Color orgColor;
+        private Image image;
 
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (land != null)
-            setSelected(!selected, false);
-    }
-
-    public void setSelected(bool selected, bool fromParent)
-    {
-        this.selected = selected;
-        if (selected)
+        // Start is called before the first frame update
+        void Start()
         {
-            rectPane.setSelected(this);
-            orgColor = image.color;
-            image.color = Color.Lerp(orgColor, Color.white, .4f);
+            image = GetComponent<Image>();
         }
-        else
+
+        // Update is called once per frame
+        void Update()
         {
-            image.color = orgColor;
-            if (!fromParent)
-                rectPane.setSelected(null);
+
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (land != null)
+                setSelected(!selected, false);
+        }
+
+        public void setSelected(bool selected, bool fromParent)
+        {
+            this.selected = selected;
+            if (selected)
+            {
+                rectPane.setSelected(this);
+                orgColor = image.color;
+                image.color = Color.Lerp(orgColor, Color.white, .4f);
+            }
+            else
+            {
+                image.color = orgColor;
+                if (!fromParent)
+                    rectPane.setSelected(null);
+            }
         }
     }
 }

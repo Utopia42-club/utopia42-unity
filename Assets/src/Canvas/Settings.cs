@@ -1,131 +1,137 @@
+using src.Model;
+using src.Service;
+using src.Service.Ethereum;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Settings : MonoBehaviour
+namespace src.Canvas
 {
-    private static readonly string GUEST = "guest";
-    public InputField walletInput;
-    public Dropdown networkInput;
-    public Button submitButton;
-    public Button saveGameButton;
-    public Button editProfileButton;
-    public Button helpButton;
-
-    void Start()
+    public class Settings : MonoBehaviour
     {
-        foreach (var net in EthNetwork.NETWORKS)
-            networkInput.options.Add(new Dropdown.OptionData(net.name));
+        private static readonly string GUEST = "guest";
+        public InputField walletInput;
+        public Dropdown networkInput;
+        public Button submitButton;
+        public Button saveGameButton;
+        public Button editProfileButton;
+        public Button helpButton;
 
-        ResetInputs();
-        var manager = GameManager.INSTANCE;
-        saveGameButton.onClick.AddListener(() => manager.Save());
-        editProfileButton.onClick.AddListener(() => manager.ShowUserProfile());
-        helpButton.onClick.AddListener(() => manager.Help());
-        walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
-
-        manager.stateChange.AddListener(state =>
+        void Start()
         {
+            foreach (var net in EthNetwork.NETWORKS)
+                networkInput.options.Add(new Dropdown.OptionData(net.name));
+
             ResetInputs();
-            gameObject.SetActive(state == GameManager.State.SETTINGS);
-        });
-        if (WebBridge.IsPresent())
-        {
-            WebBridge.CallAsync<ConnectionDetail>("connectMetamask", "", (ci) =>
+            var manager = GameManager.INSTANCE;
+            saveGameButton.onClick.AddListener(() => manager.Save());
+            editProfileButton.onClick.AddListener(() => manager.ShowUserProfile());
+            helpButton.onClick.AddListener(() => manager.Help());
+            walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
+
+            manager.stateChange.AddListener(state =>
             {
-                if (ci.network.HasValue && ci.wallet != null)
-                {
-                    PlayerPrefs.SetInt(Keys.NETWORK, ci.network.Value);
-                    PlayerPrefs.SetString(Keys.WALLET, ci.wallet);
-                    ResetInputs();
-                }
+                ResetInputs();
+                gameObject.SetActive(state == GameManager.State.SETTINGS);
             });
-        }
-    }
-
-    private void ResetInputs()
-    {
-        walletInput.text = IsGuest() ? null : WalletId();
-        var net = Network();
-        networkInput.value = -1;
-
-        for (int i = 0; i < networkInput.options.Count; i++)
-        {
-            if (EthNetwork.NETWORKS[i].Equals(net))
+            if (WebBridge.IsPresent())
             {
-                networkInput.value = i;
-                break;
+                WebBridge.CallAsync<ConnectionDetail>("connectMetamask", "", (ci) =>
+                {
+                    if (ci.network.HasValue && ci.wallet != null)
+                    {
+                        PlayerPrefs.SetInt(Keys.NETWORK, ci.network.Value);
+                        PlayerPrefs.SetString(Keys.WALLET, ci.wallet);
+                        ResetInputs();
+                    }
+                });
             }
         }
-        networkInput.interactable = !EthereumClientService.INSTANCE.IsInited();
-        saveGameButton.interactable = !IsGuest() && VoxelService.INSTANCE.HasChange();
-        editProfileButton.interactable = !IsGuest();
 
-        saveGameButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
-        editProfileButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
-        helpButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
-    }
-
-    private void ResetButtonsState()
-    {
-        submitButton.interactable = !string.IsNullOrEmpty(walletInput.text);
-    }
-
-    void Update()
-    {
-        ResetButtonsState();
-    }
-
-    public void SetGuest()
-    {
-        DoSubmit(GUEST);
-    }
-
-    public void Submit()
-    {
-        if (string.IsNullOrWhiteSpace(walletInput.text)) return;
-        DoSubmit(walletInput.text);
-    }
-
-    private void DoSubmit(string walletId)
-    {
-        if (networkInput.interactable)
-            PlayerPrefs.SetInt(Keys.NETWORK, EthNetwork.NETWORKS[networkInput.value].id);
-        else if (Equals(WalletId(), walletId))
+        private void ResetInputs()
         {
-            GameManager.INSTANCE.ExitSettings();
-            return;
+            walletInput.text = IsGuest() ? null : WalletId();
+            var net = Network();
+            networkInput.value = -1;
+
+            for (int i = 0; i < networkInput.options.Count; i++)
+            {
+                if (EthNetwork.NETWORKS[i].Equals(net))
+                {
+                    networkInput.value = i;
+                    break;
+                }
+            }
+            networkInput.interactable = !EthereumClientService.INSTANCE.IsInited();
+            saveGameButton.interactable = !IsGuest() && VoxelService.INSTANCE.HasChange();
+            editProfileButton.interactable = !IsGuest();
+
+            saveGameButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
+            editProfileButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
+            helpButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
         }
 
-        PlayerPrefs.SetString(Keys.WALLET, walletId);
-        GameManager.INSTANCE.SettingsChanged();
+        private void ResetButtonsState()
+        {
+            submitButton.interactable = !string.IsNullOrEmpty(walletInput.text);
+        }
+
+        void Update()
+        {
+            ResetButtonsState();
+        }
+
+        public void SetGuest()
+        {
+            DoSubmit(GUEST);
+        }
+
+        public void Submit()
+        {
+            if (string.IsNullOrWhiteSpace(walletInput.text)) return;
+            DoSubmit(walletInput.text);
+        }
+
+        private void DoSubmit(string walletId)
+        {
+            if (networkInput.interactable)
+                PlayerPrefs.SetInt(Keys.NETWORK, EthNetwork.NETWORKS[networkInput.value].id);
+            else if (Equals(WalletId(), walletId))
+            {
+                GameManager.INSTANCE.ExitSettings();
+                return;
+            }
+
+            PlayerPrefs.SetString(Keys.WALLET, walletId);
+            GameManager.INSTANCE.SettingsChanged();
+        }
+
+        public static bool IsGuest()
+        {
+            return WalletId().Equals(GUEST);
+        }
+
+        public static string WalletId()
+        {
+            return PlayerPrefs.GetString(Keys.WALLET).ToLower();
+        }
+
+        public static EthNetwork Network()
+        {
+            return EthNetwork.GetById(PlayerPrefs.GetInt(Keys.NETWORK, EthNetwork.NETWORKS[0].id));
+        }
+
+        public static ConnectionDetail ConnectionDetail()
+        {
+            var detail = new ConnectionDetail();
+            detail.wallet = WalletId();
+            detail.network = Network().id;
+            return detail;
+        }
     }
 
-    public static bool IsGuest()
+    class Keys
     {
-        return WalletId().Equals(GUEST);
+        public static readonly string WALLET = "WALLET";
+        public static readonly string NETWORK = "NETWORK";
     }
-
-    public static string WalletId()
-    {
-        return PlayerPrefs.GetString(Keys.WALLET).ToLower();
-    }
-
-    public static EthNetwork Network()
-    {
-        return EthNetwork.GetById(PlayerPrefs.GetInt(Keys.NETWORK, EthNetwork.NETWORKS[0].id));
-    }
-
-    public static ConnectionDetail ConnectionDetail()
-    {
-        var detail = new ConnectionDetail();
-        detail.wallet = WalletId();
-        detail.network = Network().id;
-        return detail;
-    }
-}
-
-class Keys
-{
-    public static readonly string WALLET = "WALLET";
-    public static readonly string NETWORK = "NETWORK";
 }

@@ -1,16 +1,18 @@
 using UnityEngine;
-using UnityEngine.UI;
 
-public class Help : MonoBehaviour
+namespace src.Canvas
 {
-    public ActionButton closeButton;
-
-    void Start()
+    public class Help : MonoBehaviour
     {
-        closeButton.AddListener(() =>
+        public ActionButton closeButton;
+
+        void Start()
         {
-            if (GameManager.INSTANCE.GetState() == GameManager.State.HELP)
-                GameManager.INSTANCE.ReturnToGame();
-        });
+            closeButton.AddListener(() =>
+            {
+                if (GameManager.INSTANCE.GetState() == GameManager.State.HELP)
+                    GameManager.INSTANCE.ReturnToGame();
+            });
+        }
     }
 }
