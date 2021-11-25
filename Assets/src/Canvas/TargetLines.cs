@@ -66,30 +66,46 @@ namespace src.Canvas
         private void Draw(Vector3Int mousePos)
         {
             var drawingRect = drawingObject.GetComponent<RectTransform>();
-            var mouseX = Round(mousePos.x);
-            var mouseY = Round(mousePos.y);
+            var mouseX = RoundDown(mousePos.x);
+            var mouseY = RoundDown(mousePos.y);
             var rectPos = startDrawPos;
-            float x2 = Mathf.Max(rectPos.x, mouseX);
-            float x1 = Mathf.Min(rectPos.x, mouseX);
-            float y2 = Mathf.Max(rectPos.y, mouseY);
-            float y1 = Mathf.Min(rectPos.y, mouseY);
-            var rect = new Rect(x1, y1, x2 - x1, y2 - y1);
-            if (!landRect.OverlapsOthers(drawingObject, rect))
-            {
-                drawingRect.localPosition = new Vector3(x1, y1, 0);
-                drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rect.height);
-                drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rect.width);
-            }
+
+            // New Rect
+            int x2 = Mathf.Max(rectPos.x, mouseX);
+            int x1 = Mathf.Min(rectPos.x, mouseX);
+            int y1 = Mathf.Min(rectPos.y, mouseY);
+            int y2 = Mathf.Max(rectPos.y, mouseY);
+
+            // Old Rect
+            var or = drawingRect.rect;
+            var olp = drawingRect.localPosition;
+            int ox1 = (int)olp.x;
+            int ox2 = ox1 + (int) or.width;
+            int oy1 = (int) olp.y;
+            int oy2 = oy1 + (int) or.height;
+
+            // Debug.Log($"{ox1},{ox2},{oy1},{oy2}, {x1},{x2},{y1},{y2}");
+            var rect = landRect.ResolveCollisions(drawingObject, ox1, ox2, oy1, oy2, x1 - ox1, x2 - ox2,
+                y1 - oy1, y2 - oy2);
+
+            drawingRect.localPosition = new Vector3(rect.x, rect.y, 0);
+            drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rect.height);
+            drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rect.width);
         }
 
-        private static Vector3Int Round(Vector3 v)
+        private static Vector3Int RoundDown(Vector3 v)
         {
-            return new Vector3Int(Round(v.x), Round(v.y), Round(v.z));
+            return new Vector3Int(RoundDown(v.x), RoundDown(v.y), RoundDown(v.z));
         }
 
-        private static int Round(float x)
+        public static int RoundDown(float x)
         {
             return 5 * (int) Mathf.Floor(x / 5);
+        }
+
+        public static int RoundUp(float x)
+        {
+            return 5 * (int) Mathf.Ceil(x / 5);
         }
 
         private void StartDrag(Vector3Int mousePosInt)
@@ -106,7 +122,7 @@ namespace src.Canvas
 
         private void StartDraw(Vector3Int pos)
         {
-            startDrawPos = Round(pos);
+            startDrawPos = RoundDown(pos);
             drawing = true;
             drawingObject = landRect.DrawAt(pos.x, pos.y);
         }
