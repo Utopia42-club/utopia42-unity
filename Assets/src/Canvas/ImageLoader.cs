@@ -8,30 +8,43 @@ namespace src.Canvas
     public class ImageLoader : MonoBehaviour
     {
         private string url = "";
-        [SerializeField]
-        private Sprite emptySprite;
+        [SerializeField] private Sprite emptySprite;
+
+        private Coroutine currentRoutine;
 
         public void SetUrl(string url)
         {
+            if (object.Equals(this.url, url))
+            {
+                Debug.Log("Redundant!!");
+                return;
+            }
+
             this.url = url;
             if (url == null)
                 GetComponent<Image>().overrideSprite = emptySprite;
             else
-                StartCoroutine(LoadFromLikeCoroutine());
+                currentRoutine = StartCoroutine(LoadFromLikeCoroutine());
         }
 
         // this section will be run independently
         private IEnumerator LoadFromLikeCoroutine()
         {
+            var url = this.url;
             UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
+
             yield return request.SendWebRequest();
-            if (request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.ConnectionError)
+            if (url != this.url) yield break;
+
+            if (request.result == UnityWebRequest.Result.ProtocolError ||
+                request.result == UnityWebRequest.Result.ConnectionError)
                 GetComponent<Image>().overrideSprite = emptySprite;
             else
             {
                 // ImageComponent.texture = ((DownloadHandlerTexture) request.downloadHandler).texture;
-                Texture2D tex = ((DownloadHandlerTexture)request.downloadHandler).texture;
-                Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(tex.width / 2, tex.height / 2));
+                Texture2D tex = ((DownloadHandlerTexture) request.downloadHandler).texture;
+                Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(tex.width / 2, tex.height / 2));
                 GetComponent<Image>().overrideSprite = sprite;
             }
         }
