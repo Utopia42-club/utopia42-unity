@@ -10,8 +10,6 @@ namespace src.Canvas
         private string url = "";
         [SerializeField] private Sprite emptySprite;
 
-        private Coroutine currentRoutine;
-
         public void SetUrl(string url)
         {
             if (Equals(this.url, url))
@@ -21,7 +19,7 @@ namespace src.Canvas
             if (url == null)
                 GetComponent<Image>().overrideSprite = emptySprite;
             else
-                currentRoutine = StartCoroutine(LoadFromLikeCoroutine());
+                StartCoroutine(LoadFromLikeCoroutine());
         }
 
         // this section will be run independently
