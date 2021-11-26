@@ -31,18 +31,20 @@ namespace src.Canvas
         {
             if (WebBridge.IsPresent())
             {
-                //var orig = WebGLInput.captureAllKeyboardInput;
-                //WebGLInput.captureAllKeyboardInput = false;
+#if UNITY_WEBGL
+                var orig = WebGLInput.captureAllKeyboardInput;
+                WebGLInput.captureAllKeyboardInput = false;
                 WebBridge.Call<object>("editProfile", null);
                 ResetButtons(() =>
                 {
-                    //WebGLInput.captureAllKeyboardInput = orig;
+                    WebGLInput.captureAllKeyboardInput = orig;
                     onDone();
                 }, () =>
                 {
-                    //WebGLInput.captureAllKeyboardInput = orig;
+                    WebGLInput.captureAllKeyboardInput = orig;
                     onCancel();
                 });
+#endif
             }
             else
                 CallUrl("editProfile", onDone, onCancel);
@@ -117,7 +119,8 @@ namespace src.Canvas
                 currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}", WEB_APP_URL, method,
                     parameters, wallet, network);
             else
-                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", WEB_APP_URL, method, wallet, network);
+                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", WEB_APP_URL, method, wallet,
+                    network);
 
             Application.OpenURL(currentUrl);
             ResetButtons(onDone, onCancel);

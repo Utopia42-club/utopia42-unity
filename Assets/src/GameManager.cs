@@ -41,9 +41,9 @@ namespace src
             {
                 var land = lands[0];
                 pos = new Vector3(
-                    ((float)(land.x1 + land.x2)) / 2,
+                    ((float) (land.x1 + land.x2)) / 2,
                     Chunk.CHUNK_HEIGHT + 10,
-                    ((float)(land.y1 + land.y2)) / 2);
+                    ((float) (land.y1 + land.y2)) / 2);
             }
 
             pos = FindStartingY(pos);
@@ -86,6 +86,7 @@ namespace src
                 Loading.INSTANCE.UpdateText(string.Format("Creating the world {0}%", Mathf.FloorToInt(perc)));
                 yield return null;
             }
+
             worldInited = true;
             SetState(State.PLAYING);
         }
@@ -105,6 +106,7 @@ namespace src
                         break;
                     }
                 }
+
                 if (!coll) return feet;
             }
         }
@@ -221,13 +223,13 @@ namespace src
 
         public void ShowUserProfile()
         {
-            if (GetState() == GameManager.State.PLAYING || GetState() == State.SETTINGS)
+            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
             {
                 SetState(State.LOADING);
                 Loading.INSTANCE.UpdateText("Loading profile");
                 Owner.INSTANCE.UserProfile(profile =>
                 {
-                    SetState(GameManager.State.PROFILE);
+                    SetState(State.PROFILE);
                     ProfileDialog.INSTANCE.SetProfile(profile);
                 }, () => SetState(State.PLAYING));
             }
@@ -235,9 +237,9 @@ namespace src
 
         public void ShowProfile(Profile profile)
         {
-            if (GetState() == GameManager.State.PLAYING || GetState() == State.SETTINGS)
+            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
             {
-                SetState(GameManager.State.PROFILE);
+                SetState(State.PROFILE);
                 ProfileDialog.INSTANCE.SetProfile(profile);
             }
         }
@@ -247,9 +249,9 @@ namespace src
             SetState(State.BROWSER_CONNECTION);
             BrowserConnector.INSTANCE.EditProfile(() =>
             {
-                SetState(GameManager.State.PLAYING);
+                SetState(State.PLAYING);
                 Owner.INSTANCE.OnProfileEdited();
-            }, () => { });
+            }, () => { SetState(State.PLAYING); });
         }
 
         private IEnumerator ReloadLands()
@@ -291,15 +293,20 @@ namespace src
 
         public static GameManager INSTANCE
         {
-            get
-            {
-                return GameObject.Find("GameManager").GetComponent<GameManager>();
-            }
+            get { return GameObject.Find("GameManager").GetComponent<GameManager>(); }
         }
 
         public enum State
         {
-            LOADING, SETTINGS, PLAYING, MAP, BROWSER_CONNECTION, INVENTORY, HELP, PROFILE, DIALOG
+            LOADING,
+            SETTINGS,
+            PLAYING,
+            MAP,
+            BROWSER_CONNECTION,
+            INVENTORY,
+            HELP,
+            PROFILE,
+            DIALOG
         }
     }
 }
