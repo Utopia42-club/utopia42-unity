@@ -39,7 +39,7 @@ namespace src.Canvas.Map
             this.selected = selected;
             if (selected)
             {
-                rectPane.setSelected(this);
+                rectPane.SetSelected(this);
                 orgColor = image.color;
                 image.color = Color.Lerp(orgColor, Color.white, .4f);
             }
@@ -47,7 +47,7 @@ namespace src.Canvas.Map
             {
                 image.color = orgColor;
                 if (!fromParent)
-                    rectPane.setSelected(null);
+                    rectPane.SetSelected(null);
             }
         }
     }

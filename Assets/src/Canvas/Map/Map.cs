@@ -1,35 +1,43 @@
+using System;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace src.Canvas.Map
 {
     public class Map : MonoBehaviour
     {
-        [SerializeField] private Button saveButton;
-        [SerializeField] private RectPane pane;
         [SerializeField] private LandProfileDialog landProfileDialog;
-
+        [SerializeField] private LandBuyDialog landBuyDialog;
+        private Action landBuyDialogDismissCallback;
+        
         void Start()
         {
             GameManager.INSTANCE.stateChange.AddListener(
-                state => gameObject.SetActive(state == GameManager.State.MAP)
+                state =>
+                {
+                    gameObject.SetActive(state == GameManager.State.MAP);
+                    CloseLandBuyDialogState();
+                    CloseLandProfileDialogState();
+                }
             );
-            saveButton.onClick.AddListener(DoSave);
         }
 
-        private void Update()
+        public void CloseLandProfileDialogState()
         {
-            saveButton.gameObject.SetActive(pane.HasDrawn());
+            landProfileDialog.RequestClose();
+            landProfileDialog.gameObject.SetActive(false);
         }
 
-        private void DoSave()
+        public void OpenLandBuyDialogState(RectTransform rect, Action dismissCallback)
         {
-            GameManager.INSTANCE.Buy(pane.GetDrawn());
+            landBuyDialog.gameObject.SetActive(true);
+            landBuyDialog.SetRect(rect);
+            landBuyDialogDismissCallback = dismissCallback;
         }
 
-        public void ChangeLandProfileDialogState(bool state)
+        public void CloseLandBuyDialogState()
         {
-            landProfileDialog.gameObject.SetActive(state);
+            landBuyDialog.gameObject.SetActive(false);
+            landBuyDialogDismissCallback?.Invoke();
         }
     }
 }

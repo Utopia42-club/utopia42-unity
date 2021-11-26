@@ -1,3 +1,4 @@
+using System;
 using src.Canvas.Map;
 using src.Utils;
 using TMPro;
@@ -16,13 +17,14 @@ namespace src.Canvas
         private Vector3Int startDrawPos;
         private bool drawing = false;
         private GameObject drawingObject;
+        public Map.Map map;
 
         void Update()
         {
             var mousePos = Input.mousePosition;
             var mousePosInt = Vectors.FloorToInt(mousePos);
             var realPosition = Vectors.FloorToInt(mousePos - landRect.GetComponent<RectTransform>().position);
-            positionText.text = string.Format("{0} {1}", realPosition.x, realPosition.y);
+            positionText.text = $"{realPosition.x} {realPosition.y}";
 
             if (!drawing && !dragging && Input.GetMouseButtonDown(0))
             {
@@ -60,7 +62,10 @@ namespace src.Canvas
             if ((long) rect.xMin == (long) rect.xMax || (long) rect.yMin == (long) rect.yMax)
                 landRect.Delete(drawingObject);
 
-            //TODO open buy dialog
+            map.OpenLandBuyDialogState(drawingRect, () =>
+            {
+                landRect.Delete(drawingObject);
+            });
         }
 
         private void Draw(Vector3Int mousePos)
@@ -79,7 +84,7 @@ namespace src.Canvas
             // Old Rect
             var or = drawingRect.rect;
             var olp = drawingRect.localPosition;
-            int ox1 = (int)olp.x;
+            int ox1 = (int) olp.x;
             int ox2 = ox1 + (int) or.width;
             int oy1 = (int) olp.y;
             int oy2 = oy1 + (int) or.height;

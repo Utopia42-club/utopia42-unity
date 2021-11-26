@@ -14,8 +14,6 @@ namespace src.Canvas.Map
         private readonly HashSet<GameObject> drawnLandIndicators = new HashSet<GameObject>();
 
         [SerializeField] public GameObject landPrefab;
-        [SerializeField] public Button transferButton;
-        [SerializeField] public Button toggleNftButton;
 
         public TransferHandler selectedLand;
         public LandProfileDialog landProfileDialog;
@@ -51,7 +49,8 @@ namespace src.Canvas.Map
                 bool owner = entry.Key.Equals(Settings.WalletId());
                 foreach (var land in entry.Value)
                     Add(land.x1, land.x2, land.y1, land.y2,
-                        owner ? land.isNft ? new Color(250, 237, 95) : Color.green : Color.gray, land, entry.Key);
+                        owner ? land.isNft ? Colors.MAP_OWNED_LAND_NFT : Colors.MAP_OWNED_LAND :
+                            land.isNft ? Colors.MAP_OTHERS_LAND_NFT : Colors.MAP_OTHERS_LAND, land, entry.Key);
             }
         }
 
@@ -64,7 +63,7 @@ namespace src.Canvas.Map
         }
 
 
-        internal void setSelected(TransferHandler transferHandler)
+        internal void SetSelected(TransferHandler transferHandler)
         {
             if (selectedLand != null && transferHandler != selectedLand)
                 selectedLand.setSelected(false, true);
@@ -108,7 +107,7 @@ namespace src.Canvas.Map
 
         internal GameObject DrawAt(long x, long y)
         {
-            GameObject obj = Add(x, x, y, y, Color.blue, null, Settings.WalletId());
+            GameObject obj = Add(x, x, y, y, Colors.PRIMARY_COLOR, null, Settings.WalletId());
             drawnLandIndicators.Add(obj);
             return obj;
         }

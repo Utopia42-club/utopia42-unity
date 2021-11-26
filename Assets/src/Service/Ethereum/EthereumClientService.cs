@@ -36,9 +36,24 @@ namespace src.Service.Ethereum
         public IEnumerator GetLastLandId(Action<BigInteger> consumer)
         {
             var request =
-                new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(network.provider, network.contractAddress);
+                new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(network.provider,
+                    network.contractAddress);
             yield return request.Query(new LastLandIdFunction() { }, network.contractAddress);
             consumer(request.Result.ReturnValue1);
+        }
+
+        public IEnumerator GetLandPrice(long x1, long x2, long y1, long y2, Action<decimal> consumer)
+        {
+            var request =
+                new QueryUnityRequest<LandPriceFunction, LandPriceOutputDTO>(network.provider, network.contractAddress);
+            yield return request.Query(new LandPriceFunction()
+            {
+                X1 = x1,
+                X2 = x2,
+                Y1 = y1,
+                Y2 = y2
+            }, network.contractAddress);
+            consumer(Nethereum.Web3.Web3.Convert.FromWei(request.Result.ReturnValue1));
         }
 
 

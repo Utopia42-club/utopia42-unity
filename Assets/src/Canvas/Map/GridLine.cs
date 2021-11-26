@@ -19,11 +19,12 @@ namespace src.Canvas.Map
             rectTransform.SetParent(parent);
             rectTransform.pivot = new Vector2(0, 0);
 
-            rectTransform.SetSizeWithCurrentAnchors(vertical ? RectTransform.Axis.Horizontal
+            rectTransform.SetSizeWithCurrentAnchors(vertical
+                ? RectTransform.Axis.Horizontal
                 : RectTransform.Axis.Vertical, THICKNESS);
 
             gameObject.AddComponent<CanvasRenderer>();
-            gameObject.AddComponent<Image>().color = new Color(39, 174, 96);
+            gameObject.AddComponent<Image>().color = new Color(39 / 255f, 174 / 255f, 96 / 255f);
 
             this.index = index + 1;
             SetIndex(index);
@@ -46,7 +47,7 @@ namespace src.Canvas.Map
         {
             if (this.index == index) return;
             this.index = index;
-            gameObject.GetComponent<Image>().color = index == 0 ? Color.red : Color.green;
+            gameObject.GetComponent<Image>().color = index == 0 ? Colors.MAP_GRID_ORIGIN_LINES : Colors.MAP_GRID_LINES;
             gameObject.name = index + " " + vertical;
             rectTransform.localPosition = (vertical ? Vector3.right : Vector3.up) * SPACE * index;
         }
