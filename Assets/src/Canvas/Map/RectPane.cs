@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using src.Model;
 using src.Service;
@@ -112,25 +113,98 @@ namespace src.Canvas.Map
             return obj;
         }
 
-        internal bool OverlapsOthers(GameObject landIndicator, Rect rect)
+        internal Rect ResolveCollisions(GameObject landIndicator, int x1, int x2, int y1, int y2, int dx1, int dx2,
+            int dy1, int dy2)
         {
-            // int x1 = (int) rect.x;
-            // int y1 = (int) rect.y;
-            // int x2 = x1 + (int) rect.width;
-            // int y2 = y1 + (int) rect.height;
+            if (dx2 != 0 || dy2 != 0)
+            {
+                if (dx2 > 0)
+                {
+                    var maxX2 = ForEachIndicator(x2 + dx2, (ox1, ox2, oy1, oy2, maxX2) =>
+                    {
+                        if (ox2 > x1 && (y1 > oy1 && y1 < oy2 || y2 > oy1 && y2 < oy2
+                                                              || oy1 > y1 && oy1 < y2 || oy2 > y1 && oy2 < y2))
+                            return Math.Min(maxX2, ox1);
+                        return maxX2;
+                    }, landIndicator);
+
+                    x2 = Math.Max(maxX2, x2);
+                }
+                else x2 = Math.Max(x1, x2 + dx2);
+
+                if (dy2 > 0)
+                {
+                    var maxY2 = ForEachIndicator(y2 + dy2, (ox1, ox2, oy1, oy2, maxY2) =>
+                    {
+                        if (oy2 > y1 && (x1 > ox1 && x1 < ox2 || x2 > ox1 && x2 < ox2
+                                                              || ox1 > x1 && ox1 < x2 || ox2 > x1 && ox2 < x2))
+                            return Math.Min(maxY2, oy1);
+                        return maxY2;
+                    }, landIndicator);
+
+                    y2 = Math.Max(maxY2, y2);
+                }
+                else y2 = Math.Max(y1, y2 + dy2);
+            }
+
+            if (dy1 != 0 || dx1 != 0)
+            {
+                if (dx1 < 0)
+                {
+                    var minX1 = ForEachIndicator(x1 + dx1, (ox1, ox2, oy1, oy2, minX1) =>
+                    {
+                        if (ox1 < x2 && (y1 > oy1 && y1 < oy2 || y2 > oy1 && y2 < oy2
+                                                              || oy1 > y1 && oy1 < y2 || oy2 > y1 && oy2 < y2))
+                            return Math.Max(minX1, ox2);
+                        return minX1;
+                    }, landIndicator);
+
+                    x1 = Math.Min(minX1, x1);
+                }
+                else x1 = Math.Min(x2, x1 + dx1);
+
+                if (dy1 < 0)
+                {
+                    var minY1 = ForEachIndicator(y1 + dy1, (ox1, ox2, oy1, oy2, minY1) =>
+                    {
+                        if (oy1 < y2 && (x1 > ox1 && x1 < ox2 || x2 > ox1 && x2 < ox2
+                                                              || ox1 > x1 && ox1 < x2 || ox2 > x1 && ox2 < x2))
+                            return Math.Max(minY1, oy2);
+                        return minY1;
+                    }, landIndicator);
+
+                    y1 = Math.Min(minY1, y1);
+                }
+                else y1 = Math.Min(y2, y1 + dy1);
+            }
+
+            return new Rect(x1, y1, x2 - x1, y2 - y1);
+        }
+
+
+        /*
+         * function is (indicatorX1, indicatorX2, indicatorY1, indicatorY2, current) => next
+         */
+        private int ForEachIndicator(int seed, Func<int, int, int, int, int, int> function, GameObject ignore)
+        {
+            var current = seed;
             foreach (var li in landIndicators)
             {
-                if (li != landIndicator)
+                if (li != ignore)
                 {
                     var transform = li.GetComponent<RectTransform>();
-                    var r = transform.rect;
-                    if (new Rect(transform.localPosition.x, transform.localPosition.y, r.width, r.height)
-                        .Overlaps(rect))
-                        return true;
+                    var or = transform.rect;
+                    var olp = transform.localPosition;
+                    int x1 = TargetLines.RoundDown((int) olp.x);
+                    int x2 = TargetLines.RoundUp(x1 + (int) or.width);
+                    int y1 = TargetLines.RoundDown((int) olp.y);
+                    int y2 = TargetLines.RoundUp(y1 + (int) or.height);
+
+                    current = function.Invoke(x1, x2, y1, y2, current);
                 }
             }
 
-            return false;
+            return current;
         }
 
         internal List<Land> GetDrawn()

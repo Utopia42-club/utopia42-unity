@@ -51,7 +51,6 @@ namespace src.Service
                         break;
                 }
             }
-            yield break;
         }
     }
 }
