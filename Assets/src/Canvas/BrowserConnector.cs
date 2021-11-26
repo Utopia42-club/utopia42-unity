@@ -50,18 +50,15 @@ namespace src.Canvas
                 CallUrl("editProfile", onDone, onCancel);
         }
 
-        public void Transfer(long landId, bool isNft, Action onDone, Action onCancel)
+        public void Transfer(long landId, Action onDone, Action onCancel)
         {
             if (WebBridge.IsPresent())
             {
-                var data = new Dictionary<string, object>();
-                data.Add("landId", landId);
-                data.Add("isNft", isNft);
                 WebBridge.Call<object>("transfer", landId);
                 ResetButtons(onDone, onCancel);
             }
             else
-                CallUrl("transfer", $"{landId}_{isNft.ToString().ToLower()}", onDone, onCancel);
+                CallUrl("transfer", landId.ToString(), onDone, onCancel);
         }
 
         public void SetNft(long landId, bool value, Action onDone, Action onCancel)

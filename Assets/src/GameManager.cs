@@ -205,10 +205,10 @@ namespace src
                 () => SetState(State.PLAYING));
         }
 
-        public void Transfer(long landId, bool isNft)
+        public void Transfer(long landId)
         {
             SetState(State.BROWSER_CONNECTION);
-            BrowserConnector.INSTANCE.Transfer(landId, isNft,
+            BrowserConnector.INSTANCE.Transfer(landId,
                 () => StartCoroutine(ReloadLands()),
                 () => SetState(State.PLAYING));
         }
