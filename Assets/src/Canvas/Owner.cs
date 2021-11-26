@@ -11,7 +11,7 @@ namespace src.Canvas
     public class Owner : MonoBehaviour
     {
         private static Owner instance;
-        private readonly static Profile NO_PROFILE = new Profile();
+        private static readonly Profile NO_PROFILE = new Profile();
         private Dictionary<string, Profile> profileCache = new Dictionary<string, Profile>();
         public TextMeshProUGUI label;
         public ActionButton openProfileButton;

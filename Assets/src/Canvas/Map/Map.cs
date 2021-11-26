@@ -5,10 +5,9 @@ namespace src.Canvas.Map
 {
     public class Map : MonoBehaviour
     {
-        [SerializeField]
-        private Button saveButton;
-        [SerializeField]
-        private RectPane pane;
+        [SerializeField] private Button saveButton;
+        [SerializeField] private RectPane pane;
+        [SerializeField] private LandProfileDialog landProfileDialog;
 
         void Start()
         {
@@ -26,6 +25,11 @@ namespace src.Canvas.Map
         private void DoSave()
         {
             GameManager.INSTANCE.Buy(pane.GetDrawn());
+        }
+
+        public void ChangeLandProfileDialogState(bool state)
+        {
+            landProfileDialog.gameObject.SetActive(state);
         }
     }
 }

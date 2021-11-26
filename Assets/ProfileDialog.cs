@@ -40,7 +40,6 @@ public class ProfileDialog : MonoBehaviour
         });
     }
 
-    // Update is called once per frame
     public void SetProfile(Profile profile)
     {
         if (profile == null)

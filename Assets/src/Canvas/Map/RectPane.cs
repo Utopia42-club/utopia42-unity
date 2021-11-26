@@ -17,6 +17,7 @@ namespace src.Canvas.Map
         [SerializeField] public Button toggleNftButton;
 
         public TransferHandler selectedLand;
+        public LandProfileDialog landProfileDialog;
 
         void Start()
         {
@@ -26,21 +27,12 @@ namespace src.Canvas.Map
             manager.stateChange.AddListener(s =>
             {
                 if (s == GameManager.State.MAP) Init();
-                else DestroyRects();
+                else
+                {
+                    DestroyRects();
+                    landProfileDialog.gameObject.SetActive(false);
+                }
             });
-
-            transferButton.onClick.AddListener(DoTransfer);
-            toggleNftButton.onClick.AddListener(DoToggleNft);
-        }
-
-        private void DoTransfer()
-        {
-            GameManager.INSTANCE.Transfer(selectedLand.land.id, selectedLand.land.isNft);
-        }
-
-        private void DoToggleNft()
-        {
-            GameManager.INSTANCE.SetNFT(selectedLand.land.id, !selectedLand.land.isNft);
         }
 
         private void Init()
@@ -76,15 +68,14 @@ namespace src.Canvas.Map
             if (selectedLand != null && transferHandler != selectedLand)
                 selectedLand.setSelected(false, true);
             selectedLand = transferHandler;
-            transferButton.gameObject.SetActive(selectedLand != null &&
-                                                selectedLand.walletId.Equals(Settings.WalletId()));
-            toggleNftButton.gameObject.SetActive(selectedLand != null &&
-                                                 selectedLand.walletId.Equals(Settings.WalletId()));
-            if (toggleNftButton.gameObject.activeSelf)
-            {
-                toggleNftButton.gameObject.GetComponentInChildren<Text>().text =
-                    selectedLand.land.isNft ? "Remove NFT" : "Create NFT";
-            }
+            if (!selectedLand) return;
+            landProfileDialog.gameObject.SetActive(true);
+            StartCoroutine(RestClient.INSATANCE.GetProfile(selectedLand.walletId,
+                (profile) =>
+                {
+                    landProfileDialog.SetProfile(profile);
+                    landProfileDialog.SetLand(selectedLand.land);
+                }, () => { }));
         }
 
         private GameObject Add(long x1, long x2, long y1, long y2, Color color, Land land, string walletId)
