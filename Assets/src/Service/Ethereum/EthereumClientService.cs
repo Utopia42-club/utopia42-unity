@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
 using Nethereum.JsonRpc.UnityClient;
+using Nethereum.Web3;
 using src.Service.Ethereum.ContractDefinition;
-using UnityEngine;
 using Land = src.Model.Land;
 
 namespace src.Service.Ethereum
@@ -53,7 +53,7 @@ namespace src.Service.Ethereum
                 Y1 = y1,
                 Y2 = y2
             }, network.contractAddress);
-            consumer(Nethereum.Web3.Web3.Convert.FromWei(request.Result.ReturnValue1));
+            consumer(Web3.Convert.FromWei(request.Result.ReturnValue1));
         }
 
 
@@ -86,7 +86,7 @@ namespace src.Service.Ethereum
             consumer(MapLands(request.Result.Lands));
         }
 
-        private static List<Land> MapLands(List<src.Service.Ethereum.ContractDefinition.Land> contractLands)
+        private static List<Land> MapLands(List<ContractDefinition.Land> contractLands)
         {
             List<Land> resultLands = new List<Land>();
             if (contractLands != null)
@@ -125,7 +125,7 @@ namespace src.Service.Ethereum
                 {
                     foreach (var land in lands)
                     {
-                        if (land.owner == null || land.owner.Length == 0 || land.x1 == land.x2  || land.y1 == land.y2)
+                        if (land.owner == null || land.owner.Length == 0 || land.x1 == land.x2 || land.y1 == land.y2)
                             continue;
                         resultLands.Add(land);
                     }
