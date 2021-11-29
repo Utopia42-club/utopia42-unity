@@ -8,7 +8,6 @@ using src.MetaBlocks.ImageBlock;
 using src.MetaBlocks.LinkBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
-using src.Service.Ethereum;
 using src.Service.Migration;
 using UnityEngine;
 
@@ -20,8 +19,8 @@ namespace src.Service
         private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
         private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
         private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
-        private Dictionary<string, List<Land>> ownersLands;
         private HashSet<Land> changedLands = new HashSet<Land>();
+        private readonly LandRegistry landRegistry = new LandRegistry();
 
         public VoxelService()
         {
@@ -93,6 +92,7 @@ namespace src.Service
                 InitGroundLevel(position, voxels, bedrock);
                 return;
             }
+
             if (position.y < 0)
             {
                 top = body = bedrock;
@@ -128,6 +128,7 @@ namespace src.Service
                         top = grass;
                         body = dirt;
                     }
+
                     FillAtXY(top, body, x, z, voxels);
                 }
             }
@@ -154,6 +155,7 @@ namespace src.Service
                 if (entry.Value.name.Equals(name))
                     return entry.Value;
             }
+
             Debug.LogError("Invalid block type: " + name);
             return null;
         }
@@ -193,11 +195,9 @@ namespace src.Service
             return vp.chunk.y <= 0;
         }
 
-        public List<Land> getLandsFor(string walletId)
+        public List<Land> GetLandsFor(string walletId)
         {
-            List<Land> res = null;
-            ownersLands.TryGetValue(walletId, out res);
-            return res;
+            return landRegistry.GetLandsFor(walletId);
         }
 
         public IEnumerator Initialize(Loading loading, Action onDone)
@@ -230,7 +230,8 @@ namespace src.Service
             foreach (var entry in land.changes)
             {
                 var change = entry.Value;
-                var pos = LandDetails.PraseKey(entry.Key) + new Vector3Int((int)land.region.x1, 0, (int)land.region.y1);
+                var pos = LandDetails.PraseKey(entry.Key) +
+                          new Vector3Int((int) land.region.x1, 0, (int) land.region.y1);
                 var position = new VoxelPosition(pos);
                 if (land.region.Contains(ref pos))
                 {
@@ -245,16 +246,18 @@ namespace src.Service
             }
         }
 
-        private void ReadMetadata(LandDetails land, Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks)
+        private void ReadMetadata(LandDetails land,
+            Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks)
         {
             foreach (var entry in land.metadata)
             {
                 var meta = entry.Value;
-                var pos = LandDetails.PraseKey(entry.Key) + new Vector3Int((int)land.region.x1, 0, (int)land.region.y1);
+                var pos = LandDetails.PraseKey(entry.Key) +
+                          new Vector3Int((int) land.region.x1, 0, (int) land.region.y1);
                 var position = new VoxelPosition(pos);
                 if (land.region.Contains(ref pos))
                 {
-                    var type = (MetaBlockType)GetBlockType(meta.type);
+                    var type = (MetaBlockType) GetBlockType(meta.type);
                     if (type == null) continue;
                     try
                     {
@@ -275,25 +278,20 @@ namespace src.Service
         private IEnumerator LoadDetails(Loading loading, Action<LandDetails> consumer)
         {
             loading.UpdateText("Loading Wallets And Lands...");
-            var ownersLands = new Dictionary<string, List<Land>>();
-            yield return EthereumClientService.INSTANCE.GetLands(ownersLands);
-            this.ownersLands = ownersLands;
+            yield return landRegistry.ReloadLands();
 
-            var lands = new List<Land>();
-            foreach (var val in ownersLands.Values)
-                lands.AddRange(val);
+            var landsCount = landRegistry.GetLands().Count;
+            var enums = new IEnumerator[landsCount];
 
-            var enums = new IEnumerator[lands.Count];
-
-            for (int i = 0; i < lands.Count; i++)
+            var index = 0;
+            foreach (var land in landRegistry.GetLands().Values)
             {
-                var land = lands[i];
-                var idx = i;
                 if (!string.IsNullOrWhiteSpace(land.ipfsKey))
-                    enums[i] = IpfsClient.INSATANCE.GetLandDetails(land.ipfsKey, consumer);
+                    enums[index] = IpfsClient.INSATANCE.GetLandDetails(land, consumer);
+                index++;
             }
 
-            for (int i = 0; i < lands.Count; i++)
+            for (int i = 0; i < landsCount; i++)
                 if (enums[i] != null)
                 {
                     loading.UpdateText(string.Format("Loading Changes ({0}/{1})...", i, enums.Length));
@@ -324,7 +322,7 @@ namespace src.Service
                 var change = new VoxelChange();
                 change.name = GetBlockType(type).name;
                 land.changes[key] = change;
-            }, m => true);//Filter can check if the block is default
+            }, m => true); //Filter can check if the block is default
             Stream(result, metaBlocks, (key, metaBlock, land) =>
             {
                 var properties = metaBlock.GetProps();
@@ -361,7 +359,8 @@ namespace src.Service
                             var land = landDetails.region;
                             if (land.Contains(ref worldPos))
                             {
-                                var key = LandDetails.FormatKey(worldPos - new Vector3Int((int)land.x1, 0, (int)land.y1));
+                                var key = LandDetails.FormatKey(worldPos -
+                                                                new Vector3Int((int) land.x1, 0, (int) land.y1));
                                 consumer(key, voxelEntry.Value, landDetails);
                                 break;
                             }
@@ -385,7 +384,8 @@ namespace src.Service
                 metas = new Dictionary<Vector3Int, MetaBlock>();
                 metaBlocks[pos.chunk] = metas;
             }
-            metas[pos.local] = ((MetaBlockType)GetBlockType(id)).New("");
+
+            metas[pos.local] = ((MetaBlockType) GetBlockType(id)).New("");
             changedLands.Add(land);
 
             return metas;
@@ -399,6 +399,7 @@ namespace src.Service
                 vc = new Dictionary<Vector3Int, byte>();
                 changes[pos.chunk] = vc;
             }
+
             vc[pos.local] = id;
             changedLands.Add(land);
         }
@@ -425,7 +426,12 @@ namespace src.Service
 
         public Dictionary<string, List<Land>> GetOwnersLands()
         {
-            return ownersLands;
+            return landRegistry.GetOwnersLands();
+        }
+
+        public IEnumerator ReloadLandsFor(string wallet)
+        {
+            yield return landRegistry.ReloadLandsFor(wallet);
         }
 
         public bool IsInitialized()
@@ -433,18 +439,9 @@ namespace src.Service
             return this.changes != null;
         }
 
-
         public IEnumerator ReloadLands()
         {
-            var ownersLands = new Dictionary<string, List<Land>>();
-            yield return EthereumClientService.INSTANCE.GetLands(ownersLands);
-            this.ownersLands = ownersLands;
-            yield break;
-        }
-
-        public IEnumerator ReloadLandsFor(string wallet)
-        {
-            yield return EthereumClientService.INSTANCE.GetLandsForOwner(wallet, lands => ownersLands[wallet] = lands);
+            yield return landRegistry.ReloadLands();
         }
     }
 }

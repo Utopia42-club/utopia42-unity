@@ -67,7 +67,7 @@ namespace src
             if (wallet != null)
             {
                 var service = VoxelService.INSTANCE;
-                lands = service.getLandsFor(wallet);
+                lands = service.GetLandsFor(wallet);
                 service.RefreshChangedLands(lands);
             }
 

@@ -41,7 +41,7 @@ namespace src.Canvas
             {
                 var player = Player.INSTANCE;
                 var changed = IsLandChanged(player.transform.position);
-                if (changed || (!view.activeSelf && currentWallet != null))
+                if (changed || !view.activeSelf && currentWallet != null)
                     OnOwnerChanged();
             }
             else

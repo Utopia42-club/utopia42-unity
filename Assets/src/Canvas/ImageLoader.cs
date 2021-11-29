@@ -29,7 +29,7 @@ namespace src.Canvas
             UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
 
             yield return request.SendWebRequest();
-            if (url != this.url) yield break;
+            if (!Equals(this.url, url)) yield break;
 
             if (request.result == UnityWebRequest.Result.ProtocolError ||
                 request.result == UnityWebRequest.Result.ConnectionError)

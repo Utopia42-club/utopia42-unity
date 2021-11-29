@@ -1,10 +1,8 @@
-using System;
-using src.Canvas.Map;
 using src.Utils;
 using TMPro;
 using UnityEngine;
 
-namespace src.Canvas
+namespace src.Canvas.Map
 {
     public class TargetLines : MonoBehaviour
     {
@@ -17,7 +15,7 @@ namespace src.Canvas
         private Vector3Int startDrawPos;
         private bool drawing = false;
         private GameObject drawingObject;
-        public Map.Map map;
+        public Map map;
 
         void Update()
         {
@@ -26,7 +24,8 @@ namespace src.Canvas
             var realPosition = Vectors.FloorToInt(mousePos - landRect.GetComponent<RectTransform>().position);
             positionText.text = $"{realPosition.x} {realPosition.y}";
 
-            if (!drawing && !dragging && Input.GetMouseButtonDown(0))
+            if (!drawing && !dragging && Input.GetMouseButtonDown(0) &&
+                !landRect.landProfileDialog.gameObject.activeSelf)
             {
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
                                                       || Input.GetKey(KeyCode.LeftCommand) ||
@@ -62,10 +61,7 @@ namespace src.Canvas
             if ((long) rect.xMin == (long) rect.xMax || (long) rect.yMin == (long) rect.yMax)
                 landRect.Delete(drawingObject);
 
-            map.OpenLandBuyDialogState(drawingRect, () =>
-            {
-                landRect.Delete(drawingObject);
-            });
+            map.OpenLandBuyDialogState(drawingRect, () => { landRect.Delete(drawingObject); });
         }
 
         private void Draw(Vector3Int mousePos)

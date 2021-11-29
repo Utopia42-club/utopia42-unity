@@ -74,10 +74,6 @@ namespace src.Service.Ethereum
             var request =
                 new QueryUnityRequest<GetLandsFunction, GetLandsOutputDTO>(network.provider, network.contractAddress);
             yield return request.Query(new GetLandsFunction() {Owner = owner}, network.contractAddress);
-            Debug.Log(request.Exception);
-            Debug.Log(request.DefaultAccount);
-            Debug.Log(request.Result.Lands);
-            Debug.Log(request.Result.Lands.Count);
             consumer(MapLands(request.Result.Lands));
         }
 
@@ -113,7 +109,7 @@ namespace src.Service.Ethereum
             return resultLands;
         }
 
-        public IEnumerator GetLands(Dictionary<string, List<Land>> ownersLands)
+        public IEnumerator GetLands(List<Land> resultLands)
         {
             BigInteger lastId = 0;
             yield return GetLastLandId(result => lastId = result);
@@ -129,18 +125,15 @@ namespace src.Service.Ethereum
                 {
                     foreach (var land in lands)
                     {
-                        if (land.owner == null || land.owner.Length == 0)
+                        if (land.owner == null || land.owner.Length == 0 || land.x1 == land.x2  || land.y1 == land.y2)
                             continue;
-                        List<Land> ol;
-                        if (!ownersLands.TryGetValue(land.owner, out ol))
-                            ownersLands[land.owner] = ol = new List<Land>();
-                        ol.Add(land);
+                        resultLands.Add(land);
                     }
                 });
                 var cl = ids[ids.Count - 1];
                 if (cl + pageSize > lastId)
                     ids = ids.GetRange(0, (int) (lastId - cl));
-                for (var i = 1; i <= ids.Count; i++) ids[i] = i + cl;
+                for (var i = 0; i < ids.Count; i++) ids[i] = i + cl + 1;
             }
         }
     }

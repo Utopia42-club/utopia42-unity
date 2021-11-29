@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace src.Canvas.Map
 {
-    public class TransferHandler : MonoBehaviour, IPointerDownHandler
+    public class SelectionHandler : MonoBehaviour, IPointerClickHandler
     {
         public GameObject transformButton;
         public RectPane rectPane;
@@ -25,30 +25,29 @@ namespace src.Canvas.Map
         // Update is called once per frame
         void Update()
         {
-
         }
 
-        public void OnPointerDown(PointerEventData eventData)
-        {
-            if (land != null)
-                setSelected(!selected, false);
-        }
-
-        public void setSelected(bool selected, bool fromParent)
+        public void SetSelected(bool selected, bool fromParent)
         {
             this.selected = selected;
             if (selected)
             {
-                rectPane.SetSelected(this);
+                rectPane.OpenDialogForLand(this);
                 orgColor = image.color;
-                image.color = Color.Lerp(orgColor, Color.white, .4f);
+                image.color = Color.Lerp(orgColor, Color.black, .2f);
             }
             else
             {
                 image.color = orgColor;
                 if (!fromParent)
-                    rectPane.SetSelected(null);
+                    rectPane.OpenDialogForLand(null);
             }
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (land != null && !rectPane.landProfileDialog.gameObject.activeSelf && (eventData.pressPosition - eventData.position).magnitude < 0.1f)
+                SetSelected(true, false);
         }
     }
 }

@@ -18,9 +18,9 @@ namespace src.Service
         {
         }
 
-        public IEnumerator GetLandDetails(string id, Action<LandDetails> consumer)
+        public IEnumerator GetLandDetails(Land land, Action<LandDetails> consumer)
         {
-            string url = SERVER_URL + "/cat?arg=/ipfs/" + id;
+            string url = SERVER_URL + "/cat?arg=/ipfs/" + land.ipfsKey;
             using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
             {
                 yield return webRequest.SendWebRequest();
@@ -36,12 +36,11 @@ namespace src.Service
                         break;
                     case UnityWebRequest.Result.Success:
                         var details = JsonConvert.DeserializeObject<LandDetails>(webRequest.downloadHandler.text);
+                        details.region = land;
                         consumer.Invoke(details);
                         break;
                 }
             }
-
-            yield break;
         }
 
         public IEnumerator Upload(List<LandDetails> details, Action<Dictionary<long, string>> success)

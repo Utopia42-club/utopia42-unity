@@ -28,7 +28,7 @@ namespace src.Model
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
             var land = (Land) obj;
-            return x1 == land.x1 && x2 == land.x2 && y1 == land.y1 && y2 == land.y2;
+            return id == land.id;
         }
 
 
@@ -46,6 +46,11 @@ namespace src.Model
         {
             return x1 <= x && x2 >= x
                            && y1 <= z && y2 >= z;
+        }
+
+        public Rect ToRect()
+        {
+            return new Rect(x1, y1, x2 - x1, y2 - y1);
         }
     }
 }

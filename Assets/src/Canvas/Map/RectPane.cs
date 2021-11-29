@@ -15,7 +15,7 @@ namespace src.Canvas.Map
 
         [SerializeField] public GameObject landPrefab;
 
-        public TransferHandler selectedLand;
+        public SelectionHandler selectedLand;
         public LandProfileDialog landProfileDialog;
 
         void Start()
@@ -63,11 +63,11 @@ namespace src.Canvas.Map
         }
 
 
-        internal void SetSelected(TransferHandler transferHandler)
+        internal void OpenDialogForLand(SelectionHandler selectionHandler)
         {
-            if (selectedLand != null && transferHandler != selectedLand)
-                selectedLand.setSelected(false, true);
-            selectedLand = transferHandler;
+            if (selectedLand != null && selectionHandler != selectedLand)
+                selectedLand.SetSelected(false, true);
+            selectedLand = selectionHandler;
             if (!selectedLand) return;
             landProfileDialog.gameObject.SetActive(true);
             StartCoroutine(RestClient.INSATANCE.GetProfile(selectedLand.walletId,
@@ -82,10 +82,10 @@ namespace src.Canvas.Map
         {
             var landObject = Instantiate(landPrefab);
             var transform = landObject.GetComponent<RectTransform>();
-            TransferHandler transferHandler = landObject.GetComponent<TransferHandler>();
-            transferHandler.land = land;
-            transferHandler.walletId = walletId;
-            transferHandler.rectPane = this;
+            SelectionHandler selectionHandler = landObject.GetComponent<SelectionHandler>();
+            selectionHandler.land = land;
+            selectionHandler.walletId = walletId;
+            selectionHandler.rectPane = this;
 
             transform.SetParent(this.transform);
             transform.SetAsFirstSibling();

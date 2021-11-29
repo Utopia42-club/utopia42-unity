@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ namespace src.Model
         public string v;
         public string wallet;
         public Dictionary<string, Metadata> metadata;
+        [Obsolete("Field is deprecated! Using this field might cause problems.")]
         public Land region;
         public Dictionary<string, VoxelChange> changes;
 
