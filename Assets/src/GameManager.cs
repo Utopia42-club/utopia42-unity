@@ -151,11 +151,11 @@ namespace src
             else InitPlayerForWallet();
         }
 
-        internal void SettingsChanged()
+        internal void SettingsChanged(EthNetwork network)
         {
             if (!EthereumClientService.INSTANCE.IsInited())
             {
-                EthereumClientService.INSTANCE.SetNetwork(Settings.Network());
+                EthereumClientService.INSTANCE.SetNetwork(network);
                 SetState(State.LOADING);
                 StartCoroutine(VoxelService.INSTANCE.Initialize(Loading.INSTANCE, () => this.InitPlayerForWallet()));
             }
