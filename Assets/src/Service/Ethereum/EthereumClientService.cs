@@ -114,9 +114,9 @@ namespace src.Service.Ethereum
             BigInteger lastId = 0;
             yield return GetLastLandId(result => lastId = result);
 
-            var pageSize = (lastId + 1) < 50 ? (int) lastId + 1 : 50;
+            var pageSize = lastId < 50 ? (int) lastId : 50;
             var ids = new List<BigInteger>(pageSize);
-            for (var i = 1; i < pageSize; i++) ids.Add(i);
+            for (var i = 1; i <= pageSize; i++) ids.Add(i);
 
             while (true)
             {
@@ -130,10 +130,10 @@ namespace src.Service.Ethereum
                         resultLands.Add(land);
                     }
                 });
-                var cl = ids[ids.Count - 1];
-                if (cl + pageSize > lastId)
-                    ids = ids.GetRange(0, (int) (lastId - cl));
-                for (var i = 0; i < ids.Count; i++) ids[i] = i + cl + 1;
+                var currentLast = ids[ids.Count - 1];
+                if (currentLast + pageSize > lastId)
+                    ids = ids.GetRange(0, (int) (lastId - currentLast));
+                for (var i = 0; i < ids.Count; i++) ids[i] = i + currentLast + 1;
             }
         }
     }
