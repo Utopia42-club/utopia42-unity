@@ -277,7 +277,7 @@ namespace src.Service
 
         private IEnumerator LoadDetails(Loading loading, Action<LandDetails> consumer)
         {
-            loading.UpdateText("Loading Wallets And Lands...");
+            loading.UpdateText("Loading Lands\n0/0");
             yield return landRegistry.ReloadLands();
 
             var landsCount = landRegistry.GetLands().Count;
@@ -294,7 +294,7 @@ namespace src.Service
             for (int i = 0; i < landsCount; i++)
                 if (enums[i] != null)
                 {
-                    loading.UpdateText(string.Format("Loading Changes ({0}/{1})...", i, enums.Length));
+                    loading.UpdateText(string.Format("Loading Lands\n{0}/{1}", i, enums.Length));
                     yield return enums[i];
                 }
         }

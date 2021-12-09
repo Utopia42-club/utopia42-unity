@@ -51,7 +51,7 @@ namespace src.Canvas.Map
             
             this.land = land;
             landSizeLabel.SetText((rect.width * rect.height).ToString());
-            landPriceLabel.SetText("Computing...");
+            landPriceLabel.SetText("Calculating...");
             StartCoroutine(EthereumClientService.INSTANCE.GetLandPrice(land.x1, land.x2, land.y1, land.y2, price =>
             {
                 landPriceLabel.SetText(price.ToString());

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace src.Model
 {
     [Serializable]
-    public class Land
+    public class  Land
     {
         public long id;
         public long x1;

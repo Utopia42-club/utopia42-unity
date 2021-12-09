@@ -94,7 +94,7 @@ namespace src.Canvas.Map
             if (toggleNftButton.gameObject.activeSelf)
             {
                 toggleNftButton.GetComponentInChildren<TextMeshProUGUI>().text =
-                    land.isNft ? "Remove NFT" : "Create NFT";
+                    land.isNft ? "Remove NFT" : "Make NFT";
             }
         }
 

@@ -75,7 +75,7 @@ namespace src
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Creating the world...");
+            Loading.INSTANCE.UpdateText("Creating the world\n0%");
             yield return null;
             var world = World.INSTANCE;
             while (!world.Initialize(new VoxelPosition(pos).chunk, clean)) yield return null;
@@ -83,7 +83,7 @@ namespace src
             while (world.CountChunksToCreate() > 0)
             {
                 var perc = ((total - world.CountChunksToCreate()) / total) * 100;
-                Loading.INSTANCE.UpdateText(string.Format("Creating the world {0}%", Mathf.FloorToInt(perc)));
+                Loading.INSTANCE.UpdateText(string.Format("Creating the world\n{0}%", Mathf.FloorToInt(perc)));
                 yield return null;
             }
 

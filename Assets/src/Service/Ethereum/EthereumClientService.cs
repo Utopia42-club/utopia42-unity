@@ -11,7 +11,7 @@ namespace src.Service.Ethereum
 {
     public class EthereumClientService
     {
-        public static EthereumClientService INSTANCE = new EthereumClientService();
+        public readonly static EthereumClientService INSTANCE = new EthereumClientService();
         private EthNetwork network;
 
         private EthereumClientService()
