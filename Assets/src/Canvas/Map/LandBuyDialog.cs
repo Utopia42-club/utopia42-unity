@@ -9,7 +9,6 @@ namespace src.Canvas.Map
 {
     public class LandBuyDialog : MonoBehaviour
     {
-        public ActionButton closeButton;
         public TextMeshProUGUI landSizeLabel;
         public TextMeshProUGUI landPriceLabel;
         public Button buyButton;
@@ -23,7 +22,6 @@ namespace src.Canvas.Map
         void Start()
         {
             manager = GameManager.INSTANCE;
-            closeButton.AddListener(Close);
             cancelButton.onClick.AddListener(Close);
             buyButton.onClick.AddListener(DoBuy);
         }
