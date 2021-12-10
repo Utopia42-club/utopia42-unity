@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
@@ -26,37 +27,38 @@ namespace src.Service
         {
             types[0] = new BlockType(0, "air", false, 0, 0, 0, 0, 0, 0);
             types[1] = new BlockType(1, "grass", true, 10, 10, 10, 10, 7, 11);
-            types[2] = new BlockType(2, "bedrock", true, 0, 0, 0, 0, 0, 0);
-            types[3] = new BlockType(3, "dirt", true, 7, 7, 7, 7, 7, 7);
-            types[4] = new BlockType(4, "stone", true, 29, 29, 29, 29, 29, 29);
-            types[5] = new BlockType(5, "sand", true, 27, 27, 27, 27, 27, 27);
-            types[6] = new BlockType(6, "bricks", true, 3, 3, 3, 3, 3, 3);
-            types[7] = new BlockType(7, "wood", true, 19, 19, 19, 19, 20, 20);
-            types[8] = new BlockType(8, "planks", true, 21, 21, 21, 21, 21, 21);
-            types[9] = new BlockType(9, "cobblestone", true, 4, 4, 4, 4, 4, 4);
-            types[10] = new BlockType(10, "black_terracotta", true, 1, 1, 1, 1, 1, 1);
-            types[11] = new BlockType(11, "blue_wool", true, 2, 2, 2, 2, 2, 2);
-            types[12] = new BlockType(12, "cyan_wool", true, 5, 5, 5, 5, 5, 5);
-            types[13] = new BlockType(13, "diamond", true, 6, 6, 6, 6, 6, 6);
-            types[14] = new BlockType(14, "end_stone", true, 8, 8, 8, 8, 8, 8);
-            types[15] = new BlockType(15, "gold", true, 9, 9, 9, 9, 9, 9);
-            types[16] = new BlockType(16, "gravel", true, 12, 12, 12, 12, 12, 12);
-            types[17] = new BlockType(17, "green_wool", true, 13, 13, 13, 13, 13, 13);
-            types[18] = new BlockType(18, "ice", true, 14, 14, 14, 14, 14, 14);
-            types[19] = new BlockType(19, "lime_wool", true, 15, 15, 15, 15, 15, 15);
-            types[20] = new BlockType(20, "magma", true, 16, 16, 16, 16, 16, 16);
-            types[21] = new BlockType(21, "mossy_stone_bricks", true, 17, 17, 17, 17, 17, 17);
-            types[22] = new BlockType(22, "nether_bricks", true, 18, 18, 18, 18, 18, 18);
-            types[23] = new BlockType(23, "polished_andesite", true, 22, 22, 22, 22, 22, 22);
-            types[24] = new BlockType(24, "purple_wool", true, 23, 23, 23, 23, 23, 23);
-            types[25] = new BlockType(25, "purpur", true, 24, 24, 24, 24, 24, 24);
-            types[26] = new BlockType(26, "quartz", true, 25, 25, 25, 25, 25, 25);
-            types[27] = new BlockType(27, "red_wool", true, 26, 26, 26, 26, 26, 26);
-            types[28] = new BlockType(28, "snow", true, 28, 28, 28, 28, 28, 28);
-            types[29] = new BlockType(29, "stone_bricks", true, 30, 30, 30, 30, 30, 30);
-            types[30] = new ImageBlockType(30);
-            types[31] = new VideoBlockType(31);
-            types[32] = new LinkBlockType(32);
+            types[2] = new BlockType(2, "dark_grass", true, 35, 35, 35, 35, 7, 13);
+            types[3] = new BlockType(3, "bedrock", true, 0, 0, 0, 0, 0, 0);
+            types[4] = new BlockType(4, "dirt", true, 7, 7, 7, 7, 7, 7);
+            types[5] = new BlockType(5, "stone", true, 29, 29, 29, 29, 29, 29);
+            types[6] = new BlockType(6, "sand", true, 27, 27, 27, 27, 27, 27);
+            types[7] = new BlockType(7, "bricks", true, 3, 3, 3, 3, 3, 3);
+            types[8] = new BlockType(8, "wood", true, 19, 19, 19, 19, 20, 20);
+            types[9] = new BlockType(9, "planks", true, 21, 21, 21, 21, 21, 21);
+            types[10] = new BlockType(10, "cobblestone", true, 4, 4, 4, 4, 4, 4);
+            types[11] = new BlockType(11, "black_terracotta", true, 1, 1, 1, 1, 1, 1);
+            types[12] = new BlockType(12, "blue_wool", true, 2, 2, 2, 2, 2, 2);
+            types[13] = new BlockType(13, "cyan_wool", true, 5, 5, 5, 5, 5, 5);
+            types[14] = new BlockType(14, "diamond", true, 6, 6, 6, 6, 6, 6);
+            types[15] = new BlockType(15, "end_stone", true, 8, 8, 8, 8, 8, 8);
+            types[16] = new BlockType(16, "gold", true, 9, 9, 9, 9, 9, 9);
+            types[17] = new BlockType(17, "gravel", true, 12, 12, 12, 12, 12, 12);
+            types[18] = new BlockType(18, "green_wool", true, 13, 13, 13, 13, 13, 13);
+            types[19] = new BlockType(19, "ice", true, 14, 14, 14, 14, 14, 14);
+            types[20] = new BlockType(20, "lime_wool", true, 15, 15, 15, 15, 15, 15);
+            types[21] = new BlockType(21, "magma", true, 16, 16, 16, 16, 16, 16);
+            types[22] = new BlockType(22, "mossy_stone_bricks", true, 17, 17, 17, 17, 17, 17);
+            types[23] = new BlockType(23, "nether_bricks", true, 18, 18, 18, 18, 18, 18);
+            types[24] = new BlockType(24, "polished_andesite", true, 22, 22, 22, 22, 22, 22);
+            types[25] = new BlockType(25, "purple_wool", true, 23, 23, 23, 23, 23, 23);
+            types[26] = new BlockType(26, "purpur", true, 24, 24, 24, 24, 24, 24);
+            types[27] = new BlockType(27, "quartz", true, 25, 25, 25, 25, 25, 25);
+            types[28] = new BlockType(28, "red_wool", true, 26, 26, 26, 26, 26, 26);
+            types[29] = new BlockType(29, "snow", true, 28, 28, 28, 28, 28, 28);
+            types[30] = new BlockType(30, "stone_bricks", true, 30, 30, 30, 30, 30, 30);
+            types[31] = new ImageBlockType(31);
+            types[32] = new VideoBlockType(32);
+            types[33] = new LinkBlockType(33);
         }
 
         public Dictionary<Vector3Int, MetaBlock> GetMetaBlocks(Vector3Int coordinate)
@@ -84,18 +86,19 @@ namespace src.Service
 
         private void InitiateChunk(Vector3Int position, byte[,,] voxels)
         {
-            byte bedrock = GetBlockType("bedrock").id;
+            byte stone = GetBlockType("end_stone").id;
             byte body;
             byte top;
+
             if (position.y == 0)
             {
-                InitGroundLevel(position, voxels, bedrock);
+                InitGroundLevel(position, voxels, stone);
                 return;
             }
 
             if (position.y < 0)
             {
-                top = body = bedrock;
+                top = body = stone;
             }
             else
                 body = top = GetBlockType("air").id;
@@ -109,24 +112,31 @@ namespace src.Service
             }
         }
 
-        private void InitGroundLevel(Vector3Int position, byte[,,] voxels, byte bedrock)
+        private void InitGroundLevel(Vector3Int position, byte[,,] voxels, byte stone)
         {
             byte body, top;
             byte grass = GetBlockType("grass").id;
+            byte darkGrass = GetBlockType("dark_grass").id;
             byte dirt = GetBlockType("dirt").id;
-            var player = Player.INSTANCE;
+
+            var lands = landRegistry.GetLandsForChunk(new Vector2Int(position.x, position.z));
+            var wallet = Settings.WalletId();
+
             for (var x = 0; x < Chunk.CHUNK_WIDTH; ++x)
             {
                 for (var z = 0; z < Chunk.CHUNK_WIDTH; ++z)
                 {
-                    var owns = player.FindOwnedLand(
-                        new Vector3Int(x + position.x * Chunk.CHUNK_WIDTH, 0, z + position.z * Chunk.CHUNK_WIDTH)
-                    ) != null;
-                    top = body = bedrock;
-                    if (owns)
+                    top = body = stone;
+                    if (lands != null)
                     {
-                        top = grass;
-                        body = dirt;
+                        var pos = new Vector3Int(x + position.x * Chunk.CHUNK_WIDTH, 0,
+                            z + position.z * Chunk.CHUNK_WIDTH);
+                        var land = lands.FirstOrDefault(land => land.Contains(ref pos));
+                        if (land != null)
+                        {
+                            body = dirt;
+                            top = land.owner.Equals(wallet) ? darkGrass : grass;
+                        }
                     }
 
                     FillAtXY(top, body, x, z, voxels);
@@ -197,7 +207,7 @@ namespace src.Service
 
         public List<Land> GetLandsFor(string walletId)
         {
-            return landRegistry.GetLandsFor(walletId);
+            return landRegistry.GetLandsForOwner(walletId);
         }
 
         public IEnumerator Initialize(Loading loading, Action onDone)
@@ -310,6 +320,7 @@ namespace src.Service
                     var ld = new LandDetails();
                     ld.changes = new Dictionary<string, VoxelChange>();
                     ld.metadata = new Dictionary<string, Metadata>();
+                    // If the changes file is copied from another land, region points to the wrong land.
                     ld.region = l;
                     ld.v = "0.1.0";
                     ld.wallet = wallet;
@@ -337,7 +348,7 @@ namespace src.Service
         }
 
         /*
-     * vlues: chunk pos -> (voxel pos -> data)
+     * values: chunk pos -> (voxel pos -> data)
      *
      *  For each item in the values that passes the filter, finds the corresponding land and calls the consumer with: position key, value, land
      */
@@ -429,9 +440,17 @@ namespace src.Service
             return landRegistry.GetOwnersLands();
         }
 
+        public Land GetLandByPosition(Vector3 position)
+        {
+            var vp = new VoxelPosition(position);
+
+            var lands = landRegistry.GetLandsForChunk(new Vector2Int(vp.chunk.x, vp.chunk.z));
+            return lands?.FirstOrDefault(l => l.Contains(position.x, position.z));
+        }
+
         public IEnumerator ReloadLandsFor(string wallet)
         {
-            yield return landRegistry.ReloadLandsFor(wallet);
+            yield return landRegistry.ReloadLandsForOwner(wallet);
         }
 
         public bool IsInitialized()

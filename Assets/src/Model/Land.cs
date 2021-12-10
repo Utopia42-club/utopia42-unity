@@ -44,8 +44,8 @@ namespace src.Model
 
         public bool Contains(float x, float z)
         {
-            return x1 <= x && x2 >= x
-                           && y1 <= z && y2 >= z;
+            return x1 <= x && x2 > x
+                           && y1 <= z && y2 > z;
         }
 
         public Rect ToRect()

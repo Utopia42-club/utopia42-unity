@@ -33,6 +33,13 @@ namespace src.Service
             }
         }
 
+        internal HashSet<Land> GetLandsForChunk(Vector2Int chunkPosition)
+        {
+            HashSet<Land> lands;
+            chunkLands.TryGetValue(chunkPosition, out lands);
+            return lands;
+        }
+
         internal Dictionary<long, Land> GetLands()
         {
             return validLands;
@@ -57,6 +64,7 @@ namespace src.Service
                             if (land.time > oLand.time)
                             {
                                 ignored = true;
+                                ignoredLands.Add(land.id);
                                 break;
                             }
 
@@ -65,11 +73,7 @@ namespace src.Service
                     }
 
                     if (ignored)
-                    {
-                        ignoredLands.Add(land.id);
                         break;
-                    }
-
                     landLists.Add(currChunkLands);
                 }
                 else emptyChunks.Add(chunk);
@@ -118,18 +122,18 @@ namespace src.Service
         private IEnumerable<Vector2Int> ChunksForLand(Land land)
         {
             var startPos = new VoxelPosition(land.x1, 0, land.y1);
-            var endPos = new VoxelPosition(land.x1, 0, land.y1);
+            var endPos = new VoxelPosition(land.x2, 0, land.y2);
 
             for (int cx = startPos.chunk.x; cx <= endPos.chunk.x; cx++)
             {
-                for (int cy = startPos.chunk.y; cy <= endPos.chunk.y; cy++)
+                for (int cy = startPos.chunk.z; cy <= endPos.chunk.z; cy++)
                 {
                     yield return new Vector2Int(cx, cy);
                 }
             }
         }
 
-        public List<Land> GetLandsFor(string walletId)
+        public List<Land> GetLandsForOwner(string walletId)
         {
             List<Land> res = null;
             ownersLands.TryGetValue(walletId, out res);
@@ -148,7 +152,7 @@ namespace src.Service
             yield return SetLands(lands);
         }
 
-        public IEnumerator ReloadLandsFor(string wallet)
+        public IEnumerator ReloadLandsForOwner(string wallet)
         {
             List<Land> loaded = new List<Land>();
             yield return EthereumClientService.INSTANCE.GetLandsForOwner(wallet,
@@ -213,5 +217,6 @@ namespace src.Service
                 ids.Add(land.id);
             return ids;
         }
+
     }
 }

@@ -15,10 +15,8 @@ namespace src.Canvas
         private Dictionary<string, Profile> profileCache = new Dictionary<string, Profile>();
         public TextMeshProUGUI label;
         public ActionButton openProfileButton;
-        [SerializeField]
-        private GameObject view;
-        [SerializeField]
-        private ImageLoader profileIcon;
+        [SerializeField] private GameObject view;
+        [SerializeField] private ImageLoader profileIcon;
         private GameManager manager;
         private Land prevLand;
         private string prevWallet;
@@ -48,6 +46,7 @@ namespace src.Canvas
             {
                 view.SetActive(false);
             }
+
             if (manager.GetState() == GameManager.State.PLAYING || manager.GetState() == GameManager.State.PROFILE)
             {
                 if (Input.GetButtonDown("Profile"))
@@ -105,7 +104,7 @@ namespace src.Canvas
                     {
                         SetCurrentProfile(profile);
                         HorizontalLayoutGroup layout = view.GetComponentInChildren<HorizontalLayoutGroup>();
-                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)layout.transform);
+                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform) layout.transform);
                     }
                 }, () => { }));
         }
@@ -123,37 +122,20 @@ namespace src.Canvas
                 return true;
             }
 
-            var ownerLands = VoxelService.INSTANCE.GetOwnersLands();
-            if (ownerLands != null)
-            {
-                foreach (var landPair in ownerLands)
-                {
-                    foreach (var land in landPair.Value)
-                    {
-                        if (land.Contains(ref position))
-                        {
-                            prevLand = currentLand;
-                            prevWallet = currentWallet;
-                            currentLand = land;
-                            currentWallet = landPair.Key;
-                            return true;
-                        }
-                    }
-                }
-            }
-            if (currentLand == null) return false;
-            currentLand = null;
-            currentWallet = null;
+            var land = VoxelService.INSTANCE.GetLandByPosition(position);
+            if (land == null && currentLand == null) return false;
+
+            prevLand = currentLand;
+            prevWallet = currentWallet;
+            currentLand = land;
+            currentWallet = land?.owner;
             return true;
         }
 
 
         public static Owner INSTANCE
         {
-            get
-            {
-                return instance;
-            }
+            get { return instance; }
         }
 
         internal void UserProfile(Action<Profile> consumer, Action failed)
