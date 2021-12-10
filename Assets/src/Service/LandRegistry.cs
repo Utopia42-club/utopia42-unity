@@ -110,13 +110,16 @@ namespace src.Service
             validLands.Remove(land.id);
             foreach (var chunk in ChunksForLand(land))
             {
-                var lands = chunkLands[chunk];
-                lands.Remove(land);
-                if (lands.Count == 0)
-                    chunkLands.Remove(chunk);
+                if (chunkLands.TryGetValue(chunk, out var lands))
+                {
+                    lands.Remove(land);
+                    if (lands.Count == 0)
+                        chunkLands.Remove(chunk);
+                }
             }
 
-            ownersLands[land.owner].Remove(land);
+            if (ownersLands.TryGetValue(land.owner, out var ownerLands))
+                ownerLands.Remove(land);
         }
 
         private IEnumerable<Vector2Int> ChunksForLand(Land land)
@@ -135,8 +138,7 @@ namespace src.Service
 
         public List<Land> GetLandsForOwner(string walletId)
         {
-            List<Land> res = null;
-            ownersLands.TryGetValue(walletId, out res);
+            ownersLands.TryGetValue(walletId, out var res);
             return res;
         }
 
@@ -163,15 +165,26 @@ namespace src.Service
         private IEnumerator ReSetOwnerLands(string wallet, List<Land> lands)
         {
             var iterations = 50;
-            var toLoad = ownersLands[wallet];
-            ownersLands[wallet] = new List<Land>();
+            var currentLands = new List<Land>();
+            if (ownersLands.TryGetValue(wallet, out var ownerLands))
+                currentLands.AddRange(ownerLands);
+
+            foreach (var toRemove in currentLands)
+            {
+                RemoveLand(toRemove);
+                iterations--;
+                if (iterations <= 0)
+                {
+                    yield return null;
+                    iterations = 50;
+                }
+            }
+
+            var transferredLandIds = currentLands.ConvertAll(l => (BigInteger) l.id);
             foreach (var land in lands)
             {
-                toLoad.Remove(land);
+                transferredLandIds.Remove(land.id);
                 if (ignoredLands.Contains(land.id)) continue;
-                Land oldValue;
-                if (validLands.TryGetValue(land.id, out oldValue))
-                    RemoveLand(oldValue);
                 InsertLand(land);
                 iterations--;
                 if (iterations <= 0)
@@ -181,24 +194,12 @@ namespace src.Service
                 }
             }
 
-            var toLoadIds = new List<BigInteger>();
-            foreach (var land in toLoad)
-            {
-                RemoveLand(land);
-                toLoadIds.Add(land.id);
-                iterations--;
-                if (iterations <= 0)
-                {
-                    yield return null;
-                    iterations = 50;
-                }
-            }
 
             var toInsert = new List<Land>();
-            yield return EthereumClientService.INSTANCE.GetLandsByIds(toLoadIds, lands => toInsert.AddRange(lands));
+            yield return EthereumClientService.INSTANCE.GetLandsByIds(transferredLandIds,
+                loaded => toInsert.AddRange(loaded));
 
-
-            foreach (var land in lands)
+            foreach (var land in toInsert)
             {
                 InsertLand(land);
                 iterations--;
@@ -217,6 +218,5 @@ namespace src.Service
                 ids.Add(land.id);
             return ids;
         }
-
     }
 }

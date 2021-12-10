@@ -9,6 +9,7 @@ namespace src.Canvas.Map
 {
     public class RectPane : MonoBehaviour
     {
+        [SerializeField] internal Transform landContainer;
         [SerializeField] private RectTransform playerPosIndicator;
         private readonly HashSet<GameObject> landIndicators = new HashSet<GameObject>();
         private readonly HashSet<GameObject> drawnLandIndicators = new HashSet<GameObject>();
@@ -50,7 +51,7 @@ namespace src.Canvas.Map
                 foreach (var land in entry.Value)
                     Add(land.x1, land.x2, land.y1, land.y2,
                         owner ? land.isNft ? Colors.MAP_OWNED_LAND_NFT : Colors.MAP_OWNED_LAND :
-                            land.isNft ? Colors.MAP_OTHERS_LAND_NFT : Colors.MAP_OTHERS_LAND, land, entry.Key);
+                        land.isNft ? Colors.MAP_OTHERS_LAND_NFT : Colors.MAP_OTHERS_LAND, land, entry.Key);
             }
         }
 
@@ -87,7 +88,7 @@ namespace src.Canvas.Map
             selectionHandler.walletId = walletId;
             selectionHandler.rectPane = this;
 
-            transform.SetParent(this.transform);
+            transform.SetParent(landContainer);
             transform.SetAsFirstSibling();
             transform.pivot = new Vector2(0, 0);
             transform.localPosition = new Vector3(x1, y1, 0);

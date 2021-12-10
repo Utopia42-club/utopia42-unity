@@ -21,18 +21,34 @@ namespace src.Canvas.Map
         {
             var mousePos = Input.mousePosition;
             var mousePosInt = Vectors.FloorToInt(mousePos);
-            var realPosition = Vectors.FloorToInt(mousePos - landRect.GetComponent<RectTransform>().position);
+            var landRectTransform = landRect.GetComponent<RectTransform>();
+            var mouseLocalPos = mousePos - landRectTransform.position;
+            mouseLocalPos.Scale(new Vector3(1 / landRect.landContainer.localScale.x,
+                1 / landRect.landContainer.localScale.y, 1 / landRect.landContainer.localScale.z));
+            var realPosition = Vectors.FloorToInt(mouseLocalPos);
             positionText.text = $"{realPosition.x} {realPosition.y}";
 
-            if (!drawing && !dragging && Input.GetMouseButtonDown(0) &&
+            if (!drawing && !dragging &&
                 !map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen())
             {
-                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
-                                                      || Input.GetKey(KeyCode.LeftCommand)
-                                                      || Input.GetKey(KeyCode.RightCommand))
-                    StartDraw(realPosition);
-                else
-                    StartDrag(mousePosInt);
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
+                                                          || Input.GetKey(KeyCode.LeftCommand)
+                                                          || Input.GetKey(KeyCode.RightCommand))
+                        StartDraw(realPosition);
+                    else
+                        StartDrag(mousePosInt);
+                }
+
+                if (Input.mouseScrollDelta.y != 0)
+                {
+                    var multiplier = Input.mouseScrollDelta.y < 0 ? (float) 0.5 : 2;
+                    var scale = landRect.landContainer.localScale.x * multiplier;
+                    scale = Mathf.Min(4f, scale);
+                    scale = Mathf.Max(0.1f, scale);
+                    landRect.landContainer.localScale = new Vector3(scale, scale, 1);
+                }
             }
 
             if (!Input.GetMouseButton(0))
@@ -60,8 +76,8 @@ namespace src.Canvas.Map
             var rect = drawingRect.rect;
             if ((long) rect.xMin == (long) rect.xMax || (long) rect.yMin == (long) rect.yMax)
                 landRect.Delete(drawingObject);
-
-            map.OpenLandBuyDialogState(drawingRect, () => { landRect.Delete(drawingObject); });
+            else
+                map.OpenLandBuyDialogState(drawingRect, () => { landRect.Delete(drawingObject); });
         }
 
         private void Draw(Vector3Int mousePos)
@@ -78,12 +94,12 @@ namespace src.Canvas.Map
             int y2 = Mathf.Max(rectPos.y, mouseY);
 
             // Old Rect
-            var or = drawingRect.rect;
-            var olp = drawingRect.localPosition;
-            int ox1 = (int) olp.x;
-            int ox2 = ox1 + (int) or.width;
-            int oy1 = (int) olp.y;
-            int oy2 = oy1 + (int) or.height;
+            var oldRect = drawingRect.rect;
+            var oldPosition = drawingRect.localPosition;
+            int ox1 = (int) oldPosition.x;
+            int ox2 = ox1 + (int) oldRect.width;
+            int oy1 = (int) oldPosition.y;
+            int oy2 = oy1 + (int) oldRect.height;
 
             // Debug.Log($"{ox1},{ox2},{oy1},{oy2}, {x1},{x2},{y1},{y2}");
             var rect = landRect.ResolveCollisions(drawingObject, ox1, ox2, oy1, oy2, x1 - ox1, x2 - ox2,
@@ -92,6 +108,7 @@ namespace src.Canvas.Map
             drawingRect.localPosition = new Vector3(rect.x, rect.y, 0);
             drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rect.height);
             drawingRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rect.width);
+            drawingRect.localScale = Vector3.one;
         }
 
         private static Vector3Int RoundDown(Vector3 v)
