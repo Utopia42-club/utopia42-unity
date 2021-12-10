@@ -25,11 +25,11 @@ namespace src.Canvas.Map
             positionText.text = $"{realPosition.x} {realPosition.y}";
 
             if (!drawing && !dragging && Input.GetMouseButtonDown(0) &&
-                !landRect.landProfileDialog.gameObject.activeSelf)
+                !map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen())
             {
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
-                                                      || Input.GetKey(KeyCode.LeftCommand) ||
-                                                      Input.GetKey(KeyCode.RightCommand))
+                                                      || Input.GetKey(KeyCode.LeftCommand)
+                                                      || Input.GetKey(KeyCode.RightCommand))
                     StartDraw(realPosition);
                 else
                     StartDrag(mousePosInt);

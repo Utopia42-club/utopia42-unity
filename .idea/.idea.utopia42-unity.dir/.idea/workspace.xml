@@ -2,14 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1c089ca6-8101-4803-a16a-7546b2f7f361" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.utopia42-unity.dir/.idea/indexLayout.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.utopia42-unity.dir/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.utopia42-unity.dir/.idea/projectSettingsUpdater.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.utopia42-unity.dir/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/src/Service/Ethereum/EthereumClientService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/src/Service/Ethereum/EthereumClientService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectVersion.txt" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectVersion.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/UtopiaScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/UtopiaScene.unity" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +53,7 @@
       <workItem from="1638638948947" duration="141000" />
       <workItem from="1638639183682" duration="165000" />
       <workItem from="1638639367033" duration="1719000" />
+      <workItem from="1639117940711" duration="2000" />
     </task>
     <servers />
   </component>

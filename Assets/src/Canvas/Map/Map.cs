@@ -8,7 +8,7 @@ namespace src.Canvas.Map
         [SerializeField] private LandProfileDialog landProfileDialog;
         [SerializeField] private LandBuyDialog landBuyDialog;
         private Action landBuyDialogDismissCallback;
-        
+
         void Start()
         {
             GameManager.INSTANCE.stateChange.AddListener(
@@ -19,6 +19,16 @@ namespace src.Canvas.Map
                     CloseLandProfileDialogState();
                 }
             );
+        }
+
+        public bool IsLandBuyDialogOpen()
+        {
+            return landBuyDialog.gameObject.activeInHierarchy;
+        }
+
+        public bool IsLandProfileDialogOpen()
+        {
+            return landProfileDialog.gameObject.activeInHierarchy;
         }
 
         public void CloseLandProfileDialogState()
