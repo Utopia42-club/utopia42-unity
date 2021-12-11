@@ -10,8 +10,8 @@ namespace src.Service
 {
     public class RestClient
     {
-        public static readonly string SERVER_URL = "http://app.utopia42.club:5025/";
-        public static readonly string NETS_URL = "http://app.utopia42.club/networks.json";
+        public static readonly string SERVER_URL = "http://api.utopia42.club/";
+        public static readonly string NETS_URL = SERVER_URL + "static/networks.json";
 
         public static RestClient INSATANCE = new RestClient();
 
