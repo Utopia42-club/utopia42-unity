@@ -21,10 +21,7 @@ namespace src.Canvas.Map
         {
             var mousePos = Input.mousePosition;
             var mousePosInt = Vectors.FloorToInt(mousePos);
-            var landRectTransform = landRect.GetComponent<RectTransform>();
-            var mouseLocalPos = mousePos - landRectTransform.position;
-            mouseLocalPos.Scale(new Vector3(1 / landRect.landContainer.localScale.x,
-                1 / landRect.landContainer.localScale.y, 1 / landRect.landContainer.localScale.z));
+            var mouseLocalPos = ScreenToLandContainerLocal(mousePos);
             var realPosition = Vectors.FloorToInt(mouseLocalPos);
             positionText.text = $"{realPosition.x} {realPosition.y}";
 
@@ -46,8 +43,8 @@ namespace src.Canvas.Map
                     var multiplier = Input.mouseScrollDelta.y < 0 ? (float) 0.5 : 2;
                     var scale = landRect.landContainer.localScale.x * multiplier;
                     scale = Mathf.Min(4f, scale);
-                    scale = Mathf.Max(0.1f, scale);
-                    landRect.landContainer.localScale = new Vector3(scale, scale, 1);
+                    // Center the map to mouse position 
+                    ScaleMap(Mathf.Max(0.25f, scale));
                 }
             }
 
@@ -66,6 +63,23 @@ namespace src.Canvas.Map
                 GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
 
             SetLinesPos(mousePosInt);
+        }
+
+        private Vector3 ScreenToLandContainerLocal(Vector3 pos)
+        {
+            var landRectTransform = landRect.GetComponent<RectTransform>();
+            var local = pos - landRectTransform.position;
+            var landContainerScale = landRect.landContainer.localScale;
+            local.Scale(new Vector3(1 / landContainerScale.x, 1 / landContainerScale.y,
+                1 / landContainerScale.z));
+            return local;
+        }
+
+        private void ScaleMap(float scale)
+        {
+            var preScale = landRect.landContainer.localScale.x;
+            landRect.landContainer.localScale = new Vector3(scale, scale, 1);
+            landRect.GetComponent<RectTransform>().localPosition =  scale / preScale * landRect.GetComponent<RectTransform>().localPosition;
         }
 
         private void FinishDraw()

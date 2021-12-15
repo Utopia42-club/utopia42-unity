@@ -39,6 +39,7 @@ namespace src.Canvas.Map
         {
             VoxelService service = VoxelService.INSTANCE;
             if (!service.IsInitialized()) return;
+            landContainer.localScale = Vector3.one;
 
             var playerPos = Player.INSTANCE.transform.position;
             playerPosIndicator.localPosition = new Vector3(playerPos.x, playerPos.z, 0);
