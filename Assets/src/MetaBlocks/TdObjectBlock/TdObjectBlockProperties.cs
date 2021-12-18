@@ -6,8 +6,8 @@ namespace src.MetaBlocks.TdObjectBlock
     public class TdObjectBlockProperties
     {
         public string url;
-        public Vector3 scale;
-        public Vector3 eulerAngles;
+        public Vector3 scale = Vector3.zero;
+        public Vector3 offset = Vector3.one;
 
         public TdObjectBlockProperties()
         {
@@ -20,15 +20,16 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 url = obj.url;
                 scale = obj.scale;
-                eulerAngles = obj.eulerAngles;
+                offset = obj.offset;
             }
         }
         
-        public void SetProps(string url)
+        public void UpdateProps(TdObjectBlockProperties props)
         {
-            this.url = url;
-            // TODO: set scale and eulerAngles ?
-            // TODO: position ?
+            if(props == null) return;
+            this.url = props.url;
+            this.scale = props.scale;
+            this.offset = props.offset;
         }
         
         public override bool Equals(object obj)
@@ -37,12 +38,12 @@ namespace src.MetaBlocks.TdObjectBlock
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
             var prop = obj as TdObjectBlockProperties;
-            return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(eulerAngles, prop.eulerAngles);
+            return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(offset, prop.offset);
         }
 
         public bool IsEmpty()
         {
-            return (url == null || url.Equals("")) && scale == null && eulerAngles == null;
+            return (url == null || url.Equals("")) && scale == null && offset == null;
         }
     }
 }

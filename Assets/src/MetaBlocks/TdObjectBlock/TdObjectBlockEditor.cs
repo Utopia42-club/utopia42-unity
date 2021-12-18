@@ -9,18 +9,61 @@ namespace src.MetaBlocks.TdObjectBlock
         [SerializeField]
         public InputField url;
 
-        public string GetValue()
+        [SerializeField]
+        public InputField scaleX;
+        [SerializeField]
+        public InputField scaleY;
+        [SerializeField]
+        public InputField scaleZ;
+        
+        [SerializeField]
+        public InputField offsetX;
+        [SerializeField]
+        public InputField offsetY;
+        [SerializeField]
+        public InputField offsetZ;
+        
+        public TdObjectBlockProperties GetValue()
         {
-            if (HasValue(url))
+            if (HasValue(url) && HasValue(scaleX) && HasValue(scaleY) && HasValue(scaleZ)
+                && HasValue(offsetX) && HasValue(offsetY) && HasValue(offsetZ))
             {
-                return url.text;
+                var props = new TdObjectBlockProperties();
+                props.url = url.text.Trim();
+                props.scale = new Vector3(float.Parse(scaleX.text), float.Parse(scaleY.text), float.Parse(scaleZ.text));
+                props.offset = new Vector3(float.Parse(offsetX.text), float.Parse(offsetY.text), float.Parse(offsetZ.text));
+                return props;
             }
             return null;
         }
         
-        public void SetValue(string url)
+        public void SetValue(TdObjectBlockProperties value)
         {
-            this.url.text = url == null ? "" : url;
+            if (value == null)
+            {
+                url.text = "";
+                scaleX.text = "1";
+                scaleY.text = "1";
+                scaleZ.text = "1";
+                offsetX.text = "0";
+                offsetY.text = "0";
+                offsetZ.text = "0";
+                return;
+            }
+            
+            url.text =  value.url == null ? "" : value.url;
+            if (value.scale != null)
+            {
+                scaleX.text = value.scale.x.ToString();
+                scaleY.text = value.scale.y.ToString();
+                scaleZ.text = value.scale.z.ToString();
+            }
+            if (value.offset != null)
+            {
+                offsetX.text = value.offset.x.ToString();
+                offsetY.text = value.offset.y.ToString();
+                offsetZ.text = value.offset.z.ToString();
+            }
         }
 
         private bool HasValue(InputField f)

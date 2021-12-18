@@ -22,7 +22,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private void Start()
         {
             if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-                    CreateIcon();
+                CreateIcon();
             ready = true;
         }
 
@@ -74,6 +74,8 @@ namespace src.MetaBlocks.TdObjectBlock
             DestroyImmediate(tdObject);
 
             TdObjectBlockProperties properties = (TdObjectBlockProperties) GetBlock().GetProps();
+            var scale = properties != null ? properties.scale : Vector3.one;
+            var offset = properties != null ? properties.offset : Vector3.zero;
 
             if (properties != null)
             {
@@ -82,9 +84,11 @@ namespace src.MetaBlocks.TdObjectBlock
                     {
                         var center = GetObjectCenter(go);
                         var size = GetObjectSize(go, center);
+                        var minY = center.y - size.y / 2;
                         Debug.Log("Object loaded, size = " + size);
                         go.transform.SetParent(transform, false);
-                        go.transform.localPosition = -center + 2*Vector3.up; // TODO: fix height
+                        go.transform.localPosition = new Vector3(-center.x, -minY + 1, -center.z) + offset;
+                        go.transform.localScale = scale;
                         tdObject = go;
                     }));
             }
@@ -100,12 +104,12 @@ namespace src.MetaBlocks.TdObjectBlock
             var editor = dialog.GetContent().GetComponent<TdObjectBlockEditor>();
 
             var props = GetBlock().GetProps();
-            editor.SetValue(props == null ? null : (props as TdObjectBlockProperties).url);
+            editor.SetValue(props == null ? null : props as TdObjectBlockProperties);
             dialog.WithAction("Submit", () =>
             {
-                var url = editor.GetValue();
+                var value = editor.GetValue();
                 var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
-                props.SetProps(url);
+                props.UpdateProps(value);
 
                 if (props.IsEmpty()) props = null; // TODO: now?
 
@@ -124,9 +128,10 @@ namespace src.MetaBlocks.TdObjectBlock
                 if (r != null)
                     center += r.bounds.center;
             }
+
             return center / loadedObject.transform.childCount;
         }
-    
+
         private static Vector3 GetObjectSize(GameObject loadedObject, Vector3 center)
         {
             var bounds = new Bounds(center, Vector3.zero);
@@ -136,6 +141,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 if (r != null)
                     bounds.Encapsulate(r.bounds);
             }
+
             return bounds.size;
         }
 
