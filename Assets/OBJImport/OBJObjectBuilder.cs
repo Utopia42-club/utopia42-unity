@@ -118,6 +118,10 @@ public class OBJObjectBuilder {
 		msh.RecalculateBounds();
 
 		mf.sharedMesh = msh;
+		
+		//add mesh collider
+		var mc = go.AddComponent<MeshCollider>();
+		mc.sharedMesh = msh;
 
 		//
 		return go;
