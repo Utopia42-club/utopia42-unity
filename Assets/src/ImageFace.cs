@@ -7,12 +7,6 @@ namespace src
 {
     public class ImageFace : MetaFace
     {
-
-        private void Start()
-        {
-            //Init(Voxels.Face.FRONT, "https://upload.wikimedia.org/wikipedia/commons/7/78/Image.jpg", 2, 2);
-        }
-
         public void Init(Voxels.Face face, string url, int width, int height)
         {
             MeshRenderer meshRenderer = Initialize(face, width, height);
@@ -26,7 +20,6 @@ namespace src
             if (request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.ConnectionError)
                 yield break;
             material.mainTexture = ((DownloadHandlerTexture)request.downloadHandler).texture;
-            yield break;
         }
     }
 }

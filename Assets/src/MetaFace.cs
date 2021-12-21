@@ -9,7 +9,7 @@ namespace src
         {
             var meshRenderer = gameObject.AddComponent<MeshRenderer>();
             var meshFilter = gameObject.AddComponent<MeshFilter>();
-            meshRenderer.material = new Material(Shader.Find("Standard"));
+            meshRenderer.material = new Material(Shader.Find("Unlit/Texture"));
 
             if (face == Voxels.Face.FRONT || face == Voxels.Face.BACK)
                 transform.localScale = new Vector3(width, height, 1);
