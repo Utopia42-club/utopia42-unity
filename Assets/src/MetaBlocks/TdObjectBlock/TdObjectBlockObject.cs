@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Dummiesman;
+// using Dummiesman;
 using src.Canvas;
 using src.Model;
 using src.Utils;
@@ -162,7 +162,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 case UnityWebRequest.Result.Success:
                     using (var stream = new MemoryStream(webRequest.downloadHandler.data))
                     {
-                        consumer.Invoke(new OBJLoader().LoadZip(stream));
+                        // consumer.Invoke(new OBJLoader().LoadZip(stream));
                     }
 
                     break;
