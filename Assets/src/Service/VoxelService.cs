@@ -60,7 +60,7 @@ namespace src.Service
             types[31] = new ImageBlockType(31);
             types[32] = new VideoBlockType(32);
             types[33] = new LinkBlockType(33);
-            types[34] = new TdObjectBlockType(34);
+            // types[34] = new TdObjectBlockType(34);
         }
 
         public Dictionary<Vector3Int, MetaBlock> GetMetaBlocks(Vector3Int coordinate)

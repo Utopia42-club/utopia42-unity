@@ -196,10 +196,10 @@ namespace src.Canvas.Map
                     var transform = li.GetComponent<RectTransform>();
                     var or = transform.rect;
                     var olp = transform.localPosition;
-                    int x1 = TargetLines.RoundDown((int) olp.x);
-                    int x2 = TargetLines.RoundUp(x1 + (int) or.width);
-                    int y1 = TargetLines.RoundDown((int) olp.y);
-                    int y2 = TargetLines.RoundUp(y1 + (int) or.height);
+                    int x1 = MapInputManager.RoundDown((int) olp.x);
+                    int x2 = MapInputManager.RoundUp(olp.x + (int) or.width);
+                    int y1 = MapInputManager.RoundDown((int) olp.y);
+                    int y2 = MapInputManager.RoundUp(olp.y + (int) or.height);
 
                     current = function.Invoke(x1, x2, y1, y2, current);
                 }
