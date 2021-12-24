@@ -8,12 +8,14 @@ namespace src.MetaBlocks
     public class MetaBlock
     {
         private MetaBlockObject blockObject;
+        public readonly Land land;
         public readonly MetaBlockType type;
         private object properties;
 
-        public MetaBlock(MetaBlockType type, object properties)
+        public MetaBlock(MetaBlockType type, Land land, object properties)
         {
             this.type = type;
+            this.land = land;
             this.properties = properties;
         }
 

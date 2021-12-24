@@ -1,3 +1,4 @@
+using System;
 using Newtonsoft.Json;
 using src.Model;
 
@@ -5,20 +6,20 @@ namespace src.MetaBlocks
 {
     public class MetaBlockType : BlockType
     {
-        public readonly System.Type componentType;
-        private readonly System.Type propertiesType;
+        public readonly Type componentType;
+        private readonly Type propertiesType;
 
-        public MetaBlockType(byte id, string name, System.Type componentType, System.Type propertiesType)
+        public MetaBlockType(byte id, string name, Type componentType, Type propertiesType)
             : base(id, name, false, 0, 0, 0, 0, 0, 0)
         {
             this.componentType = componentType;
             this.propertiesType = propertiesType;
         }
 
-        public MetaBlock New(string props)
+        public MetaBlock New(Land land, string props)
         {
-            return new MetaBlock(this, (props == null || props.Length == 0) ? null :
-                JsonConvert.DeserializeObject(props, propertiesType));
+            return new MetaBlock(this, land,
+                (props == null || props.Length == 0) ? null : JsonConvert.DeserializeObject(props, propertiesType));
         }
     }
 }
