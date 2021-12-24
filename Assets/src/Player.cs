@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
@@ -52,6 +53,13 @@ namespace src
 
         private void Start()
         {
+            gameObject.AddComponent<CapsuleCollider>();
+            var rb = gameObject.AddComponent<Rigidbody>();
+            rb.isKinematic = false;
+            rb.useGravity = false;
+            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX |
+                             RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezeRotationY;
             Snack.INSTANCE.ShowObject("Owner", null);
         }
 

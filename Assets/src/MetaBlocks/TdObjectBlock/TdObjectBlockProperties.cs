@@ -8,6 +8,7 @@ namespace src.MetaBlocks.TdObjectBlock
         public string url;
         public Vector3 scale = Vector3.one;
         public Vector3 offset = Vector3.zero;
+        public Vector3 rotation = Vector3.zero;
 
         public TdObjectBlockProperties()
         {
@@ -21,6 +22,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 url = obj.url;
                 scale = obj.scale;
                 offset = obj.offset;
+                rotation = obj.rotation;
             }
         }
         
@@ -30,6 +32,7 @@ namespace src.MetaBlocks.TdObjectBlock
             this.url = props.url;
             this.scale = props.scale;
             this.offset = props.offset;
+            this.rotation = props.rotation;
         }
         
         public override bool Equals(object obj)
@@ -38,12 +41,12 @@ namespace src.MetaBlocks.TdObjectBlock
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
             var prop = obj as TdObjectBlockProperties;
-            return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(offset, prop.offset);
+            return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(offset, prop.offset) && Equals(rotation, prop.rotation);
         }
 
         public bool IsEmpty()
         {
-            return (url == null || url.Equals("")) && scale == null && offset == null;
+            return url == null || url.Equals("");
         }
     }
 }

@@ -14,6 +14,7 @@
 
 using Dummiesman;
 using System.Collections.Generic;
+using src;
 using UnityEngine;
 
 namespace Dummiesman {
@@ -120,10 +121,17 @@ public class OBJObjectBuilder {
 		mf.sharedMesh = msh;
 		
 		//add mesh collider
-		var mc = go.AddComponent<MeshCollider>();
-		mc.sharedMesh = msh;
+		// var mc = go.AddComponent<MeshCollider>();
+		// mc.sharedMesh = msh;
+		// mc.convex = true;
+		
+		//add rigid body
+		// var rb = go.AddComponent<Rigidbody>();
+		// rb.isKinematic = false;
+		// rb.useGravity = false;
+		// rb.constraints = RigidbodyConstraints.FreezeAll;
+		// rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-		//
 		return go;
 	}
 

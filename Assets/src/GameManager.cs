@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using src.Canvas;
+using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Service.Ethereum;
@@ -235,6 +236,20 @@ namespace src
             }
         }
 
+        public void ToggleMovingObjectState(TdObjectBlockObject tdObjectBlockObject)
+        {
+            if (GetState() == State.PLAYING)
+            {
+                SetState(State.MOVING_OBJECT);
+                tdObjectBlockObject.SetSnackForMovingObjectMode();
+            } else if (GetState() == State.MOVING_OBJECT)
+            {
+                SetState(State.PLAYING);
+                tdObjectBlockObject.UpdateProps();
+                tdObjectBlockObject.SetSnackForPlayingMode();
+            } 
+        }
+
         public void ShowProfile(Profile profile)
         {
             if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
@@ -306,7 +321,8 @@ namespace src
             INVENTORY,
             HELP,
             PROFILE,
-            DIALOG
+            DIALOG,
+            MOVING_OBJECT
         }
     }
 }
