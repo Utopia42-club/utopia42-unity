@@ -7,7 +7,6 @@ using src.Canvas;
 using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
 using src.MetaBlocks.LinkBlock;
-using src.MetaBlocks.TdObjectBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
 using src.Service.Migration;
@@ -273,7 +272,7 @@ namespace src.Service
                     if (type == null) continue;
                     try
                     {
-                        var block = type.New(meta.properties);
+                        var block = type.New(land.region, meta.properties);
                         Dictionary<Vector3Int, MetaBlock> chunk;
                         if (!metaBlocks.TryGetValue(position.chunk, out chunk))
                             metaBlocks[position.chunk] = chunk = new Dictionary<Vector3Int, MetaBlock>();
@@ -398,7 +397,7 @@ namespace src.Service
                 metaBlocks[pos.chunk] = metas;
             }
 
-            metas[pos.local] = ((MetaBlockType) GetBlockType(id)).New("");
+            metas[pos.local] = ((MetaBlockType) GetBlockType(id)).New(land, "");
             changedLands.Add(land);
 
             return metas;
