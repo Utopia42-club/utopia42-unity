@@ -23,15 +23,24 @@ namespace src.MetaBlocks.TdObjectBlock
         [SerializeField]
         public InputField offsetZ;
         
+        [SerializeField]
+        public InputField rotationX;
+        [SerializeField]
+        public InputField rotationY;
+        [SerializeField]
+        public InputField rotationZ;
+        
         public TdObjectBlockProperties GetValue()
         {
             if (HasValue(url) && HasValue(scaleX) && HasValue(scaleY) && HasValue(scaleZ)
-                && HasValue(offsetX) && HasValue(offsetY) && HasValue(offsetZ))
+                && HasValue(offsetX) && HasValue(offsetY) && HasValue(offsetZ)
+                && HasValue(rotationX) && HasValue(rotationY) && HasValue(rotationZ))
             {
                 var props = new TdObjectBlockProperties();
                 props.url = url.text.Trim();
                 props.scale = new Vector3(float.Parse(scaleX.text), float.Parse(scaleY.text), float.Parse(scaleZ.text));
                 props.offset = new Vector3(float.Parse(offsetX.text), float.Parse(offsetY.text), float.Parse(offsetZ.text));
+                props.rotation = new Vector3(float.Parse(rotationX.text), float.Parse(rotationY.text), float.Parse(rotationZ.text));
                 return props;
             }
             return null;
@@ -48,6 +57,9 @@ namespace src.MetaBlocks.TdObjectBlock
                 offsetX.text = "0";
                 offsetY.text = "0";
                 offsetZ.text = "0";
+                rotationX.text = "0";
+                rotationY.text = "0";
+                rotationZ.text = "0";
                 return;
             }
             
@@ -63,6 +75,12 @@ namespace src.MetaBlocks.TdObjectBlock
                 offsetX.text = value.offset.x.ToString();
                 offsetY.text = value.offset.y.ToString();
                 offsetZ.text = value.offset.z.ToString();
+            }
+            if (value.rotation != null)
+            {
+                rotationX.text = value.rotation.x.ToString();
+                rotationY.text = value.rotation.y.ToString();
+                rotationZ.text = value.rotation.z.ToString();
             }
         }
 
