@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using Dummiesman;
 // using Dummiesman;
 using src.Canvas;
@@ -17,16 +16,17 @@ namespace src.MetaBlocks.TdObjectBlock
     public class TdObjectBlockObject : MetaBlockObject
     {
         private GameObject tdObject;
-        private Vector3 initialPosition;
+        private Vector3? initialPosition;
         private SnackItem snackItem;
         private Land land;
         private bool canEdit;
         private bool ready = false;
+        private string currentUrl = "";
 
         private void Start()
         {
             if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-                CreateIcon();
+                CreateIcon(false);
             ready = true;
         }
 
@@ -54,12 +54,13 @@ namespace src.MetaBlocks.TdObjectBlock
         public void SetSnackForPlayingMode()
         {
             if (snackItem != null) snackItem.Remove();
-            
+
             var lines = new List<string>();
             lines.Add("Press Z for details");
             lines.Add("Press T to toggle preview");
             lines.Add("Press X to delete");
-            lines.Add("Press V to move object");
+            if(tdObject != null)
+                lines.Add("Press V to move object");
 
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
@@ -69,15 +70,15 @@ namespace src.MetaBlocks.TdObjectBlock
                     GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
-                if (Input.GetKeyDown(KeyCode.V))
+                if (Input.GetKeyDown(KeyCode.V) && tdObject != null)
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
             });
         }
-        
+
         public void SetSnackForMovingObjectMode()
         {
             if (snackItem != null) snackItem.Remove();
-            
+
             var lines = new List<string>();
             lines.Add("Press W to move forward");
             lines.Add("Press S to move backward");
@@ -93,7 +94,6 @@ namespace src.MetaBlocks.TdObjectBlock
 
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
-                
                 if (Input.GetKey(KeyCode.R)) RotateAroundY();
                 if (Input.GetKey(KeyCode.A)) MoveLeft();
                 if (Input.GetKey(KeyCode.D)) MoveRight();
@@ -119,10 +119,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void loadTdObject()
         {
-            DestroyImmediate(tdObject);
-            tdObject = null;
             transform.eulerAngles = Vector3.zero;
-
             TdObjectBlockProperties properties = (TdObjectBlockProperties) GetBlock().GetProps();
             var scale = properties != null ? properties.scale : Vector3.one;
             var offset = properties != null ? properties.offset : Vector3.zero;
@@ -130,31 +127,64 @@ namespace src.MetaBlocks.TdObjectBlock
 
             if (properties != null)
             {
-                StartCoroutine(LoadZip(properties.url,
-                    go =>
-                    {
-                        var center = GetObjectCenter(go);
-                        var size = GetObjectSize(go, center);
-                        var bc = go.AddComponent<BoxCollider>(); // TODO ?
-                        bc.center = center;
-                        bc.size = size;
+                if (currentUrl.Equals(properties.url) && tdObject != null)
+                {
+                    LoadGameObject(tdObject, scale, offset, rotation);
+                }
+                else
+                {
+                    DestroyImmediate(tdObject);
+                    tdObject = null;
+                    initialPosition = null;
 
-                        var minY = center.y - size.y / 2;
-                        Debug.Log("Object loaded, size = " + size);
-                        go.transform.SetParent(transform, false);
-                        initialPosition = new Vector3(-center.x, -minY + 1, -center.z);
-                        go.transform.localPosition = initialPosition + offset;
-                        go.transform.localScale = scale;
-                        transform.eulerAngles = rotation;
+                    StartCoroutine(LoadZip(properties.url, go =>
+                    {
+                        tdObject = null;
+                        LoadGameObject(go, scale, offset, rotation);
                         tdObject = go;
                     }));
+
+                    currentUrl = properties.url;
+                }
             }
         }
 
+        public void LoadGameObject(GameObject go, Vector3 scale, Vector3 offset, Vector3 rotation)
+        {
+            if (initialPosition == null)
+            {
+                var center = GetObjectCenter(go);
+                var size = GetObjectSize(go, center);
+
+                var minY = center.y - size.y / 2;
+                Debug.Log("Object loaded, size = " + size);
+                go.transform.SetParent(transform, false);
+                initialPosition = new Vector3(-center.x, -minY + 1, -center.z);
+            }
+
+            go.transform.localPosition = (Vector3) initialPosition + offset;
+            go.transform.localScale = scale;
+            transform.eulerAngles = rotation;
+
+            var bc = go.GetComponent<BoxCollider>();
+            if (bc == null) bc = go.AddComponent<BoxCollider>();
+            bc.center = GetObjectCenter(go);
+            bc.size = GetObjectSize(go, bc.center);
+
+            var land = GetBlock().land;
+            if (land != null && !IsInLand(bc))
+            {
+                Debug.Log("Overflow! land id: " + land.id);
+                CreateIcon(true);
+                DestroyImmediate(go);
+            }
+        }
+
+
         public void UpdateProps()
         {
-            var props = GetBlock().GetProps() as TdObjectBlockProperties;
-            props.offset = tdObject.transform.localPosition - initialPosition;
+            var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
+            props.offset = tdObject.transform.localPosition - (Vector3) initialPosition;
             props.rotation = transform.eulerAngles;
             props.scale = tdObject.transform.localScale;
             GetBlock().SetProps(props, land);
@@ -190,7 +220,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             foreach (Transform child in loadedObject.transform)
             {
-                var r = child.gameObject.GetComponent<MeshRenderer>();
+                var r = child.gameObject.GetComponent<MeshFilter>().mesh;
                 if (r != null)
                     center += r.bounds.center;
             }
@@ -203,7 +233,7 @@ namespace src.MetaBlocks.TdObjectBlock
             var bounds = new Bounds(center, Vector3.zero);
             foreach (Transform child in loadedObject.transform)
             {
-                var r = child.gameObject.GetComponent<MeshRenderer>();
+                var r = child.gameObject.GetComponent<MeshFilter>().mesh;
                 if (r != null)
                     bounds.Encapsulate(r.bounds);
             }

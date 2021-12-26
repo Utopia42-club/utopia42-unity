@@ -89,8 +89,17 @@ namespace src.MetaBlocks.ImageBlock
             go.transform.parent = transform;
             go.transform.localPosition = Vector3.zero + ((Vector3)face.direction) * 0.1f;
             var imgFace = go.AddComponent<ImageFace>();
-            imgFace.Init(face, props.url, props.width, props.height);
-            images.Add(go);
+            var renderer = imgFace.Initialize(face, props.width, props.height);
+            if (IsInLand(renderer))
+            {
+                imgFace.Init(renderer, props.url);
+                images.Add(go);   
+            }
+            else
+            {
+                DestroyImmediate(renderer);
+                CreateIcon(true);
+            }
         }
 
         private void EditProps(Voxels.Face face)

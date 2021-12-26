@@ -7,6 +7,7 @@ using src.Canvas;
 using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
 using src.MetaBlocks.LinkBlock;
+using src.MetaBlocks.TdObjectBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
 using src.Service.Migration;

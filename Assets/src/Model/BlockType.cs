@@ -31,9 +31,11 @@ namespace src.Model
             return textures[face.index];
         }
 
-        public UnityEngine.Sprite GetIcon()
+        public UnityEngine.Sprite GetIcon(bool failed = false)
         {
-            return UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/" + name);
+            return failed ? 
+                UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/failed") :
+                UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/" + name);
         }
     }
 }
