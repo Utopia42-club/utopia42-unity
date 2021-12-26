@@ -144,12 +144,21 @@ namespace src.MetaBlocks.VideoBlock
             go.transform.parent = transform;
             go.transform.localPosition = Vector3.zero + ((Vector3)face.direction) * 0.1f;
             var vidFace = go.AddComponent<VideoFace>();
-            vidFace.Init(face, props.url, props.width, props.height, props.previewTime);
-            videos[face] = vidFace;
-            vidFace.loading.AddListener(l =>
+            MeshRenderer meshRenderer = vidFace.Initialize(face, props.width, props.height);
+            if (IsInLand(meshRenderer))
             {
-                if (focusedFace == face) UpdateSnacksAndIconObject(face);
-            });
+                vidFace.Init(meshRenderer, props.url, props.previewTime);
+                videos[face] = vidFace;
+                vidFace.loading.AddListener(l =>
+                {
+                    if (focusedFace == face) UpdateSnacksAndIconObject(face);
+                });
+            }
+            else
+            {
+                DestroyImmediate(meshRenderer);
+                CreateIcon(true);
+            }
         }
 
         private void EditProps(Voxels.Face face)
