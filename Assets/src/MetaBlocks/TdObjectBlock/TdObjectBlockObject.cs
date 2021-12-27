@@ -187,7 +187,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     minY = center.y - size.y / 2;
                 }
 
-                Debug.Log("Object loaded, size = " + size);
+                //Debug.Log("Object loaded, size = " + size);
                 tdObject.transform.SetParent(tdObjectContainer.transform, false);
                 initialPosition = new Vector3(-center.x, -minY + 1, -center.z);
             }
@@ -200,7 +200,7 @@ namespace src.MetaBlocks.TdObjectBlock
             var land = GetBlock().land;
             if (land != null && !IsInLand(bc))
             {
-                Debug.Log("Overflow! land id: " + land.id);
+                //Debug.Log("Overflow! land id: " + land.id);
                 CreateIcon(true);
                 DestroyImmediate(tdObjectContainer);
                 tdObject = null;
