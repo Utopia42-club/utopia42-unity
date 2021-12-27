@@ -74,22 +74,30 @@ namespace src.MetaBlocks.TdObjectBlock
             });
         }
 
-        public void SetSnackForMovingObjectMode()
+        public void SetSnackForMovingObjectMode(bool helpMode = false)
         {
             if (snackItem != null) snackItem.Remove();
-
+            
             var lines = new List<string>();
-            lines.Add("Press W to move forward");
-            lines.Add("Press S to move backward");
-            lines.Add("Press ALT+W to move up");
-            lines.Add("Press ALT+S to move down");
-            lines.Add("Press A to move left");
-            lines.Add("Press D to move right");
-            lines.Add("Press R to rotate");
-            lines.Add("Press ] to scale up");
-            lines.Add("Press [ to scale down");
-            lines.Add("Press Del to delete");
-            lines.Add("Press X to exit moving object mode");
+            if (helpMode)
+            {
+                lines.Add("W : forward");
+                lines.Add("S : backward");
+                lines.Add("ALT+W : up");
+                lines.Add("ALT+S : down");
+                lines.Add("A : left");
+                lines.Add("D : right");
+                lines.Add("R : rotate");
+                lines.Add("] : scale up");
+                lines.Add("[ : scale down");
+                lines.Add("Del : delete");
+                lines.Add("H : exit help");
+            }
+            else
+            {
+                lines.Add("H : help");
+            }
+            lines.Add("X : exit moving object mode");
 
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
@@ -109,6 +117,8 @@ namespace src.MetaBlocks.TdObjectBlock
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
                     GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
                 }
+                if (Input.GetKeyDown(KeyCode.H))
+                    SetSnackForMovingObjectMode(!helpMode);
             });
         }
 
