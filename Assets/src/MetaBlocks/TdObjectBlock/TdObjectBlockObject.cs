@@ -9,6 +9,7 @@ using src.Model;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UIElements;
 using Vector3 = UnityEngine.Vector3;
 
 namespace src.MetaBlocks.TdObjectBlock
@@ -60,19 +61,15 @@ namespace src.MetaBlocks.TdObjectBlock
             var lines = new List<string>();
             lines.Add("Press Z for details");
             lines.Add("Press T to toggle preview");
-            lines.Add("Press X to delete");
-            if(tdObjectContainer != null)
-                lines.Add("Press V to move object");
+            lines.Add("Press V to move object");
 
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
-                if (Input.GetKeyDown(KeyCode.X))
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
-                if (Input.GetKeyDown(KeyCode.V) && tdObjectContainer != null)
+                if (Input.GetKeyDown(KeyCode.V))
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
             });
         }
@@ -91,8 +88,8 @@ namespace src.MetaBlocks.TdObjectBlock
             lines.Add("Press R to rotate");
             lines.Add("Press ] to scale up");
             lines.Add("Press [ to scale down");
-            lines.Add("Press V to exit moving object mode");
-
+            lines.Add("Press Del to delete");
+            lines.Add("Press X to exit moving object mode");
 
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
@@ -105,8 +102,13 @@ namespace src.MetaBlocks.TdObjectBlock
                 if (Input.GetKey(KeyCode.S)) MoveBackward();
                 if (Input.GetKey(KeyCode.RightBracket)) ScaleUp();
                 if (Input.GetKey(KeyCode.LeftBracket)) ScaleDown();
-                if (Input.GetKeyDown(KeyCode.V))
+                if (Input.GetKeyDown(KeyCode.X))
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
+                if (Input.GetButtonDown("Delete"))
+                {
+                    GameManager.INSTANCE.ToggleMovingObjectState(this);
+                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                }
             });
         }
 
@@ -209,7 +211,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             var props = GetBlock().GetProps();
             editor.SetValue(props == null ? null : props as TdObjectBlockProperties);
-            dialog.WithAction("Submit", () =>
+            dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
                 var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);

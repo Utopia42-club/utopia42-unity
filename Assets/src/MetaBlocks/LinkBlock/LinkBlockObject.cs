@@ -46,7 +46,7 @@ namespace src.MetaBlocks.LinkBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                lines.Add("Press X to delete");
+                lines.Add("Press Del to delete");
             }
 
             LinkBlockProperties props = GetProps();
@@ -63,7 +63,7 @@ namespace src.MetaBlocks.LinkBlock
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                         EditProps();
-                    if (Input.GetKeyDown(KeyCode.X))
+                    if (Input.GetButtonDown("Delete"))
                         GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
                 }
                 if (props != null && !props.IsEmpty() && Input.GetKeyDown(KeyCode.O))
@@ -105,7 +105,7 @@ namespace src.MetaBlocks.LinkBlock
 
             var props = GetBlock().GetProps();
             editor.SetValue(props as LinkBlockProperties);
-            dialog.WithAction("Submit", () =>
+            dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
                 Debug.Log(value.url);

@@ -94,12 +94,12 @@ namespace src.MetaBlocks.VideoBlock
             {
                 lines.Add("Press Z for details");
                 lines.Add("Press T to toggle preview");
-                lines.Add("Press X to delete");
+                lines.Add("Press Del to delete");
                 snackItem = Snack.INSTANCE.ShowLines(lines, () =>
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                         EditProps(face);
-                    if (Input.GetKeyDown(KeyCode.X))
+                    if (Input.GetButtonDown("Delete"))
                         GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
                     if (Input.GetKeyDown(KeyCode.T))
                         GetIconObject().SetActive(!GetIconObject().activeSelf);
@@ -172,7 +172,7 @@ namespace src.MetaBlocks.VideoBlock
 
             var props = GetBlock().GetProps();
             editor.SetValue(props == null ? null : (props as VideoBlockProperties).GetFaceProps(face));
-            dialog.WithAction("Submit", () =>
+            dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
                 var props = new VideoBlockProperties(GetBlock().GetProps() as VideoBlockProperties);
