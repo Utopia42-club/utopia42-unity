@@ -20,6 +20,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private GameObject tdObject;
 
         private Vector3? initialPosition;
+        private float initialScale = 1;
         private SnackItem snackItem;
         private Land land;
         private bool canEdit;
@@ -168,26 +169,32 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation)
         {
+            tdObject.transform.localScale = scale * initialScale;
             if (initialPosition == null)
             {
                 var center = GetObjectCenter(tdObject);
                 var size = GetObjectSize(tdObject, center);
-
                 var minY = center.y - size.y / 2;
+                
+                if (size.y > 2.5)
+                {
+                    initialScale = 2.5f / size.y;
+                    tdObject.transform.localScale *= initialScale;
+                    center = GetObjectCenter(tdObject);
+                    size = GetObjectSize(tdObject, center); 
+                    minY = center.y - size.y / 2;
+                }
+
                 Debug.Log("Object loaded, size = " + size);
                 tdObject.transform.SetParent(tdObjectContainer.transform, false);
                 initialPosition = new Vector3(-center.x, -minY + 1, -center.z);
             }
 
             tdObject.transform.localPosition = (Vector3) initialPosition + offset;
-            tdObject.transform.localScale = scale;
             tdObjectContainer.transform.eulerAngles = rotation;
 
-            var bc = tdObject.GetComponent<BoxCollider>();
-            if (bc == null) bc = tdObject.AddComponent<BoxCollider>();
-            bc.center = GetObjectCenter(tdObject);
-            bc.size = GetObjectSize(tdObject, bc.center);
-
+            var bc = getBoxCollider(tdObject);
+            
             var land = GetBlock().land;
             if (land != null && !IsInLand(bc))
             {
@@ -199,6 +206,15 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
+        private BoxCollider getBoxCollider(GameObject tdObject)
+        {
+            var bc = tdObject.GetComponent<BoxCollider>();
+            if (bc == null) bc = tdObject.AddComponent<BoxCollider>();
+            bc.center = GetObjectCenter(tdObject, false);
+            bc.size = GetObjectSize(tdObject, bc.center, false);
+            return bc;
+        }
+
 
         public void UpdateProps()
         {
@@ -206,7 +222,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if(tdObjectContainer == null) return;
             props.offset = tdObject.transform.localPosition - (Vector3) initialPosition;
             props.rotation = tdObjectContainer.transform.eulerAngles;
-            props.scale = tdObject.transform.localScale;
+            props.scale = tdObject.transform.localScale / initialScale;
             GetBlock().SetProps(props, land);
         }
 
@@ -234,28 +250,46 @@ namespace src.MetaBlocks.TdObjectBlock
             });
         }
 
-        private static Vector3 GetObjectCenter(GameObject loadedObject)
+        private static Vector3 GetObjectCenter(GameObject loadedObject, bool usingMeshRenderer = true)
         {
             var center = Vector3.zero;
 
             foreach (Transform child in loadedObject.transform)
             {
-                var r = child.gameObject.GetComponent<MeshFilter>().mesh;
-                if (r != null)
-                    center += r.bounds.center;
+                if (usingMeshRenderer)
+                {
+                    var r = child.gameObject.GetComponent<MeshRenderer>();
+                    if (r != null)
+                        center += r.bounds.center;    
+                }
+                else
+                {
+                    var r = child.gameObject.GetComponent<MeshFilter>().mesh;
+                    if (r != null)
+                        center += r.bounds.center;   
+                }
             }
 
             return center / loadedObject.transform.childCount;
         }
 
-        private static Vector3 GetObjectSize(GameObject loadedObject, Vector3 center)
+        private static Vector3 GetObjectSize(GameObject loadedObject, Vector3 center, bool usingMeshRenderer = true)
         {
             var bounds = new Bounds(center, Vector3.zero);
             foreach (Transform child in loadedObject.transform)
             {
-                var r = child.gameObject.GetComponent<MeshFilter>().mesh;
-                if (r != null)
-                    bounds.Encapsulate(r.bounds);
+                if (usingMeshRenderer)
+                {
+                    var r = child.gameObject.GetComponent<MeshRenderer>();
+                    if (r != null)
+                        bounds.Encapsulate(r.bounds);   
+                }
+                else
+                {
+                    var r = child.gameObject.GetComponent<MeshFilter>().mesh;
+                    if (r != null)
+                        bounds.Encapsulate(r.bounds);
+                }
             }
 
             return bounds.size;
