@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Dummiesman;
 // using Dummiesman;
 using src.Canvas;
@@ -135,9 +136,9 @@ namespace src.MetaBlocks.TdObjectBlock
         private void loadTdObject()
         {
             TdObjectBlockProperties properties = (TdObjectBlockProperties) GetBlock().GetProps();
-            var scale = properties != null ? properties.scale : Vector3.one;
-            var offset = properties != null ? properties.offset : Vector3.zero;
-            var rotation = properties != null ? properties.rotation : Vector3.zero;
+            var scale = properties?.scale?.ToVector3() ?? Vector3.one;
+            var offset = properties?.offset?.ToVector3() ?? Vector3.zero;
+            var rotation = properties?.rotation?.ToVector3() ?? Vector3.zero;
 
             if (properties != null)
             {
@@ -175,10 +176,11 @@ namespace src.MetaBlocks.TdObjectBlock
                 var center = GetObjectCenter(tdObject);
                 var size = GetObjectSize(tdObject, center);
                 var minY = center.y - size.y / 2;
-                
-                if (size.y > 2.5)
+
+                var maxD = new[] {size.x, size.y, size.z}.Max();
+                if (maxD > 3)
                 {
-                    initialScale = 2.5f / size.y;
+                    initialScale = 3f / maxD;
                     tdObject.transform.localScale *= initialScale;
                     center = GetObjectCenter(tdObject);
                     size = GetObjectSize(tdObject, center); 
@@ -220,9 +222,9 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
             if(tdObjectContainer == null) return;
-            props.offset = tdObject.transform.localPosition - (Vector3) initialPosition;
-            props.rotation = tdObjectContainer.transform.eulerAngles;
-            props.scale = tdObject.transform.localScale / initialScale;
+            props.offset = SerializableVector3.@from(tdObject.transform.localPosition - (Vector3) initialPosition);
+            props.rotation = SerializableVector3.@from(tdObjectContainer.transform.eulerAngles);
+            props.scale = SerializableVector3.@from(tdObject.transform.localScale / initialScale);
             GetBlock().SetProps(props, land);
         }
 
@@ -314,7 +316,6 @@ namespace src.MetaBlocks.TdObjectBlock
                     {
                         consumer.Invoke(new OBJLoader().LoadZip(stream));
                     }
-
                     break;
             }
         }
