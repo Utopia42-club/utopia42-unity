@@ -59,7 +59,7 @@ namespace src.Service
             types[31] = new ImageBlockType(31);
             types[32] = new VideoBlockType(32);
             types[33] = new LinkBlockType(33);
-            types[34] = new TdObjectBlockType(34);
+            //types[34] = new TdObjectBlockType(34);
         }
 
         public Dictionary<Vector3Int, MetaBlock> GetMetaBlocks(Vector3Int coordinate)
@@ -243,12 +243,12 @@ namespace src.Service
                 var change = entry.Value;
                 var pos = LandDetails.PraseKey(entry.Key) +
                           new Vector3Int((int) land.region.x1, 0, (int) land.region.y1);
-                var position = new VoxelPosition(pos);
                 if (land.region.Contains(ref pos))
                 {
                     var type = GetBlockType(change.name);
                     if (type == null) continue;
 
+                    var position = new VoxelPosition(pos);
                     Dictionary<Vector3Int, byte> chunk;
                     if (!changes.TryGetValue(position.chunk, out chunk))
                         changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
