@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Dummiesman;
-// using Dummiesman;
 using src.Canvas;
 using src.Model;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
-using Vector3 = UnityEngine.Vector3;
+
+// using Dummiesman;
 
 namespace src.MetaBlocks.TdObjectBlock
 {
@@ -87,7 +87,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     EditProps();
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
-                if (Input.GetKeyDown(KeyCode.V))
+                if (Input.GetKeyDown(KeyCode.V) && tdObjectContainer != null)
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
                 if (Input.GetButtonDown("Delete"))
                 {
@@ -107,7 +107,8 @@ namespace src.MetaBlocks.TdObjectBlock
             if (moveController == null)
             {
                 moveController = gameObject.AddComponent<TdObjectMoveController>();
-                moveController.Attach(tdObjectContainer.transform, tdObjectContainer.transform, tdObjectContainer.transform);
+                moveController.Attach(tdObjectContainer.transform, tdObjectContainer.transform,
+                    tdObjectContainer.transform);
             }
 
             var lines = GetMovingSnackLines(helpMode);
@@ -214,17 +215,17 @@ namespace src.MetaBlocks.TdObjectBlock
                 {
                     initialScale = 1;
                 }
-                
+
                 initialPosition = new Vector3(-center.x, -center.y, -center.z);
                 InitializeProps(initialPosition, initialScale);
                 return;
             }
-            
+
             tdObject.transform.SetParent(tdObjectContainer.transform, false);
-            
+
             tdObject.transform.localScale = initialScale * Vector3.one;
             tdObjectContainer.transform.localScale = scale;
-            
+
             tdObject.transform.localPosition = (Vector3) initialPosition;
             tdObjectContainer.transform.localPosition = (Vector3) offset;
 
