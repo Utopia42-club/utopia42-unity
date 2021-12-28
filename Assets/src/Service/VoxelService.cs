@@ -389,6 +389,12 @@ namespace src.Service
             changedLands.Add(land);
         }
 
+        public void OnMetaRemoved(MetaBlock block)
+        {
+            if (block.land != null)
+                changedLands.Add(block.land);
+        }
+
         public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, byte id, Land land)
         {
             Dictionary<Vector3Int, MetaBlock> metas;

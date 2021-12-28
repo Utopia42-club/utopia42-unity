@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using src.MetaBlocks;
 using src.Model;
@@ -28,7 +29,8 @@ namespace src
         {
             this.coordinate = coordinate;
             this.world = world;
-            this.position = new Vector3Int(coordinate.x * CHUNK_WIDTH, coordinate.y * CHUNK_HEIGHT, coordinate.z * CHUNK_WIDTH);
+            this.position = new Vector3Int(coordinate.x * CHUNK_WIDTH, coordinate.y * CHUNK_HEIGHT,
+                coordinate.z * CHUNK_WIDTH);
         }
 
         public bool IsInited()
@@ -97,7 +99,7 @@ namespace src
         public BlockType GetBlock(Vector3Int localPos)
         {
             if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
-                throw new System.ArgumentException("Invalid local position: " + localPos);
+                throw new ArgumentException("Invalid local position: " + localPos);
 
             return VoxelService.INSTANCE.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
         }
@@ -123,7 +125,8 @@ namespace src
 
         void AddVisibleFaces(Vector3Int pos, List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
         {
-            Vector3Int[] verts = new Vector3Int[] {
+            Vector3Int[] verts = new Vector3Int[]
+            {
                 Voxels.Vertices[0] + pos,
                 Voxels.Vertices[1] + pos,
                 Voxels.Vertices[2] + pos,
@@ -163,7 +166,6 @@ namespace src
 
         void CreateMesh(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
         {
-
             Mesh mesh = new Mesh();
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
@@ -187,12 +189,13 @@ namespace src
             uvs.Add(new Vector2(x + eps, y + eps));
             uvs.Add(new Vector2(x + eps, y + Voxels.NormalizedBlockTextureSize - eps));
             uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize - eps, y + eps));
-            uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize - eps, y + Voxels.NormalizedBlockTextureSize - eps));
+            uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize - eps,
+                y + Voxels.NormalizedBlockTextureSize - eps));
         }
 
         public void DeleteVoxel(VoxelPosition pos, Land land)
         {
-            voxels[pos.local.x, pos.local.y, pos.local.z] = 0;//FIXME
+            voxels[pos.local.x, pos.local.y, pos.local.z] = 0; //FIXME
             VoxelService.INSTANCE.AddChange(pos, 0, land);
             OnChanged(pos);
         }
@@ -206,6 +209,7 @@ namespace src
                 OnChanged(pos);
             }
         }
+
         public void PutMeta(VoxelPosition pos, BlockType type, Land land)
         {
             metaBlocks = VoxelService.INSTANCE.AddMetaBlock(pos, type.id, land);
@@ -216,6 +220,7 @@ namespace src
         {
             var block = metaBlocks[pos.local];
             metaBlocks.Remove(pos.local);
+            VoxelService.INSTANCE.OnMetaRemoved(block);
             block.Destroy();
         }
 
@@ -239,7 +244,7 @@ namespace src
 
         private Vector3Int ToGlobal(Vector3Int localPoint)
         {
-            return localPoint + new Vector3Int((int)position.x, (int)position.y, (int)position.z);
+            return localPoint + new Vector3Int((int) position.x, (int) position.y, (int) position.z);
         }
 
         public bool IsActive()
@@ -259,7 +264,7 @@ namespace src
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
 
-            return this.coordinate.Equals(((Chunk)obj).coordinate);
+            return this.coordinate.Equals(((Chunk) obj).coordinate);
         }
 
         public override int GetHashCode()
