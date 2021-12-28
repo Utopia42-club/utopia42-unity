@@ -28,6 +28,8 @@ namespace src.MetaBlocks.TdObjectBlock
         private bool ready = false;
         private string currentUrl = "";
 
+        private TdObjectMoveController moveController;
+
         private void Start()
         {
             if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
@@ -42,23 +44,39 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public override void OnDataUpdate()
         {
-            loadTdObject();
+            LoadTdObject();
         }
 
         protected override void DoInitialize()
         {
-            loadTdObject();
+            LoadTdObject();
         }
 
         public override void Focus(Voxels.Face face)
         {
             if (!canEdit) return;
-            SetSnackForPlayingMode();
+            SetupDefaultSnack();
         }
 
-        public void SetSnackForPlayingMode()
+        public void ExitMovingState()
         {
-            if (snackItem != null) snackItem.Remove();
+            UpdateProps();
+            SetupDefaultSnack();
+            if (moveController != null)
+            {
+                moveController.Detach();
+                DestroyImmediate(moveController);
+                moveController = null;
+            }
+        }
+
+        private void SetupDefaultSnack()
+        {
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
 
             var lines = new List<string>();
             lines.Add("Press Z for details");
@@ -76,17 +94,45 @@ namespace src.MetaBlocks.TdObjectBlock
             });
         }
 
-        public void SetSnackForMovingObjectMode(bool helpMode = false)
+        public void SetToMovingState(bool helpMode = false)
         {
-            if (snackItem != null) snackItem.Remove();
-            
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            if (moveController == null)
+            {
+                moveController = gameObject.AddComponent<TdObjectMoveController>();
+                moveController.Attach(tdObject.transform, tdObject.transform, tdObjectContainer.transform);
+            }
+
+            var lines = GetMovingSnackLines(helpMode);
+            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
+            {
+                if (Input.GetKeyDown(KeyCode.X))
+                    GameManager.INSTANCE.ToggleMovingObjectState(this);
+                if (Input.GetButtonDown("Delete"))
+                {
+                    GameManager.INSTANCE.ToggleMovingObjectState(this);
+                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                }
+
+                if (Input.GetKeyDown(KeyCode.H))
+                    SetToMovingState(!helpMode);
+            });
+        }
+
+        private static List<string> GetMovingSnackLines(bool helpMode)
+        {
             var lines = new List<string>();
             if (helpMode)
             {
                 lines.Add("W : forward");
                 lines.Add("S : backward");
-                lines.Add("ALT+W : up");
-                lines.Add("ALT+S : down");
+                lines.Add("SPACE : up");
+                lines.Add("SHIFT+SPACE : down");
                 lines.Add("A : left");
                 lines.Add("D : right");
                 lines.Add("R : rotate");
@@ -99,29 +145,9 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 lines.Add("H : help");
             }
-            lines.Add("X : exit moving object mode");
 
-            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
-            {
-                if (Input.GetKey(KeyCode.R)) RotateAroundY();
-                if (Input.GetKey(KeyCode.A)) MoveLeft();
-                if (Input.GetKey(KeyCode.D)) MoveRight();
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.LeftAlt)) MoveUp();
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.LeftAlt)) MoveDown();
-                if (Input.GetKey(KeyCode.W)) MoveForward();
-                if (Input.GetKey(KeyCode.S)) MoveBackward();
-                if (Input.GetKey(KeyCode.RightBracket)) ScaleUp();
-                if (Input.GetKey(KeyCode.LeftBracket)) ScaleDown();
-                if (Input.GetKeyDown(KeyCode.X))
-                    GameManager.INSTANCE.ToggleMovingObjectState(this);
-                if (Input.GetButtonDown("Delete"))
-                {
-                    GameManager.INSTANCE.ToggleMovingObjectState(this);
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
-                }
-                if (Input.GetKeyDown(KeyCode.H))
-                    SetSnackForMovingObjectMode(!helpMode);
-            });
+            lines.Add("X : exit moving object mode");
+            return lines;
         }
 
         public override void UnFocus()
@@ -133,7 +159,7 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        private void loadTdObject()
+        private void LoadTdObject()
         {
             TdObjectBlockProperties properties = (TdObjectBlockProperties) GetBlock().GetProps();
             var scale = properties?.scale?.ToVector3() ?? Vector3.one;
@@ -159,7 +185,7 @@ namespace src.MetaBlocks.TdObjectBlock
                         tdObjectContainer.transform.SetParent(transform, false);
                         tdObjectContainer.transform.localPosition = Vector3.zero;
                         tdObject = go;
-                        
+
                         LoadGameObject(scale, offset, rotation);
                     }));
 
@@ -183,7 +209,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     initialScale = 3f / maxD;
                     tdObject.transform.localScale *= initialScale;
                     center = GetObjectCenter(tdObject);
-                    size = GetObjectSize(tdObject, center); 
+                    size = GetObjectSize(tdObject, center);
                     minY = center.y - size.y / 2;
                 }
 
@@ -196,7 +222,7 @@ namespace src.MetaBlocks.TdObjectBlock
             tdObjectContainer.transform.eulerAngles = rotation;
 
             var bc = getBoxCollider(tdObject);
-            
+
             var land = GetBlock().land;
             if (land != null && !IsInLand(bc))
             {
@@ -221,7 +247,7 @@ namespace src.MetaBlocks.TdObjectBlock
         public void UpdateProps()
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
-            if(tdObjectContainer == null) return;
+            if (tdObjectContainer == null) return;
             props.offset = SerializableVector3.@from(tdObject.transform.localPosition - (Vector3) initialPosition);
             props.rotation = SerializableVector3.@from(tdObjectContainer.transform.eulerAngles);
             props.scale = SerializableVector3.@from(tdObject.transform.localScale / initialScale);
@@ -262,13 +288,13 @@ namespace src.MetaBlocks.TdObjectBlock
                 {
                     var r = child.gameObject.GetComponent<MeshRenderer>();
                     if (r != null)
-                        center += r.bounds.center;    
+                        center += r.bounds.center;
                 }
                 else
                 {
                     var r = child.gameObject.GetComponent<MeshFilter>().mesh;
                     if (r != null)
-                        center += r.bounds.center;   
+                        center += r.bounds.center;
                 }
             }
 
@@ -284,7 +310,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 {
                     var r = child.gameObject.GetComponent<MeshRenderer>();
                     if (r != null)
-                        bounds.Encapsulate(r.bounds);   
+                        bounds.Encapsulate(r.bounds);
                 }
                 else
                 {
@@ -301,7 +327,7 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             using var webRequest = UnityWebRequest.Get(url);
             yield return webRequest.SendWebRequest();
-            
+
             switch (webRequest.result)
             {
                 case UnityWebRequest.Result.ConnectionError:
@@ -316,62 +342,9 @@ namespace src.MetaBlocks.TdObjectBlock
                     {
                         consumer.Invoke(new OBJLoader().LoadZip(stream));
                     }
+
                     break;
             }
-        }
-
-        public void RotateAroundY()
-        {
-            if (tdObjectContainer == null) return;
-            tdObjectContainer.transform.Rotate(3 * Vector3.up);
-        }
-
-        public void MoveLeft()
-        {
-            if (tdObject == null) return;
-            tdObject.transform.position += Player.INSTANCE.transform.right * -0.1f;
-        }
-
-        public void MoveRight()
-        {
-            if (tdObject == null) return;
-            tdObject.transform.position += Player.INSTANCE.transform.right * 0.1f;
-        }
-
-        public void MoveForward()
-        {
-            if (tdObject == null) return;
-            tdObject.transform.position += Player.INSTANCE.transform.forward * 0.1f;
-        }
-
-        public void MoveBackward()
-        {
-            if (tdObject == null) return;
-            tdObject.transform.position += Player.INSTANCE.transform.forward * -0.1f;
-        }
-
-        public void MoveUp()
-        {
-            if (tdObject == null) return;
-            tdObject.transform.position += Vector3.up * 0.1f;
-        }
-
-        public void MoveDown()
-        {
-            if (tdObject == null) return;
-            tdObject.transform.position += Vector3.down * 0.1f;
-        }
-
-        public void ScaleUp()
-        {
-            if (tdObject == null) return;
-            tdObject.transform.localScale *= 1.1f;
-        }
-
-        public void ScaleDown()
-        {
-            if (tdObject == null) return;
-            tdObject.transform.localScale *= 0.9f;
         }
     }
 }

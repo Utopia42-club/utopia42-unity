@@ -241,12 +241,11 @@ namespace src
             if (GetState() == State.PLAYING)
             {
                 SetState(State.MOVING_OBJECT);
-                tdObjectBlockObject.SetSnackForMovingObjectMode();
+                tdObjectBlockObject.SetToMovingState();
             } else if (GetState() == State.MOVING_OBJECT)
             {
                 SetState(State.PLAYING);
-                tdObjectBlockObject.UpdateProps();
-                tdObjectBlockObject.SetSnackForPlayingMode();
+                tdObjectBlockObject.ExitMovingState();
             } 
         }
 

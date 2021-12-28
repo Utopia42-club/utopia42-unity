@@ -19,7 +19,7 @@ namespace src
 
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
-                if (state == GameManager.State.PLAYING)
+                if (state == GameManager.State.PLAYING || state == GameManager.State.MOVING_OBJECT)
                 {
                     Cursor.lockState = CursorLockMode.Locked;
                     Cursor.visible = false;

@@ -20,11 +20,6 @@ namespace src.Canvas
         public SnackItem ShowLines(List<string> lines, System.Action onUpdate)
         {
             string text = string.Join("\n", lines);
-            int maxChars = 0;
-            foreach (var l in lines)
-                if (maxChars < l.Length) maxChars = l.Length;
-
-
             return Add(new SnackItem.Text(this, onUpdate, text, textPanel, textObject));
         }
 

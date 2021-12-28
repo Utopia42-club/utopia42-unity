@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace src.Canvas
@@ -51,7 +52,8 @@ namespace src.Canvas
 
             internal override void Hide()
             {
-                textPanel.SetActive(false);
+                if (textPanel != null)
+                    textPanel.SetActive(false);
             }
 
             internal override void Show()
@@ -64,6 +66,11 @@ namespace src.Canvas
             {
                 text = newText;
                 textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
+            }
+
+            public void UpdateLines(List<string> lines)
+            {
+                UpdateText(string.Join("\n", lines));
             }
         }
 
