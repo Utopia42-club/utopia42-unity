@@ -16,6 +16,11 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockObject : MetaBlockObject
     {
+        private const string Loading = "Loading 3D object ...";
+        private const string InvalidObjURL = "Invalid 3D object url";
+        private const string InvalidObjData = "Invalid 3D object data";
+        private const string OutOfBound = "3D object exceeds land boundaries";
+
         private GameObject tdObjectContainer;
         private GameObject tdObject;
 
@@ -24,6 +29,8 @@ namespace src.MetaBlocks.TdObjectBlock
         private bool canEdit;
         private bool ready = false;
         private string currentUrl = "";
+
+        private string stateMsg = "";
 
         private TdObjectMoveController moveController;
 
@@ -78,8 +85,11 @@ namespace src.MetaBlocks.TdObjectBlock
             var lines = new List<string>();
             lines.Add("Press Z for details");
             lines.Add("Press T to toggle preview");
-            lines.Add("Press V to move object");
+            if (tdObjectContainer != null)
+                lines.Add("Press V to move object");
             lines.Add("Press Del to delete object");
+            if(!stateMsg.Equals(""))
+                lines.Add("\n" + stateMsg);
 
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
@@ -176,6 +186,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 tdObjectContainer = null;
                 tdObject = null;
 
+                stateMsg = Loading;
                 StartCoroutine(LoadZip(properties.url, go =>
                 {
                     tdObjectContainer = new GameObject();
@@ -200,7 +211,6 @@ namespace src.MetaBlocks.TdObjectBlock
                 tdObject.transform.localPosition = Vector3.zero;
                 var center = GetObjectCenter(tdObject);
                 var size = GetObjectSize(tdObject, center);
-                // var minY = center.y - size.y / 2;
 
                 var maxD = new[] {size.x, size.y, size.z}.Max();
                 if (maxD > 10f)
@@ -209,7 +219,6 @@ namespace src.MetaBlocks.TdObjectBlock
                     tdObject.transform.localScale = initialScale * Vector3.one;
                     center = GetObjectCenter(tdObject);
                     size = GetObjectSize(tdObject, center);
-                    // minY = center.y - size.y / 2;
                 }
                 else
                 {
@@ -236,11 +245,25 @@ namespace src.MetaBlocks.TdObjectBlock
             var land = GetBlock().land;
             if (land != null && !IsInLand(bc))
             {
-                CreateIcon(true);
-                DestroyImmediate(tdObjectContainer);
-                tdObject = null;
-                tdObjectContainer = null;
+                DestroyOnFailure();
+                stateMsg = OutOfBound;
             }
+            else
+            {
+                CreateIcon();
+                stateMsg = "";
+            }
+        }
+
+        private void DestroyOnFailure()
+        {
+            CreateIcon(true);
+            if (tdObjectContainer != null)
+            {
+                DestroyImmediate(tdObjectContainer);
+                tdObjectContainer = null;   
+            }
+            tdObject = null;
         }
 
         private BoxCollider getBoxCollider(GameObject tdObject)
@@ -256,10 +279,6 @@ namespace src.MetaBlocks.TdObjectBlock
         public void InitializeProps(Vector3 initialPosition, float initialScale)
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
-            // if (tdObjectContainer == null) return;
-            // props.offset = SerializableVector3.@from(tdObject.transform.localPosition - initialPosition);
-            // props.rotation = SerializableVector3.@from(tdObjectContainer.transform.eulerAngles);
-            // props.scale = SerializableVector3.@from(tdObject.transform.localScale / initialScale);
             props.initialPosition = SerializableVector3.@from(initialPosition);
             props.initialScale = initialScale;
             GetBlock().SetProps(props, land);
@@ -292,7 +311,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
                 props.UpdateProps(value);
 
-                if (props.IsEmpty()) props = null; // TODO: now?
+                if (props.IsEmpty()) props = null;
 
                 GetBlock().SetProps(props, land);
                 manager.CloseDialog(dialog);
@@ -344,7 +363,7 @@ namespace src.MetaBlocks.TdObjectBlock
             return bounds.size;
         }
 
-        private static IEnumerator LoadZip(string url, Action<GameObject> consumer)
+        private IEnumerator LoadZip(string url, Action<GameObject> consumer)
         {
             using var webRequest = UnityWebRequest.Get(url);
             yield return webRequest.SendWebRequest();
@@ -354,14 +373,27 @@ namespace src.MetaBlocks.TdObjectBlock
                 case UnityWebRequest.Result.ConnectionError:
                 case UnityWebRequest.Result.DataProcessingError:
                     Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
+                    DestroyOnFailure();
+                    stateMsg = InvalidObjURL;
                     break;
                 case UnityWebRequest.Result.ProtocolError:
                     Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
+                    DestroyOnFailure();
+                    stateMsg = InvalidObjURL;
                     break;
                 case UnityWebRequest.Result.Success:
                     using (var stream = new MemoryStream(webRequest.downloadHandler.data))
                     {
-                        consumer.Invoke(new OBJLoader().LoadZip(stream));
+                        try
+                        {
+                            var go = new OBJLoader().LoadZip(stream);
+                            consumer.Invoke(go);
+                        }
+                        catch (Exception e)
+                        {
+                            DestroyOnFailure();
+                            stateMsg = InvalidObjData;
+                        }
                     }
 
                     break;
