@@ -24,9 +24,7 @@ namespace src
         public GameObject cursorSlot;
         public GameObject help;
         public Player player;
-
-        private Land currentLand;
-
+        
         void Start()
         {
             GameManager.INSTANCE.stateChange.AddListener(state =>

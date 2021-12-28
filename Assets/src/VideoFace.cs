@@ -19,12 +19,11 @@ namespace src
             //Init(Voxels.Face.FRONT, "https://www.rmp-streaming.com/media/big-buck-bunny-360p.mp4", 2, 2, 10);
         }
 
-        public void Init(Voxels.Face face, string url, int width, int height, float prevTime)
+        public void Init(MeshRenderer meshRenderer, string url, float prevTime)
         {
             previewing = true;
             prepared = false;
             loading.Invoke(true);
-            MeshRenderer meshRenderer = Initialize(face, width, height);
             this.prevTime = prevTime;
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
             videoPlayer.url = url;

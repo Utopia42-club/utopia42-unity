@@ -94,12 +94,12 @@ namespace src.MetaBlocks.VideoBlock
             {
                 lines.Add("Press Z for details");
                 lines.Add("Press T to toggle preview");
-                lines.Add("Press X to delete");
+                lines.Add("Press Del to delete");
                 snackItem = Snack.INSTANCE.ShowLines(lines, () =>
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                         EditProps(face);
-                    if (Input.GetKeyDown(KeyCode.X))
+                    if (Input.GetButtonDown("Delete"))
                         GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
                     if (Input.GetKeyDown(KeyCode.T))
                         GetIconObject().SetActive(!GetIconObject().activeSelf);
@@ -144,12 +144,21 @@ namespace src.MetaBlocks.VideoBlock
             go.transform.parent = transform;
             go.transform.localPosition = Vector3.zero + ((Vector3)face.direction) * 0.1f;
             var vidFace = go.AddComponent<VideoFace>();
-            vidFace.Init(face, props.url, props.width, props.height, props.previewTime);
-            videos[face] = vidFace;
-            vidFace.loading.AddListener(l =>
+            MeshRenderer meshRenderer = vidFace.Initialize(face, props.width, props.height);
+            if (IsInLand(meshRenderer))
             {
-                if (focusedFace == face) UpdateSnacksAndIconObject(face);
-            });
+                vidFace.Init(meshRenderer, props.url, props.previewTime);
+                videos[face] = vidFace;
+                vidFace.loading.AddListener(l =>
+                {
+                    if (focusedFace == face) UpdateSnacksAndIconObject(face);
+                });
+            }
+            else
+            {
+                DestroyImmediate(meshRenderer);
+                CreateIcon(true);
+            }
         }
 
         private void EditProps(Voxels.Face face)
@@ -163,7 +172,7 @@ namespace src.MetaBlocks.VideoBlock
 
             var props = GetBlock().GetProps();
             editor.SetValue(props == null ? null : (props as VideoBlockProperties).GetFaceProps(face));
-            dialog.WithAction("Submit", () =>
+            dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
                 var props = new VideoBlockProperties(GetBlock().GetProps() as VideoBlockProperties);

@@ -346,7 +346,9 @@ namespace Dummiesman
         private GameObject LoadZip(ZipArchive zip)
         {
             _zipMap = new Dictionary<string, ZipArchiveEntry>();
-            foreach (var entry in zip.Entries)
+            List<ZipArchiveEntry> entries = new List<ZipArchiveEntry>(zip.Entries);
+            entries.Sort(new SortArchiveEntries());
+            foreach (var entry in entries)
             {
                 if(entry.FullName.StartsWith("__MACOSX")) continue;
                 var fullName = entry.FullName
@@ -392,5 +394,13 @@ namespace Dummiesman
             using var zipFile = new ZipArchive(zip);
             return LoadZip(zipFile);
         }
+    }
+}
+
+class SortArchiveEntries : IComparer<ZipArchiveEntry>
+{
+    public int Compare(ZipArchiveEntry x, ZipArchiveEntry y)
+    {
+        return String.Compare(x.FullName, y.FullName, StringComparison.Ordinal);
     }
 }

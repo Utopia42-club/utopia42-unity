@@ -8,7 +8,7 @@ namespace src.MetaBlocks.LinkBlock
     {
         public static readonly string PREFAB = "MetaBlocks/LinkBlockEditor";
 
-        public TMP_Dropdown type;
+        public Dropdown type;
         public InputField url;
         public InputField x;
         public InputField y;

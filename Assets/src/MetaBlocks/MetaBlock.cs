@@ -64,7 +64,8 @@ namespace src.MetaBlocks
             if (Equals(properties, props)) return;
             properties = props;
             VoxelService.INSTANCE.MarkLandChanged(land);
-            if (blockObject != null) blockObject.OnDataUpdate();
+            if (blockObject != null) 
+                blockObject.OnDataUpdate();
         }
 
         public object GetProps()

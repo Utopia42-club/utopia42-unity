@@ -1,4 +1,5 @@
 using System.Collections;
+using src.MetaBlocks.ImageBlock;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -7,10 +8,9 @@ namespace src
 {
     public class ImageFace : MetaFace
     {
-        public void Init(Voxels.Face face, string url, int width, int height)
+        public void Init(MeshRenderer renderer, string url)
         {
-            MeshRenderer meshRenderer = Initialize(face, width, height);
-            StartCoroutine(LoadImage(meshRenderer.material, url));
+            StartCoroutine(LoadImage(renderer.material, url));
         }
 
         private IEnumerator LoadImage(Material material, string url)
