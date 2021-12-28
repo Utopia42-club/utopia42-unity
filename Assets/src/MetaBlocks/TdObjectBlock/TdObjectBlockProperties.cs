@@ -6,10 +6,14 @@ namespace src.MetaBlocks.TdObjectBlock
     public class TdObjectBlockProperties
     {
         public string url;
+        
         public SerializableVector3 scale = SerializableVector3.from(Vector3.one);
         public SerializableVector3 offset = SerializableVector3.from(Vector3.zero);
         public SerializableVector3 rotation = SerializableVector3.from(Vector3.zero);
 
+        public SerializableVector3 initialPosition = SerializableVector3.from(Vector3.zero);
+        public float initialScale = 0;
+        
         public TdObjectBlockProperties()
         {
 
@@ -23,6 +27,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 scale = obj.scale;
                 offset = obj.offset;
                 rotation = obj.rotation;
+                initialPosition = obj.initialPosition;
+                initialScale = obj.initialScale;
             }
         }
         
@@ -41,7 +47,8 @@ namespace src.MetaBlocks.TdObjectBlock
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
             var prop = obj as TdObjectBlockProperties;
-            return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(offset, prop.offset) && Equals(rotation, prop.rotation);
+            return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(offset, prop.offset) && Equals(rotation, prop.rotation) 
+                   && Equals(initialPosition, prop.initialPosition) && Equals(initialScale, prop.initialScale);
         }
 
         public bool IsEmpty()

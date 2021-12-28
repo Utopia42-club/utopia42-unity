@@ -10,7 +10,6 @@ using src.Model;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.UIElements;
 using Vector3 = UnityEngine.Vector3;
 
 namespace src.MetaBlocks.TdObjectBlock
@@ -20,8 +19,6 @@ namespace src.MetaBlocks.TdObjectBlock
         private GameObject tdObjectContainer;
         private GameObject tdObject;
 
-        private Vector3? initialPosition;
-        private float initialScale = 1;
         private SnackItem snackItem;
         private Land land;
         private bool canEdit;
@@ -82,6 +79,7 @@ namespace src.MetaBlocks.TdObjectBlock
             lines.Add("Press Z for details");
             lines.Add("Press T to toggle preview");
             lines.Add("Press V to move object");
+            lines.Add("Press Del to delete object");
 
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
@@ -91,6 +89,10 @@ namespace src.MetaBlocks.TdObjectBlock
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetKeyDown(KeyCode.V))
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
+                if (Input.GetButtonDown("Delete"))
+                {
+                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                }
             });
         }
 
@@ -105,7 +107,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if (moveController == null)
             {
                 moveController = gameObject.AddComponent<TdObjectMoveController>();
-                moveController.Attach(tdObject.transform, tdObject.transform, tdObjectContainer.transform);
+                moveController.Attach(tdObjectContainer.transform, tdObjectContainer.transform, tdObjectContainer.transform);
             }
 
             var lines = GetMovingSnackLines(helpMode);
@@ -113,12 +115,6 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 if (Input.GetKeyDown(KeyCode.X))
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
-                if (Input.GetButtonDown("Delete"))
-                {
-                    GameManager.INSTANCE.ToggleMovingObjectState(this);
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
-                }
-
                 if (Input.GetKeyDown(KeyCode.H))
                     SetToMovingState(!helpMode);
             });
@@ -138,7 +134,6 @@ namespace src.MetaBlocks.TdObjectBlock
                 lines.Add("R : rotate");
                 lines.Add("] : scale up");
                 lines.Add("[ : scale down");
-                lines.Add("Del : delete");
                 lines.Add("H : exit help");
             }
             else
@@ -162,71 +157,84 @@ namespace src.MetaBlocks.TdObjectBlock
         private void LoadTdObject()
         {
             TdObjectBlockProperties properties = (TdObjectBlockProperties) GetBlock().GetProps();
-            var scale = properties?.scale?.ToVector3() ?? Vector3.one;
-            var offset = properties?.offset?.ToVector3() ?? Vector3.zero;
-            var rotation = properties?.rotation?.ToVector3() ?? Vector3.zero;
+            if (properties == null) return;
 
-            if (properties != null)
+            var scale = properties.scale?.ToVector3() ?? Vector3.one;
+            var offset = properties.offset?.ToVector3() ?? Vector3.zero;
+            var rotation = properties.rotation?.ToVector3() ?? Vector3.zero;
+            var initialPosition = properties.initialPosition?.ToVector3() ?? Vector3.zero;
+            var initialScale = properties.initialScale;
+
+            if (currentUrl.Equals(properties.url) && tdObjectContainer != null)
             {
-                if (currentUrl.Equals(properties.url) && tdObjectContainer != null)
+                LoadGameObject(scale, offset, rotation, initialPosition, initialScale);
+            }
+            else
+            {
+                DestroyImmediate(tdObjectContainer);
+                tdObjectContainer = null;
+                tdObject = null;
+
+                StartCoroutine(LoadZip(properties.url, go =>
                 {
-                    LoadGameObject(scale, offset, rotation);
-                }
-                else
-                {
-                    DestroyImmediate(tdObjectContainer);
-                    tdObjectContainer = null;
-                    tdObject = null;
-                    initialPosition = null;
+                    tdObjectContainer = new GameObject();
+                    tdObjectContainer.transform.SetParent(transform, false);
+                    tdObjectContainer.transform.localPosition = Vector3.zero;
+                    tdObject = go;
 
-                    StartCoroutine(LoadZip(properties.url, go =>
-                    {
-                        tdObjectContainer = new GameObject();
-                        tdObjectContainer.transform.SetParent(transform, false);
-                        tdObjectContainer.transform.localPosition = Vector3.zero;
-                        tdObject = go;
+                    LoadGameObject(scale, offset, rotation, initialPosition, initialScale);
+                }));
 
-                        LoadGameObject(scale, offset, rotation);
-                    }));
-
-                    currentUrl = properties.url;
-                }
+                currentUrl = properties.url;
             }
         }
 
-        public void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation)
+        public void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation, Vector3 initialPosition,
+            float initialScale)
         {
-            tdObject.transform.localScale = scale * initialScale;
-            if (initialPosition == null)
+            var initializedBefore = initialScale != 0;
+            if (!initializedBefore)
             {
+                tdObject.transform.localScale = Vector3.one;
+                tdObject.transform.localPosition = Vector3.zero;
                 var center = GetObjectCenter(tdObject);
                 var size = GetObjectSize(tdObject, center);
-                var minY = center.y - size.y / 2;
+                // var minY = center.y - size.y / 2;
 
                 var maxD = new[] {size.x, size.y, size.z}.Max();
-                if (maxD > 3)
+                if (maxD > 10f)
                 {
-                    initialScale = 3f / maxD;
-                    tdObject.transform.localScale *= initialScale;
+                    initialScale = 10f / maxD;
+                    tdObject.transform.localScale = initialScale * Vector3.one;
                     center = GetObjectCenter(tdObject);
                     size = GetObjectSize(tdObject, center);
-                    minY = center.y - size.y / 2;
+                    // minY = center.y - size.y / 2;
                 }
-
-                //Debug.Log("Object loaded, size = " + size);
-                tdObject.transform.SetParent(tdObjectContainer.transform, false);
-                initialPosition = new Vector3(-center.x, -minY + 1, -center.z);
+                else
+                {
+                    initialScale = 1;
+                }
+                
+                initialPosition = new Vector3(-center.x, -center.y, -center.z);
+                InitializeProps(initialPosition, initialScale);
+                return;
             }
+            
+            tdObject.transform.SetParent(tdObjectContainer.transform, false);
+            
+            tdObject.transform.localScale = initialScale * Vector3.one;
+            tdObjectContainer.transform.localScale = scale;
+            
+            tdObject.transform.localPosition = (Vector3) initialPosition;
+            tdObjectContainer.transform.localPosition = (Vector3) offset;
 
-            tdObject.transform.localPosition = (Vector3) initialPosition + offset;
             tdObjectContainer.transform.eulerAngles = rotation;
 
-            var bc = getBoxCollider(tdObject);
 
+            var bc = getBoxCollider(tdObject);
             var land = GetBlock().land;
             if (land != null && !IsInLand(bc))
             {
-                //Debug.Log("Overflow! land id: " + land.id);
                 CreateIcon(true);
                 DestroyImmediate(tdObjectContainer);
                 tdObject = null;
@@ -244,13 +252,25 @@ namespace src.MetaBlocks.TdObjectBlock
         }
 
 
+        public void InitializeProps(Vector3 initialPosition, float initialScale)
+        {
+            var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
+            // if (tdObjectContainer == null) return;
+            // props.offset = SerializableVector3.@from(tdObject.transform.localPosition - initialPosition);
+            // props.rotation = SerializableVector3.@from(tdObjectContainer.transform.eulerAngles);
+            // props.scale = SerializableVector3.@from(tdObject.transform.localScale / initialScale);
+            props.initialPosition = SerializableVector3.@from(initialPosition);
+            props.initialScale = initialScale;
+            GetBlock().SetProps(props, land);
+        }
+
         public void UpdateProps()
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
             if (tdObjectContainer == null) return;
-            props.offset = SerializableVector3.@from(tdObject.transform.localPosition - (Vector3) initialPosition);
+            props.offset = SerializableVector3.@from(tdObjectContainer.transform.localPosition);
             props.rotation = SerializableVector3.@from(tdObjectContainer.transform.eulerAngles);
-            props.scale = SerializableVector3.@from(tdObject.transform.localScale / initialScale);
+            props.scale = SerializableVector3.@from(tdObjectContainer.transform.localScale);
             GetBlock().SetProps(props, land);
         }
 
