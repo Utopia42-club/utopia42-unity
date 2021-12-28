@@ -5,7 +5,8 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     internal class TdObjectMoveController : MonoBehaviour
     {
-        public float moveSpeed = 4f;
+        private static readonly float moveSpeed = 3f;
+        private static readonly Vector3 ScaleDelta = 0.05f * Vector3.one;
 
         private Transform scaleTarget;
         private Transform rotateTarget;
@@ -65,13 +66,13 @@ namespace src.MetaBlocks.TdObjectBlock
         private void ScaleUp()
         {
             if (scaleTarget == null) return;
-            scaleTarget.transform.localScale += Vector3.one * 0.1f;
+            scaleTarget.transform.localScale += ScaleDelta;
         }
 
         private void ScaleDown()
         {
             if (scaleTarget == null) return;
-            var scale = scaleTarget.transform.localScale - Vector3.one * 0.1f;
+            var scale = scaleTarget.transform.localScale - ScaleDelta;
             scaleTarget.transform.localScale = new Vector3(Mathf.Max(scale.x, 0.1f), Mathf.Max(scale.y, 0.1f), Mathf.Max(scale.z, 0.1f));
         }
 

@@ -977,9 +977,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 785aef32112492d4ea0d99d1f7634d20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  url: {fileID: 0}
-  width: {fileID: 0}
-  height: {fileID: 0}
+  url: {fileID: 7657837759649625565}
+  width: {fileID: 4105711306523141284}
+  height: {fileID: 6138525082506409879}
 --- !u!1 &4245700160867713380
 GameObject:
   m_ObjectHideFlags: 0

@@ -73,6 +73,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 moveController = null;
             }
         }
+        
+        
 
         private void SetupDefaultSnack()
         {
@@ -81,17 +83,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem.Remove();
                 snackItem = null;
             }
-
-            var lines = new List<string>();
-            lines.Add("Press Z for details");
-            lines.Add("Press T to toggle preview");
-            if (tdObjectContainer != null)
-                lines.Add("Press V to move object");
-            lines.Add("Press Del to delete object");
-            if(!stateMsg.Equals(""))
-                lines.Add("\n" + stateMsg);
-
-            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
+            
+            snackItem = Snack.INSTANCE.ShowLines(GetDefaultSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
@@ -155,6 +148,19 @@ namespace src.MetaBlocks.TdObjectBlock
             lines.Add("X : exit moving object mode");
             return lines;
         }
+        
+        private List<string> GetDefaultSnackLines()
+        {
+            var lines = new List<string>();
+            lines.Add("Press Z for details");
+            lines.Add("Press T to toggle preview");
+            if (tdObjectContainer != null)
+                lines.Add("Press V to move object");
+            lines.Add("Press DEL to delete object");
+            if(!stateMsg.Equals(""))
+                lines.Add("\n" + stateMsg);
+            return lines;
+        }
 
         public override void UnFocus()
         {
@@ -163,6 +169,13 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem.Remove();
                 snackItem = null;
             }
+        }
+
+        public void SetNewStateMsg(string msg)
+        {
+            stateMsg = msg;
+            if (snackItem != null)
+                ((SnackItem.Text) snackItem).UpdateText(string.Join("\n", GetDefaultSnackLines()));
         }
 
         private void LoadTdObject()
@@ -186,7 +199,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 tdObjectContainer = null;
                 tdObject = null;
 
-                stateMsg = Loading;
+                SetNewStateMsg(Loading);
                 StartCoroutine(LoadZip(properties.url, go =>
                 {
                     tdObjectContainer = new GameObject();
@@ -246,12 +259,12 @@ namespace src.MetaBlocks.TdObjectBlock
             if (land != null && !IsInLand(bc))
             {
                 DestroyOnFailure();
-                stateMsg = OutOfBound;
+                SetNewStateMsg(OutOfBound);
             }
             else
             {
                 CreateIcon();
-                stateMsg = "";
+                SetNewStateMsg("");
             }
         }
 
@@ -374,12 +387,12 @@ namespace src.MetaBlocks.TdObjectBlock
                 case UnityWebRequest.Result.DataProcessingError:
                     Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
                     DestroyOnFailure();
-                    stateMsg = InvalidObjURL;
+                    SetNewStateMsg(InvalidObjURL);
                     break;
                 case UnityWebRequest.Result.ProtocolError:
                     Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
                     DestroyOnFailure();
-                    stateMsg = InvalidObjURL;
+                    SetNewStateMsg(InvalidObjURL);
                     break;
                 case UnityWebRequest.Result.Success:
                     using (var stream = new MemoryStream(webRequest.downloadHandler.data))
@@ -392,7 +405,7 @@ namespace src.MetaBlocks.TdObjectBlock
                         catch (Exception e)
                         {
                             DestroyOnFailure();
-                            stateMsg = InvalidObjData;
+                            SetNewStateMsg(InvalidObjData);
                         }
                     }
 
