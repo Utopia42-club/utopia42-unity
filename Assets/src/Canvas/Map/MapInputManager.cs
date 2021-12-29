@@ -17,6 +17,9 @@ namespace src.Canvas.Map
         private GameObject drawingObject;
         public Map map;
 
+        private const float MoveSpeed = 5f;
+        private const float BoostedMoveSpeed = 15f;
+
         void Update()
         {
             var mousePos = Input.mousePosition;
@@ -61,7 +64,9 @@ namespace src.Canvas.Map
 
             if (Input.GetMouseButtonDown(1))
                 GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
-
+            
+            HandleKeyboardInput();
+            
             SetLinesPos(mousePosInt);
         }
 
@@ -166,6 +171,24 @@ namespace src.Canvas.Map
 
             var hp = horizontal.position;
             horizontal.position = new Vector3(hp.x, mousePos.y, 0);
+        }
+        
+        private void HandleKeyboardInput()
+        {
+            var boosted = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            if(Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+                Move(Vector3.right, boosted); 
+            else if(Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+                Move(Vector3.left, boosted);
+            else if(Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
+                Move(Vector3.up, boosted);
+            else if(Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
+                Move(Vector3.down, boosted);
+        }
+        
+        private void Move(Vector3 direction, bool boosted)
+        {
+            landRect.GetComponent<RectTransform>().localPosition -= direction * (boosted ? BoostedMoveSpeed : MoveSpeed);
         }
     }
 }

@@ -5,7 +5,7 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     internal class TdObjectMoveController : MonoBehaviour
     {
-        private static readonly float moveSpeed = 3f;
+        private const float MoveSpeed = 3f;
         private static readonly Vector3 ScaleDelta = 0.05f * Vector3.one;
 
         private Transform scaleTarget;
@@ -42,7 +42,7 @@ namespace src.MetaBlocks.TdObjectBlock
             var pivot = Player.INSTANCE.transform;
             var velocity = (pivot.forward * forwardBackward + pivot.right * leftRight + pivot.up * upwardDownward) *
                            Time.fixedDeltaTime *
-                           moveSpeed;
+                           MoveSpeed;
             moveTarget.position += velocity;
 
             if (rotate) RotateAroundY();
