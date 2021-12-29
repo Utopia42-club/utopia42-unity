@@ -231,7 +231,6 @@ namespace src.MetaBlocks.TdObjectBlock
                     initialScale = 10f / maxD;
                     tdObject.transform.localScale = initialScale * Vector3.one;
                     center = GetObjectCenter(tdObject);
-                    size = GetObjectSize(tdObject, center);
                 }
                 else
                 {

@@ -5,8 +5,9 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     internal class TdObjectMoveController : MonoBehaviour
     {
-        private const float MoveSpeed = 3f;
-        private static readonly Vector3 ScaleDelta = 0.05f * Vector3.one;
+        private const float MoveSpeed = 1f;
+        private static readonly Vector3 ScaleDelta = 0.005f * Vector3.one;
+        private static readonly Vector3 RotationDelta = 1f * Vector3.up;
 
         private Transform scaleTarget;
         private Transform rotateTarget;
@@ -60,7 +61,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private void RotateAroundY()
         {
             if (rotateTarget == null) return;
-            rotateTarget.transform.Rotate(3 * Vector3.up);
+            rotateTarget.transform.Rotate(RotationDelta);
         }
 
         private void ScaleUp()
