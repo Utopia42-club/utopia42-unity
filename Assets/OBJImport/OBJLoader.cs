@@ -345,21 +345,23 @@ namespace Dummiesman
 
         private GameObject LoadZip(ZipArchive zip)
         {
+            var separator = Path.DirectorySeparatorChar.ToString().Equals("/") ? "/" : "\\\\";
             _zipMap = new Dictionary<string, ZipArchiveEntry>();
             List<ZipArchiveEntry> entries = new List<ZipArchiveEntry>(zip.Entries);
             entries.Sort(new SortArchiveEntries());
             foreach (var entry in entries)
             {
                 if(entry.FullName.StartsWith("__MACOSX")) continue;
-                var fullName = entry.FullName
-                    .Replace('\\', Path.DirectorySeparatorChar)
-                    .Replace('/', Path.DirectorySeparatorChar);
+
+                var fullName = new Regex(@"\\\\").Replace(entry.FullName, separator);
+                fullName = new Regex(@"/").Replace(fullName, separator);
+                if (fullName.EndsWith(separator)) continue;
+
                 if (_zipMap.ContainsKey(fullName) || fullName.Equals("")) continue;
                 
                 _zipMap.Add(fullName, entry);
 
-                // TODO ?
-                var modifiedFullname = new Regex(@"^[\S\s]+?/").Replace(fullName, "");
+                var modifiedFullname = new Regex(separator.Equals("/") ? @"^[\S\s]+?/" : @"^[\S\s]+?\\\\").Replace(fullName, "");
                 if(!_zipMap.ContainsKey(modifiedFullname))
                     _zipMap.Add(modifiedFullname, entry);
                 

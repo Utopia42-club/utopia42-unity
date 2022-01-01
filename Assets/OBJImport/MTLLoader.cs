@@ -16,6 +16,7 @@ using Dummiesman;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class MTLLoader {
@@ -74,9 +75,10 @@ public class MTLLoader {
 
     private Texture2D TryLoadTexture(string texturePath, bool normalMap)
     {
+        var separator = Path.DirectorySeparatorChar.ToString().Equals("/") ? "/" : "\\\\";
         //swap directory seperator char
-        texturePath = texturePath.Replace('\\', Path.DirectorySeparatorChar);
-        texturePath = texturePath.Replace('/', Path.DirectorySeparatorChar);
+        texturePath = new Regex(@"\\\\").Replace(texturePath, separator);
+        texturePath = new Regex(@"/").Replace(texturePath, separator);
 
         return TextureLoadFunction(texturePath, normalMap);
     }
