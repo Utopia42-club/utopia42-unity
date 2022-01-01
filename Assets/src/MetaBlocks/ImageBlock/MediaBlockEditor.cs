@@ -6,6 +6,7 @@ namespace src.MetaBlocks.ImageBlock
     public class MediaBlockEditor : MonoBehaviour
     {
         public static readonly string PREFAB = "MetaBlocks/MediaBlockEditor";
+        public static readonly int DEFAULT_DIMENSION = 3;
         [SerializeField]
         public InputField url;
         [SerializeField]
@@ -15,12 +16,12 @@ namespace src.MetaBlocks.ImageBlock
 
         public MediaBlockProperties.FaceProps GetValue()
         {
-            if (HasValue(url) && HasValue(width) && HasValue(height))
+            if (HasValue(url))
             {
                 var props = new MediaBlockProperties.FaceProps();
                 props.url = url.text;
-                props.width = int.Parse(width.text);
-                props.height = int.Parse(height.text);
+                props.width = HasValue(width) ? int.Parse(width.text) : DEFAULT_DIMENSION;
+                props.height = HasValue(height) ? int.Parse(height.text) : DEFAULT_DIMENSION;
                 return props;
             }
             return null;
@@ -28,8 +29,8 @@ namespace src.MetaBlocks.ImageBlock
         public void SetValue(MediaBlockProperties.FaceProps value)
         {
             url.text = value == null ? "" : value.url;
-            width.text = value == null ? "" : value.width.ToString();
-            height.text = value == null ? "" : value.height.ToString();
+            width.text = value == null ? DEFAULT_DIMENSION.ToString() : value.width.ToString();
+            height.text = value == null ? DEFAULT_DIMENSION.ToString() : value.height.ToString();
         }
 
         private bool HasValue(InputField f)
