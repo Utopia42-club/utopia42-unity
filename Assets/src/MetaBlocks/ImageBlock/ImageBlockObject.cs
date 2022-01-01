@@ -10,9 +10,12 @@ namespace src.MetaBlocks.ImageBlock
     {
         private readonly List<GameObject> images = new List<GameObject>();
         private SnackItem snackItem;
+        private int lastFocusedFaceIndex = -1;
         private Land land;
         private bool canEdit;
         private bool ready = false;
+
+        private readonly StateMsg[] stateMsg = {StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok};
 
         private void Start()
         {
@@ -40,11 +43,8 @@ namespace src.MetaBlocks.ImageBlock
         {
             if (!canEdit) return;
             if (snackItem != null) snackItem.Remove();
-            var lines = new List<string>();
-            lines.Add("Press Z for details");
-            lines.Add("Press T to toggle preview");
-            lines.Add("Press Del to delete");
-            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
+            
+            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face.index), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps(face);
@@ -53,6 +53,19 @@ namespace src.MetaBlocks.ImageBlock
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
             });
+
+            lastFocusedFaceIndex = face.index;
+        }
+
+        private List<string> GetFaceSnackLines(int faceIndex)
+        {
+            var lines = new List<string>();
+            lines.Add("Press Z for details");
+            lines.Add("Press T to toggle preview");
+            lines.Add("Press Del to delete");
+            if(stateMsg[faceIndex] != StateMsg.Ok)
+                lines.Add($"\n{MetaBlockState.ToString(stateMsg[faceIndex], "image")}");
+            return lines;
         }
 
         public override void UnFocus()
@@ -92,14 +105,40 @@ namespace src.MetaBlocks.ImageBlock
             var renderer = imgFace.Initialize(face, props.width, props.height);
             if (IsInLand(renderer))
             {
-                imgFace.Init(renderer, props.url);
-                images.Add(go);   
+                imgFace.Init(renderer, props.url, this, face.index);
+                images.Add(go);
+                return;
             }
-            else
+            DestroyImmediate(renderer);
+            UpdateStateAndIcon(face.index, StateMsg.OutOfBound);
+        }
+
+        public void UpdateStateAndIcon(int faceIndex, StateMsg msg)
+        {
+            stateMsg[faceIndex] = msg;
+            if (snackItem != null && lastFocusedFaceIndex == faceIndex)
             {
-                DestroyImmediate(renderer);
-                CreateIcon(true);
+                ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines(faceIndex));
             }
+            UpdateIcon(msg);
+        }
+
+        private void UpdateIcon(StateMsg message) // TODO
+        {
+            if (message != StateMsg.Loading && message != StateMsg.Ok)
+            {
+                CreateIcon(true);
+                return;
+            }
+            foreach (var msg in stateMsg)
+            {
+                if (msg != StateMsg.Loading && msg != StateMsg.Ok)
+                {
+                    CreateIcon(true);
+                    return;
+                }
+            }
+            CreateIcon();
         }
 
         private void EditProps(Voxels.Face face)

@@ -16,11 +16,6 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockObject : MetaBlockObject
     {
-        private const string Loading = "Loading 3D object ...";
-        private const string InvalidObjURL = "Invalid 3D object url";
-        private const string InvalidObjData = "Invalid 3D object data";
-        private const string OutOfBound = "3D object exceeds land boundaries";
-
         private GameObject tdObjectContainer;
         private GameObject tdObject;
 
@@ -30,7 +25,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private bool ready = false;
         private string currentUrl = "";
 
-        private string stateMsg = "";
+        private StateMsg stateMsg = StateMsg.Ok;
 
         private TdObjectMoveController moveController;
 
@@ -157,8 +152,8 @@ namespace src.MetaBlocks.TdObjectBlock
             if (tdObjectContainer != null)
                 lines.Add("Press V to move object");
             lines.Add("Press DEL to delete object");
-            if(!stateMsg.Equals(""))
-                lines.Add("\n" + stateMsg);
+            if(stateMsg != StateMsg.Ok)
+                lines.Add("\n" + MetaBlockState.ToString(stateMsg, "3D object"));
             return lines;
         }
 
@@ -171,11 +166,15 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        public void SetNewStateMsg(string msg)
+        public void UpdateStateAndIcon(StateMsg msg)
         {
             stateMsg = msg;
             if (snackItem != null)
-                ((SnackItem.Text) snackItem).UpdateText(string.Join("\n", GetDefaultSnackLines()));
+                ((SnackItem.Text) snackItem).UpdateLines(GetDefaultSnackLines());
+            if(stateMsg != StateMsg.Ok && stateMsg != StateMsg.Loading)
+                CreateIcon(true);
+            else
+                CreateIcon();
         }
 
         private void LoadTdObject()
@@ -199,7 +198,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 tdObjectContainer = null;
                 tdObject = null;
 
-                SetNewStateMsg(Loading);
+                UpdateStateAndIcon(StateMsg.Loading);
                 StartCoroutine(LoadZip(properties.url, go =>
                 {
                     tdObjectContainer = new GameObject();
@@ -258,18 +257,16 @@ namespace src.MetaBlocks.TdObjectBlock
             if (land != null && !IsInLand(bc))
             {
                 DestroyOnFailure();
-                SetNewStateMsg(OutOfBound);
+                UpdateStateAndIcon(StateMsg.OutOfBound);
             }
             else
             {
-                CreateIcon();
-                SetNewStateMsg("");
+                UpdateStateAndIcon(StateMsg.Ok);
             }
         }
 
         private void DestroyOnFailure()
         {
-            CreateIcon(true);
             if (tdObjectContainer != null)
             {
                 DestroyImmediate(tdObjectContainer);
@@ -386,12 +383,12 @@ namespace src.MetaBlocks.TdObjectBlock
                 case UnityWebRequest.Result.DataProcessingError:
                     Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
                     DestroyOnFailure();
-                    SetNewStateMsg(InvalidObjURL);
+                    UpdateStateAndIcon(StateMsg.InvalidUrl);
                     break;
                 case UnityWebRequest.Result.ProtocolError:
                     Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
                     DestroyOnFailure();
-                    SetNewStateMsg(InvalidObjURL);
+                    UpdateStateAndIcon(StateMsg.InvalidUrl);
                     break;
                 case UnityWebRequest.Result.Success:
                     using (var stream = new MemoryStream(webRequest.downloadHandler.data))
@@ -404,7 +401,7 @@ namespace src.MetaBlocks.TdObjectBlock
                         catch (Exception e)
                         {
                             DestroyOnFailure();
-                            SetNewStateMsg(InvalidObjData);
+                            UpdateStateAndIcon(StateMsg.InvalidData);
                         }
                     }
 
