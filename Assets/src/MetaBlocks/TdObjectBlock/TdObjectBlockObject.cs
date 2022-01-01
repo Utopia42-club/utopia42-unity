@@ -105,8 +105,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if (moveController == null)
             {
                 moveController = gameObject.AddComponent<TdObjectMoveController>();
-                moveController.Attach(tdObjectContainer.transform, tdObjectContainer.transform,
-                    tdObjectContainer.transform);
+                moveController.Attach(tdObjectContainer.transform, tdObjectContainer.transform, tdObjectContainer.transform);
             }
 
             var lines = GetMovingSnackLines(helpMode);
@@ -130,7 +129,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 lines.Add("SHIFT+SPACE : down");
                 lines.Add("A : left");
                 lines.Add("D : right");
-                lines.Add("R : rotate");
+                lines.Add("R : rotate around y");
+                lines.Add("SHIFT+R : rotate around z");
                 lines.Add("] : scale up");
                 lines.Add("[ : scale down");
                 lines.Add("H : exit help");

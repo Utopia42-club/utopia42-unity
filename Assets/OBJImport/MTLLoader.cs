@@ -192,7 +192,7 @@ public class MTLLoader {
             if (splitLine[0] == "Kd" || splitLine[0] == "kd")
             {
                 var currentColor = currentMaterial.GetColor("_Color");
-                var kdColor = OBJLoaderHelper.ColorFromStrArray(splitLine);
+                var kdColor = OBJLoaderHelper.ColorFromStrArray(splitLine, 4f);
 
                 currentMaterial.SetColor("_Color", new Color(kdColor.r, kdColor.g, kdColor.b, currentColor.a));
                 continue;

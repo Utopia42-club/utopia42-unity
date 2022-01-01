@@ -7,7 +7,8 @@ namespace src.MetaBlocks.TdObjectBlock
     {
         private const float MoveSpeed = 1f;
         private static readonly Vector3 ScaleDelta = 0.005f * Vector3.one;
-        private static readonly Vector3 RotationDelta = 1f * Vector3.up;
+        private static readonly Vector3 RotationDeltaY = 1f * Vector3.up;
+        private static readonly Vector3 RotationDeltaZ = 1f * Vector3.forward;
 
         private Transform scaleTarget;
         private Transform rotateTarget;
@@ -17,7 +18,8 @@ namespace src.MetaBlocks.TdObjectBlock
         private float forwardBackward;
         private float upwardDownward;
 
-        private bool rotate = false;
+        private bool rotateY = false;
+        private bool rotateZ = false;
         private bool scaleUp = false;
         private bool scaleDown = false;
 
@@ -31,7 +33,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 ? (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift) ? -1 : +1)
                 : 0;
 
-            rotate = Input.GetKey(KeyCode.R);
+            rotateY = Input.GetKey(KeyCode.R);
+            rotateZ = Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.R) || Input.GetKey(KeyCode.RightShift) && Input.GetKey(KeyCode.R);
             scaleUp = Input.GetKey(KeyCode.RightBracket);
             scaleDown = Input.GetKey(KeyCode.LeftBracket);
         }
@@ -46,7 +49,9 @@ namespace src.MetaBlocks.TdObjectBlock
                            MoveSpeed;
             moveTarget.position += velocity;
 
-            if (rotate) RotateAroundY();
+            if (rotateZ) RotateAroundZ();
+            else if (rotateY) RotateAroundY();
+            
             if (scaleUp) ScaleUp();
             if (scaleDown) ScaleDown();
         }
@@ -61,7 +66,13 @@ namespace src.MetaBlocks.TdObjectBlock
         private void RotateAroundY()
         {
             if (rotateTarget == null) return;
-            rotateTarget.transform.Rotate(RotationDelta);
+            rotateTarget.transform.Rotate(RotationDeltaY);
+        }
+        
+        private void RotateAroundZ()
+        {
+            if (rotateTarget == null) return;
+            rotateTarget.transform.Rotate(RotationDeltaZ);
         }
 
         private void ScaleUp()

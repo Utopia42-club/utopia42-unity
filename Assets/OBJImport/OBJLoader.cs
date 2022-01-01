@@ -370,7 +370,7 @@ namespace Dummiesman
                     _zipMap.Add(type, entry);
             }
 
-            if (!_zipMap.ContainsKey("obj")) return null; // TODO ?
+            if (!_zipMap.ContainsKey("obj")) throw new InvalidDataException("Obj file not found");
 
             if (_zipMap.ContainsKey("mtl"))
             {
