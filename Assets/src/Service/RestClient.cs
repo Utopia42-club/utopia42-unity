@@ -10,9 +10,6 @@ namespace src.Service
 {
     public class RestClient
     {
-        public static readonly string SERVER_URL = "https://api.utopia42.club/";
-        public static readonly string NETS_URL = SERVER_URL + "static/networks.json";
-
         public static RestClient INSATANCE = new RestClient();
 
         private RestClient()
@@ -21,7 +18,7 @@ namespace src.Service
 
         public IEnumerator LoadNetworks(Action<EthNetwork[]> consumer, Action failed)
         {
-            using (UnityWebRequest webRequest = UnityWebRequest.Get(NETS_URL))
+            using (UnityWebRequest webRequest = UnityWebRequest.Get(Utils.Constants.NetsURL))
             {
                 // webRequest.SetRequestHeader("Content-Type", "application/json");
                 // webRequest.SetRequestHeader("Accept", "*/*");
@@ -32,7 +29,7 @@ namespace src.Service
 
         public IEnumerator GetProfile(string walletId, Action<Profile> consumer, Action failed)
         {
-            string url = SERVER_URL + "profile";
+            string url = Utils.Constants.ApiURL + "/profile";
             using (UnityWebRequest webRequest = UnityWebRequest.Post(url, walletId))
             {
                 webRequest.SetRequestHeader("Content-Type", "application/json");

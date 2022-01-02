@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using src.Model;
 using src.Service;
+using src.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -72,7 +73,7 @@ namespace src.Canvas
             {
                 view.SetActive(true);
                 currentProfile = profile;
-                profileIcon.SetUrl(RestClient.SERVER_URL + "profile/avatar/" + profile.imageUrl);
+                profileIcon.SetUrl(Constants.ApiURL + "/profile/avatar/" + profile.imageUrl);
                 label.SetText(profile.name);
             }
         }

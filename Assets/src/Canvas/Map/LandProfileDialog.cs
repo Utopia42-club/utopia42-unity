@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using src.Model;
-using src.Service;
+using src.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,7 +25,7 @@ namespace src.Canvas.Map
         public Button toggleNftButton;
         public Land land;
         public Profile profile;
-    
+
         private GameManager manager;
 
         void Start()
@@ -46,7 +46,7 @@ namespace src.Canvas.Map
         {
             GameManager.INSTANCE.SetNFT(land.id, !land.isNft);
         }
-    
+
         private void Close()
         {
             map.CloseLandProfileDialogState();
@@ -68,7 +68,7 @@ namespace src.Canvas.Map
             if (profile.bio != null)
                 bioLabel.SetText(profile.bio);
             if (profile.imageUrl != null)
-                profileImage.SetUrl(RestClient.SERVER_URL + "profile/avatar/" + profile.imageUrl);
+                profileImage.SetUrl(Constants.ApiURL + "/profile/avatar/" + profile.imageUrl);
             if (profile.links != null)
             {
                 foreach (var link in profile.links)

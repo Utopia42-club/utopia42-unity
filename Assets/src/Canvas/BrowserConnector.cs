@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using src.Model;
 using src.Service.Ethereum;
+using src.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +10,6 @@ namespace src.Canvas
 {
     public class BrowserConnector : MonoBehaviour
     {
-        private static string WEB_APP_URL = "http://app.utopia42.club/home";
         private string currentUrl;
         [SerializeField] private Button doneButton;
 
@@ -113,10 +113,12 @@ namespace src.Canvas
             var wallet = Settings.WalletId();
             int network = EthereumClientService.INSTANCE.GetNetwork().id;
             if (parameters != null)
-                currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}", WEB_APP_URL, method,
+                currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}",
+                    Constants.WebAppHomeURL, method,
                     parameters, wallet, network);
             else
-                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", WEB_APP_URL, method, wallet,
+                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", Constants.WebAppHomeURL,
+                    method, wallet,
                     network);
 
             Application.OpenURL(currentUrl);
