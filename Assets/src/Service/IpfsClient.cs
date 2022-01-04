@@ -63,7 +63,8 @@ namespace src.Service
                     {
                         case UnityWebRequest.Result.ConnectionError:
                         case UnityWebRequest.Result.DataProcessingError:
-                            Debug.LogError(string.Format("Posing data for {0} caused Error: {1}", url, webRequest.error));
+                            Debug.LogError(
+                                string.Format("Posing data for {0} caused Error: {1}", url, webRequest.error));
                             //result.Add(detail.region.ipfsKey);
                             break;
                         case UnityWebRequest.Result.ProtocolError:
@@ -81,8 +82,36 @@ namespace src.Service
             success.Invoke(result);
             yield break;
         }
-    }
 
+        public IEnumerator UploadScreenShot(byte[] screenshot, Action<string> consumer)
+        {
+            var result = new Dictionary<long, string>();
+            string url = SERVER_URL + "/add?stream-channels=true&progress=false";
+            
+            var form = new List<IMultipartFormSection>();
+            form.Add(new MultipartFormDataSection("image", screenshot, "image/png"));
+            
+            using (UnityWebRequest webRequest = UnityWebRequest.Post(url, form))
+            {
+                yield return webRequest.SendWebRequest();
+
+                switch (webRequest.result) //FIXME add proper error handling
+                {
+                    case UnityWebRequest.Result.ConnectionError:
+                    case UnityWebRequest.Result.DataProcessingError:
+                        Debug.LogError(string.Format("Posing data for {0} caused Error: {1}", url, webRequest.error));
+                        break;
+                    case UnityWebRequest.Result.ProtocolError:
+                        Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
+                        break;
+                    case UnityWebRequest.Result.Success:
+                        var response = JsonConvert.DeserializeObject<IpfsResponse>(webRequest.downloadHandler.text);
+                        consumer.Invoke(response.hash);
+                        break;
+                }
+            }
+        }
+    }
 
     [Serializable]
     class IpfsResponse

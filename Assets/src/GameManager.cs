@@ -221,13 +221,29 @@ namespace src
             {
                 StartCoroutine(GameObject.Find("Map").GetComponent<Map>().TakeNftScreenShot(land, screenshot =>
                 {
-                    // TODO: upload
+                    StartCoroutine(IpfsClient.INSATANCE.UploadScreenShot(screenshot, ipfsKey =>
+                    {
+                        var md = LandMetadata.CreateLandMetadata(land, ipfsKey);
+                        StartCoroutine(RestClient.INSATANCE.SetLandMetadata(md, () =>
+                        {
+                            SetState(State.BROWSER_CONNECTION);
+                            BrowserConnector.INSTANCE.SetNft(land.id, true,
+                                () => StartCoroutine(ReloadLands()),
+                                () => SetState(State.PLAYING));
+                        }, (() =>
+                        {
+                            
+                        })));
+                    }));
                 }));
             }
-            SetState(State.BROWSER_CONNECTION);
-            BrowserConnector.INSTANCE.SetNft(land.id, convertToNft,
-                () => StartCoroutine(ReloadLands()),
-                () => SetState(State.PLAYING));
+            else
+            {
+                SetState(State.BROWSER_CONNECTION);
+                BrowserConnector.INSTANCE.SetNft(land.id, false,
+                    () => StartCoroutine(ReloadLands()),
+                    () => SetState(State.PLAYING));   
+            }
         }
 
         public void ShowUserProfile()
