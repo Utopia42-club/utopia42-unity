@@ -6,11 +6,15 @@ namespace src.Model
     [System.Serializable]
     public class LandMetadata
     {
-        public string landId;
-        public string name;
+        public long landId;
         public string description;
-        public string image;
-
+        public string imageIpfsKey;
+        public long centerX;
+        public long centerY;
+        public long width;
+        public long height;
+        public long area;
+        
         public override int GetHashCode()
         {
             return landId.GetHashCode();
@@ -28,11 +32,20 @@ namespace src.Model
         public static LandMetadata CreateLandMetadata(Land land, string imageIpfsKey)
         {
             var md = new LandMetadata();
-            md.image = imageIpfsKey;
-            md.name = "Land #" + land.id;
-            md.landId = land.id.ToString();
-            md.description =
-                $"x1: {land.x1}, x2: {land.x2}\ny1: {land.y1}, y2: {land.y2}\nSize: {Math.Abs(land.x2 - land.x1) * Math.Abs(land.y2 - land.y1)}";
+            md.landId = land.id;
+            md.imageIpfsKey = imageIpfsKey;
+            // md.description = "";
+
+            var width = Math.Abs(land.x2 - land.x1);
+            var height = Math.Abs(land.y2 - land.y1);
+            
+            md.area = height * width;
+            md.width = width;
+            md.height = height;
+
+            md.centerX = (long) Math.Floor(0.5 * (land.x1 + land.x2));
+            md.centerY = (long) Math.Floor(0.5 * (land.y1 + land.y2));
+
             return md;
         }
     }

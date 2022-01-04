@@ -43,8 +43,7 @@ namespace src.Service
         
         public IEnumerator SetLandMetadata(LandMetadata landMetadata, Action success, Action failed)
         {
-            // string url = Utils.Constants.ApiURL + "/land_metadata/set";
-            const string url = "http://localhost:8080" + "/land_metadata/set";
+            string url = Utils.Constants.ApiURL + "/land-metadata/set";
             var data = JsonConvert.SerializeObject(landMetadata);
             var bodyRaw = Encoding.UTF8.GetBytes(data);
 
