@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using src.Model;
 using src.Utils;
 using TMPro;
 using UnityEngine;
@@ -19,6 +22,8 @@ namespace src.Canvas.Map
 
         private const float MoveSpeed = 5f;
         private const float BoostedMoveSpeed = 15f;
+        
+        private const float MaxZoomOutScale = 0.25f;
 
         void Update()
         {
@@ -189,6 +194,44 @@ namespace src.Canvas.Map
         private void Move(Vector3 direction, bool boosted)
         {
             landRect.GetComponent<RectTransform>().localPosition -= direction * (boosted ? BoostedMoveSpeed : MoveSpeed);
+        }
+
+        public void PrepareForScreenShot(Land land)
+        {
+            ZoomOutOnLand(land);
+            MoveToLandCenter(land);
+            vertical.gameObject.SetActive(false);
+            horizontal.gameObject.SetActive(false);
+            positionText.gameObject.SetActive(false);
+            landRect.HidePlayerPosIndicator();
+        }
+        
+        public void ScreenShotDone()
+        {
+            vertical.gameObject.SetActive(true);
+            horizontal.gameObject.SetActive(true);
+            positionText.gameObject.SetActive(true);
+            landRect.ShowPlayerPosIndicator();
+        }
+        
+        private void MoveToLandCenter(Land land)
+        {
+            var landCenter = new Vector3((land.x1 + land.x2) * 0.5f, (land.y1 + land.y2) * 0.5f, 0);
+            var landContainerScale = landRect.landContainer.localScale;
+            landCenter.Scale(new Vector3(landContainerScale.x, landContainerScale.y, 0));
+            landRect.GetComponent<RectTransform>().localPosition = -landCenter;
+        }
+
+        private void ZoomOutOnLand(Land land)
+        {
+            var width = Math.Abs(land.x2 - land.x1);
+            var height = Math.Abs(land.y2 - land.y1);
+
+            var widthRatio = Screen.width / (width * 1.5);
+            var heightRatio = Screen.height / (height * 1.5);
+
+            var scale = (float) new[] {widthRatio, heightRatio, MaxZoomOutScale}.Min();
+            landRect.landContainer.localScale = new Vector3(scale, scale, 1);
         }
     }
 }

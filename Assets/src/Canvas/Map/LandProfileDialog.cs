@@ -44,7 +44,7 @@ namespace src.Canvas.Map
 
         private void DoToggleNft()
         {
-            GameManager.INSTANCE.SetNFT(land.id, !land.isNft);
+            GameManager.INSTANCE.SetNFT(land, !land.isNft);
         }
 
         private void Close()

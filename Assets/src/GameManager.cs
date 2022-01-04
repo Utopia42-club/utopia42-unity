@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using src.Canvas;
+using src.Canvas.Map;
 using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
@@ -214,12 +215,35 @@ namespace src
                 () => SetState(State.PLAYING));
         }
 
-        public void SetNFT(long landId, bool value)
+        public void SetNFT(Land land, bool convertToNft)
         {
-            SetState(State.BROWSER_CONNECTION);
-            BrowserConnector.INSTANCE.SetNft(landId, value,
-                () => StartCoroutine(ReloadLands()),
-                () => SetState(State.PLAYING));
+            if (convertToNft)
+            {
+                StartCoroutine(GameObject.Find("Map").GetComponent<Map>().TakeNftScreenShot(land, screenshot =>
+                {
+                    StartCoroutine(IpfsClient.INSATANCE.UploadScreenShot(screenshot, ipfsKey =>
+                    {
+                        var md = LandMetadata.CreateLandMetadata(land, ipfsKey);
+                        StartCoroutine(RestClient.INSATANCE.SetLandMetadata(md, () =>
+                        {
+                            SetState(State.BROWSER_CONNECTION);
+                            BrowserConnector.INSTANCE.SetNft(land.id, true,
+                                () => StartCoroutine(ReloadLands()),
+                                () => SetState(State.PLAYING));
+                        }, (() =>
+                        {
+                            
+                        })));
+                    }));
+                }));
+            }
+            else
+            {
+                SetState(State.BROWSER_CONNECTION);
+                BrowserConnector.INSTANCE.SetNft(land.id, false,
+                    () => StartCoroutine(ReloadLands()),
+                    () => SetState(State.PLAYING));   
+            }
         }
 
         public void ShowUserProfile()

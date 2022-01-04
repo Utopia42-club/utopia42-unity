@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Text;
 using Newtonsoft.Json;
 using src.Model;
 using src.Service.Ethereum;
@@ -36,6 +37,39 @@ namespace src.Service
                 webRequest.SetRequestHeader("Accept", "*/*");
 
                 yield return ExecuteRequest<Profile>(consumer, failed, webRequest);
+            }
+        }
+        
+        
+        public IEnumerator SetLandMetadata(LandMetadata landMetadata, Action success, Action failed)
+        {
+            // string url = Utils.Constants.ApiURL + "/land_metadata/set";
+            const string url = "http://localhost:8080" + "/land_metadata/set";
+            var data = JsonConvert.SerializeObject(landMetadata);
+            var bodyRaw = Encoding.UTF8.GetBytes(data);
+
+            using (UnityWebRequest webRequest = new UnityWebRequest(url, "POST"))
+            {
+                webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                webRequest.downloadHandler = new DownloadHandlerBuffer();
+                webRequest.SetRequestHeader("Content-Type", "application/json");
+                
+                yield return webRequest.SendWebRequest();
+                switch (webRequest.result)
+                {
+                    case UnityWebRequest.Result.ConnectionError:
+                    case UnityWebRequest.Result.DataProcessingError:
+                        Debug.LogError(string.Format("Request for {0} caused Error: {1}", webRequest.url, webRequest.error));
+                        failed();
+                        break;
+                    case UnityWebRequest.Result.ProtocolError:
+                        Debug.LogError(string.Format("Request for {0} caused HTTP Error: {1}", webRequest.url, webRequest.error));
+                        failed();
+                        break;
+                    case UnityWebRequest.Result.Success:
+                        success();
+                        break;   
+                }
             }
         }
 

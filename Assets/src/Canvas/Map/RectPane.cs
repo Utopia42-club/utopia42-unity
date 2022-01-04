@@ -230,5 +230,15 @@ namespace src.Canvas.Map
         {
             return drawnLandIndicators.Count != 0;
         }
+
+        public void HidePlayerPosIndicator()
+        {
+            playerPosIndicator.gameObject.SetActive(false);
+        }
+        
+        public void ShowPlayerPosIndicator()
+        {
+            playerPosIndicator.gameObject.SetActive(true);
+        }
     }
 }
