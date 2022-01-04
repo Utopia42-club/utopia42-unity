@@ -82,6 +82,7 @@ namespace src.Service.Ethereum
             var request =
                 new QueryUnityRequest<GetLandsByIdsFunction, GetLandsByIdsOutputDTO>(network.provider,
                     network.contractAddress);
+            //TODO add exception handling
             yield return request.Query(new GetLandsByIdsFunction() {Ids = ids}, network.contractAddress);
             consumer(MapLands(request.Result.Lands));
         }
