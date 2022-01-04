@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using src.Canvas;
+using src.Canvas.Map;
 using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
@@ -214,10 +215,17 @@ namespace src
                 () => SetState(State.PLAYING));
         }
 
-        public void SetNFT(long landId, bool value)
+        public void SetNFT(Land land, bool convertToNft)
         {
+            if (convertToNft)
+            {
+                StartCoroutine(GameObject.Find("Map").GetComponent<Map>().TakeNftScreenShot(land, screenshot =>
+                {
+                    // TODO: upload
+                }));
+            }
             SetState(State.BROWSER_CONNECTION);
-            BrowserConnector.INSTANCE.SetNft(landId, value,
+            BrowserConnector.INSTANCE.SetNft(land.id, convertToNft,
                 () => StartCoroutine(ReloadLands()),
                 () => SetState(State.PLAYING));
         }

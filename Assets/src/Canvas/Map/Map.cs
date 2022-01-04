@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using src.Model;
 using UnityEngine;
 
 namespace src.Canvas.Map
@@ -20,6 +22,20 @@ namespace src.Canvas.Map
                 }
             );
         }
+        
+        public IEnumerator TakeNftScreenShot(Land land, Action<byte[]> consumer)
+        {
+            
+            var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
+            mapInputManager.PrepareForScreenShot(land);
+            landProfileDialog.gameObject.SetActive(false);
+            yield return null;
+            
+            var screenShot = ScreenCapture.CaptureScreenshotAsTexture();
+            consumer.Invoke(screenShot.EncodeToPNG());
+            mapInputManager.ScreenShotDone();
+        }
+        
 
         public bool IsLandBuyDialogOpen()
         {
