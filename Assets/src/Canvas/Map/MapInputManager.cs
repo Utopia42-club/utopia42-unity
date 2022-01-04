@@ -203,6 +203,7 @@ namespace src.Canvas.Map
             vertical.gameObject.SetActive(false);
             horizontal.gameObject.SetActive(false);
             positionText.gameObject.SetActive(false);
+            landRect.HidePlayerPosIndicator();
         }
         
         public void ScreenShotDone()
@@ -210,6 +211,7 @@ namespace src.Canvas.Map
             vertical.gameObject.SetActive(true);
             horizontal.gameObject.SetActive(true);
             positionText.gameObject.SetActive(true);
+            landRect.ShowPlayerPosIndicator();
         }
         
         private void MoveToLandCenter(Land land)
