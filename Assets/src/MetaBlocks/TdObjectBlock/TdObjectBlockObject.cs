@@ -16,6 +16,8 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockObject : MetaBlockObject
     {
+        public const ulong DownloadLimitMb = 1;
+        
         private GameObject tdObjectContainer;
         private GameObject tdObject;
 
@@ -375,10 +377,21 @@ namespace src.MetaBlocks.TdObjectBlock
         private IEnumerator LoadZip(string url, Action<GameObject> consumer)
         {
             using var webRequest = UnityWebRequest.Get(url);
-            yield return webRequest.SendWebRequest();
+            var op = webRequest.SendWebRequest();
+
+            while (!op.isDone)
+            {
+                if(webRequest.downloadedBytes > DownloadLimitMb * 1000000)
+                    break;
+                yield return null;
+            }
 
             switch (webRequest.result)
             {
+                case UnityWebRequest.Result.InProgress:
+                    DestroyOnFailure();
+                    UpdateStateAndIcon(StateMsg.SizeLimit);
+                    break;
                 case UnityWebRequest.Result.ConnectionError:
                 case UnityWebRequest.Result.DataProcessingError:
                     Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
@@ -404,7 +417,6 @@ namespace src.MetaBlocks.TdObjectBlock
                             UpdateStateAndIcon(StateMsg.InvalidData);
                         }
                     }
-
                     break;
             }
         }

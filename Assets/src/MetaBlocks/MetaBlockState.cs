@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
+using src.MetaBlocks.TdObjectBlock;
 
 namespace src.MetaBlocks
 {
@@ -15,6 +13,7 @@ namespace src.MetaBlocks
                 StateMsg.InvalidData => InvalidObjDataMsg(type),
                 StateMsg.OutOfBound => OutOfBoundMsg(type),
                 StateMsg.ConnectionError => ConnectionErrorMsg(type),
+                StateMsg.SizeLimit => SizeLimitMsg(type),
                 _ => "" // TODO
             };
         }
@@ -43,6 +42,11 @@ namespace src.MetaBlocks
         {
             return "Connection Error";
         }
+        
+        private static string SizeLimitMsg(string type)
+        {
+            return $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1): "")} exceeds the size limit of {TdObjectBlockObject.DownloadLimitMb} MB";
+        }
     }
 
     public enum StateMsg
@@ -52,6 +56,7 @@ namespace src.MetaBlocks
         InvalidData,
         OutOfBound,
         ConnectionError,
-        Ok
+        Ok,
+        SizeLimit
     }
 }
