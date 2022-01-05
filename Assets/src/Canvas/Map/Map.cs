@@ -29,13 +29,20 @@ namespace src.Canvas.Map
             var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
             mapInputManager.PrepareForScreenShot(land);
             landProfileDialog.gameObject.SetActive(false);
-            yield return null;
+            yield return new WaitForEndOfFrame();
             
-            var screenShot = ScreenCapture.CaptureScreenshotAsTexture();
-            consumer.Invoke(screenShot.EncodeToPNG());
+            // var screenshot = ScreenCapture.CaptureScreenshotAsTexture();
+            var width = Screen.width;
+            var height = Screen.height;
+            var screenshot = new Texture2D(width, height, TextureFormat.ARGB32, false);
+            screenshot.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            screenshot.Apply();
+            yield return null;
+
+            consumer.Invoke(screenshot.EncodeToPNG());
             mapInputManager.ScreenShotDone();
         }
-        
+
 
         public bool IsLandBuyDialogOpen()
         {
