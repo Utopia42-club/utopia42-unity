@@ -83,14 +83,14 @@ namespace src.Service
             yield break;
         }
 
-        public IEnumerator UploadScreenShot(byte[] screenshot, Action<string> consumer)
+        public IEnumerator UploadScreenShot(byte[] screenshot, Action<string> consumer, Action failed)
         {
             var result = new Dictionary<long, string>();
             string url = SERVER_URL + "/add?stream-channels=true&progress=false";
-            
+
             var form = new List<IMultipartFormSection>();
             form.Add(new MultipartFormDataSection("image", screenshot, "image/png"));
-            
+
             using (UnityWebRequest webRequest = UnityWebRequest.Post(url, form))
             {
                 yield return webRequest.SendWebRequest();
@@ -100,9 +100,11 @@ namespace src.Service
                     case UnityWebRequest.Result.ConnectionError:
                     case UnityWebRequest.Result.DataProcessingError:
                         Debug.LogError(string.Format("Posing data for {0} caused Error: {1}", url, webRequest.error));
+                        failed.Invoke();
                         break;
                     case UnityWebRequest.Result.ProtocolError:
                         Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
+                        failed.Invoke();
                         break;
                     case UnityWebRequest.Result.Success:
                         var response = JsonConvert.DeserializeObject<IpfsResponse>(webRequest.downloadHandler.text);

@@ -8,6 +8,7 @@ using src.Model;
 using src.Service;
 using src.Service.Ethereum;
 using src.Utils;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -221,20 +222,21 @@ namespace src
             {
                 StartCoroutine(GameObject.Find("Map").GetComponent<Map>().TakeNftScreenShot(land, screenshot =>
                 {
-                    StartCoroutine(IpfsClient.INSATANCE.UploadScreenShot(screenshot, ipfsKey =>
-                    {
-                        var md = LandMetadata.CreateLandMetadata(land, ipfsKey);
-                        StartCoroutine(RestClient.INSATANCE.SetLandMetadata(md, () =>
+                    StartCoroutine(IpfsClient.INSATANCE.UploadScreenShot(screenshot,
+                        ipfsKey => SetLandMetadata(ipfsKey, land.id), () =>
                         {
-                            SetState(State.BROWSER_CONNECTION);
-                            BrowserConnector.INSTANCE.SetNft(land.id, true,
-                                () => StartCoroutine(ReloadLands()),
-                                () => SetState(State.PLAYING));
-                        }, (() =>
-                        {
-                            
-                        })));
-                    }));
+                            var dialog = INSTANCE.OpenDialog();
+                            dialog
+                                .WithTitle("Failed to upload screenshot")
+                                .WithContent("Dialog/TextContent")
+                                .WithAction("OK", () =>
+                                {
+                                    INSTANCE.CloseDialog(dialog);
+                                    SetState(State.PLAYING);
+                                });
+                            dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
+                                "Conversion to NFT cancelled. Click OK to continue.";
+                        }));
                 }));
             }
             else
@@ -242,8 +244,32 @@ namespace src
                 SetState(State.BROWSER_CONNECTION);
                 BrowserConnector.INSTANCE.SetNft(land.id, false,
                     () => StartCoroutine(ReloadLands()),
-                    () => SetState(State.PLAYING));   
+                    () => SetState(State.PLAYING));
             }
+        }
+
+        private void SetLandMetadata(string key, long landId)
+        {
+            StartCoroutine(RestClient.INSATANCE.SetLandMetadata(new LandMetadata(landId, key), () =>
+            {
+                SetState(State.BROWSER_CONNECTION);
+                BrowserConnector.INSTANCE.SetNft(landId, true,
+                    () => StartCoroutine(ReloadLands()),
+                    () => SetState(State.PLAYING));
+            }, () =>
+            {
+                var dialog = INSTANCE.OpenDialog();
+                dialog
+                    .WithTitle("Failed to update land metadata")
+                    .WithContent("Dialog/TextContent")
+                    .WithAction("OK", () =>
+                    {
+                        INSTANCE.CloseDialog(dialog);
+                        SetState(State.PLAYING);
+                    });
+                dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
+                    "Conversion to NFT cancelled. Click OK to continue.";
+            }));
         }
 
         public void ShowUserProfile()
@@ -266,11 +292,12 @@ namespace src
             {
                 SetState(State.MOVING_OBJECT);
                 tdObjectBlockObject.SetToMovingState();
-            } else if (GetState() == State.MOVING_OBJECT)
+            }
+            else if (GetState() == State.MOVING_OBJECT)
             {
                 SetState(State.PLAYING);
                 tdObjectBlockObject.ExitMovingState();
-            } 
+            }
         }
 
         public void ShowProfile(Profile profile)
