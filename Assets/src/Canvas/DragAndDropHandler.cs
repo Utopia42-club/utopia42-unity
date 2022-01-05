@@ -70,7 +70,7 @@ namespace src.Canvas
                     ItemStack oldSlot = clickedSlot.itemSlot.HandOverStack();
 
                     clickedSlot.itemSlot.SetStack(oldCursorSlot);
-                    cursorSlot.itemSlot.SetStack(oldSlot);
+                    // cursorSlot.itemSlot.SetStack(oldSlot);
                 }
             }
         }
