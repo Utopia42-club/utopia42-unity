@@ -16,7 +16,7 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockObject : MetaBlockObject
     {
-        public const ulong DownloadLimitMb = 1;
+        public const ulong DownloadLimitMb = 10;
         
         private GameObject tdObjectContainer;
         private GameObject tdObject;
