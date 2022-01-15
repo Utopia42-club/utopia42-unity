@@ -1132,7 +1132,6 @@ GameObject:
   m_Component:
   - component: {fileID: 144663239}
   - component: {fileID: 144663240}
-  - component: {fileID: 144663241}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1172,30 +1171,11 @@ MonoBehaviour:
   walkSpeed: 6
   sprintSpeed: 12
   jumpHeight: 5
-  playerWidth: 0.15
-  boundsTolerance: 0.1
   highlightBlock: {fileID: 960974167}
   placeBlock: {fileID: 865122078}
   castStep: 0.1
   reach: 8
   selectedBlockId: 1
---- !u!114 &144663241
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 144663238}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90cfaa6c63338f446a6beced2ab82734, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  vertical: {fileID: 2015532234}
-  horizontal: {fileID: 721501780}
-  positionText: {fileID: 1840768721}
-  landRect: {fileID: 1022591947}
-  map: {fileID: 218622210}
 --- !u!1 &165036037
 GameObject:
   m_ObjectHideFlags: 0

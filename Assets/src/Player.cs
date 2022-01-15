@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
+using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -38,6 +39,9 @@ namespace src
         private MetaBlock focusedMetaBlock;
         private Voxels.Face focusedMetaFace;
         private Rigidbody rb;
+        private RaycastHit raycastHit;
+        private TdObjectBlockObject hitTdObjectBlock;
+        private Collider hitCollider;
 
         public float castStep = 0.1f;
         public float reach = 8f;
@@ -81,7 +85,12 @@ namespace src
         private void FixedUpdate()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
+            UpdatePlayerPosition();
+            DetectObjectSelection();
+        }
 
+        private void UpdatePlayerPosition()
+        {
             if (floating && !jumpRequest)
             {
                 var rbVelocity = rb.velocity;
@@ -112,11 +121,39 @@ namespace src
             rb.MovePosition(nextPosition);
         }
 
+        private void DetectObjectSelection()
+        {
+            if (Physics.Raycast(cam.position, cam.forward, out raycastHit))
+            {
+                if (hitCollider == raycastHit.collider) return;
+
+                hitCollider = raycastHit.collider;
+                var tdObjectBlock = hitCollider.transform.parent?.parent?.GetComponent<TdObjectBlockObject>();
+                if (tdObjectBlock != null)
+                {
+                    if (hitTdObjectBlock != null)
+                        hitTdObjectBlock.UnFocus();
+
+                    tdObjectBlock.Focus(null);
+                    hitTdObjectBlock = tdObjectBlock;
+                    return;
+                }
+            }
+
+            if (hitTdObjectBlock != null)
+            {
+                hitTdObjectBlock.UnFocus();
+                hitTdObjectBlock = null;
+                hitCollider = null;
+            }
+        }
+
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetPlayerInputs();
             PlaceCursorBlocks();
+
             rb.useGravity = !floating;
 
             if (lastChunk == null)

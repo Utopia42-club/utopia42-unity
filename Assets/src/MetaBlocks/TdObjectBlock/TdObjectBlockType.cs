@@ -2,7 +2,8 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockType : MetaBlockType
     {
-        public TdObjectBlockType(byte id) : base(id, "3d_object", typeof(TdObjectBlockObject), typeof(TdObjectBlockProperties))
+        public const string Name = "3d_object";
+        public TdObjectBlockType(byte id) : base(id, Name, typeof(TdObjectBlockObject), typeof(TdObjectBlockProperties))
         {
         }
     }

@@ -69,7 +69,7 @@ namespace src.Canvas.Map
 
             if (Input.GetMouseButtonDown(1))
                 GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
-            
+
             HandleKeyboardInput();
             
             SetLinesPos(mousePosInt);
