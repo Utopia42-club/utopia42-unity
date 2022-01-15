@@ -12,28 +12,22 @@ namespace src
     {
         public static readonly Vector3Int viewDistance = new Vector3Int(5, 5, 5);
 
-        private bool grounded;
         private bool sprinting;
 
         public Transform cam;
         public World world;
 
-        public float walkSpeed = 4f;
-        public float sprintSpeed = 8f;
-        public float jumpForce = 8f;
-        public float gravity = -9.8f;
-
-        public float playerWidth = 0.15f;
-        public float boundsTolerance = 0.1f;
+        public float walkSpeed = 6f;
+        public float sprintSpeed = 12f;
+        public float jumpHeight = 5;
 
         private float horizontal;
         private float vertical;
         private Vector3 velocity;
-        private float verticalMomentum = 0;
-        private bool jumpRequest;
-        private bool floating = false;
         private Land highlightLand;
         private Land placeLand;
+        private bool jumpRequest;
+        private bool floating = true;
 
         private Vector3Int lastChunk;
 
@@ -43,6 +37,7 @@ namespace src
         public Transform placeBlock;
         private MetaBlock focusedMetaBlock;
         private Voxels.Face focusedMetaFace;
+        private Rigidbody rb;
 
         public float castStep = 0.1f;
         public float reach = 8f;
@@ -53,12 +48,14 @@ namespace src
         private void Start()
         {
             gameObject.AddComponent<CapsuleCollider>();
-            var rb = gameObject.AddComponent<Rigidbody>();
+            rb = gameObject.AddComponent<Rigidbody>();
             rb.isKinematic = false;
-            rb.useGravity = false;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX |
-                             RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezeRotationY;
+            rb.constraints = RigidbodyConstraints.FreezeRotation;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.useGravity = false; // TODO: set true after lands loading finishes (set floating to false)
+            rb.drag = 0;
+            rb.angularDrag = 0;
             Snack.INSTANCE.ShowObject("Owner", null);
         }
 
@@ -84,11 +81,35 @@ namespace src
         private void FixedUpdate()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            CalculateVelocity();
-            if (jumpRequest)
-                Jump();
 
-            transform.Translate(velocity, Space.World);
+            if (floating && !jumpRequest)
+            {
+                var rbVelocity = rb.velocity;
+                rbVelocity.y = 0;
+                rb.velocity = rbVelocity;
+            }
+
+            if (sprinting)
+                velocity = ((transform.forward * vertical) + (transform.right * horizontal)) * Time.fixedDeltaTime *
+                           sprintSpeed;
+            else
+                velocity = ((transform.forward * vertical) + (transform.right * horizontal)) * Time.fixedDeltaTime *
+                           walkSpeed;
+
+            var nextPosition = rb.position + velocity;
+            if (jumpRequest)
+            {
+                if (!floating)
+                {
+                    rb.AddForce(Vector3.up * Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y),
+                        ForceMode.VelocityChange);
+                    jumpRequest = false;
+                }
+                else
+                    nextPosition += Vector3.up * jumpHeight * Time.fixedDeltaTime;
+            }
+
+            rb.MovePosition(nextPosition);
         }
 
         private void Update()
@@ -96,6 +117,7 @@ namespace src
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetPlayerInputs();
             PlaceCursorBlocks();
+            rb.useGravity = !floating;
 
             if (lastChunk == null)
             {
@@ -113,43 +135,6 @@ namespace src
             }
         }
 
-        void Jump()
-        {
-            verticalMomentum = jumpForce;
-            grounded = false;
-            jumpRequest = false;
-        }
-
-        private void CalculateVelocity()
-        {
-            // Affect vertical momentum with gravity.
-            if (!floating && verticalMomentum > gravity)
-                verticalMomentum += Time.fixedDeltaTime * gravity;
-
-            // if we're sprinting, use the sprint multiplier.
-            if (sprinting)
-                velocity = ((transform.forward * vertical) + (transform.right * horizontal)) * Time.fixedDeltaTime *
-                           sprintSpeed;
-            else
-                velocity = ((transform.forward * vertical) + (transform.right * horizontal)) * Time.fixedDeltaTime *
-                           walkSpeed;
-
-            // Apply vertical momentum (falling/jumping).
-            velocity += Vector3.up * verticalMomentum * Time.fixedDeltaTime;
-            if (floating)
-                verticalMomentum = 0;
-
-            if ((velocity.z > 0 && front) || (velocity.z < 0 && back))
-                velocity.z = 0;
-            if ((velocity.x > 0 && right) || (velocity.x < 0 && left))
-                velocity.x = 0;
-
-            if (velocity.y < 0)
-                velocity.y = ComputeDownSpeed(velocity.y);
-            else if (velocity.y > 0)
-                velocity.y = ComputeUpSpeed(velocity.y);
-        }
-
         private void GetPlayerInputs()
         {
             horizontal = Input.GetAxis("Horizontal");
@@ -160,11 +145,14 @@ namespace src
             if (Input.GetButtonUp("Sprint"))
                 sprinting = false;
 
+
+            if (Input.GetButtonDown("Jump"))
+                jumpRequest = true;
+            if (Input.GetButtonUp("Jump"))
+                jumpRequest = false;
+
             if (Input.GetButtonDown("Toggle Floating"))
                 floating = !floating;
-            //if (grounded && Input.GetButtonDown("Jump"))
-            if (Input.GetButton("Jump"))
-                jumpRequest = true;
 
             if (highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))
             {
@@ -214,7 +202,7 @@ namespace src
                     highlightBlock.gameObject.SetActive(CanEdit(posint, out highlightLand));
 
                     if (typeof(MetaBlockType).IsAssignableFrom(
-                        VoxelService.INSTANCE.GetBlockType(selectedBlockId).GetType()))
+                            VoxelService.INSTANCE.GetBlockType(selectedBlockId).GetType()))
                     {
                         if (chunk.GetMetaAt(vp) == null)
                         {
@@ -329,7 +317,7 @@ namespace src
             return land != null && !land.isNft;
         }
 
-        public Land FindOwnedLand(Vector3Int position)
+        private Land FindOwnedLand(Vector3Int position)
         {
             if (highlightLand != null && highlightLand.Contains(ref position))
                 return highlightLand;
@@ -341,65 +329,7 @@ namespace src
             return null;
         }
 
-        private float ComputeDownSpeed(float downSpeed)
-        {
-            if (grounded = CollidesXz(new Vector3(0, downSpeed, 0)))
-            {
-                return Mathf.Min(Mathf.FloorToInt(transform.position.y + 0.01f) - transform.position.y, 0);
-            }
-
-            return downSpeed;
-        }
-
-        private float ComputeUpSpeed(float upSpeed)
-        {
-            if (CollidesXz(new Vector3(0, upSpeed + 0.05f, 0)))
-                return 0;
-            return upSpeed;
-        }
-
-        public bool front
-        {
-            get { return CollidesXz(new Vector3(0, 0, +playerWidth)); }
-        }
-
-        public bool back
-        {
-            get { return CollidesXz(new Vector3(0, 0, -playerWidth)); }
-        }
-
-        public bool left
-        {
-            get { return CollidesXz(new Vector3(-playerWidth, 0, 0)); }
-        }
-
-        public bool right
-        {
-            get { return CollidesXz(new Vector3(+playerWidth, 0, 0)); }
-        }
-
-        private bool CollidesXz(Vector3 offset)
-        {
-            var center = transform.position + offset;
-            float[] dys = new float[] {0.01f, 0.95f, 1.95f};
-            int[] coef = new int[] {-1, 0, 1};
-            foreach (int xcoef in coef)
-            {
-                foreach (int zcoef in coef)
-                {
-                    foreach (float dy in dys)
-                    {
-                        var delta = new Vector3(xcoef * playerWidth, dy, zcoef * playerWidth); //FIXME ?
-                        if (world.IsSolidAt(Vectors.FloorToInt(center + delta)))
-                            return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public VoxelPosition ComputePosition()
+        private VoxelPosition ComputePosition()
         {
             return new VoxelPosition(transform.position);
         }
