@@ -28,7 +28,7 @@ namespace src
         private Land highlightLand;
         private Land placeLand;
         private bool jumpRequest;
-        private bool floating = true;
+        private bool floating = false;
 
         private Vector3Int lastChunk;
 
@@ -51,13 +51,13 @@ namespace src
 
         private void Start()
         {
-            gameObject.AddComponent<CapsuleCollider>();
+            gameObject.AddComponent<BoxCollider>();
             rb = gameObject.AddComponent<Rigidbody>();
             rb.isKinematic = false;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
             rb.constraints = RigidbodyConstraints.FreezeRotation;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
-            rb.useGravity = false; // TODO: set true after lands loading finishes (set floating to false)
+            rb.useGravity = false;
             rb.drag = 0;
             rb.angularDrag = 0;
             Snack.INSTANCE.ShowObject("Owner", null);

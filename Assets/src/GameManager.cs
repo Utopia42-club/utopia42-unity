@@ -77,6 +77,8 @@ namespace src
 
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
+            var player = Player.INSTANCE;
+            player.GetComponent<Rigidbody>().useGravity = false;
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Creating the world\n0%");
             yield return null;
@@ -92,6 +94,7 @@ namespace src
 
             worldInited = true;
             SetState(State.PLAYING);
+            player.GetComponent<Rigidbody>().useGravity = true;
         }
 
         private Vector3 FindStartingY(Vector3 pos)

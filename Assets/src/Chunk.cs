@@ -176,6 +176,7 @@ namespace src
             mesh.RecalculateNormals();
 
             meshFilter.mesh = mesh;
+            meshCollider.sharedMesh = null;
             meshCollider.sharedMesh = mesh;
         }
 
