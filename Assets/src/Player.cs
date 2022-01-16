@@ -56,7 +56,7 @@ namespace src
             rb.isKinematic = false;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
             rb.constraints = RigidbodyConstraints.FreezeRotation;
-            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            // rb.interpolation = RigidbodyInterpolation.Interpolate;
             rb.useGravity = false;
             rb.drag = 0;
             rb.angularDrag = 0;
