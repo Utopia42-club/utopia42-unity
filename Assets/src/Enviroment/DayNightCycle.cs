@@ -2,8 +2,10 @@ using UnityEngine;
 
 public class DayNightCycle : MonoBehaviour
 {
-    public float minTime = 0.05f;
-    public float maxTime = 0.9f;
+    private const float MinTime = 0f;
+    private const float MaxTime = 1f;
+
+    public float rotationOffset = 0.1f; 
 
     [Range(0.0f, 1.0f)] public float time;
     public float fullDayLength; //seconds
@@ -33,12 +35,12 @@ public class DayNightCycle : MonoBehaviour
         // update time
         time += timeRate * Time.deltaTime;
 
-        if (time >= maxTime)
-            time = minTime;
+        if (time >= MaxTime)
+            time = MinTime;
 
         // light rotation
-        sun.transform.eulerAngles = (time - 0.25f) * noon * 4.0f;
-        moon.transform.eulerAngles = (time - 0.75f) * noon * 4.0f;
+        sun.transform.eulerAngles = (time - rotationOffset) * noon * 4.0f;
+        moon.transform.eulerAngles = (time - (1- rotationOffset)) * noon * 4.0f;
 
         // light intensity
         sun.intensity = sunIntensity.Evaluate(time);
