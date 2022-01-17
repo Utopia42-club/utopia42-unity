@@ -21,10 +21,11 @@ namespace src
         public float walkSpeed = 6f;
         public float sprintSpeed = 12f;
         public float jumpHeight = 5;
+        public float gravity = -9.8f;
 
         private float horizontal;
         private float vertical;
-        private Vector3 velocity;
+        private Vector3 velocity = Vector3.zero;
         private Land highlightLand;
         private Land placeLand;
         private bool jumpRequest;
@@ -38,10 +39,10 @@ namespace src
         public Transform placeBlock;
         private MetaBlock focusedMetaBlock;
         private Voxels.Face focusedMetaFace;
-        private Rigidbody rb;
         private RaycastHit raycastHit;
         private MetaSelectable selectedMeta;
         private Collider hitCollider;
+        private CharacterController controller;
 
         public float castStep = 0.1f;
         public float reach = 8f;
@@ -51,14 +52,7 @@ namespace src
 
         private void Start()
         {
-            gameObject.AddComponent<BoxCollider>();
-            rb = gameObject.AddComponent<Rigidbody>();
-            rb.isKinematic = false;
-            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-            rb.constraints = RigidbodyConstraints.FreezeRotation;
-            rb.useGravity = false;
-            rb.drag = 0;
-            rb.angularDrag = 0;
+            controller = GetComponent<CharacterController>();
             Snack.INSTANCE.ShowObject("Owner", null);
         }
 
@@ -90,34 +84,24 @@ namespace src
 
         private void UpdatePlayerPosition()
         {
-            if (floating && !jumpRequest)
-            {
-                var rbVelocity = rb.velocity;
-                rbVelocity.y = 0;
-                rb.velocity = rbVelocity;
-            }
+            var moveDirection = ((transform.forward * vertical) + (transform.right * horizontal));
+            controller.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
 
-            if (sprinting)
-                velocity = ((transform.forward * vertical) + (transform.right * horizontal)) * Time.fixedDeltaTime *
-                           sprintSpeed;
-            else
-                velocity = ((transform.forward * vertical) + (transform.right * horizontal)) * Time.fixedDeltaTime *
-                           walkSpeed;
 
-            var nextPosition = rb.position + velocity;
+            if (controller.isGrounded && velocity.y < 0 || floating)
+                velocity.y = 0f;
+
             if (jumpRequest)
             {
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
                 if (!floating)
-                {
-                    rb.AddForce(Vector3.up * Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y),
-                        ForceMode.VelocityChange);
                     jumpRequest = false;
-                }
-                else
-                    nextPosition += Vector3.up * jumpHeight * Time.fixedDeltaTime;
             }
 
-            rb.MovePosition(nextPosition);
+            if (!floating && !controller.isGrounded)
+                velocity.y += gravity * Time.fixedDeltaTime;
+
+            controller.Move(velocity * Time.fixedDeltaTime);
         }
 
         private void DetectObjectSelection()
@@ -137,6 +121,7 @@ namespace src
                     return;
                 }
             }
+
             if (selectedMeta == null) return;
             selectedMeta.UnSelect();
             selectedMeta = null;
@@ -148,8 +133,6 @@ namespace src
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetPlayerInputs();
             PlaceCursorBlocks();
-
-            rb.useGravity = !floating;
 
             if (lastChunk == null)
             {
