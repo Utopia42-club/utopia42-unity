@@ -256,7 +256,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             var bc = getBoxCollider(tdObject);
             var land = GetBlock().land;
-            if (land != null && !IsInLand(bc))
+            if (land != null && !InLand(bc))
             {
                 DestroyOnFailure();
                 UpdateStateAndIcon(StateMsg.OutOfBound);
@@ -281,7 +281,12 @@ namespace src.MetaBlocks.TdObjectBlock
         private BoxCollider getBoxCollider(GameObject tdObject)
         {
             var bc = tdObject.GetComponent<BoxCollider>();
-            if (bc == null) bc = tdObject.AddComponent<BoxCollider>();
+            if (bc == null)
+            {
+                bc = tdObject.AddComponent<BoxCollider>();
+                var tdObjectSelectable = tdObject.AddComponent<TdObjectSelectable>();
+                tdObjectSelectable.Initialize(this);
+            }
             bc.center = GetObjectCenter(tdObject, false);
             bc.size = GetObjectSize(tdObject, bc.center, false);
             return bc;

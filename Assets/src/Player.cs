@@ -40,7 +40,7 @@ namespace src
         private Voxels.Face focusedMetaFace;
         private Rigidbody rb;
         private RaycastHit raycastHit;
-        private TdObjectBlockObject hitTdObjectBlock;
+        private MetaSelectable selectedMeta;
         private Collider hitCollider;
 
         public float castStep = 0.1f;
@@ -54,9 +54,8 @@ namespace src
             gameObject.AddComponent<BoxCollider>();
             rb = gameObject.AddComponent<Rigidbody>();
             rb.isKinematic = false;
-            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.constraints = RigidbodyConstraints.FreezeRotation;
-            // rb.interpolation = RigidbodyInterpolation.Interpolate;
             rb.useGravity = false;
             rb.drag = 0;
             rb.angularDrag = 0;
@@ -126,26 +125,22 @@ namespace src
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit))
             {
                 if (hitCollider == raycastHit.collider) return;
-
                 hitCollider = raycastHit.collider;
-                var tdObjectBlock = hitCollider.transform.parent?.parent?.GetComponent<TdObjectBlockObject>();
-                if (tdObjectBlock != null)
+                var metaSelectable = hitCollider.gameObject.GetComponent<MetaSelectable>();
+                if (metaSelectable != null)
                 {
-                    if (hitTdObjectBlock != null)
-                        hitTdObjectBlock.UnFocus();
+                    if (selectedMeta != null)
+                        selectedMeta.UnSelect();
 
-                    tdObjectBlock.Focus(null);
-                    hitTdObjectBlock = tdObjectBlock;
+                    metaSelectable.Select();
+                    selectedMeta = metaSelectable;
                     return;
                 }
             }
-
-            if (hitTdObjectBlock != null)
-            {
-                hitTdObjectBlock.UnFocus();
-                hitTdObjectBlock = null;
-                hitCollider = null;
-            }
+            if (selectedMeta == null) return;
+            selectedMeta.UnSelect();
+            selectedMeta = null;
+            hitCollider = null;
         }
 
         private void Update()

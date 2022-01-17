@@ -15,7 +15,8 @@ namespace src.MetaBlocks.ImageBlock
         private bool canEdit;
         private bool ready = false;
 
-        private readonly StateMsg[] stateMsg = {StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok};
+        private readonly StateMsg[] stateMsg =
+            {StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok};
 
         private void Start()
         {
@@ -43,7 +44,7 @@ namespace src.MetaBlocks.ImageBlock
         {
             if (!canEdit) return;
             if (snackItem != null) snackItem.Remove();
-            
+
             snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face.index), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
@@ -63,7 +64,7 @@ namespace src.MetaBlocks.ImageBlock
             lines.Add("Press Z for details");
             lines.Add("Press T to toggle preview");
             lines.Add("Press Del to delete");
-            if(stateMsg[faceIndex] != StateMsg.Ok)
+            if (stateMsg[faceIndex] != StateMsg.Ok)
                 lines.Add($"\n{MetaBlockState.ToString(stateMsg[faceIndex], "image")}");
             return lines;
         }
@@ -83,7 +84,7 @@ namespace src.MetaBlocks.ImageBlock
                 DestroyImmediate(img);
             images.Clear();
 
-            MediaBlockProperties properties = (MediaBlockProperties)GetBlock().GetProps();
+            MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
             if (properties != null)
             {
                 AddFace(Voxels.Face.BACK, properties.back);
@@ -98,19 +99,24 @@ namespace src.MetaBlocks.ImageBlock
         private void AddFace(Voxels.Face face, MediaBlockProperties.FaceProps props)
         {
             if (props == null) return;
+
             var go = new GameObject();
             go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero + ((Vector3)face.direction) * 0.1f;
+            go.transform.localPosition = Vector3.zero + ((Vector3) face.direction) * 0.1f;
             var imgFace = go.AddComponent<ImageFace>();
-            var renderer = imgFace.Initialize(face, props.width, props.height);
-            if (IsInLand(renderer))
+            var meshRenderer = imgFace.Initialize(face, props.width, props.height);
+            if (!InLand(meshRenderer))
             {
-                imgFace.Init(renderer, props.url, this, face.index);
-                images.Add(go);
+                DestroyImmediate(meshRenderer);
+                DestroyImmediate(imgFace);
+                UpdateStateAndIcon(face.index, StateMsg.OutOfBound);
                 return;
             }
-            DestroyImmediate(renderer);
-            UpdateStateAndIcon(face.index, StateMsg.OutOfBound);
+
+            imgFace.Init(meshRenderer, props.url, this, face.index);
+            images.Add(go);
+            var faceSelectable = imgFace.gameObject.AddComponent<FaceSelectable>();
+            faceSelectable.Initialize(this, face);
         }
 
         public void UpdateStateAndIcon(int faceIndex, StateMsg msg)
@@ -120,6 +126,7 @@ namespace src.MetaBlocks.ImageBlock
             {
                 ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines(faceIndex));
             }
+
             UpdateIcon(msg);
         }
 
@@ -130,6 +137,7 @@ namespace src.MetaBlocks.ImageBlock
                 CreateIcon(true);
                 return;
             }
+
             foreach (var msg in stateMsg)
             {
                 if (msg != StateMsg.Loading && msg != StateMsg.Ok)
@@ -138,6 +146,7 @@ namespace src.MetaBlocks.ImageBlock
                     return;
                 }
             }
+
             CreateIcon();
         }
 
