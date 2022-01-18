@@ -29,7 +29,6 @@ namespace src
         private Land placeLand;
         private bool jumpRequest;
         private bool floating = false;
-        private Vector3? lastHitPoint;
 
         private Vector3Int lastChunk;
 
@@ -46,8 +45,6 @@ namespace src
 
         public float castStep = 0.01f;
         public byte selectedBlockId = 1;
-        public byte lastSelectedBlockId = 0;
-
 
         private void Start()
         {
@@ -108,9 +105,6 @@ namespace src
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit))
             {
                 var raycastHitPoint = raycastHit.point;
-                if (raycastHitPoint.Equals(lastHitPoint) && selectedBlockId == lastSelectedBlockId) return;
-                lastSelectedBlockId = selectedBlockId;
-                lastHitPoint = raycastHitPoint;
                 PlaceCursorBlocks(raycastHitPoint);
 
                 if (hitCollider == raycastHit.collider) return;
