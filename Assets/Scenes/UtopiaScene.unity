@@ -1132,6 +1132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 144663239}
   - component: {fileID: 144663240}
+  - component: {fileID: 144663241}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1176,6 +1177,24 @@ MonoBehaviour:
   castStep: 0.1
   reach: 8
   selectedBlockId: 1
+--- !u!143 &144663241
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 144663238}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 1
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &165036037
 GameObject:
   m_ObjectHideFlags: 0
