@@ -325,6 +325,8 @@ namespace src
 
         public void EditProfile()
         {
+            if(LandProfileDialog.INSTANCE.gameObject.activeSelf)
+                LandProfileDialog.INSTANCE.Close();
             SetState(State.BROWSER_CONNECTION);
             BrowserConnector.INSTANCE.EditProfile(() =>
             {
