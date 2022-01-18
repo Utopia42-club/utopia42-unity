@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
-using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -30,6 +29,7 @@ namespace src
         private Land placeLand;
         private bool jumpRequest;
         private bool floating = false;
+        private Vector3? lastHitPoint;
 
         private Vector3Int lastChunk;
 
@@ -44,10 +44,9 @@ namespace src
         private Collider hitCollider;
         private CharacterController controller;
 
-        public float castStep = 0.1f;
-        public float reach = 8f;
-
+        public float castStep = 0.01f;
         public byte selectedBlockId = 1;
+        public byte lastSelectedBlockId = 0;
 
 
         private void Start()
@@ -108,6 +107,12 @@ namespace src
         {
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit))
             {
+                var raycastHitPoint = raycastHit.point;
+                if (raycastHitPoint.Equals(lastHitPoint) && selectedBlockId == lastSelectedBlockId) return;
+                lastSelectedBlockId = selectedBlockId;
+                lastHitPoint = raycastHitPoint;
+                PlaceCursorBlocks(raycastHitPoint);
+
                 if (hitCollider == raycastHit.collider) return;
                 hitCollider = raycastHit.collider;
                 var metaSelectable = hitCollider.gameObject.GetComponent<MetaSelectable>();
@@ -132,7 +137,6 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetPlayerInputs();
-            PlaceCursorBlocks();
 
             if (lastChunk == null)
             {
@@ -173,7 +177,12 @@ namespace src
             {
                 var vp = new VoxelPosition(highlightBlock.position);
                 var chunk = world.GetChunkIfInited(vp.chunk);
-                if (chunk != null) chunk.DeleteVoxel(vp, highlightLand);
+                if (chunk != null)
+                {
+                    chunk.DeleteVoxel(vp, highlightLand);
+                    if (chunk.GetMetaAt(vp) != null)
+                        chunk.DeleteMeta(vp);
+                }
             }
 
             if (placeBlock.gameObject.activeSelf && Input.GetMouseButtonDown(1))
@@ -183,7 +192,7 @@ namespace src
                 if (chunk != null)
                 {
                     var type = VoxelService.INSTANCE.GetBlockType(selectedBlockId);
-                    if (typeof(MetaBlockType).IsAssignableFrom(type.GetType()))
+                    if (type is MetaBlockType)
                         chunk.PutMeta(vp, type, placeLand);
                     else
                         chunk.PutVoxel(vp, type, placeLand);
@@ -191,56 +200,64 @@ namespace src
             }
         }
 
-        private void PlaceCursorBlocks()
+        private void PlaceCursorBlocks(Vector3 blockHitPoint)
         {
-            float distance = castStep;
-            Vector3Int lastPos = Vectors.FloorToInt(cam.position);
+            var epsilon = cam.forward * castStep;
+            epsilon.y = 0;
+            var placeBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
 
-            MetaBlock metaToFocus = null;
-            bool foundSolid = false;
-            while (distance < reach && !foundSolid)
+            epsilon.y = -castStep;
+            var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
+
+            var vp = new VoxelPosition(posInt);
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk == null) return;
+            var metaToFocus = chunk.GetMetaAt(vp);
+            var foundSolid = chunk.GetBlock(vp.local).isSolid;
+
+            var foundSolidAbove = false;
+            if (!foundSolid)
             {
-                Vector3 pos = cam.position + (cam.forward * distance);
-                distance += castStep;
-                Vector3Int posint = Vectors.FloorToInt(pos);
-                var vp = new VoxelPosition(posint);
+                posInt += Vector3Int.up;
+                vp = new VoxelPosition(posInt);
+                chunk = world.GetChunkIfInited(vp.chunk);
+                if (chunk == null) return;
+                metaToFocus = chunk.GetMetaAt(vp);
+                foundSolidAbove = chunk.GetBlock(vp.local).isSolid;
+            }
 
-                var chunk = world.GetChunkIfInited(vp.chunk);
-                if (chunk == null) break;
 
-                if (metaToFocus == null)
-                    metaToFocus = chunk.GetMetaAt(vp);
+            if (foundSolid || foundSolidAbove)
+            {
+                highlightBlock.position = posInt;
+                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
 
-                if (foundSolid = chunk.GetBlock(vp.local).isSolid)
+                if (VoxelService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType)
                 {
-                    highlightBlock.position = posint;
-                    highlightBlock.gameObject.SetActive(CanEdit(posint, out highlightLand));
-
-                    if (typeof(MetaBlockType).IsAssignableFrom(
-                            VoxelService.INSTANCE.GetBlockType(selectedBlockId).GetType()))
+                    if (chunk.GetMetaAt(vp) == null)
                     {
-                        if (chunk.GetMetaAt(vp) == null)
-                        {
-                            placeBlock.position = posint;
-                            placeBlock.gameObject.SetActive(CanEdit(posint, out placeLand));
-                        }
-                        else
-                            placeBlock.gameObject.SetActive(false);
+                        placeBlock.position = posInt;
+                        placeBlock.gameObject.SetActive(CanEdit(posInt, out placeLand));
                     }
                     else
-                    {
-                        var currVox = Vectors.FloorToInt(transform.position);
-                        if (lastPos != currVox && lastPos != currVox + Vector3Int.up)
-                        {
-                            placeBlock.position = lastPos;
-                            placeBlock.gameObject.SetActive(CanEdit(lastPos, out placeLand));
-                        }
-                        else
-                            placeBlock.gameObject.SetActive(false);
-                    }
+                        placeBlock.gameObject.SetActive(false);
                 }
-
-                lastPos = posint;
+                else
+                {
+                    var currVox = Vectors.FloorToInt(transform.position);
+                    if (placeBlockPosInt != currVox && placeBlockPosInt != currVox + Vector3Int.up)
+                    {
+                        placeBlock.position = placeBlockPosInt;
+                        placeBlock.gameObject.SetActive(CanEdit(placeBlockPosInt, out placeLand));
+                    }
+                    else
+                        placeBlock.gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                highlightBlock.gameObject.SetActive(false);
+                placeBlock.gameObject.SetActive(false);
             }
 
             Voxels.Face faceToFocus = null;
@@ -268,12 +285,6 @@ namespace src
                         focusedMetaFace = null;
                     }
                 }
-            }
-
-            if (!foundSolid)
-            {
-                highlightBlock.gameObject.SetActive(false);
-                placeBlock.gameObject.SetActive(false);
             }
         }
 
