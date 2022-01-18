@@ -9,8 +9,9 @@ namespace src.Canvas.Map
 {
     public class LandProfileDialog : MonoBehaviour
     {
+        private static LandProfileDialog instance;
+
         public ActionButton closeButton;
-        public Map map;
         public TextMeshProUGUI nameLabel;
         public TextMeshProUGUI bioLabel;
         public ImageLoader profileImage;
@@ -24,12 +25,12 @@ namespace src.Canvas.Map
         public Button transferButton;
         public Button toggleNftButton;
         public Land land;
-        public Profile profile;
-
         private GameManager manager;
 
         void Start()
         {
+            instance = this;
+            gameObject.SetActive(false);
             manager = GameManager.INSTANCE;
             editButton.GetComponent<ActionButton>().AddListener(() => manager.EditProfile());
             closeButton.AddListener(Close);
@@ -47,14 +48,31 @@ namespace src.Canvas.Map
             GameManager.INSTANCE.SetNFT(land, !land.isNft);
         }
 
-        private void Close()
+        public void Close()
         {
-            map.CloseLandProfileDialogState();
+            nameLabel.SetText("");
+            bioLabel.SetText("");
+            profileImage.SetUrl(null);
+            if (links.Count > 0)
+            {
+                foreach (var link in links) DestroyImmediate(link);
+                links.Clear();
+            }
+
+            gameObject.SetActive(false);
+            manager.SetProfileDialogState(false);
         }
 
+        public void Open(Land land, Profile profile)
+        {
+            gameObject.SetActive(true);
+            SetLand(land);
+            SetProfile(profile);
+            manager.SetProfileDialogState(true);
+        }
+        
         public void SetProfile(Profile profile)
         {
-            this.profile = profile;
             if (profile == null)
             {
                 nameLabel.SetText("No Profile Found!");
@@ -98,16 +116,6 @@ namespace src.Canvas.Map
             }
         }
 
-        public void RequestClose()
-        {
-            nameLabel.SetText("");
-            bioLabel.SetText("");
-            profileImage.SetUrl(null);
-            if (links.Count > 0)
-            {
-                foreach (var link in links) DestroyImmediate(link);
-                links.Clear();
-            }
-        }
+        public static LandProfileDialog INSTANCE => instance;
     }
 }

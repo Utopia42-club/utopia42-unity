@@ -46,7 +46,7 @@ namespace src.Canvas.Map
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (land != null && !rectPane.landProfileDialog.gameObject.activeSelf && (eventData.pressPosition - eventData.position).magnitude < 0.1f)
+            if (land != null && !LandProfileDialog.INSTANCE.gameObject.activeSelf && (eventData.pressPosition - eventData.position).magnitude < 0.1f)
                 SetSelected(true, false);
         }
     }

@@ -17,7 +17,6 @@ namespace src.Canvas.Map
         [SerializeField] public GameObject landPrefab;
 
         public SelectionHandler selectedLand;
-        public LandProfileDialog landProfileDialog;
 
         void Start()
         {
@@ -30,7 +29,6 @@ namespace src.Canvas.Map
                 else
                 {
                     DestroyRects();
-                    landProfileDialog.gameObject.SetActive(false);
                 }
             });
         }
@@ -71,13 +69,10 @@ namespace src.Canvas.Map
                 selectedLand.SetSelected(false, true);
             selectedLand = selectionHandler;
             if (!selectedLand) return;
-            landProfileDialog.gameObject.SetActive(true);
-            StartCoroutine(RestClient.INSATANCE.GetProfile(selectedLand.walletId,
-                (profile) =>
-                {
-                    landProfileDialog.SetProfile(profile);
-                    landProfileDialog.SetLand(selectedLand.land);
-                }, () => { }));
+            var landProfileDialog = LandProfileDialog.INSTANCE;
+            landProfileDialog.Open(selectedLand.land, Profile.LOADING_PROFILE);
+            ProfileLoader.INSTANCE.load(selectedLand.walletId, landProfileDialog.SetProfile,
+                () => landProfileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
         private GameObject Add(long x1, long x2, long y1, long y2, Color color, Land land, string walletId)
@@ -235,7 +230,7 @@ namespace src.Canvas.Map
         {
             playerPosIndicator.gameObject.SetActive(false);
         }
-        
+
         public void ShowPlayerPosIndicator()
         {
             playerPosIndicator.gameObject.SetActive(true);

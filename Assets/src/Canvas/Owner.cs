@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using src.Canvas.Map;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -12,25 +13,26 @@ namespace src.Canvas
     public class Owner : MonoBehaviour
     {
         private static Owner instance;
-        private static readonly Profile NO_PROFILE = new Profile();
-        private Dictionary<string, Profile> profileCache = new Dictionary<string, Profile>();
         public TextMeshProUGUI label;
         public ActionButton openProfileButton;
         [SerializeField] private GameObject view;
         [SerializeField] private ImageLoader profileIcon;
+
         private GameManager manager;
         private Land prevLand;
         private string prevWallet;
         private Profile currentProfile;
         private Land currentLand;
         private string currentWallet;
+        private ProfileLoader profileLoader;
 
         // Start is called before the first frame update
         void Start()
         {
             instance = this;
             manager = GameManager.INSTANCE;
-            openProfileButton.AddListener(() => manager.ShowProfile(currentProfile));
+            profileLoader = ProfileLoader.INSTANCE;
+            openProfileButton.AddListener(() => manager.ShowProfile(currentProfile, null));
         }
 
         // Update is called once per frame
@@ -42,28 +44,25 @@ namespace src.Canvas
                 var changed = IsLandChanged(player.transform.position);
                 if (changed || !view.activeSelf && currentWallet != null)
                     OnOwnerChanged();
+                if (Input.GetButtonDown("Profile") && currentWallet != null &&
+                    !profileLoader.IsWalletLoading(currentWallet))
+                    manager.ShowProfile(currentProfile, currentLand);
             }
             else
-            {
                 view.SetActive(false);
-            }
+        }
 
-            if (manager.GetState() == GameManager.State.PLAYING || manager.GetState() == GameManager.State.PROFILE)
-            {
-                if (Input.GetButtonDown("Profile"))
-                {
-                    var state = manager.GetState();
-                    if (state == GameManager.State.PROFILE)
-                        manager.ReturnToGame();
-                    else if (state == GameManager.State.PLAYING && currentWallet != null)
-                        manager.ShowProfile(currentProfile);
-                }
-            }
+        private void OnOwnerChanged()
+        {
+            if (currentWallet != null)
+                LoadProfile();
+            else
+                SetCurrentProfile(null);
         }
 
         private void SetCurrentProfile(Profile profile)
         {
-            if (profile == NO_PROFILE || profile == null)
+            if (profile == null)
             {
                 profileIcon.SetUrl(null);
                 currentProfile = null;
@@ -78,36 +77,27 @@ namespace src.Canvas
             }
         }
 
-        private void OnOwnerChanged()
+        internal void OnProfileEdited()
         {
-            if (currentWallet != null)
-            {
-                Profile p;
-                if (profileCache.TryGetValue(currentWallet, out p))
-                    SetCurrentProfile(p);
-                else LoadProfile();
-            }
-            else
-                SetCurrentProfile(null);
+            var owner = Settings.WalletId();
+            profileLoader.InvalidateProfile(owner);
+            if (currentWallet != null && currentWallet.Equals(owner))
+                LoadProfile();
         }
 
         private void LoadProfile()
         {
             view.SetActive(false);
-            var wallet = currentWallet;
-            StartCoroutine(RestClient.INSATANCE.GetProfile(wallet,
-                (profile) =>
+            SetCurrentProfile(Profile.LOADING_PROFILE);
+            profileLoader.load(currentWallet, profile =>
+            {
+                SetCurrentProfile(profile);
+                if (profile != null)
                 {
-                    profileCache[wallet] = profile == null ? NO_PROFILE : profile;
-                    if (!wallet.Equals(currentWallet)) return;
-                    view.SetActive(profile != null);
-                    if (profile != null)
-                    {
-                        SetCurrentProfile(profile);
-                        HorizontalLayoutGroup layout = view.GetComponentInChildren<HorizontalLayoutGroup>();
-                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform) layout.transform);
-                    }
-                }, () => { }));
+                    HorizontalLayoutGroup layout = view.GetComponentInChildren<HorizontalLayoutGroup>();
+                    LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform) layout.transform);
+                }
+            }, () => SetCurrentProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
         private bool IsLandChanged(Vector3 position)
@@ -137,33 +127,6 @@ namespace src.Canvas
         public static Owner INSTANCE
         {
             get { return instance; }
-        }
-
-        internal void UserProfile(Action<Profile> consumer, Action failed)
-        {
-            var owner = Settings.WalletId();
-            if (owner == null) return;
-            Profile profile;
-            if (profileCache.TryGetValue(owner, out profile))
-                consumer(profile == NO_PROFILE ? null : profile);
-            else
-            {
-                StartCoroutine(RestClient.INSATANCE.GetProfile(owner,
-                    (profile) =>
-                    {
-                        profileCache[owner] = profile == null ? NO_PROFILE : profile;
-                        consumer(profile);
-                    }, failed));
-            }
-        }
-
-        internal void OnProfileEdited()
-        {
-            var owner = Settings.WalletId();
-            if (profileCache.ContainsKey(owner))
-                profileCache.Remove(owner);
-            if (currentWallet != null && currentWallet.Equals(owner))
-                LoadProfile();
         }
     }
 }
