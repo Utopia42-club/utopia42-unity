@@ -84,26 +84,27 @@ namespace src
             var moveDirection = ((transform.forward * vertical) + (transform.right * horizontal));
             controller.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
 
-
             if (controller.isGrounded && velocity.y < 0 || floating)
                 velocity.y = 0f;
 
             if (jumpRequest)
             {
                 velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-                if (!floating)
-                    jumpRequest = false;
+                // if (!floating)
+                    // jumpRequest = false;
             }
 
             if (!floating && !controller.isGrounded)
                 velocity.y += gravity * Time.fixedDeltaTime;
-
+            
             controller.Move(velocity * Time.fixedDeltaTime);
+            if ((controller.collisionFlags & CollisionFlags.Above) != 0)
+                velocity.y = 0;
         }
 
         private void DetectSelection()
         {
-            if (Physics.Raycast(cam.position, cam.forward, out raycastHit))
+            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
                 PlaceCursorBlocks(raycastHit.point);
                 if (hitCollider == raycastHit.collider) return;
@@ -121,6 +122,11 @@ namespace src
                     selectedMeta = metaSelectable;
                     return;
                 }
+            }
+            else
+            {
+                highlightBlock.gameObject.SetActive(false);
+                placeBlock.gameObject.SetActive(false);
             }
 
             if (selectedMeta == null) return;
