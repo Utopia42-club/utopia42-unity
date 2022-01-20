@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
@@ -75,7 +76,7 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             UpdatePlayerPosition();
-            DetectObjectSelection();
+            DetectSelection();
         }
 
         private void UpdatePlayerPosition()
@@ -100,20 +101,21 @@ namespace src
             controller.Move(velocity * Time.fixedDeltaTime);
         }
 
-        private void DetectObjectSelection()
+        private void DetectSelection()
         {
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit))
             {
-                var raycastHitPoint = raycastHit.point;
-                PlaceCursorBlocks(raycastHitPoint);
-
+                PlaceCursorBlocks(raycastHit.point);
                 if (hitCollider == raycastHit.collider) return;
                 hitCollider = raycastHit.collider;
                 var metaSelectable = hitCollider.gameObject.GetComponent<MetaSelectable>();
                 if (metaSelectable != null)
                 {
+                    focusedMetaFace = null;
                     if (selectedMeta != null)
+                    {
                         selectedMeta.UnSelect();
+                    }
 
                     metaSelectable.Select();
                     selectedMeta = metaSelectable;
@@ -123,6 +125,7 @@ namespace src
 
             if (selectedMeta == null) return;
             selectedMeta.UnSelect();
+            focusedMetaFace = null;
             selectedMeta = null;
             hitCollider = null;
         }
@@ -197,31 +200,16 @@ namespace src
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
         {
             var epsilon = cam.forward * castStep;
-            epsilon.y = 0;
             var placeBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
 
-            epsilon.y = -castStep;
             var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
-
             var vp = new VoxelPosition(posInt);
             var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk == null) return;
             var metaToFocus = chunk.GetMetaAt(vp);
             var foundSolid = chunk.GetBlock(vp.local).isSolid;
 
-            var foundSolidAbove = false;
-            if (!foundSolid)
-            {
-                posInt += Vector3Int.up;
-                vp = new VoxelPosition(posInt);
-                chunk = world.GetChunkIfInited(vp.chunk);
-                if (chunk == null) return;
-                metaToFocus = chunk.GetMetaAt(vp);
-                foundSolidAbove = chunk.GetBlock(vp.local).isSolid;
-            }
-
-
-            if (foundSolid || foundSolidAbove)
+            if (foundSolid)
             {
                 highlightBlock.position = posInt;
                 highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
@@ -260,7 +248,7 @@ namespace src
                 if (!metaToFocus.IsPositioned()) metaToFocus = null;
                 else
                 {
-                    faceToFocus = FindFocusedFace(metaToFocus.GetPosition());
+                    faceToFocus = FindFocusedFace(blockHitPoint - posInt);
                     if (faceToFocus == null) metaToFocus = null;
                 }
             }
@@ -283,46 +271,18 @@ namespace src
         }
 
 
-        private Voxels.Face FindFocusedFace(Vector3 pos)
+        private Voxels.Face FindFocusedFace(Vector3 blockLocalHitPoint)
         {
-            var localPos = cam.position - pos;
+            if (blockLocalHitPoint.x < castStep) return Voxels.Face.LEFT;
+            if (Math.Abs(blockLocalHitPoint.x - 1) < castStep) return Voxels.Face.RIGHT;
 
-            if (IsAimedAt(localPos.x, localPos.z, cam.forward.x, cam.forward.z) &&
-                IsAimedAt(localPos.x, localPos.y, cam.forward.x, cam.forward.y))
-                return Voxels.Face.LEFT;
+            if (blockLocalHitPoint.z < castStep) return Voxels.Face.BACK;
+            if (Math.Abs(blockLocalHitPoint.z - 1) < castStep) return Voxels.Face.FRONT;
 
-            if (IsAimedAt(localPos.z, localPos.x, cam.forward.z, cam.forward.x) &&
-                IsAimedAt(localPos.z, localPos.y, cam.forward.z, cam.forward.y))
-                return Voxels.Face.BACK;
+            if (blockLocalHitPoint.y < castStep) return Voxels.Face.BOTTOM;
+            if (Math.Abs(blockLocalHitPoint.y - 1) < castStep) return Voxels.Face.TOP;
 
-            if (IsAimedAt(localPos.y, localPos.z, cam.forward.y, cam.forward.z) &&
-                IsAimedAt(localPos.y, localPos.x, cam.forward.y, cam.forward.x))
-                return Voxels.Face.BOTTOM;
-
-
-            localPos -= Vector3.one;
-            if (IsAimedAt(-localPos.y, -localPos.z, -cam.forward.y, -cam.forward.z) &&
-                IsAimedAt(-localPos.y, -localPos.x, -cam.forward.y, -cam.forward.x))
-                return Voxels.Face.TOP;
-
-
-            if (IsAimedAt(-localPos.x, -localPos.z, -cam.forward.x, -cam.forward.z) &&
-                IsAimedAt(-localPos.x, -localPos.y, -cam.forward.x, -cam.forward.y))
-                return Voxels.Face.RIGHT;
-
-            if (IsAimedAt(-localPos.z, -localPos.x, -cam.forward.z, -cam.forward.x) &&
-                IsAimedAt(-localPos.z, -localPos.y, -cam.forward.z, -cam.forward.y))
-                return Voxels.Face.FRONT;
             return null;
-        }
-
-        private bool IsAimedAt(float posX, float posZ, float forwardX, float forwardZ)
-        {
-            var pos2d = new Vector2(posX, posZ);
-            var lower = Vector2.SignedAngle(Vector2.right, -pos2d);
-            var upper = Vector2.SignedAngle(Vector2.right, Vector2.up - pos2d);
-            var actual = Vector2.SignedAngle(Vector2.right, new Vector2(forwardX, forwardZ));
-            return lower < upper && lower < actual && upper > actual;
         }
 
         public bool CanEdit(Vector3Int position, out Land land)
