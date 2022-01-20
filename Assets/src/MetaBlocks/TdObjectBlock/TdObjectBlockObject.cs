@@ -17,7 +17,7 @@ namespace src.MetaBlocks.TdObjectBlock
     public class TdObjectBlockObject : MetaBlockObject
     {
         public const ulong DownloadLimitMb = 10;
-        
+
         private GameObject tdObjectContainer;
         private GameObject tdObject;
 
@@ -70,8 +70,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 moveController = null;
             }
         }
-        
-        
+
 
         private void SetupDefaultSnack()
         {
@@ -80,7 +79,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem.Remove();
                 snackItem = null;
             }
-            
+
             snackItem = Snack.INSTANCE.ShowLines(GetDefaultSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
@@ -107,7 +106,8 @@ namespace src.MetaBlocks.TdObjectBlock
             if (moveController == null)
             {
                 moveController = gameObject.AddComponent<TdObjectMoveController>();
-                moveController.Attach(tdObjectContainer.transform, tdObjectContainer.transform, tdObjectContainer.transform);
+                moveController.Attach(tdObjectContainer.transform, tdObjectContainer.transform,
+                    tdObjectContainer.transform);
             }
 
             var lines = GetMovingSnackLines(helpMode);
@@ -145,7 +145,7 @@ namespace src.MetaBlocks.TdObjectBlock
             lines.Add("X : exit moving object mode");
             return lines;
         }
-        
+
         private List<string> GetDefaultSnackLines()
         {
             var lines = new List<string>();
@@ -154,7 +154,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if (tdObjectContainer != null)
                 lines.Add("Press V to move object");
             lines.Add("Press DEL to delete object");
-            if(stateMsg != StateMsg.Ok)
+            if (stateMsg != StateMsg.Ok)
                 lines.Add("\n" + MetaBlockState.ToString(stateMsg, "3D object"));
             return lines;
         }
@@ -173,7 +173,7 @@ namespace src.MetaBlocks.TdObjectBlock
             stateMsg = msg;
             if (snackItem != null)
                 ((SnackItem.Text) snackItem).UpdateLines(GetDefaultSnackLines());
-            if(stateMsg != StateMsg.Ok && stateMsg != StateMsg.Loading)
+            if (stateMsg != StateMsg.Ok && stateMsg != StateMsg.Loading)
                 CreateIcon(true);
             else
                 CreateIcon();
@@ -203,10 +203,11 @@ namespace src.MetaBlocks.TdObjectBlock
                 UpdateStateAndIcon(StateMsg.Loading);
                 StartCoroutine(LoadZip(properties.url, go =>
                 {
-                    tdObjectContainer = new GameObject();
+                    tdObjectContainer = new GameObject("3d object container");
                     tdObjectContainer.transform.SetParent(transform, false);
                     tdObjectContainer.transform.localPosition = Vector3.zero;
                     tdObject = go;
+                    tdObject.name = TdObjectBlockType.Name;
 
                     LoadGameObject(scale, offset, rotation, initialPosition, initialScale);
                 }));
@@ -253,10 +254,9 @@ namespace src.MetaBlocks.TdObjectBlock
 
             tdObjectContainer.transform.eulerAngles = rotation;
 
-
             var bc = getBoxCollider(tdObject);
             var land = GetBlock().land;
-            if (land != null && !IsInLand(bc))
+            if (land != null && !InLand(bc))
             {
                 DestroyOnFailure();
                 UpdateStateAndIcon(StateMsg.OutOfBound);
@@ -272,15 +272,21 @@ namespace src.MetaBlocks.TdObjectBlock
             if (tdObjectContainer != null)
             {
                 DestroyImmediate(tdObjectContainer);
-                tdObjectContainer = null;   
+                tdObjectContainer = null;
             }
+
             tdObject = null;
         }
 
         private BoxCollider getBoxCollider(GameObject tdObject)
         {
             var bc = tdObject.GetComponent<BoxCollider>();
-            if (bc == null) bc = tdObject.AddComponent<BoxCollider>();
+            if (bc == null)
+            {
+                bc = tdObject.AddComponent<BoxCollider>();
+                var tdObjectSelectable = tdObject.AddComponent<TdObjectSelectable>();
+                tdObjectSelectable.Initialize(this);
+            }
             bc.center = GetObjectCenter(tdObject, false);
             bc.size = GetObjectSize(tdObject, bc.center, false);
             return bc;
@@ -381,7 +387,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             while (!op.isDone)
             {
-                if(webRequest.downloadedBytes > DownloadLimitMb * 1000000)
+                if (webRequest.downloadedBytes > DownloadLimitMb * 1000000)
                     break;
                 yield return null;
             }
@@ -417,6 +423,7 @@ namespace src.MetaBlocks.TdObjectBlock
                             UpdateStateAndIcon(StateMsg.InvalidData);
                         }
                     }
+
                     break;
             }
         }

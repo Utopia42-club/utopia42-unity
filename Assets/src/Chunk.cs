@@ -22,6 +22,7 @@ namespace src
         public readonly Vector3Int coordinate;
         public MeshRenderer meshRenderer;
         public MeshFilter meshFilter;
+        public MeshCollider meshCollider;
         private bool inited = false;
         private bool active = true;
 
@@ -46,6 +47,7 @@ namespace src
             chunkObject.SetActive(active);
             meshFilter = chunkObject.AddComponent<MeshFilter>();
             meshRenderer = chunkObject.AddComponent<MeshRenderer>();
+            meshCollider = chunkObject.AddComponent<MeshCollider>();
 
             meshRenderer.material = world.material;
             chunkObject.transform.SetParent(world.transform);
@@ -174,6 +176,8 @@ namespace src
             mesh.RecalculateNormals();
 
             meshFilter.mesh = mesh;
+            meshCollider.sharedMesh = null;
+            meshCollider.sharedMesh = mesh;
         }
 
         void AddTexture(int textureID, List<Vector2> uvs)

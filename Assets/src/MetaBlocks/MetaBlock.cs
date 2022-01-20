@@ -22,7 +22,7 @@ namespace src.MetaBlocks
         public void RenderAt(Transform parent, Vector3Int position, Chunk chunk)
         {
             if (blockObject != null) throw new System.Exception("Already rendered.");
-            GameObject go = new GameObject("Image");
+            GameObject go = new GameObject("MetaBlock");
             blockObject = (MetaBlockObject)go.AddComponent(type.componentType);
             go.transform.parent = parent;
             go.transform.localPosition = position;

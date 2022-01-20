@@ -125,7 +125,7 @@ namespace src.MetaBlocks.VideoBlock
                 DestroyImmediate(vid.gameObject);
             videos.Clear();
 
-            VideoBlockProperties properties = (VideoBlockProperties)GetBlock().GetProps();
+            VideoBlockProperties properties = (VideoBlockProperties) GetBlock().GetProps();
             if (properties != null)
             {
                 AddFace(Voxels.Face.BACK, properties.back);
@@ -140,25 +140,29 @@ namespace src.MetaBlocks.VideoBlock
         private void AddFace(Voxels.Face face, VideoBlockProperties.FaceProps props)
         {
             if (props == null) return;
+
             var go = new GameObject();
             go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero + ((Vector3)face.direction) * 0.1f;
+            go.transform.localPosition = Vector3.zero + ((Vector3) face.direction) * 0.1f;
             var vidFace = go.AddComponent<VideoFace>();
-            MeshRenderer meshRenderer = vidFace.Initialize(face, props.width, props.height);
-            if (IsInLand(meshRenderer))
-            {
-                vidFace.Init(meshRenderer, props.url, props.previewTime);
-                videos[face] = vidFace;
-                vidFace.loading.AddListener(l =>
-                {
-                    if (focusedFace == face) UpdateSnacksAndIconObject(face);
-                });
-            }
-            else
+            var meshRenderer = vidFace.Initialize(face, props.width, props.height);
+            if (!InLand(meshRenderer))
             {
                 DestroyImmediate(meshRenderer);
+                DestroyImmediate(vidFace);
                 CreateIcon(true);
+                return;
             }
+
+            vidFace.Init(meshRenderer, props.url, props.previewTime);
+            videos[face] = vidFace;
+            vidFace.loading.AddListener(l =>
+            {
+                if (focusedFace == face) UpdateSnacksAndIconObject(face);
+            });
+
+            var faceSelectable = vidFace.gameObject.AddComponent<FaceSelectable>();
+            faceSelectable.Initialize(this, face);
         }
 
         private void EditProps(Voxels.Face face)

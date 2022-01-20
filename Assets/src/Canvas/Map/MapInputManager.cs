@@ -22,7 +22,7 @@ namespace src.Canvas.Map
 
         private const float MoveSpeed = 5f;
         private const float BoostedMoveSpeed = 15f;
-        
+
         private const float MaxZoomOutScale = 0.25f;
 
         void Update()
@@ -33,45 +33,46 @@ namespace src.Canvas.Map
             var realPosition = Vectors.FloorToInt(mouseLocalPos);
             positionText.text = $"{realPosition.x} {realPosition.y}";
 
-            if (!drawing && !dragging &&
-                !map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen())
+            if (!map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen())
             {
-                if (Input.GetMouseButtonDown(0))
+                if (!drawing && !dragging)
                 {
-                    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
-                                                          || Input.GetKey(KeyCode.LeftCommand)
-                                                          || Input.GetKey(KeyCode.RightCommand))
-                        StartDraw(realPosition);
-                    else
-                        StartDrag(mousePosInt);
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
+                                                              || Input.GetKey(KeyCode.LeftCommand)
+                                                              || Input.GetKey(KeyCode.RightCommand))
+                            StartDraw(realPosition);
+                        else
+                            StartDrag(mousePosInt);
+                    }
+
+                    if (Input.mouseScrollDelta.y != 0)
+                    {
+                        var multiplier = Input.mouseScrollDelta.y < 0 ? (float) 0.5 : 2;
+                        var scale = landRect.landContainer.localScale.x * multiplier;
+                        scale = Mathf.Min(4f, scale);
+                        // Center the map to mouse position 
+                        ScaleMap(Mathf.Max(0.25f, scale));
+                    }
                 }
 
-                if (Input.mouseScrollDelta.y != 0)
+                if (!Input.GetMouseButton(0))
                 {
-                    var multiplier = Input.mouseScrollDelta.y < 0 ? (float) 0.5 : 2;
-                    var scale = landRect.landContainer.localScale.x * multiplier;
-                    scale = Mathf.Min(4f, scale);
-                    // Center the map to mouse position 
-                    ScaleMap(Mathf.Max(0.25f, scale));
+                    if (drawing) FinishDraw();
+                    dragging = false;
                 }
+
+                if (dragging)
+                    Drag(mousePosInt);
+                else if (drawing)
+                    Draw(realPosition);
+                
+                if (Input.GetMouseButtonDown(1))
+                    GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
+                HandleKeyboardInput();
             }
 
-            if (!Input.GetMouseButton(0))
-            {
-                if (drawing) FinishDraw();
-                dragging = false;
-            }
-
-            if (dragging)
-                Drag(mousePosInt);
-            else if (drawing)
-                Draw(realPosition);
-
-            if (Input.GetMouseButtonDown(1))
-                GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
-            
-            HandleKeyboardInput();
-            
             SetLinesPos(mousePosInt);
         }
 
@@ -89,7 +90,8 @@ namespace src.Canvas.Map
         {
             var preScale = landRect.landContainer.localScale.x;
             landRect.landContainer.localScale = new Vector3(scale, scale, 1);
-            landRect.GetComponent<RectTransform>().localPosition =  scale / preScale * landRect.GetComponent<RectTransform>().localPosition;
+            landRect.GetComponent<RectTransform>().localPosition =
+                scale / preScale * landRect.GetComponent<RectTransform>().localPosition;
         }
 
         private void FinishDraw()
@@ -177,23 +179,24 @@ namespace src.Canvas.Map
             var hp = horizontal.position;
             horizontal.position = new Vector3(hp.x, mousePos.y, 0);
         }
-        
+
         private void HandleKeyboardInput()
         {
             var boosted = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            if(Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
-                Move(Vector3.right, boosted); 
-            else if(Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+            if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+                Move(Vector3.right, boosted);
+            else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
                 Move(Vector3.left, boosted);
-            else if(Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
+            else if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
                 Move(Vector3.up, boosted);
-            else if(Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
+            else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
                 Move(Vector3.down, boosted);
         }
-        
+
         private void Move(Vector3 direction, bool boosted)
         {
-            landRect.GetComponent<RectTransform>().localPosition -= direction * (boosted ? BoostedMoveSpeed : MoveSpeed);
+            landRect.GetComponent<RectTransform>().localPosition -=
+                direction * (boosted ? BoostedMoveSpeed : MoveSpeed);
         }
 
         public void PrepareForScreenShot(Land land)
@@ -205,7 +208,7 @@ namespace src.Canvas.Map
             positionText.gameObject.SetActive(false);
             landRect.HidePlayerPosIndicator();
         }
-        
+
         public void ScreenShotDone()
         {
             vertical.gameObject.SetActive(true);
@@ -213,7 +216,7 @@ namespace src.Canvas.Map
             positionText.gameObject.SetActive(true);
             landRect.ShowPlayerPosIndicator();
         }
-        
+
         private void MoveToLandCenter(Land land)
         {
             var landCenter = new Vector3((land.x1 + land.x2) * 0.5f, (land.y1 + land.y2) * 0.5f, 0);

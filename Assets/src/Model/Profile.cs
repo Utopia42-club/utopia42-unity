@@ -5,6 +5,24 @@ namespace src.Model
     [System.Serializable]
     public class Profile
     {
+        public static readonly Profile LOADING_PROFILE = new Profile();
+        public static readonly Profile FAILED_TO_LOAD_PROFILE = new Profile();
+
+        static Profile()
+        {
+            LOADING_PROFILE.bio = "Loading...";
+            LOADING_PROFILE.name = "Loading...";
+            LOADING_PROFILE.imageUrl = null;
+            LOADING_PROFILE.walletId = "";
+            LOADING_PROFILE.links = null;
+            
+            FAILED_TO_LOAD_PROFILE.bio = "Failed to load";
+            FAILED_TO_LOAD_PROFILE.name = "Failed to load";
+            FAILED_TO_LOAD_PROFILE.imageUrl = null;
+            FAILED_TO_LOAD_PROFILE.walletId = "";
+            FAILED_TO_LOAD_PROFILE.links = null;
+        }
+        
         public string walletId;
         public string name;
         public string bio;

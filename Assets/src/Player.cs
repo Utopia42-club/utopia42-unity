@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
@@ -12,28 +13,23 @@ namespace src
     {
         public static readonly Vector3Int viewDistance = new Vector3Int(5, 5, 5);
 
-        private bool grounded;
         private bool sprinting;
 
         public Transform cam;
         public World world;
 
-        public float walkSpeed = 4f;
-        public float sprintSpeed = 8f;
-        public float jumpForce = 8f;
+        public float walkSpeed = 6f;
+        public float sprintSpeed = 12f;
+        public float jumpHeight = 5;
         public float gravity = -9.8f;
-
-        public float playerWidth = 0.15f;
-        public float boundsTolerance = 0.1f;
 
         private float horizontal;
         private float vertical;
-        private Vector3 velocity;
-        private float verticalMomentum = 0;
-        private bool jumpRequest;
-        private bool floating = false;
+        private Vector3 velocity = Vector3.zero;
         private Land highlightLand;
         private Land placeLand;
+        private bool jumpRequest;
+        private bool floating = false;
 
         private Vector3Int lastChunk;
 
@@ -43,22 +39,17 @@ namespace src
         public Transform placeBlock;
         private MetaBlock focusedMetaBlock;
         private Voxels.Face focusedMetaFace;
+        private RaycastHit raycastHit;
+        private MetaSelectable selectedMeta;
+        private Collider hitCollider;
+        private CharacterController controller;
 
-        public float castStep = 0.1f;
-        public float reach = 8f;
-
+        public float castStep = 0.01f;
         public byte selectedBlockId = 1;
-
 
         private void Start()
         {
-            gameObject.AddComponent<CapsuleCollider>();
-            var rb = gameObject.AddComponent<Rigidbody>();
-            rb.isKinematic = false;
-            rb.useGravity = false;
-            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX |
-                             RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezeRotationY;
+            controller = GetComponent<CharacterController>();
             Snack.INSTANCE.ShowObject("Owner", null);
         }
 
@@ -84,18 +75,65 @@ namespace src
         private void FixedUpdate()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            CalculateVelocity();
-            if (jumpRequest)
-                Jump();
+            UpdatePlayerPosition();
+            DetectSelection();
+        }
 
-            transform.Translate(velocity, Space.World);
+        private void UpdatePlayerPosition()
+        {
+            var moveDirection = ((transform.forward * vertical) + (transform.right * horizontal));
+            controller.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
+
+
+            if (controller.isGrounded && velocity.y < 0 || floating)
+                velocity.y = 0f;
+
+            if (jumpRequest)
+            {
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                if (!floating)
+                    jumpRequest = false;
+            }
+
+            if (!floating && !controller.isGrounded)
+                velocity.y += gravity * Time.fixedDeltaTime;
+
+            controller.Move(velocity * Time.fixedDeltaTime);
+        }
+
+        private void DetectSelection()
+        {
+            if (Physics.Raycast(cam.position, cam.forward, out raycastHit))
+            {
+                PlaceCursorBlocks(raycastHit.point);
+                if (hitCollider == raycastHit.collider) return;
+                hitCollider = raycastHit.collider;
+                var metaSelectable = hitCollider.gameObject.GetComponent<MetaSelectable>();
+                if (metaSelectable != null)
+                {
+                    focusedMetaFace = null;
+                    if (selectedMeta != null)
+                    {
+                        selectedMeta.UnSelect();
+                    }
+
+                    metaSelectable.Select();
+                    selectedMeta = metaSelectable;
+                    return;
+                }
+            }
+
+            if (selectedMeta == null) return;
+            selectedMeta.UnSelect();
+            focusedMetaFace = null;
+            selectedMeta = null;
+            hitCollider = null;
         }
 
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetPlayerInputs();
-            PlaceCursorBlocks();
 
             if (lastChunk == null)
             {
@@ -113,43 +151,6 @@ namespace src
             }
         }
 
-        void Jump()
-        {
-            verticalMomentum = jumpForce;
-            grounded = false;
-            jumpRequest = false;
-        }
-
-        private void CalculateVelocity()
-        {
-            // Affect vertical momentum with gravity.
-            if (!floating && verticalMomentum > gravity)
-                verticalMomentum += Time.fixedDeltaTime * gravity;
-
-            // if we're sprinting, use the sprint multiplier.
-            if (sprinting)
-                velocity = ((transform.forward * vertical) + (transform.right * horizontal)) * Time.fixedDeltaTime *
-                           sprintSpeed;
-            else
-                velocity = ((transform.forward * vertical) + (transform.right * horizontal)) * Time.fixedDeltaTime *
-                           walkSpeed;
-
-            // Apply vertical momentum (falling/jumping).
-            velocity += Vector3.up * verticalMomentum * Time.fixedDeltaTime;
-            if (floating)
-                verticalMomentum = 0;
-
-            if ((velocity.z > 0 && front) || (velocity.z < 0 && back))
-                velocity.z = 0;
-            if ((velocity.x > 0 && right) || (velocity.x < 0 && left))
-                velocity.x = 0;
-
-            if (velocity.y < 0)
-                velocity.y = ComputeDownSpeed(velocity.y);
-            else if (velocity.y > 0)
-                velocity.y = ComputeUpSpeed(velocity.y);
-        }
-
         private void GetPlayerInputs()
         {
             horizontal = Input.GetAxis("Horizontal");
@@ -160,17 +161,25 @@ namespace src
             if (Input.GetButtonUp("Sprint"))
                 sprinting = false;
 
+
+            if (Input.GetButtonDown("Jump"))
+                jumpRequest = true;
+            if (Input.GetButtonUp("Jump"))
+                jumpRequest = false;
+
             if (Input.GetButtonDown("Toggle Floating"))
                 floating = !floating;
-            //if (grounded && Input.GetButtonDown("Jump"))
-            if (Input.GetButton("Jump"))
-                jumpRequest = true;
 
             if (highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))
             {
                 var vp = new VoxelPosition(highlightBlock.position);
                 var chunk = world.GetChunkIfInited(vp.chunk);
-                if (chunk != null) chunk.DeleteVoxel(vp, highlightLand);
+                if (chunk != null)
+                {
+                    chunk.DeleteVoxel(vp, highlightLand);
+                    if (chunk.GetMetaAt(vp) != null)
+                        chunk.DeleteMeta(vp);
+                }
             }
 
             if (placeBlock.gameObject.activeSelf && Input.GetMouseButtonDown(1))
@@ -180,7 +189,7 @@ namespace src
                 if (chunk != null)
                 {
                     var type = VoxelService.INSTANCE.GetBlockType(selectedBlockId);
-                    if (typeof(MetaBlockType).IsAssignableFrom(type.GetType()))
+                    if (type is MetaBlockType)
                         chunk.PutMeta(vp, type, placeLand);
                     else
                         chunk.PutVoxel(vp, type, placeLand);
@@ -188,56 +197,49 @@ namespace src
             }
         }
 
-        private void PlaceCursorBlocks()
+        private void PlaceCursorBlocks(Vector3 blockHitPoint)
         {
-            float distance = castStep;
-            Vector3Int lastPos = Vectors.FloorToInt(cam.position);
+            var epsilon = cam.forward * castStep;
+            var placeBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
 
-            MetaBlock metaToFocus = null;
-            bool foundSolid = false;
-            while (distance < reach && !foundSolid)
+            var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
+            var vp = new VoxelPosition(posInt);
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk == null) return;
+            var metaToFocus = chunk.GetMetaAt(vp);
+            var foundSolid = chunk.GetBlock(vp.local).isSolid;
+
+            if (foundSolid)
             {
-                Vector3 pos = cam.position + (cam.forward * distance);
-                distance += castStep;
-                Vector3Int posint = Vectors.FloorToInt(pos);
-                var vp = new VoxelPosition(posint);
+                highlightBlock.position = posInt;
+                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
 
-                var chunk = world.GetChunkIfInited(vp.chunk);
-                if (chunk == null) break;
-
-                if (metaToFocus == null)
-                    metaToFocus = chunk.GetMetaAt(vp);
-
-                if (foundSolid = chunk.GetBlock(vp.local).isSolid)
+                if (VoxelService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType)
                 {
-                    highlightBlock.position = posint;
-                    highlightBlock.gameObject.SetActive(CanEdit(posint, out highlightLand));
-
-                    if (typeof(MetaBlockType).IsAssignableFrom(
-                        VoxelService.INSTANCE.GetBlockType(selectedBlockId).GetType()))
+                    if (chunk.GetMetaAt(vp) == null)
                     {
-                        if (chunk.GetMetaAt(vp) == null)
-                        {
-                            placeBlock.position = posint;
-                            placeBlock.gameObject.SetActive(CanEdit(posint, out placeLand));
-                        }
-                        else
-                            placeBlock.gameObject.SetActive(false);
+                        placeBlock.position = posInt;
+                        placeBlock.gameObject.SetActive(CanEdit(posInt, out placeLand));
                     }
                     else
-                    {
-                        var currVox = Vectors.FloorToInt(transform.position);
-                        if (lastPos != currVox && lastPos != currVox + Vector3Int.up)
-                        {
-                            placeBlock.position = lastPos;
-                            placeBlock.gameObject.SetActive(CanEdit(lastPos, out placeLand));
-                        }
-                        else
-                            placeBlock.gameObject.SetActive(false);
-                    }
+                        placeBlock.gameObject.SetActive(false);
                 }
-
-                lastPos = posint;
+                else
+                {
+                    var currVox = Vectors.FloorToInt(transform.position);
+                    if (placeBlockPosInt != currVox && placeBlockPosInt != currVox + Vector3Int.up)
+                    {
+                        placeBlock.position = placeBlockPosInt;
+                        placeBlock.gameObject.SetActive(CanEdit(placeBlockPosInt, out placeLand));
+                    }
+                    else
+                        placeBlock.gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                highlightBlock.gameObject.SetActive(false);
+                placeBlock.gameObject.SetActive(false);
             }
 
             Voxels.Face faceToFocus = null;
@@ -246,7 +248,7 @@ namespace src
                 if (!metaToFocus.IsPositioned()) metaToFocus = null;
                 else
                 {
-                    faceToFocus = FindFocusedFace(metaToFocus.GetPosition());
+                    faceToFocus = FindFocusedFace(blockHitPoint - posInt);
                     if (faceToFocus == null) metaToFocus = null;
                 }
             }
@@ -266,55 +268,21 @@ namespace src
                     }
                 }
             }
-
-            if (!foundSolid)
-            {
-                highlightBlock.gameObject.SetActive(false);
-                placeBlock.gameObject.SetActive(false);
-            }
         }
 
 
-        private Voxels.Face FindFocusedFace(Vector3 pos)
+        private Voxels.Face FindFocusedFace(Vector3 blockLocalHitPoint)
         {
-            var localPos = cam.position - pos;
+            if (blockLocalHitPoint.x < castStep) return Voxels.Face.LEFT;
+            if (Math.Abs(blockLocalHitPoint.x - 1) < castStep) return Voxels.Face.RIGHT;
 
-            if (IsAimedAt(localPos.x, localPos.z, cam.forward.x, cam.forward.z) &&
-                IsAimedAt(localPos.x, localPos.y, cam.forward.x, cam.forward.y))
-                return Voxels.Face.LEFT;
+            if (blockLocalHitPoint.z < castStep) return Voxels.Face.BACK;
+            if (Math.Abs(blockLocalHitPoint.z - 1) < castStep) return Voxels.Face.FRONT;
 
-            if (IsAimedAt(localPos.z, localPos.x, cam.forward.z, cam.forward.x) &&
-                IsAimedAt(localPos.z, localPos.y, cam.forward.z, cam.forward.y))
-                return Voxels.Face.BACK;
+            if (blockLocalHitPoint.y < castStep) return Voxels.Face.BOTTOM;
+            if (Math.Abs(blockLocalHitPoint.y - 1) < castStep) return Voxels.Face.TOP;
 
-            if (IsAimedAt(localPos.y, localPos.z, cam.forward.y, cam.forward.z) &&
-                IsAimedAt(localPos.y, localPos.x, cam.forward.y, cam.forward.x))
-                return Voxels.Face.BOTTOM;
-
-
-            localPos -= Vector3.one;
-            if (IsAimedAt(-localPos.y, -localPos.z, -cam.forward.y, -cam.forward.z) &&
-                IsAimedAt(-localPos.y, -localPos.x, -cam.forward.y, -cam.forward.x))
-                return Voxels.Face.TOP;
-
-
-            if (IsAimedAt(-localPos.x, -localPos.z, -cam.forward.x, -cam.forward.z) &&
-                IsAimedAt(-localPos.x, -localPos.y, -cam.forward.x, -cam.forward.y))
-                return Voxels.Face.RIGHT;
-
-            if (IsAimedAt(-localPos.z, -localPos.x, -cam.forward.z, -cam.forward.x) &&
-                IsAimedAt(-localPos.z, -localPos.y, -cam.forward.z, -cam.forward.y))
-                return Voxels.Face.FRONT;
             return null;
-        }
-
-        private bool IsAimedAt(float posX, float posZ, float forwardX, float forwardZ)
-        {
-            var pos2d = new Vector2(posX, posZ);
-            var lower = Vector2.SignedAngle(Vector2.right, -pos2d);
-            var upper = Vector2.SignedAngle(Vector2.right, Vector2.up - pos2d);
-            var actual = Vector2.SignedAngle(Vector2.right, new Vector2(forwardX, forwardZ));
-            return lower < upper && lower < actual && upper > actual;
         }
 
         public bool CanEdit(Vector3Int position, out Land land)
@@ -329,7 +297,7 @@ namespace src
             return land != null && !land.isNft;
         }
 
-        public Land FindOwnedLand(Vector3Int position)
+        private Land FindOwnedLand(Vector3Int position)
         {
             if (highlightLand != null && highlightLand.Contains(ref position))
                 return highlightLand;
@@ -341,65 +309,7 @@ namespace src
             return null;
         }
 
-        private float ComputeDownSpeed(float downSpeed)
-        {
-            if (grounded = CollidesXz(new Vector3(0, downSpeed, 0)))
-            {
-                return Mathf.Min(Mathf.FloorToInt(transform.position.y + 0.01f) - transform.position.y, 0);
-            }
-
-            return downSpeed;
-        }
-
-        private float ComputeUpSpeed(float upSpeed)
-        {
-            if (CollidesXz(new Vector3(0, upSpeed + 0.05f, 0)))
-                return 0;
-            return upSpeed;
-        }
-
-        public bool front
-        {
-            get { return CollidesXz(new Vector3(0, 0, +playerWidth)); }
-        }
-
-        public bool back
-        {
-            get { return CollidesXz(new Vector3(0, 0, -playerWidth)); }
-        }
-
-        public bool left
-        {
-            get { return CollidesXz(new Vector3(-playerWidth, 0, 0)); }
-        }
-
-        public bool right
-        {
-            get { return CollidesXz(new Vector3(+playerWidth, 0, 0)); }
-        }
-
-        private bool CollidesXz(Vector3 offset)
-        {
-            var center = transform.position + offset;
-            float[] dys = new float[] {0.01f, 0.95f, 1.95f};
-            int[] coef = new int[] {-1, 0, 1};
-            foreach (int xcoef in coef)
-            {
-                foreach (int zcoef in coef)
-                {
-                    foreach (float dy in dys)
-                    {
-                        var delta = new Vector3(xcoef * playerWidth, dy, zcoef * playerWidth); //FIXME ?
-                        if (world.IsSolidAt(Vectors.FloorToInt(center + delta)))
-                            return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public VoxelPosition ComputePosition()
+        private VoxelPosition ComputePosition()
         {
             return new VoxelPosition(transform.position);
         }

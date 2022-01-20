@@ -5,10 +5,16 @@ namespace src
 {
     public class MetaFace : MonoBehaviour
     {
+        private MeshFilter meshFilter;
+        private MeshCollider meshCollider;
+        private MeshRenderer meshRenderer;
+
         public MeshRenderer Initialize(Voxels.Face face, int width, int height)
         {
-            var meshRenderer = gameObject.AddComponent<MeshRenderer>();
-            var meshFilter = gameObject.AddComponent<MeshFilter>();
+            meshFilter = gameObject.AddComponent<MeshFilter>();
+            meshCollider = gameObject.AddComponent<MeshCollider>();
+
+            meshRenderer = gameObject.AddComponent<MeshRenderer>();
             meshRenderer.material = new Material(Shader.Find("Unlit/Texture"));
 
             if (face == Voxels.Face.FRONT || face == Voxels.Face.BACK)
@@ -24,7 +30,7 @@ namespace src
 
             var mesh = new Mesh();
             mesh.vertices = vertices;
-            mesh.triangles = new int[12] { 0, 1, 2, 2, 1, 3,  2, 1, 0, 3, 1, 2, };
+            mesh.triangles = new int[12] {0, 1, 2, 2, 1, 3, 2, 1, 0, 3, 1, 2,};
 
             Vector2[] uv = new Vector2[4]
             {
@@ -47,8 +53,10 @@ namespace src
                 -Vector3.forward
             };
             mesh.normals = normals;
-
             meshFilter.mesh = mesh;
+
+            meshCollider.convex = true;
+            meshCollider.sharedMesh = mesh;
 
             return meshRenderer;
         }

@@ -77,6 +77,7 @@ namespace src
 
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
+            var player = Player.INSTANCE;
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Creating the world\n0%");
             yield return null;
@@ -124,7 +125,7 @@ namespace src
                 SetState(State.PLAYING);
             else if (Input.GetButtonDown("Map"))
             {
-                if (state == State.MAP)
+                if (state == State.MAP && !LandProfileDialog.INSTANCE.gameObject.activeSelf)
                     SetState(State.PLAYING);
                 else if (state == State.PLAYING)
                     SetState(State.MAP);
@@ -142,7 +143,7 @@ namespace src
         {
             if (worldInited &&
                 (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
-                 || state == State.PROFILE))
+                 || state == State.PROFILE_DIALOG))
                 SetState(State.PLAYING);
             if (state == State.DIALOG && dialogs.Count > 0)
                 CloseDialog(dialogs[dialogs.Count - 1]);
@@ -167,6 +168,25 @@ namespace src
                 SetState(State.LOADING);
                 InitPlayerForWallet();
             }
+        }
+
+        public void SetProfileDialogState(bool open)
+        {
+            if (open)
+            {
+                if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
+                    SetState(State.PROFILE_DIALOG);
+            }
+            else if (GetState() == State.PROFILE_DIALOG)
+                ReturnToGame();
+        }
+
+        public void ShowUserProfile()
+        {
+            var profileDialog = ProfileDialog.INSTANCE;
+            profileDialog.Open(Profile.LOADING_PROFILE);
+            ProfileLoader.INSTANCE.load(Settings.WalletId(), profileDialog.Open,
+                () => profileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
         private void SetState(State state)
@@ -272,20 +292,6 @@ namespace src
             }));
         }
 
-        public void ShowUserProfile()
-        {
-            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
-            {
-                SetState(State.LOADING);
-                Loading.INSTANCE.UpdateText("Loading profile");
-                Owner.INSTANCE.UserProfile(profile =>
-                {
-                    SetState(State.PROFILE);
-                    ProfileDialog.INSTANCE.SetProfile(profile);
-                }, () => SetState(State.PLAYING));
-            }
-        }
-
         public void ToggleMovingObjectState(TdObjectBlockObject tdObjectBlockObject)
         {
             if (GetState() == State.PLAYING)
@@ -300,17 +306,27 @@ namespace src
             }
         }
 
-        public void ShowProfile(Profile profile)
+        public void ShowProfile(Profile profile, Land currentLand)
         {
             if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
             {
-                SetState(State.PROFILE);
-                ProfileDialog.INSTANCE.SetProfile(profile);
+                if (currentLand == null)
+                {
+                    var profileDialog = ProfileDialog.INSTANCE;
+                    profileDialog.Open(profile);
+                }
+                else
+                {
+                    var landProfileDialog = LandProfileDialog.INSTANCE;
+                    landProfileDialog.Open(currentLand, profile);
+                }
             }
         }
 
         public void EditProfile()
         {
+            if(LandProfileDialog.INSTANCE.gameObject.activeSelf)
+                LandProfileDialog.INSTANCE.Close();
             SetState(State.BROWSER_CONNECTION);
             BrowserConnector.INSTANCE.EditProfile(() =>
             {
@@ -370,8 +386,8 @@ namespace src
             BROWSER_CONNECTION,
             INVENTORY,
             HELP,
-            PROFILE,
             DIALOG,
+            PROFILE_DIALOG,
             MOVING_OBJECT
         }
     }

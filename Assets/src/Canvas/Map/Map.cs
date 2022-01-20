@@ -7,7 +7,6 @@ namespace src.Canvas.Map
 {
     public class Map : MonoBehaviour
     {
-        [SerializeField] private LandProfileDialog landProfileDialog;
         [SerializeField] private LandBuyDialog landBuyDialog;
         private Action landBuyDialogDismissCallback;
 
@@ -18,17 +17,16 @@ namespace src.Canvas.Map
                 {
                     gameObject.SetActive(state == GameManager.State.MAP);
                     CloseLandBuyDialogState();
-                    CloseLandProfileDialogState();
                 }
             );
         }
         
         public IEnumerator TakeNftScreenShot(Land land, Action<byte[]> consumer)
         {
-            
             var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
             mapInputManager.PrepareForScreenShot(land);
-            landProfileDialog.gameObject.SetActive(false);
+            if(LandProfileDialog.INSTANCE.gameObject.activeInHierarchy)
+                LandProfileDialog.INSTANCE.Close();
             yield return new WaitForEndOfFrame();
             
             // var screenshot = ScreenCapture.CaptureScreenshotAsTexture();
@@ -51,13 +49,7 @@ namespace src.Canvas.Map
 
         public bool IsLandProfileDialogOpen()
         {
-            return landProfileDialog.gameObject.activeInHierarchy;
-        }
-
-        public void CloseLandProfileDialogState()
-        {
-            landProfileDialog.RequestClose();
-            landProfileDialog.gameObject.SetActive(false);
+            return LandProfileDialog.INSTANCE.gameObject.activeSelf;
         }
 
         public void OpenLandBuyDialogState(RectTransform rect, Action dismissCallback)
