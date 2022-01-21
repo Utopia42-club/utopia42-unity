@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using src.Canvas.Map;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -44,6 +41,7 @@ namespace src.Canvas
                 var changed = IsLandChanged(player.transform.position);
                 if (changed || !view.activeSelf && currentWallet != null)
                     OnOwnerChanged();
+
                 if (Input.GetButtonDown("Profile") && currentWallet != null &&
                     !profileLoader.IsWalletLoading(currentWallet))
                     manager.ShowProfile(currentProfile, currentLand);
@@ -72,7 +70,9 @@ namespace src.Canvas
             {
                 view.SetActive(true);
                 currentProfile = profile;
-                profileIcon.SetUrl(Constants.ApiURL + "/profile/avatar/" + profile.imageUrl);
+                profileIcon.SetUrl(profile.imageUrl == null
+                    ? null
+                    : Constants.ApiURL + "/profile/avatar/" + profile.imageUrl);
                 label.SetText(profile.name);
             }
         }
@@ -91,13 +91,18 @@ namespace src.Canvas
             SetCurrentProfile(Profile.LOADING_PROFILE);
             profileLoader.load(currentWallet, profile =>
             {
+                Debug.Log("loaded profile.");
                 SetCurrentProfile(profile);
                 if (profile != null)
                 {
                     HorizontalLayoutGroup layout = view.GetComponentInChildren<HorizontalLayoutGroup>();
                     LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform) layout.transform);
                 }
-            }, () => SetCurrentProfile(Profile.FAILED_TO_LOAD_PROFILE));
+            }, () =>
+            {
+                Debug.Log("Failed to load.");
+                SetCurrentProfile(Profile.FAILED_TO_LOAD_PROFILE);
+            });
         }
 
         private bool IsLandChanged(Vector3 position)
