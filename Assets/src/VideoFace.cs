@@ -85,12 +85,10 @@ namespace src
 
         private void FrameReady(VideoPlayer vp, long frameIdx)
         {
-            Debug.Log("Frame Ready!!");
         }
 
         private void SeekCompeleted(VideoPlayer vp)
         {
-            Debug.Log("Seek Compeleted!!");
             if (previewing)
             {
                 videoPlayer.seekCompleted -= SeekCompeleted;

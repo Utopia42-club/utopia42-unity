@@ -91,7 +91,6 @@ namespace src.Canvas
             SetCurrentProfile(Profile.LOADING_PROFILE);
             profileLoader.load(currentWallet, profile =>
             {
-                Debug.Log("loaded profile.");
                 SetCurrentProfile(profile);
                 if (profile != null)
                 {
@@ -100,7 +99,6 @@ namespace src.Canvas
                 }
             }, () =>
             {
-                Debug.Log("Failed to load.");
                 SetCurrentProfile(Profile.FAILED_TO_LOAD_PROFILE);
             });
         }
