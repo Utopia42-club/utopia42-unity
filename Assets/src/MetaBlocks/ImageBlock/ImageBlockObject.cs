@@ -107,7 +107,7 @@ namespace src.MetaBlocks.ImageBlock
             var meshRenderer = imgFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
             {
-                DestroyImmediate(meshRenderer);
+                DestroyImmediate(imgFace.gameObject);
                 DestroyImmediate(imgFace);
                 UpdateStateAndIcon(face.index, StateMsg.OutOfBound);
                 return;

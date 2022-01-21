@@ -148,7 +148,7 @@ namespace src.MetaBlocks.VideoBlock
             var meshRenderer = vidFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
             {
-                DestroyImmediate(meshRenderer);
+                DestroyImmediate(vidFace.gameObject);
                 DestroyImmediate(vidFace);
                 CreateIcon(true);
                 return;

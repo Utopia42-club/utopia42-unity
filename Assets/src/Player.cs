@@ -20,7 +20,7 @@ namespace src
 
         public float walkSpeed = 6f;
         public float sprintSpeed = 12f;
-        public float jumpHeight = 5;
+        public float jumpHeight = 2;
         public float gravity = -9.8f;
 
         private float horizontal;
