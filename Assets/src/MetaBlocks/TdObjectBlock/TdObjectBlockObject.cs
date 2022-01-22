@@ -7,6 +7,7 @@ using Dummiesman;
 using src.Canvas;
 using src.Model;
 using src.Utils;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -189,10 +190,11 @@ namespace src.MetaBlocks.TdObjectBlock
             var rotation = properties.rotation?.ToVector3() ?? Vector3.zero;
             var initialPosition = properties.initialPosition?.ToVector3() ?? Vector3.zero;
             var initialScale = properties.initialScale;
+            var detectCollision = properties.detectCollision;
 
             if (currentUrl.Equals(properties.url) && tdObjectContainer != null)
             {
-                LoadGameObject(scale, offset, rotation, initialPosition, initialScale);
+                LoadGameObject(scale, offset, rotation, initialPosition, initialScale, detectCollision);
             }
             else
             {
@@ -209,7 +211,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     tdObject = go;
                     tdObject.name = TdObjectBlockType.Name;
 
-                    LoadGameObject(scale, offset, rotation, initialPosition, initialScale);
+                    LoadGameObject(scale, offset, rotation, initialPosition, initialScale, detectCollision);
                 }));
 
                 currentUrl = properties.url;
@@ -217,7 +219,7 @@ namespace src.MetaBlocks.TdObjectBlock
         }
 
         public void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation, Vector3 initialPosition,
-            float initialScale)
+            float initialScale, bool detectCollision)
         {
             var initializedBefore = initialScale != 0;
             if (!initializedBefore)
@@ -255,6 +257,7 @@ namespace src.MetaBlocks.TdObjectBlock
             tdObjectContainer.transform.eulerAngles = rotation;
 
             var bc = getBoxCollider(tdObject);
+            tdObject.layer = detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
             var land = GetBlock().land;
             if (land != null && !InLand(bc))
             {

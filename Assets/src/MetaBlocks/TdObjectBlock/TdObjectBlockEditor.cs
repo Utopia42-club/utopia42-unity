@@ -30,6 +30,9 @@ namespace src.MetaBlocks.TdObjectBlock
         [SerializeField]
         public InputField rotationZ;
         
+        [SerializeField]
+        public Toggle detectCollision;
+        
         public TdObjectBlockProperties GetValue()
         {
             if (HasValue(url) && HasValue(scaleX) && HasValue(scaleY) && HasValue(scaleZ)
@@ -41,6 +44,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 props.scale = SerializableVector3.@from(new Vector3(float.Parse(scaleX.text), float.Parse(scaleY.text), float.Parse(scaleZ.text)));
                 props.offset = SerializableVector3.@from(new Vector3(float.Parse(offsetX.text), float.Parse(offsetY.text), float.Parse(offsetZ.text)));
                 props.rotation = SerializableVector3.@from(new Vector3(float.Parse(rotationX.text), float.Parse(rotationY.text), float.Parse(rotationZ.text)));
+                props.detectCollision = detectCollision.isOn;
                 return props;
             }
             return null;
@@ -60,6 +64,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 rotationX.text = "0";
                 rotationY.text = "0";
                 rotationZ.text = "0";
+                detectCollision.isOn = true;
                 return;
             }
             
@@ -82,6 +87,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 rotationY.text = value.rotation.y.ToString();
                 rotationZ.text = value.rotation.z.ToString();
             }
+
+            detectCollision.isOn = value.detectCollision;
         }
 
         private bool HasValue(InputField f)

@@ -13,6 +13,8 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public SerializableVector3 initialPosition = SerializableVector3.from(Vector3.zero);
         public float initialScale = 0;
+
+        public bool detectCollision = true;
         
         public TdObjectBlockProperties()
         {
@@ -29,6 +31,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 rotation = obj.rotation;
                 initialPosition = obj.initialPosition;
                 initialScale = obj.initialScale;
+                detectCollision = obj.detectCollision;
             }
         }
         
@@ -39,6 +42,7 @@ namespace src.MetaBlocks.TdObjectBlock
             this.scale = props.scale;
             this.offset = props.offset;
             this.rotation = props.rotation;
+            this.detectCollision = props.detectCollision;
         }
         
         public override bool Equals(object obj)
@@ -48,7 +52,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 return false;
             var prop = obj as TdObjectBlockProperties;
             return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(offset, prop.offset) && Equals(rotation, prop.rotation) 
-                   && Equals(initialPosition, prop.initialPosition) && Equals(initialScale, prop.initialScale);
+                   && Equals(initialPosition, prop.initialPosition) && Equals(initialScale, prop.initialScale) && Equals(detectCollision, prop.detectCollision);
         }
 
         public bool IsEmpty()
