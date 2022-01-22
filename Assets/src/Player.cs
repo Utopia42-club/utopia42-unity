@@ -37,6 +37,7 @@ namespace src
 
         public Transform highlightBlock;
         public Transform placeBlock;
+        public Transform tdObjectHighlightBox;
         private MetaBlock focusedMetaBlock;
         private Voxels.Face focusedMetaFace;
         private RaycastHit raycastHit;
@@ -91,12 +92,12 @@ namespace src
             {
                 velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
                 // if (!floating)
-                    // jumpRequest = false;
+                // jumpRequest = false;
             }
 
             if (!floating && !controller.isGrounded)
                 velocity.y += gravity * Time.fixedDeltaTime;
-            
+
             controller.Move(velocity * Time.fixedDeltaTime);
             if ((controller.collisionFlags & CollisionFlags.Above) != 0)
                 velocity.y = 0;
@@ -129,8 +130,8 @@ namespace src
                 placeBlock.gameObject.SetActive(false);
             }
 
-            if (selectedMeta == null) return;
-            selectedMeta.UnSelect();
+            if (selectedMeta != null)
+                selectedMeta.UnSelect();
             focusedMetaFace = null;
             selectedMeta = null;
             hitCollider = null;
@@ -320,6 +321,27 @@ namespace src
             return new VoxelPosition(transform.position);
         }
 
+        public void ShowTdObjectHighlightBox(BoxCollider boxCollider)
+        {
+            var colliderTransform = boxCollider.transform;
+            tdObjectHighlightBox.transform.rotation = colliderTransform.rotation;
+
+            var size = boxCollider.size;
+            var minPos = boxCollider.center - size / 2;
+            
+            var gameObjectTransform = boxCollider.gameObject.transform;
+            size.Scale(gameObjectTransform.localScale);
+            size.Scale(gameObjectTransform.parent.localScale);
+            
+            tdObjectHighlightBox.localScale = size;
+            tdObjectHighlightBox.position = colliderTransform.TransformPoint(minPos);
+            tdObjectHighlightBox.gameObject.SetActive(true);
+        }
+
+        public void HideTdObjectHighlightBox()
+        {
+            tdObjectHighlightBox.gameObject.SetActive(false);
+        }
 
         public static Player INSTANCE
         {

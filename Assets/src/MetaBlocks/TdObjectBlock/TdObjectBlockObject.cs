@@ -31,10 +31,12 @@ namespace src.MetaBlocks.TdObjectBlock
         private StateMsg stateMsg = StateMsg.Ok;
 
         private TdObjectMoveController moveController;
+        private Player player;
 
         private void Start()
         {
-            if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
+            player = Player.INSTANCE;
+            if (canEdit = player.CanEdit(Vectors.FloorToInt(transform.position), out land))
                 CreateIcon(false);
             ready = true;
         }
@@ -58,6 +60,7 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             if (!canEdit) return;
             SetupDefaultSnack();
+            player.ShowTdObjectHighlightBox(getBoxCollider());
         }
 
         public void ExitMovingState()
@@ -84,11 +87,19 @@ namespace src.MetaBlocks.TdObjectBlock
             snackItem = Snack.INSTANCE.ShowLines(GetDefaultSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
+                {
+                    player.HideTdObjectHighlightBox();
                     EditProps();
+                }
+
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetKeyDown(KeyCode.V) && tdObjectContainer != null)
+                {
+                    player.HideTdObjectHighlightBox();
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
+                }
+
                 if (Input.GetButtonDown("Delete"))
                 {
                     GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
@@ -115,7 +126,10 @@ namespace src.MetaBlocks.TdObjectBlock
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
                 if (Input.GetKeyDown(KeyCode.X))
+                {
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
+                }
+
                 if (Input.GetKeyDown(KeyCode.H))
                     SetToMovingState(!helpMode);
             });
@@ -167,6 +181,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem.Remove();
                 snackItem = null;
             }
+
+            player.HideTdObjectHighlightBox();
         }
 
         public void UpdateStateAndIcon(StateMsg msg)
@@ -256,8 +272,9 @@ namespace src.MetaBlocks.TdObjectBlock
 
             tdObjectContainer.transform.eulerAngles = rotation;
 
-            var bc = getBoxCollider(tdObject);
-            tdObject.layer = detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
+            var bc = getBoxCollider();
+            tdObject.layer =
+                detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
             var land = GetBlock().land;
             if (land != null && !InLand(bc))
             {
@@ -281,7 +298,7 @@ namespace src.MetaBlocks.TdObjectBlock
             tdObject = null;
         }
 
-        private BoxCollider getBoxCollider(GameObject tdObject)
+        private BoxCollider getBoxCollider()
         {
             var bc = tdObject.GetComponent<BoxCollider>();
             if (bc == null)
@@ -290,6 +307,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 var tdObjectSelectable = tdObject.AddComponent<TdObjectSelectable>();
                 tdObjectSelectable.Initialize(this);
             }
+
             bc.center = GetObjectCenter(tdObject, false);
             bc.size = GetObjectSize(tdObject, bc.center, false);
             return bc;
