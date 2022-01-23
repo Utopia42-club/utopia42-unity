@@ -21,6 +21,7 @@ namespace src
         private State state = State.LOADING;
         private List<Dialog> dialogs = new List<Dialog>();
 
+
         void Start()
         {
             SetState(State.SETTINGS);
@@ -63,6 +64,15 @@ namespace src
         public void MovePlayerTo(Vector3 pos)
         {
             StartCoroutine(DoMovePlayerTo(pos, false));
+        }
+
+        public void MovePlayerTo(string pos)
+        {
+            var xz = pos.Split('_');
+            if (xz.Length == 2 && float.TryParse(xz[0], out var x) && float.TryParse(xz[1], out var z))
+            {
+                MovePlayerTo(new Vector3(x, 0, z));
+            }
         }
 
         private IEnumerator DoMovePlayerTo(Vector3 pos, bool clean)
@@ -325,7 +335,7 @@ namespace src
 
         public void EditProfile()
         {
-            if(LandProfileDialog.INSTANCE.gameObject.activeSelf)
+            if (LandProfileDialog.INSTANCE.gameObject.activeSelf)
                 LandProfileDialog.INSTANCE.Close();
             SetState(State.BROWSER_CONNECTION);
             BrowserConnector.INSTANCE.EditProfile(() =>
