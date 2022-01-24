@@ -199,6 +199,13 @@ namespace src
                 () => profileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
+        public void CopyPositionLink()
+        {
+            var currentPosition = Player.INSTANCE.transform.position;
+            GUIUtility.systemCopyBuffer =
+                Constants.WebAppBaseURL + $"/game?position={currentPosition.x}_{currentPosition.z}";
+        }
+
         private void SetState(State state)
         {
             this.state = state;

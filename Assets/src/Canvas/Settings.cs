@@ -18,6 +18,7 @@ namespace src.Canvas
         [SerializeField] private Button saveGameButton;
         [SerializeField] private Button editProfileButton;
         [SerializeField] private Button helpButton;
+        [SerializeField] private Button positionLinkButton;
 
         void Start()
         {
@@ -51,6 +52,7 @@ namespace src.Canvas
             editProfileButton.onClick.AddListener(() => manager.ShowUserProfile());
             helpButton.onClick.AddListener(() => manager.Help());
             walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
+            positionLinkButton.onClick.AddListener(() => manager.CopyPositionLink());
 
             manager.stateChange.AddListener(state =>
             {
@@ -94,6 +96,7 @@ namespace src.Canvas
             saveGameButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
             editProfileButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
             helpButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
+            positionLinkButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
         }
 
         private void ResetButtonsState()
