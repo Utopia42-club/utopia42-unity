@@ -53,6 +53,14 @@ namespace src
         {
             controller = GetComponent<CharacterController>();
             Snack.INSTANCE.ShowObject("Owner", null);
+
+            GameManager.INSTANCE.stateChange.AddListener(state =>
+            {
+                if(state == GameManager.State.PLAYING)
+                {
+                    hitCollider = null;
+                }
+            });
         }
 
         public List<Land> GetOwnedLands()

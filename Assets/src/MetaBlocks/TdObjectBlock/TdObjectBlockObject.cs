@@ -21,6 +21,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private GameObject tdObjectContainer;
         private GameObject tdObject;
         private BoxCollider tdObjectBoxCollider;
+        private TdObjectSelectable tdObjectSelectable;
 
         private SnackItem snackItem;
         private Land land;
@@ -180,7 +181,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem.Remove();
                 snackItem = null;
             }
-            
+
             Player.INSTANCE.HideTdObjectHighlightBox();
         }
 
@@ -258,7 +259,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if (tdObjectBoxCollider == null)
             {
                 tdObjectBoxCollider = tdObject.AddComponent<BoxCollider>();
-                var tdObjectSelectable = tdObject.AddComponent<TdObjectSelectable>();
+                tdObjectSelectable = tdObject.AddComponent<TdObjectSelectable>();
                 tdObjectSelectable.Initialize(this);
                 tdObjectBoxCollider.center = GetObjectCenter(tdObject, false);
                 tdObjectBoxCollider.size = GetObjectSize(tdObjectBoxCollider.center, tdObject, false);
@@ -287,6 +288,12 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void DestroyObject()
         {
+            if (tdObjectSelectable != null)
+            {
+                tdObjectSelectable.UnSelect();
+                tdObjectSelectable = null;
+            }
+
             if (tdObject != null)
             {
                 DestroyImmediate(tdObject.gameObject);
@@ -300,6 +307,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 DestroyImmediate(tdObjectContainer);
                 tdObjectContainer = null;
             }
+
+            tdObjectBoxCollider = null;
         }
 
         public void InitializeProps(Vector3 initialPosition, float initialScale)
