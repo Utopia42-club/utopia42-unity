@@ -61,7 +61,7 @@ namespace src.MetaBlocks
             if (block.land == null)
                 return true;
 
-            var transform = bc.transform;
+            var bcTransform = bc.transform;
 
             var center = bc.center;
             var size = bc.size;
@@ -70,14 +70,14 @@ namespace src.MetaBlocks
             var max = center + size * 0.5f;
 
             return
-                InLand(transform.TransformPoint(new Vector3(min.x, min.y, min.z))) &&
-                InLand(transform.TransformPoint(new Vector3(min.x, min.y, max.z))) &&
-                InLand(transform.TransformPoint(new Vector3(min.x, max.y, min.z))) &&
-                InLand(transform.TransformPoint(new Vector3(min.x, max.y, max.z))) &&
-                InLand(transform.TransformPoint(new Vector3(max.x, min.y, min.z))) &&
-                InLand(transform.TransformPoint(new Vector3(max.x, min.y, max.z))) &&
-                InLand(transform.TransformPoint(new Vector3(max.x, max.y, min.z))) &&
-                InLand(transform.TransformPoint(new Vector3(max.x, max.y, max.z)));
+                InLand(bcTransform.TransformPoint(new Vector3(min.x, min.y, min.z))) &&
+                InLand(bcTransform.TransformPoint(new Vector3(min.x, min.y, max.z))) &&
+                InLand(bcTransform.TransformPoint(new Vector3(min.x, max.y, min.z))) &&
+                InLand(bcTransform.TransformPoint(new Vector3(min.x, max.y, max.z))) &&
+                InLand(bcTransform.TransformPoint(new Vector3(max.x, min.y, min.z))) &&
+                InLand(bcTransform.TransformPoint(new Vector3(max.x, min.y, max.z))) &&
+                InLand(bcTransform.TransformPoint(new Vector3(max.x, max.y, min.z))) &&
+                InLand(bcTransform.TransformPoint(new Vector3(max.x, max.y, max.z)));
         }
 
         protected bool InLand(MeshRenderer meshRenderer)

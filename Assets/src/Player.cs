@@ -22,6 +22,7 @@ namespace src
         public float sprintSpeed = 12f;
         public float jumpHeight = 2;
         public float gravity = -9.8f;
+        
 
         private float horizontal;
         private float vertical;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using src.Canvas;
 using src.Canvas.Map;
 using src.MetaBlocks.TdObjectBlock;
@@ -21,13 +22,12 @@ namespace src
         private State state = State.LOADING;
         private List<Dialog> dialogs = new List<Dialog>();
 
-
         void Start()
         {
             SetState(State.SETTINGS);
         }
 
-        private void InitPlayerForWallet()
+        private void InitPlayerForWallet(Vector3? startingPosition)
         {
             if (string.IsNullOrWhiteSpace(Settings.WalletId()))
             {
@@ -38,21 +38,24 @@ namespace src
             var player = Player.INSTANCE;
             player.ResetLands();
 
-            var pos = new Vector3(0, Chunk.CHUNK_HEIGHT + 10, 0);
+            var pos = startingPosition;
 
-            var lands = player.GetOwnedLands();
-            if (lands.Count > 0)
+            if (pos == null)
             {
-                var land = lands[0];
-                pos = new Vector3(
-                    ((float) (land.x1 + land.x2)) / 2,
-                    Chunk.CHUNK_HEIGHT + 10,
-                    ((float) (land.y1 + land.y2)) / 2);
+                pos = new Vector3(0, Chunk.CHUNK_HEIGHT + 10, 0);
+                var lands = player.GetOwnedLands();
+                if (lands.Count > 0)
+                {
+                    var land = lands[0];
+                    pos = new Vector3(
+                        ((float) (land.x1 + land.x2)) / 2,
+                        Chunk.CHUNK_HEIGHT + 10,
+                        ((float) (land.y1 + land.y2)) / 2);
+                }
             }
 
-            pos = FindStartingY(pos);
-
-            StartCoroutine(DoMovePlayerTo(pos, true));
+            pos = FindStartingY(pos.Value);
+            StartCoroutine(DoMovePlayerTo(pos.Value, true));
         }
 
         internal void Help()
@@ -64,15 +67,6 @@ namespace src
         public void MovePlayerTo(Vector3 pos)
         {
             StartCoroutine(DoMovePlayerTo(pos, false));
-        }
-
-        public void MovePlayerTo(string pos)
-        {
-            var xz = pos.Split('_');
-            if (xz.Length == 2 && float.TryParse(xz[0], out var x) && float.TryParse(xz[1], out var z))
-            {
-                MovePlayerTo(new Vector3(x, 0, z));
-            }
         }
 
         private IEnumerator DoMovePlayerTo(Vector3 pos, bool clean)
@@ -87,7 +81,6 @@ namespace src
 
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
-            var player = Player.INSTANCE;
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Creating the world\n0%");
             yield return null;
@@ -100,6 +93,9 @@ namespace src
                 Loading.INSTANCE.UpdateText(string.Format("Creating the world\n{0}%", Mathf.FloorToInt(perc)));
                 yield return null;
             }
+
+            // If not stated, player might go through the ground (like there is no collider for the ground)
+            yield return null;
 
             worldInited = true;
             SetState(State.PLAYING);
@@ -159,24 +155,25 @@ namespace src
                 CloseDialog(dialogs[dialogs.Count - 1]);
         }
 
-        internal void ExitSettings()
+        internal void ExitSettings(Vector3? startingPosition)
         {
             if (worldInited) SetState(State.PLAYING);
-            else InitPlayerForWallet();
+            else InitPlayerForWallet(startingPosition);
         }
 
-        internal void SettingsChanged(EthNetwork network)
+        internal void SettingsChanged(EthNetwork network, Vector3? startingPosition)
         {
             if (!EthereumClientService.INSTANCE.IsInited())
             {
                 EthereumClientService.INSTANCE.SetNetwork(network);
                 SetState(State.LOADING);
-                StartCoroutine(VoxelService.INSTANCE.Initialize(Loading.INSTANCE, () => this.InitPlayerForWallet()));
+                StartCoroutine(VoxelService.INSTANCE.Initialize(Loading.INSTANCE,
+                    () => this.InitPlayerForWallet(startingPosition)));
             }
             else
             {
                 SetState(State.LOADING);
-                InitPlayerForWallet();
+                InitPlayerForWallet(startingPosition);
             }
         }
 
@@ -202,8 +199,13 @@ namespace src
         public void CopyPositionLink()
         {
             var currentPosition = Player.INSTANCE.transform.position;
-            GUIUtility.systemCopyBuffer =
-                Constants.WebAppBaseURL + $"/game?position={currentPosition.x}_{currentPosition.z}";
+            var url = Constants.WebAppBaseURL +
+                      $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}";
+
+            if (WebBridge.IsPresent())
+                WebBridge.Call<object>("copyToClipboard", url);
+            else
+                GUIUtility.systemCopyBuffer = url;
         }
 
         private void SetState(State state)

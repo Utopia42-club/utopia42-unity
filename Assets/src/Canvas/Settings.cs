@@ -15,10 +15,13 @@ namespace src.Canvas
         [SerializeField] private InputField walletInput;
         [SerializeField] private Dropdown networkInput;
         [SerializeField] private Button submitButton;
+        [SerializeField] private Button guestButton;
         [SerializeField] private Button saveGameButton;
         [SerializeField] private Button editProfileButton;
         [SerializeField] private Button helpButton;
         [SerializeField] private Button positionLinkButton;
+
+        private Vector3? startingPosition = null;
 
         void Start()
         {
@@ -59,18 +62,30 @@ namespace src.Canvas
                 ResetInputs();
                 gameObject.SetActive(state == GameManager.State.SETTINGS);
             });
-            if (WebBridge.IsPresent())
+
+            if (!WebBridge.IsPresent()) return;
+
+            WebBridge.CallAsync<ConnectionDetail>("connectMetamask", "", (ci) =>
             {
-                WebBridge.CallAsync<ConnectionDetail>("connectMetamask", "", (ci) =>
+                if (ci.network.HasValue && ci.wallet != null)
                 {
-                    if (ci.network.HasValue && ci.wallet != null)
-                    {
-                        PlayerPrefs.SetInt(Keys.NETWORK, ci.network.Value);
-                        PlayerPrefs.SetString(Keys.WALLET, ci.wallet);
-                        ResetInputs();
-                    }
-                });
-            }
+                    PlayerPrefs.SetInt(Keys.NETWORK, ci.network.Value);
+                    PlayerPrefs.SetString(Keys.WALLET, ci.wallet);
+                    ResetInputs();
+                }
+            });
+
+            guestButton.interactable = false;
+            submitButton.interactable = false;
+            WebBridge.CallAsync<Position>("getStartingPosition", "", (pos) =>
+            {
+                if (pos == null)
+                    startingPosition = null;
+                else
+                    startingPosition = new Vector3(pos.x, pos.y, pos.z);
+                guestButton.interactable = true;
+                submitButton.interactable = true;
+            });
         }
 
         private void ResetInputs()
@@ -126,12 +141,12 @@ namespace src.Canvas
                 PlayerPrefs.SetInt(Keys.NETWORK, EthNetwork.GetNetworksIfPresent()[networkInput.value].id);
             else if (Equals(WalletId(), walletId))
             {
-                GameManager.INSTANCE.ExitSettings();
+                GameManager.INSTANCE.ExitSettings(startingPosition);
                 return;
             }
 
             PlayerPrefs.SetString(Keys.WALLET, walletId);
-            GameManager.INSTANCE.SettingsChanged(Network());
+            GameManager.INSTANCE.SettingsChanged(Network(), startingPosition);
         }
 
         public static bool IsGuest()

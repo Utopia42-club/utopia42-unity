@@ -21,13 +21,6 @@ namespace src.Canvas
         {
             var manager = GameManager.INSTANCE;
             gameObject.SetActive(manager.GetState() == GameManager.State.BROWSER_CONNECTION);
-            manager.stateChange.AddListener(state =>
-                {
-                    gameObject.SetActive(state == GameManager.State.BROWSER_CONNECTION);
-                    if (WebBridge.IsPresent())
-                        WebBridge.Call<object>("stateChanged", state.ToString());
-                }
-            );
             //copyUrlButton.onClick.AddListener(() => GUIUtility.systemCopyBuffer = currentUrl);
         }
 
