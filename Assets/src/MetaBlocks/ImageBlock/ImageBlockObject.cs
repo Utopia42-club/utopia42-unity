@@ -81,7 +81,12 @@ namespace src.MetaBlocks.ImageBlock
         private void RenderFaces()
         {
             foreach (var img in images)
+            {
+                var selectable = img.GetComponent<MetaSelectable>();
+                if(selectable != null)
+                    selectable.UnSelect();
                 DestroyImmediate(img);
+            }
             images.Clear();
 
             MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
@@ -115,7 +120,7 @@ namespace src.MetaBlocks.ImageBlock
 
             imgFace.Init(meshRenderer, props.url, this, face.index);
             images.Add(go);
-            var faceSelectable = imgFace.gameObject.AddComponent<FaceSelectable>();
+            var faceSelectable = go.AddComponent<FaceSelectable>();
             faceSelectable.Initialize(this, face);
         }
 

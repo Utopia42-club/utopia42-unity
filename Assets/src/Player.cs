@@ -22,7 +22,7 @@ namespace src
         public float sprintSpeed = 12f;
         public float jumpHeight = 2;
         public float gravity = -9.8f;
-        
+
 
         private float horizontal;
         private float vertical;
@@ -56,7 +56,7 @@ namespace src
 
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
-                if(state == GameManager.State.PLAYING)
+                if (state == GameManager.State.PLAYING)
                 {
                     hitCollider = null;
                 }
@@ -137,6 +137,8 @@ namespace src
             {
                 highlightBlock.gameObject.SetActive(false);
                 placeBlock.gameObject.SetActive(false);
+                if (focusedMetaBlock != null)
+                    focusedMetaBlock.UnFocus();
             }
 
             if (selectedMeta != null)
@@ -337,11 +339,11 @@ namespace src
 
             var size = boxCollider.size;
             var minPos = boxCollider.center - size / 2;
-            
+
             var gameObjectTransform = boxCollider.gameObject.transform;
             size.Scale(gameObjectTransform.localScale);
             size.Scale(gameObjectTransform.parent.localScale);
-            
+
             tdObjectHighlightBox.localScale = size;
             tdObjectHighlightBox.position = colliderTransform.TransformPoint(minPos);
             tdObjectHighlightBox.gameObject.SetActive(true);

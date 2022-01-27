@@ -122,7 +122,13 @@ namespace src.MetaBlocks.VideoBlock
         private void RenderFaces()
         {
             foreach (var vid in videos.Values)
+            {
+                var selectable = vid.GetComponent<MetaSelectable>();
+                if (selectable != null)
+                    selectable.UnSelect();
                 DestroyImmediate(vid.gameObject);
+            }
+
             videos.Clear();
 
             VideoBlockProperties properties = (VideoBlockProperties) GetBlock().GetProps();
@@ -161,7 +167,7 @@ namespace src.MetaBlocks.VideoBlock
                 if (focusedFace == face) UpdateSnacksAndIconObject(face);
             });
 
-            var faceSelectable = vidFace.gameObject.AddComponent<FaceSelectable>();
+            var faceSelectable = go.AddComponent<FaceSelectable>();
             faceSelectable.Initialize(this, face);
         }
 
