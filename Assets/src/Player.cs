@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using src.Canvas;
 using src.MetaBlocks;
 using src.Model;
@@ -22,7 +24,7 @@ namespace src
         public float sprintSpeed = 12f;
         public float jumpHeight = 2;
         public float gravity = -9.8f;
-
+        public float selectedBlocksHighlightAlpha = 0.3f;
 
         private float horizontal;
         private float vertical;
@@ -35,6 +37,8 @@ namespace src
         private Vector3Int lastChunk;
 
         private List<Land> ownedLands = new List<Land>();
+        private List<Transform> selectedBlocks = new List<Transform>();
+        private List<Vector3> clipboardBlockPositions = new List<Vector3>();
 
         public Transform highlightBlock;
         public Transform placeBlock;
@@ -151,7 +155,9 @@ namespace src
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            GetPlayerInputs();
+            GetPlayerMovementInputs();
+            GetBlockSelectionInputs();
+            GetBlockClipboardInputs();
 
             if (lastChunk == null)
             {
@@ -169,7 +175,7 @@ namespace src
             }
         }
 
-        private void GetPlayerInputs()
+        private void GetPlayerMovementInputs()
         {
             horizontal = Input.GetAxis("Horizontal");
             vertical = Input.GetAxis("Vertical");
@@ -179,7 +185,6 @@ namespace src
             if (Input.GetButtonUp("Sprint"))
                 sprinting = false;
 
-
             if (Input.GetButtonDown("Jump"))
                 jumpRequest = true;
             if (Input.GetButtonUp("Jump"))
@@ -187,10 +192,50 @@ namespace src
 
             if (Input.GetButtonDown("Toggle Floating"))
                 floating = !floating;
+        }
 
-            if (highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))
+        private void GetBlockSelectionInputs()
+        {
+            var selectVoxel = highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0)
+                                                                   && (Input.GetKey(KeyCode.LeftControl) ||
+                                                                       Input.GetKey(KeyCode.RightControl));
+            var deleteVoxel = !selectVoxel && highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0);
+
+            var highlightBlockPosition = highlightBlock.position;
+
+            if (selectVoxel)
             {
-                var vp = new VoxelPosition(highlightBlock.position);
+                // Remove any existing selections
+                var indicesToRemove = new List<int>();
+                for (int i = 0; i < selectedBlocks.Count; i++)
+                {
+                    if (selectedBlocks[i].position.Equals(highlightBlockPosition))
+                        indicesToRemove.Add(i);
+                }
+
+                if (indicesToRemove.Count > 0)
+                {
+                    foreach (var index in indicesToRemove)
+                    {
+                        DestroyImmediate(selectedBlocks[index].gameObject);
+                        selectedBlocks.RemoveAt(index);
+                    }
+                }
+                // If there were no selection in current position, put a new highlight cube
+                else
+                {
+                    var newHighlightBlock = Instantiate(highlightBlock, highlightBlockPosition, Quaternion.identity);
+                    var material = newHighlightBlock.GetComponentInChildren<MeshRenderer>().material;
+                    Color color = material.color;
+                    color.a = Mathf.Clamp(selectedBlocksHighlightAlpha, 0, 1);
+                    material.color = color;
+                    selectedBlocks.Add(newHighlightBlock);
+                }
+            }
+
+            if (deleteVoxel)
+            {
+                var vp = new VoxelPosition(highlightBlockPosition);
                 var chunk = world.GetChunkIfInited(vp.chunk);
                 if (chunk != null)
                 {
@@ -213,6 +258,79 @@ namespace src
                         chunk.PutVoxel(vp, type, placeLand);
                 }
             }
+        }
+
+        private void GetBlockClipboardInputs()
+        {
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+                clearSelectedBlocks();
+                // Clear clipboard
+                clipboardBlockPositions.Clear();
+            }
+            else if (Input.GetKeyDown(KeyCode.C) && (Input.GetKey(KeyCode.LeftControl) ||
+                                                     Input.GetKey(KeyCode.RightControl)))
+            {
+                // Fill clipboard with selected blocks positions
+                clipboardBlockPositions.Clear();
+                foreach (var block in selectedBlocks)
+                {
+                    clipboardBlockPositions.Add(block.position);
+                }
+
+                clearSelectedBlocks();
+            }
+            else if (placeBlock.gameObject.activeSelf && clipboardBlockPositions.Count > 0 &&
+                     Input.GetKeyDown(KeyCode.V) &&
+                     (Input.GetKey(KeyCode.LeftControl) ||
+                      Input.GetKey(KeyCode.RightControl)))
+            {
+                var minX = float.PositiveInfinity;
+                var minY = float.PositiveInfinity;
+                var minZ = float.PositiveInfinity;
+                foreach (var srcBlockPosition in clipboardBlockPositions)
+                {
+                    if (srcBlockPosition.x < minX)
+                        minX = srcBlockPosition.x;
+                    if (srcBlockPosition.y < minY)
+                        minY = srcBlockPosition.y;
+                    if (srcBlockPosition.z < minZ)
+                        minZ = srcBlockPosition.z;
+                }
+
+                var minPoint = new Vector3(minX, minY, minZ);
+                var placeBlockPosition = placeBlock.position;
+                foreach (var srcBlockPosition in clipboardBlockPositions)
+                {
+                    var vp = new VoxelPosition(srcBlockPosition);
+                    var chunk = world.GetChunkIfInited(vp.chunk);
+                    if (chunk == null) continue; // TODO: store necessary information in advance
+                    var type = chunk.GetBlock(vp.local);
+                    var meta = chunk.GetMetaAt(vp);
+
+                    var newPosition = srcBlockPosition - minPoint + placeBlockPosition;
+                    if (CanEdit(Vectors.FloorToInt(newPosition), out var land))
+                    {
+                        vp = new VoxelPosition(newPosition);
+                        chunk = world.GetChunkIfInited(vp.chunk);
+                        if (chunk == null) continue;
+                        chunk.PutVoxel(vp, type, land);
+                        if (meta == null) continue;
+                        chunk.PutMeta(vp, meta.type, land);
+                        chunk.GetMetaAt(vp).SetProps(meta.GetProps(), land);
+                    }
+                }
+            }
+        }
+
+        private void clearSelectedBlocks()
+        {
+            foreach (var block in selectedBlocks)
+            {
+                DestroyImmediate(block.gameObject);
+            }
+
+            selectedBlocks.Clear();
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
