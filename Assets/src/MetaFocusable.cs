@@ -4,19 +4,19 @@ using UnityEngine;
 
 namespace src
 {
-    public abstract class MetaSelectable : MonoBehaviour
+    public abstract class MetaFocusable : MonoBehaviour
     {
         protected MetaBlockObject metaBlockObject;
         protected bool Initialized = false;
 
         public abstract void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null);
 
-        public void UnSelect()
+        public void UnFocus()
         {
             if(!Initialized) return;
             metaBlockObject.UnFocus();
         }
         
-        public abstract void Select();
+        public abstract void Focus();
     }
 }

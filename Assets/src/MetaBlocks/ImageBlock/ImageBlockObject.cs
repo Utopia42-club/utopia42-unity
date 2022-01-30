@@ -82,9 +82,9 @@ namespace src.MetaBlocks.ImageBlock
         {
             foreach (var img in images)
             {
-                var selectable = img.GetComponent<MetaSelectable>();
+                var selectable = img.GetComponent<MetaFocusable>();
                 if(selectable != null)
-                    selectable.UnSelect();
+                    selectable.UnFocus();
                 DestroyImmediate(img);
             }
             images.Clear();
@@ -120,7 +120,7 @@ namespace src.MetaBlocks.ImageBlock
 
             imgFace.Init(meshRenderer, props.url, this, face.index);
             images.Add(go);
-            var faceSelectable = go.AddComponent<FaceSelectable>();
+            var faceSelectable = go.AddComponent<FaceFocusable>();
             faceSelectable.Initialize(this, face);
         }
 

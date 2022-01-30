@@ -1,7 +1,9 @@
+using System;
+
 namespace src.MetaBlocks.LinkBlock
 {
     [System.Serializable]
-    public class LinkBlockProperties
+    public class LinkBlockProperties : ICloneable
     {
         public string url;
         public int[] pos;
@@ -30,6 +32,15 @@ namespace src.MetaBlocks.LinkBlock
                    pos[0] == props.pos[0] &&
                    pos[1] == props.pos[1] &&
                    pos[2] == props.pos[2];
+        }
+
+        public object Clone()
+        {
+            var obj = new LinkBlockProperties();
+            obj.url = url;
+            obj.pos = new int[3];
+            pos.CopyTo(obj.pos, 0);
+            return obj;
         }
 
         public bool IsEmpty()

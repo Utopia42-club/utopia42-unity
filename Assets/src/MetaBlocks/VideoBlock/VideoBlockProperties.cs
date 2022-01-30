@@ -1,9 +1,10 @@
+using System;
 using src.Utils;
 
 namespace src.MetaBlocks.VideoBlock
 {
     [System.Serializable]
-    public class VideoBlockProperties
+    public class VideoBlockProperties : ICloneable
     {
         public FaceProps front;
         public FaceProps back;
@@ -14,7 +15,6 @@ namespace src.MetaBlocks.VideoBlock
 
         public VideoBlockProperties()
         {
-
         }
 
         public VideoBlockProperties(VideoBlockProperties obj)
@@ -39,6 +39,19 @@ namespace src.MetaBlocks.VideoBlock
             return Equals(front, prop.front) && Equals(back, prop.back) &&
                    Equals(top, prop.top) && Equals(bottom, prop.bottom) &&
                    Equals(left, prop.left) && Equals(right, prop.right);
+        }
+
+        public object Clone()
+        {
+            return new VideoBlockProperties()
+            {
+                left = left.Clone(),
+                right = right.Clone(),
+                top = top.Clone(),
+                bottom = bottom.Clone(),
+                front = front.Clone(),
+                back = back.Clone()
+            };
         }
 
         public FaceProps GetFaceProps(Voxels.Face face)
@@ -87,6 +100,16 @@ namespace src.MetaBlocks.VideoBlock
                        && Equals(previewTime, prop.previewTime);
             }
 
+            public FaceProps Clone()
+            {
+                return new FaceProps()
+                {
+                    url = url,
+                    width = width,
+                    height = height,
+                    previewTime = previewTime
+                };
+            }
         }
     }
 }

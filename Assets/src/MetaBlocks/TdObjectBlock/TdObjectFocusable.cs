@@ -1,25 +1,21 @@
-using src.MetaBlocks;
 using src.Utils;
 using UnityEngine;
 
-namespace src
+namespace src.MetaBlocks.TdObjectBlock
 {
-    public class FaceSelectable : MetaSelectable
+    public class TdObjectFocusable : MetaFocusable
     {
-        private Voxels.Face face;
-
         public override void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null)
         {
             if (Initialized) return;
             this.metaBlockObject = metaBlockObject;
-            this.face = face;
             Initialized = true;
         }
 
-        public override void Select()
+        public override void Focus()
         {
             if (!Initialized) return;
-            metaBlockObject.Focus(face);
+            metaBlockObject.Focus(null);
         }
     }
 }

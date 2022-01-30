@@ -133,8 +133,8 @@ namespace src
 
         private void RequestChunkCreation(Vector3Int centerChunk)
         {
-            var to = centerChunk + Player.viewDistance;
-            var from = centerChunk - Player.viewDistance;
+            var to = centerChunk + Player.ViewDistance;
+            var from = centerChunk - Player.ViewDistance;
 
             var unseens = new HashSet<Vector3Int>(chunks.Keys);
             for (int x = from.x; x <= to.x; x++)

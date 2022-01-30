@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using src.Canvas;
 using src.MetaBlocks;
 using src.Model;
@@ -13,7 +11,7 @@ namespace src
 {
     public class Player : MonoBehaviour
     {
-        public static readonly Vector3Int viewDistance = new Vector3Int(5, 5, 5);
+        public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
 
         private bool sprinting;
 
@@ -24,7 +22,6 @@ namespace src
         public float sprintSpeed = 12f;
         public float jumpHeight = 2;
         public float gravity = -9.8f;
-        public float selectedBlocksHighlightAlpha = 0.3f;
 
         private float horizontal;
         private float vertical;
@@ -37,8 +34,8 @@ namespace src
         private Vector3Int lastChunk;
 
         private List<Land> ownedLands = new List<Land>();
-        private List<Transform> selectedBlocks = new List<Transform>();
-        private List<Vector3> clipboardBlockPositions = new List<Vector3>();
+        private List<SelectableBlock> selectedBlocks = new List<SelectableBlock>();
+        private List<SelectableBlock> copiedBlocks = new List<SelectableBlock>();
 
         public Transform highlightBlock;
         public Transform placeBlock;
@@ -46,7 +43,7 @@ namespace src
         private MetaBlock focusedMetaBlock;
         private Voxels.Face focusedMetaFace;
         private RaycastHit raycastHit;
-        private MetaSelectable selectedMeta;
+        private MetaFocusable selectedMeta;
         private Collider hitCollider;
         private CharacterController controller;
 
@@ -90,7 +87,7 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             UpdatePlayerPosition();
-            DetectSelection();
+            DetectFocus();
         }
 
         private void UpdatePlayerPosition()
@@ -116,23 +113,23 @@ namespace src
                 velocity.y = 0;
         }
 
-        private void DetectSelection()
+        private void DetectFocus()
         {
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
                 PlaceCursorBlocks(raycastHit.point);
                 if (hitCollider == raycastHit.collider) return;
                 hitCollider = raycastHit.collider;
-                var metaSelectable = hitCollider.gameObject.GetComponent<MetaSelectable>();
+                var metaSelectable = hitCollider.gameObject.GetComponent<MetaFocusable>();
                 if (metaSelectable != null)
                 {
                     focusedMetaFace = null;
                     if (selectedMeta != null)
                     {
-                        selectedMeta.UnSelect();
+                        selectedMeta.UnFocus();
                     }
 
-                    metaSelectable.Select();
+                    metaSelectable.Focus();
                     selectedMeta = metaSelectable;
                     return;
                 }
@@ -146,7 +143,7 @@ namespace src
             }
 
             if (selectedMeta != null)
-                selectedMeta.UnSelect();
+                selectedMeta.UnFocus();
             focusedMetaFace = null;
             selectedMeta = null;
             hitCollider = null;
@@ -217,19 +214,16 @@ namespace src
                 {
                     foreach (var index in indicesToRemove)
                     {
-                        DestroyImmediate(selectedBlocks[index].gameObject);
+                        DestroyImmediate(selectedBlocks[index].highlight.gameObject);
                         selectedBlocks.RemoveAt(index);
                     }
                 }
                 // If there were no selection in current position, put a new highlight cube
                 else
                 {
-                    var newHighlightBlock = Instantiate(highlightBlock, highlightBlockPosition, Quaternion.identity);
-                    var material = newHighlightBlock.GetComponentInChildren<MeshRenderer>().material;
-                    Color color = material.color;
-                    color.a = Mathf.Clamp(selectedBlocksHighlightAlpha, 0, 1);
-                    material.color = color;
-                    selectedBlocks.Add(newHighlightBlock);
+                    var selectedBlock = SelectableBlock.Create(highlightBlockPosition, world, highlightBlock);
+                    if (selectedBlock != null)
+                        selectedBlocks.Add(selectedBlock);
                 }
             }
 
@@ -264,23 +258,17 @@ namespace src
         {
             if (Input.GetKeyDown(KeyCode.X))
             {
-                clearSelectedBlocks();
-                // Clear clipboard
-                clipboardBlockPositions.Clear();
+                ClearSelectedBlocks();
+                copiedBlocks.Clear();
             }
             else if (Input.GetKeyDown(KeyCode.C) && (Input.GetKey(KeyCode.LeftControl) ||
                                                      Input.GetKey(KeyCode.RightControl)))
             {
-                // Fill clipboard with selected blocks positions
-                clipboardBlockPositions.Clear();
-                foreach (var block in selectedBlocks)
-                {
-                    clipboardBlockPositions.Add(block.position);
-                }
-
-                clearSelectedBlocks();
+                copiedBlocks.Clear();
+                copiedBlocks.AddRange(selectedBlocks);
+                ClearSelectedBlocks();
             }
-            else if (placeBlock.gameObject.activeSelf && clipboardBlockPositions.Count > 0 &&
+            else if (placeBlock.gameObject.activeSelf && copiedBlocks.Count > 0 &&
                      Input.GetKeyDown(KeyCode.V) &&
                      (Input.GetKey(KeyCode.LeftControl) ||
                       Input.GetKey(KeyCode.RightControl)))
@@ -288,48 +276,31 @@ namespace src
                 var minX = float.PositiveInfinity;
                 var minY = float.PositiveInfinity;
                 var minZ = float.PositiveInfinity;
-                foreach (var srcBlockPosition in clipboardBlockPositions)
+                foreach (var srcBlock in copiedBlocks)
                 {
-                    if (srcBlockPosition.x < minX)
-                        minX = srcBlockPosition.x;
-                    if (srcBlockPosition.y < minY)
-                        minY = srcBlockPosition.y;
-                    if (srcBlockPosition.z < minZ)
-                        minZ = srcBlockPosition.z;
+                    if (srcBlock.position.x < minX)
+                        minX = srcBlock.position.x;
+                    if (srcBlock.position.y < minY)
+                        minY = srcBlock.position.y;
+                    if (srcBlock.position.z < minZ)
+                        minZ = srcBlock.position.z;
                 }
 
                 var minPoint = new Vector3(minX, minY, minZ);
                 var placeBlockPosition = placeBlock.position;
-                foreach (var srcBlockPosition in clipboardBlockPositions)
+                foreach (var srcBlock in copiedBlocks)
                 {
-                    var vp = new VoxelPosition(srcBlockPosition);
-                    var chunk = world.GetChunkIfInited(vp.chunk);
-                    if (chunk == null) continue; // TODO: store necessary information in advance
-                    var type = chunk.GetBlock(vp.local);
-                    var meta = chunk.GetMetaAt(vp);
-
-                    var newPosition = srcBlockPosition - minPoint + placeBlockPosition;
+                    var newPosition = srcBlock.position - minPoint + placeBlockPosition;
                     if (CanEdit(Vectors.FloorToInt(newPosition), out var land))
-                    {
-                        vp = new VoxelPosition(newPosition);
-                        chunk = world.GetChunkIfInited(vp.chunk);
-                        if (chunk == null) continue;
-                        chunk.PutVoxel(vp, type, land);
-                        if (meta == null) continue;
-                        chunk.PutMeta(vp, meta.type, land);
-                        chunk.GetMetaAt(vp).SetProps(meta.GetProps(), land);
-                    }
+                        srcBlock.PutInNewPosition(world, newPosition, land);
                 }
             }
         }
 
-        private void clearSelectedBlocks()
+        private void ClearSelectedBlocks()
         {
             foreach (var block in selectedBlocks)
-            {
-                DestroyImmediate(block.gameObject);
-            }
-
+                DestroyImmediate(block.highlight.gameObject);
             selectedBlocks.Clear();
         }
 

@@ -1,9 +1,10 @@
+using System;
 using src.Utils;
 
 namespace src.MetaBlocks.ImageBlock
 {
     [System.Serializable]
-    public class MediaBlockProperties
+    public class MediaBlockProperties : ICloneable
     {
         public FaceProps front;
         public FaceProps back;
@@ -14,7 +15,6 @@ namespace src.MetaBlocks.ImageBlock
 
         public MediaBlockProperties()
         {
-
         }
 
         public MediaBlockProperties(MediaBlockProperties obj)
@@ -39,6 +39,19 @@ namespace src.MetaBlocks.ImageBlock
             return Equals(front, prop.front) && Equals(back, prop.back) &&
                    Equals(top, prop.top) && Equals(bottom, prop.bottom) &&
                    Equals(left, prop.left) && Equals(right, prop.right);
+        }
+
+        public object Clone()
+        {
+            return new MediaBlockProperties()
+            {
+                left = left.Clone(),
+                right = right.Clone(),
+                top = top.Clone(),
+                bottom = bottom.Clone(),
+                front = front.Clone(),
+                back = back.Clone()
+            };
         }
 
         public FaceProps GetFaceProps(Voxels.Face face)
@@ -85,6 +98,15 @@ namespace src.MetaBlocks.ImageBlock
                 return Equals(url, prop.url) && Equals(width, prop.width) && Equals(height, prop.height);
             }
 
+            public FaceProps Clone()
+            {
+                return new FaceProps()
+                {
+                    url = url,
+                    width = width,
+                    height = height,
+                };
+            }
         }
     }
 }
