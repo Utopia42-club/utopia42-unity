@@ -23,7 +23,7 @@ namespace src.MetaBlocks.ImageBlock
             {
                 left = obj.left;
                 right = obj.right;
-                top = obj.right;
+                top = obj.top;
                 bottom = obj.bottom;
                 front = obj.front;
                 back = obj.back;

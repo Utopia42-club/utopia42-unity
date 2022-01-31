@@ -155,6 +155,7 @@ namespace src
             GetPlayerMovementInputs();
             GetBlockSelectionInputs();
             GetBlockClipboardInputs();
+            GetBlockMovementInputs();
 
             if (lastChunk == null)
             {
@@ -191,6 +192,53 @@ namespace src
                 floating = !floating;
         }
 
+        private void GetBlockMovementInputs()
+        {
+            var movementEligible = selectedBlocks.Count > 0 &&
+                                   (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl));
+            if (!movementEligible) return;
+
+            var rotateAroundY = Input.GetKeyDown(KeyCode.R);
+            var rotateAroundX = Input.GetKeyDown(KeyCode.T);
+            var rotateAroundZ = Input.GetKeyDown(KeyCode.Y);
+            var rotation = rotateAroundX || rotateAroundY || rotateAroundZ;
+
+            var moveYp = Input.GetKeyDown(KeyCode.Space);
+            var moveY = Input.GetKeyDown(KeyCode.Space) &&
+                        (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            var moveZp = Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W);
+            var moveZ = Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S);
+            var moveXp = Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D);
+            var moveX = Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A);
+            var movement = moveYp || moveY || moveZp || moveZ || moveXp || moveX;
+
+            if (!rotation && !movement) return;
+
+            var center = selectedBlocks[0].position + 0.5f * Vector3.one;
+            foreach (var block in selectedBlocks)
+            {
+                if (rotateAroundY)
+                    block.RotateAroundY(center);
+                if (rotateAroundX)
+                    block.RotateAroundX(center);
+                if (rotateAroundZ)
+                    block.RotateAroundZ(center);
+
+                if (moveYp)
+                    block.MoveAlongY();
+                if (moveY)
+                    block.MoveAlongY(false);
+                if (moveXp)
+                    block.MoveAlongX();
+                if (moveX)
+                    block.MoveAlongX(false);
+                if (moveZp)
+                    block.MoveAlongZ();
+                if (moveZ)
+                    block.MoveAlongZ(false);
+            }
+        }
+
         private void GetBlockSelectionInputs()
         {
             var selectVoxel = highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0)
@@ -219,9 +267,9 @@ namespace src
                     }
                 }
                 // If there were no selection in current position, put a new highlight cube
-                else
+                else if (CanEdit(Vectors.FloorToInt(highlightBlockPosition), out var land))
                 {
-                    var selectedBlock = SelectableBlock.Create(highlightBlockPosition, world, highlightBlock);
+                    var selectedBlock = SelectableBlock.Create(highlightBlockPosition, world, highlightBlock, land);
                     if (selectedBlock != null)
                         selectedBlocks.Add(selectedBlock);
                 }
@@ -258,6 +306,7 @@ namespace src
         {
             if (Input.GetKeyDown(KeyCode.X))
             {
+                ConfirmMove();
                 ClearSelectedBlocks();
                 copiedBlocks.Clear();
             }
@@ -292,9 +341,16 @@ namespace src
                 {
                     var newPosition = srcBlock.position - minPoint + placeBlockPosition;
                     if (CanEdit(Vectors.FloorToInt(newPosition), out var land))
-                        srcBlock.PutInNewPosition(world, newPosition, land);
+                        srcBlock.PutInPosition(world, newPosition, land);
                 }
             }
+        }
+
+        private void ConfirmMove()
+        {
+            foreach (var block in selectedBlocks)
+                block.ConfirmMove(world);
+            ClearSelectedBlocks();
         }
 
         private void ClearSelectedBlocks()

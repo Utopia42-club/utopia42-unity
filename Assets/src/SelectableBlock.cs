@@ -1,6 +1,7 @@
 using System;
 using src.Model;
 using src.Service;
+using src.Utils;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -8,7 +9,8 @@ namespace src
 {
     public class SelectableBlock
     {
-        public readonly Vector3 position;
+        public Vector3 position { get; private set; }
+        private Land land;
         public readonly Transform highlight;
 
         private readonly byte blockTypeId;
@@ -18,26 +20,28 @@ namespace src
 
         private const float SelectedBlocksHighlightAlpha = 0.3f;
 
-        private SelectableBlock(Vector3 position, byte blockTypeId, Transform highlight, byte metaBlockTypeId,
-            object metaProperties)
+        private SelectableBlock(Vector3 pos, byte blockTypeId, Transform highlight, byte metaBlockTypeId,
+            object metaProperties, Land land)
         {
             metaAttached = true;
-            this.position = position;
+            position = pos;
             this.blockTypeId = blockTypeId;
             this.metaBlockTypeId = metaBlockTypeId;
             this.metaProperties = metaProperties;
             this.highlight = highlight;
+            this.land = land;
         }
 
-        private SelectableBlock(Vector3 position, byte blockTypeId, Transform highlight)
+        private SelectableBlock(Vector3 pos, byte blockTypeId, Transform highlight, Land land)
         {
             metaAttached = false;
-            this.position = position;
+            position = pos;
             this.blockTypeId = blockTypeId;
             this.highlight = highlight;
+            this.land = land;
         }
 
-        public static SelectableBlock Create(Vector3 position, World world, Transform highlight)
+        public static SelectableBlock Create(Vector3 position, World world, Transform highlight, Land land)
         {
             if (world == null) return null;
             var vp = new VoxelPosition(position);
@@ -55,15 +59,15 @@ namespace src
             if (meta != null)
             {
                 return new SelectableBlock(position, blockTypeId, blockHighlight, meta.type.id,
-                    ((ICloneable) meta.GetProps()).Clone());
+                    ((ICloneable) meta.GetProps()).Clone(), land);
             }
 
-            return new SelectableBlock(position, blockTypeId, blockHighlight);
+            return new SelectableBlock(position, blockTypeId, blockHighlight, land);
         }
 
-        public void PutInNewPosition(World world, Vector3 newPosition, Land land)
+        public void PutInPosition(World world, Vector3 pos, Land land)
         {
-            var vp = new VoxelPosition(newPosition);
+            var vp = new VoxelPosition(pos);
             var chunk = world.GetChunkIfInited(vp.chunk);
             chunk.PutVoxel(vp, VoxelService.INSTANCE.GetBlockType(blockTypeId), land);
             if (metaAttached)
@@ -71,6 +75,76 @@ namespace src
                 chunk.PutMeta(vp, VoxelService.INSTANCE.GetBlockType(metaBlockTypeId), land);
                 chunk.GetMetaAt(vp).SetProps(metaProperties, land);
             }
+        }
+
+        public void ConfirmMove(World world)
+        {
+            if (position.Equals(highlight.position)) return;
+            Remove(world);
+            if (Player.INSTANCE.CanEdit(Vectors.FloorToInt(highlight.position), out var land))
+                PutInPosition(world, highlight.position, land);
+        }
+
+        private void Remove(World world)
+        {
+            var vp = new VoxelPosition(position);
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk != null)
+            {
+                chunk.DeleteVoxel(vp, land);
+                if (chunk.GetMetaAt(vp) != null)
+                    chunk.DeleteMeta(vp);
+            }
+        }
+
+        public void RotateAroundY(Vector3 center)
+        {
+            RotateAround(center, Vector3.up);
+        }
+
+        public void RotateAroundX(Vector3 center)
+        {
+            RotateAround(center, Vector3.right);
+        }
+
+        public void RotateAroundZ(Vector3 center)
+        {
+            RotateAround(center, Vector3.forward);
+        }
+
+        private void RotateAround(Vector3 center, Vector3 axis)
+        {
+            var vector3 = Quaternion.AngleAxis(90, axis) * (highlight.position + 0.5f * Vector3.one - center);
+            highlight.position = center + vector3 - 0.5f * Vector3.one;
+        }
+
+        public void MoveAlongY(bool positive = true)
+        {
+            if (positive)
+                Move(Vector3.up);
+            else
+                Move(Vector3.down);
+        }
+
+        public void MoveAlongX(bool positive = true)
+        {
+            if (positive)
+                Move(Vector3.right);
+            else
+                Move(Vector3.left);
+        }
+
+        public void MoveAlongZ(bool positive = true)
+        {
+            if (positive)
+                Move(Vector3.forward);
+            else
+                Move(Vector3.back);
+        }
+
+        private void Move(Vector3 direction)
+        {
+            highlight.position += direction;
         }
     }
 }
