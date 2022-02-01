@@ -7,15 +7,20 @@ namespace src.MetaBlocks.TdObjectBlock
     {
         public override void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null)
         {
-            if (Initialized) return;
-            this.metaBlockObject = metaBlockObject;
-            Initialized = true;
+            if (initialized) return;
+            this.MetaBlockObject = metaBlockObject;
+            initialized = true;
         }
 
         public override void Focus()
         {
-            if (!Initialized) return;
-            metaBlockObject.Focus(null);
+            if (!initialized) return;
+            MetaBlockObject.Focus(null);
+        }
+
+        public override Vector3 GetBlockPosition()
+        {
+            return transform.parent.parent.position;
         }
     }
 }

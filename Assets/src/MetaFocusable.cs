@@ -6,17 +6,19 @@ namespace src
 {
     public abstract class MetaFocusable : MonoBehaviour
     {
-        protected MetaBlockObject metaBlockObject;
-        protected bool Initialized = false;
+        public MetaBlockObject MetaBlockObject { get; protected set; }
+        protected bool initialized = false;
 
         public abstract void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null);
 
         public void UnFocus()
         {
-            if(!Initialized) return;
-            metaBlockObject.UnFocus();
+            if (!initialized) return;
+            MetaBlockObject.UnFocus();
         }
-        
+
         public abstract void Focus();
+
+        public abstract Vector3 GetBlockPosition();
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using src.Canvas;
 using src.MetaBlocks;
 using src.Model;
@@ -43,12 +44,14 @@ namespace src
         private MetaBlock focusedMetaBlock;
         private Voxels.Face focusedMetaFace;
         private RaycastHit raycastHit;
-        private MetaFocusable selectedMeta;
+        private MetaFocusable focusedMeta;
         private Collider hitCollider;
         private CharacterController controller;
 
         public float castStep = 0.01f;
         public byte selectedBlockId = 1;
+
+        private bool movingSelectionState = false;
 
         private void Start()
         {
@@ -58,9 +61,7 @@ namespace src
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING)
-                {
                     hitCollider = null;
-                }
             });
         }
 
@@ -92,18 +93,17 @@ namespace src
 
         private void UpdatePlayerPosition()
         {
-            var moveDirection = ((transform.forward * vertical) + (transform.right * horizontal));
-            controller.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
+            if (!movingSelectionState)
+            {
+                var moveDirection = transform.forward * vertical + transform.right * horizontal;
+                controller.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
+            }
 
             if (controller.isGrounded && velocity.y < 0 || floating)
                 velocity.y = 0f;
 
-            if (jumpRequest)
-            {
+            if (jumpRequest && !movingSelectionState)
                 velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-                // if (!floating)
-                // jumpRequest = false;
-            }
 
             if (!floating && !controller.isGrounded)
                 velocity.y += gravity * Time.fixedDeltaTime;
@@ -120,17 +120,17 @@ namespace src
                 PlaceCursorBlocks(raycastHit.point);
                 if (hitCollider == raycastHit.collider) return;
                 hitCollider = raycastHit.collider;
-                var metaSelectable = hitCollider.gameObject.GetComponent<MetaFocusable>();
-                if (metaSelectable != null)
+                var metaFocusable = hitCollider.GetComponent<MetaFocusable>();
+                if (metaFocusable != null)
                 {
                     focusedMetaFace = null;
-                    if (selectedMeta != null)
+                    if (focusedMeta != null)
                     {
-                        selectedMeta.UnFocus();
+                        focusedMeta.UnFocus();
                     }
 
-                    metaSelectable.Focus();
-                    selectedMeta = metaSelectable;
+                    metaFocusable.Focus();
+                    focusedMeta = metaFocusable;
                     return;
                 }
             }
@@ -142,20 +142,21 @@ namespace src
                     focusedMetaBlock.UnFocus();
             }
 
-            if (selectedMeta != null)
-                selectedMeta.UnFocus();
+            if (focusedMeta != null)
+                focusedMeta.UnFocus();
             focusedMetaFace = null;
-            selectedMeta = null;
+            focusedMeta = null;
             hitCollider = null;
         }
 
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            GetPlayerMovementInputs();
-            GetBlockSelectionInputs();
-            GetBlockClipboardInputs();
-            GetBlockMovementInputs();
+
+            GetMovementInputs();
+            HandleBlockMovement();
+            HandleBlockSelection();
+            HandleBlockClipboard();
 
             if (lastChunk == null)
             {
@@ -173,7 +174,7 @@ namespace src
             }
         }
 
-        private void GetPlayerMovementInputs()
+        private void GetMovementInputs()
         {
             horizontal = Input.GetAxis("Horizontal");
             vertical = Input.GetAxis("Vertical");
@@ -192,92 +193,75 @@ namespace src
                 floating = !floating;
         }
 
-        private void GetBlockMovementInputs()
+        private void HandleBlockMovement()
         {
-            var movementEligible = selectedBlocks.Count > 0 &&
-                                   (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl));
-            if (!movementEligible) return;
+            var movementAllowed = selectedBlocks.Count > 0 && movingSelectionState;
+            if (!movementAllowed) return;
 
-            var rotateAroundY = Input.GetKeyDown(KeyCode.R);
-            var rotateAroundX = Input.GetKeyDown(KeyCode.T);
-            var rotateAroundZ = Input.GetKeyDown(KeyCode.Y);
-            var rotation = rotateAroundX || rotateAroundY || rotateAroundZ;
+            var rotateAroundZ = Input.GetKeyDown(KeyCode.R) &&
+                                (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            var rotateAroundY = !rotateAroundZ && Input.GetKeyDown(KeyCode.R);
+            var rotation = rotateAroundY || rotateAroundZ;
 
-            var moveYp = Input.GetKeyDown(KeyCode.Space);
-            var moveY = Input.GetKeyDown(KeyCode.Space) &&
-                        (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-            var moveZp = Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W);
-            var moveZ = Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S);
-            var moveXp = Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D);
-            var moveX = Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A);
-            var movement = moveYp || moveY || moveZp || moveZ || moveXp || moveX;
+            var moveDown = Input.GetButtonDown("Jump") &&
+                           (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            var moveUp = !moveDown && Input.GetButtonDown("Jump");
+
+            var moveDirection = Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical")
+                ? (transform.forward * vertical + transform.right * horizontal).normalized
+                : Vector3.zero;
+            var movement = moveUp || moveDown || moveDirection.magnitude > castStep;
 
             if (!rotation && !movement) return;
 
             var center = selectedBlocks[0].position + 0.5f * Vector3.one;
+            var delta = Vectors.FloorToInt(center + moveDirection) - selectedBlocks[0].position +
+                        (moveUp ? Vector3.up : moveDown ? Vector3.down : Vector3.zero);
+
             foreach (var block in selectedBlocks)
             {
                 if (rotateAroundY)
                     block.RotateAroundY(center);
-                if (rotateAroundX)
-                    block.RotateAroundX(center);
                 if (rotateAroundZ)
                     block.RotateAroundZ(center);
-
-                if (moveYp)
-                    block.MoveAlongY();
-                if (moveY)
-                    block.MoveAlongY(false);
-                if (moveXp)
-                    block.MoveAlongX();
-                if (moveX)
-                    block.MoveAlongX(false);
-                if (moveZp)
-                    block.MoveAlongZ();
-                if (moveZ)
-                    block.MoveAlongZ(false);
+                block.Move(Vectors.FloorToInt(delta));
             }
         }
 
-        private void GetBlockSelectionInputs()
+        private void HandleBlockSelection()
         {
-            var selectVoxel = highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0)
-                                                                   && (Input.GetKey(KeyCode.LeftControl) ||
-                                                                       Input.GetKey(KeyCode.RightControl));
+            var selectVoxel = (highlightBlock.gameObject.activeSelf || focusedMeta != null) &&
+                              Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftControl) ||
+                                                              Input.GetKey(KeyCode.RightControl));
             var deleteVoxel = !selectVoxel && highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0);
-
-            var highlightBlockPosition = highlightBlock.position;
 
             if (selectVoxel)
             {
+                var selectedBlockPosition =
+                    focusedMeta == null ? highlightBlock.position : focusedMeta.GetBlockPosition();
+
                 // Remove any existing selections
                 var indicesToRemove = new List<int>();
                 for (int i = 0; i < selectedBlocks.Count; i++)
                 {
-                    if (selectedBlocks[i].position.Equals(highlightBlockPosition))
+                    if (selectedBlocks[i].position.Equals(selectedBlockPosition))
                         indicesToRemove.Add(i);
                 }
 
                 if (indicesToRemove.Count > 0)
                 {
-                    foreach (var index in indicesToRemove)
+                    foreach (var index in indicesToRemove.OrderByDescending(i => i))
                     {
                         DestroyImmediate(selectedBlocks[index].highlight.gameObject);
                         selectedBlocks.RemoveAt(index);
                     }
                 }
-                // If there were no selection in current position, put a new highlight cube
-                else if (CanEdit(Vectors.FloorToInt(highlightBlockPosition), out var land))
-                {
-                    var selectedBlock = SelectableBlock.Create(highlightBlockPosition, world, highlightBlock, land);
-                    if (selectedBlock != null)
-                        selectedBlocks.Add(selectedBlock);
-                }
+                else AddNewSelectedBlock(selectedBlockPosition);
             }
 
             if (deleteVoxel)
             {
-                var vp = new VoxelPosition(highlightBlockPosition);
+                var vp = new VoxelPosition(highlightBlock.position);
                 var chunk = world.GetChunkIfInited(vp.chunk);
                 if (chunk != null)
                 {
@@ -302,25 +286,37 @@ namespace src
             }
         }
 
-        private void GetBlockClipboardInputs()
+        private void AddNewSelectedBlock(Vector3 position)
+        {
+            if (CanEdit(Vectors.FloorToInt(position), out var land))
+            {
+                var selectedBlock = SelectableBlock.Create(position, world, highlightBlock, land);
+                if (selectedBlock != null)
+                {
+                    selectedBlocks.Add(selectedBlock);
+                    movingSelectionState = true;
+                }
+            }
+        }
+
+        private void HandleBlockClipboard()
         {
             if (Input.GetKeyDown(KeyCode.X))
             {
                 ConfirmMove();
-                ClearSelectedBlocks();
+                ExitBlockSelectionMovement();
                 copiedBlocks.Clear();
             }
-            else if (Input.GetKeyDown(KeyCode.C) && (Input.GetKey(KeyCode.LeftControl) ||
-                                                     Input.GetKey(KeyCode.RightControl)))
+            else if (Input.GetKeyDown(KeyCode.C) &&
+                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
             {
                 copiedBlocks.Clear();
                 copiedBlocks.AddRange(selectedBlocks);
-                ClearSelectedBlocks();
+                ExitBlockSelectionMovement();
             }
             else if (placeBlock.gameObject.activeSelf && copiedBlocks.Count > 0 &&
                      Input.GetKeyDown(KeyCode.V) &&
-                     (Input.GetKey(KeyCode.LeftControl) ||
-                      Input.GetKey(KeyCode.RightControl)))
+                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
             {
                 var minX = float.PositiveInfinity;
                 var minY = float.PositiveInfinity;
@@ -350,14 +346,15 @@ namespace src
         {
             foreach (var block in selectedBlocks)
                 block.ConfirmMove(world);
-            ClearSelectedBlocks();
+            ExitBlockSelectionMovement();
         }
 
-        private void ClearSelectedBlocks()
+        private void ExitBlockSelectionMovement()
         {
             foreach (var block in selectedBlocks)
                 DestroyImmediate(block.highlight.gameObject);
             selectedBlocks.Clear();
+            movingSelectionState = false;
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)

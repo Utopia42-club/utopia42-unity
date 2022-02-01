@@ -45,12 +45,12 @@ namespace src.MetaBlocks.ImageBlock
         {
             return new MediaBlockProperties()
             {
-                left = left.Clone(),
-                right = right.Clone(),
-                top = top.Clone(),
-                bottom = bottom.Clone(),
-                front = front.Clone(),
-                back = back.Clone()
+                left = left?.Clone(),
+                right = right?.Clone(),
+                top = top?.Clone(),
+                bottom = bottom?.Clone(),
+                front = front?.Clone(),
+                back = back?.Clone()
             };
         }
 

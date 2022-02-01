@@ -54,6 +54,7 @@ namespace src
             Color color = material.color;
             color.a = Mathf.Clamp(SelectedBlocksHighlightAlpha, 0, 1);
             material.color = color;
+            blockHighlight.gameObject.SetActive(true);
 
             var meta = chunk.GetMetaAt(vp);
             if (meta != null)
@@ -102,11 +103,6 @@ namespace src
             RotateAround(center, Vector3.up);
         }
 
-        public void RotateAroundX(Vector3 center)
-        {
-            RotateAround(center, Vector3.right);
-        }
-
         public void RotateAroundZ(Vector3 center)
         {
             RotateAround(center, Vector3.forward);
@@ -118,33 +114,9 @@ namespace src
             highlight.position = center + vector3 - 0.5f * Vector3.one;
         }
 
-        public void MoveAlongY(bool positive = true)
+        public void Move(Vector3Int delta)
         {
-            if (positive)
-                Move(Vector3.up);
-            else
-                Move(Vector3.down);
-        }
-
-        public void MoveAlongX(bool positive = true)
-        {
-            if (positive)
-                Move(Vector3.right);
-            else
-                Move(Vector3.left);
-        }
-
-        public void MoveAlongZ(bool positive = true)
-        {
-            if (positive)
-                Move(Vector3.forward);
-            else
-                Move(Vector3.back);
-        }
-
-        private void Move(Vector3 direction)
-        {
-            highlight.position += direction;
+            highlight.position += delta;
         }
     }
 }
