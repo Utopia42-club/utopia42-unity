@@ -41,20 +41,23 @@ namespace src
             this.land = land;
         }
 
-        public static SelectableBlock Create(Vector3 position, World world, Transform highlight, Land land)
+        public static SelectableBlock Create(Vector3 position, World world, Transform highlight, Land land, bool showHighlight = true)
         {
             if (world == null) return null;
             var vp = new VoxelPosition(position);
             var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk == null) return null;
 
-            var blockTypeId = chunk.GetBlock(vp.local).id;
+            var blockType = chunk.GetBlock(vp.local);
+            if (!blockType.isSolid) return null;
+            var blockTypeId = blockType.id;
+
             var blockHighlight = Object.Instantiate(highlight, position, Quaternion.identity);
             var material = blockHighlight.GetComponentInChildren<MeshRenderer>().material;
             Color color = material.color;
             color.a = Mathf.Clamp(SelectedBlocksHighlightAlpha, 0, 1);
             material.color = color;
-            blockHighlight.gameObject.SetActive(true);
+            blockHighlight.gameObject.SetActive(showHighlight);
 
             var meta = chunk.GetMetaAt(vp);
             if (meta != null)
@@ -86,7 +89,7 @@ namespace src
                 PutInPosition(world, highlight.position, land);
         }
 
-        private void Remove(World world)
+        public void Remove(World world)
         {
             var vp = new VoxelPosition(position);
             var chunk = world.GetChunkIfInited(vp.chunk);

@@ -38,8 +38,12 @@ namespace src.MetaBlocks.LinkBlock
         {
             var obj = new LinkBlockProperties();
             obj.url = url;
-            obj.pos = new int[3];
-            pos.CopyTo(obj.pos, 0);
+            if (pos != null)
+            {
+                obj.pos = new int[3];
+                pos.CopyTo(obj.pos, 0);
+            }
+
             return obj;
         }
 

@@ -52,6 +52,7 @@ namespace src
         public byte selectedBlockId = 1;
 
         private bool movingSelectionState = false;
+        private SnackItem snackItem;
 
         private void Start()
         {
@@ -61,7 +62,10 @@ namespace src
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING)
+                {
                     hitCollider = null;
+                    ExitBlockSelectionMovement();
+                }
             });
         }
 
@@ -195,8 +199,7 @@ namespace src
 
         private void HandleBlockMovement()
         {
-            var movementAllowed = selectedBlocks.Count > 0 && movingSelectionState;
-            if (!movementAllowed) return;
+            if (!(selectedBlocks.Count > 0 && movingSelectionState)) return;
 
             var rotateAroundZ = Input.GetKeyDown(KeyCode.R) &&
                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
@@ -214,8 +217,8 @@ namespace src
 
             if (!rotation && !movement) return;
 
-            var center = selectedBlocks[0].position + 0.5f * Vector3.one;
-            var delta = Vectors.FloorToInt(center + moveDirection) - selectedBlocks[0].position +
+            var center = selectedBlocks[0].highlight.position + 0.5f * Vector3.one;
+            var delta = Vectors.FloorToInt(center + moveDirection) - selectedBlocks[0].highlight.position +
                         (moveUp ? Vector3.up : moveDown ? Vector3.down : Vector3.zero);
 
             foreach (var block in selectedBlocks)
@@ -254,6 +257,11 @@ namespace src
                     {
                         DestroyImmediate(selectedBlocks[index].highlight.gameObject);
                         selectedBlocks.RemoveAt(index);
+                        if (selectedBlocks.Count == 0)
+                        {
+                            ExitBlockSelectionMovement();
+                            break;
+                        }
                     }
                 }
                 else AddNewSelectedBlock(selectedBlockPosition);
@@ -294,24 +302,88 @@ namespace src
                 if (selectedBlock != null)
                 {
                     selectedBlocks.Add(selectedBlock);
-                    movingSelectionState = true;
+                    if (selectedBlocks.Count == 1 && !movingSelectionState)
+                        SetBlockSelectionMovement();
                 }
             }
+        }
+
+        private void AddNewCopiedBlock(Vector3 position)
+        {
+            if (CanEdit(Vectors.FloorToInt(position), out var land))
+            {
+                var copiedBlock = SelectableBlock.Create(position, world, highlightBlock, land, false);
+                if (copiedBlock != null)
+                    copiedBlocks.Add(copiedBlock);
+            }
+        }
+
+        private void SetBlockSelectionMovement(bool help = false)
+        {
+            movingSelectionState = true;
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            snackItem = Snack.INSTANCE.ShowLines(GetMovingSnackLines(help), () =>
+            {
+                if (Input.GetKeyDown(KeyCode.H))
+                    SetBlockSelectionMovement(!help);
+            });
+        }
+
+        private static List<string> GetMovingSnackLines(bool helpMode)
+        {
+            var lines = new List<string>();
+            if (helpMode)
+            {
+                lines.Add("W : forward");
+                lines.Add("S : backward");
+                lines.Add("SPACE : up");
+                lines.Add("SHIFT+SPACE : down");
+                lines.Add("A : left");
+                lines.Add("D : right");
+                lines.Add("R : rotate around y");
+                lines.Add("SHIFT+R : rotate around z");
+                lines.Add("H : exit help");
+            }
+            else
+            {
+                lines.Add("H : help");
+            }
+
+            lines.Add("X : cancel");
+            lines.Add("C : confirm movement");
+            lines.Add("Del : delete selected blocks");
+            lines.Add("CTRL+C/V : copy/paste selection");
+            lines.Add("CTRL+CLICK : select/unselect block");
+            return lines;
         }
 
         private void HandleBlockClipboard()
         {
             if (Input.GetKeyDown(KeyCode.X))
             {
-                ConfirmMove();
                 ExitBlockSelectionMovement();
-                copiedBlocks.Clear();
             }
             else if (Input.GetKeyDown(KeyCode.C) &&
                      (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
             {
                 copiedBlocks.Clear();
-                copiedBlocks.AddRange(selectedBlocks);
+                foreach (var block in selectedBlocks)
+                    AddNewCopiedBlock(block.highlight.position);
+                ExitBlockSelectionMovement();
+            }
+            else if (Input.GetKeyDown(KeyCode.C))
+            {
+                ConfirmMove();
+                ExitBlockSelectionMovement();
+            }
+            else if (Input.GetButtonDown("Delete"))
+            {
+                DeleteSelection();
                 ExitBlockSelectionMovement();
             }
             else if (placeBlock.gameObject.activeSelf && copiedBlocks.Count > 0 &&
@@ -333,11 +405,15 @@ namespace src
 
                 var minPoint = new Vector3(minX, minY, minZ);
                 var placeBlockPosition = placeBlock.position;
+                ClearSelection();
                 foreach (var srcBlock in copiedBlocks)
                 {
                     var newPosition = srcBlock.position - minPoint + placeBlockPosition;
                     if (CanEdit(Vectors.FloorToInt(newPosition), out var land))
+                    {
                         srcBlock.PutInPosition(world, newPosition, land);
+                        AddNewSelectedBlock(newPosition);
+                    }
                 }
             }
         }
@@ -346,15 +422,31 @@ namespace src
         {
             foreach (var block in selectedBlocks)
                 block.ConfirmMove(world);
-            ExitBlockSelectionMovement();
+        }
+
+        private void DeleteSelection()
+        {
+            foreach (var block in selectedBlocks)
+                block.Remove(world);
         }
 
         private void ExitBlockSelectionMovement()
         {
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            ClearSelection();
+            movingSelectionState = false;
+        }
+
+        private void ClearSelection()
+        {
             foreach (var block in selectedBlocks)
                 DestroyImmediate(block.highlight.gameObject);
             selectedBlocks.Clear();
-            movingSelectionState = false;
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)

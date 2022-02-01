@@ -8,14 +8,14 @@ namespace src.MetaBlocks.TdObjectBlock
         public override void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null)
         {
             if (initialized) return;
-            this.MetaBlockObject = metaBlockObject;
+            this.metaBlockObject = metaBlockObject;
             initialized = true;
         }
 
         public override void Focus()
         {
             if (!initialized) return;
-            MetaBlockObject.Focus(null);
+            metaBlockObject.Focus(null);
         }
 
         public override Vector3 GetBlockPosition()

@@ -11,7 +11,7 @@ namespace src
         public override void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null)
         {
             if (initialized) return;
-            this.MetaBlockObject = metaBlockObject;
+            this.metaBlockObject = metaBlockObject;
             this.face = face;
             initialized = true;
         }
@@ -19,7 +19,7 @@ namespace src
         public override void Focus()
         {
             if (!initialized) return;
-            MetaBlockObject.Focus(face);
+            metaBlockObject.Focus(face);
         }
 
         public override Vector3 GetBlockPosition()
