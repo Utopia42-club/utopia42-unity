@@ -60,7 +60,7 @@ namespace src
                 {
                     var chunk = PopRequest();
                     if (chunks.ContainsKey(chunk.coordinate))
-                        chunks.Remove(chunk.coordinate);
+                        chunks.Remove(chunk.coordinate);//FIXME Memory leak?
                 }
             }
             if (creatingChunks) return false;
