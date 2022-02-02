@@ -81,14 +81,6 @@ namespace src
             }
         }
 
-        public void ConfirmMove(World world)
-        {
-            if (position.Equals(highlight.position)) return;
-            Remove(world);
-            if (Player.INSTANCE.CanEdit(Vectors.FloorToInt(highlight.position), out var land))
-                PutInPosition(world, highlight.position, land);
-        }
-
         public void Remove(World world)
         {
             var vp = new VoxelPosition(position);
@@ -109,6 +101,11 @@ namespace src
         public void RotateAroundZ(Vector3 center)
         {
             RotateAround(center, Vector3.forward);
+        }
+        
+        public void RotateAroundX(Vector3 center)
+        {
+            RotateAround(center, Vector3.right);
         }
 
         private void RotateAround(Vector3 center, Vector3 axis)

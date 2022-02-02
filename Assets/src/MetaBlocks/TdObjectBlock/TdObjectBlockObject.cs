@@ -36,7 +36,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private void Start()
         {
             if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-                CreateIcon(false);
+                CreateIcon();
             ready = true;
         }
 

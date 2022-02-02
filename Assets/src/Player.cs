@@ -53,6 +53,7 @@ namespace src
 
         private bool movingSelectionState = false;
         private SnackItem snackItem;
+        private Vector3Int placeBlockPosInt;
 
         private void Start()
         {
@@ -201,10 +202,13 @@ namespace src
         {
             if (!(selectedBlocks.Count > 0 && movingSelectionState)) return;
 
+            var rotateAroundX = Input.GetKeyDown(KeyCode.R) &&
+                                (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) &&
+                                (Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl));
             var rotateAroundZ = Input.GetKeyDown(KeyCode.R) &&
                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-            var rotateAroundY = !rotateAroundZ && Input.GetKeyDown(KeyCode.R);
-            var rotation = rotateAroundY || rotateAroundZ;
+            var rotateAroundY = Input.GetKeyDown(KeyCode.R);
+            var rotation = rotateAroundY || rotateAroundZ || rotateAroundX;
 
             var moveDown = Input.GetButtonDown("Jump") &&
                            (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
@@ -223,10 +227,12 @@ namespace src
 
             foreach (var block in selectedBlocks)
             {
-                if (rotateAroundY)
-                    block.RotateAroundY(center);
-                if (rotateAroundZ)
+                if (rotateAroundX)
+                    block.RotateAroundX(center);
+                else if (rotateAroundZ)
                     block.RotateAroundZ(center);
+                else if (rotateAroundY)
+                    block.RotateAroundY(center);
                 block.Move(Vectors.FloorToInt(delta));
             }
         }
@@ -347,6 +353,7 @@ namespace src
                 lines.Add("D : right");
                 lines.Add("R : rotate around y");
                 lines.Add("SHIFT+R : rotate around z");
+                lines.Add("CTRL+SHIFT+R : rotate around x");
                 lines.Add("H : exit help");
             }
             else
@@ -404,11 +411,10 @@ namespace src
                 }
 
                 var minPoint = new Vector3(minX, minY, minZ);
-                var placeBlockPosition = placeBlock.position;
                 ClearSelection();
                 foreach (var srcBlock in copiedBlocks)
                 {
-                    var newPosition = srcBlock.position - minPoint + placeBlockPosition;
+                    var newPosition = srcBlock.position - minPoint + placeBlockPosInt;
                     if (CanEdit(Vectors.FloorToInt(newPosition), out var land))
                     {
                         srcBlock.PutInPosition(world, newPosition, land);
@@ -421,7 +427,17 @@ namespace src
         private void ConfirmMove()
         {
             foreach (var block in selectedBlocks)
-                block.ConfirmMove(world);
+            {
+                if (block.position.Equals(block.highlight.position)) return;
+                block.Remove(world);
+            }
+            
+            foreach (var block in selectedBlocks)
+            {
+                if (block.position.Equals(block.highlight.position)) return;
+                if (Player.INSTANCE.CanEdit(Vectors.FloorToInt(block.highlight.position), out var land))
+                    block.PutInPosition(world, block.highlight.position, land);
+            }
         }
 
         private void DeleteSelection()
@@ -452,7 +468,7 @@ namespace src
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
         {
             var epsilon = cam.forward * castStep;
-            var placeBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
+            placeBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
 
             var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
             var vp = new VoxelPosition(posInt);

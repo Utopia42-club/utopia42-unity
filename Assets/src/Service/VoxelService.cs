@@ -7,6 +7,7 @@ using src.Canvas;
 using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
 using src.MetaBlocks.LinkBlock;
+using src.MetaBlocks.MarkerBlock;
 using src.MetaBlocks.TdObjectBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
@@ -61,6 +62,7 @@ namespace src.Service
             types[32] = new VideoBlockType(32);
             types[33] = new LinkBlockType(33);
             types[34] = new TdObjectBlockType(34);
+            types[35] = new MarkerBlockType(35);
         }
 
         public Dictionary<Vector3Int, MetaBlock> GetMetaBlocks(Vector3Int coordinate)
