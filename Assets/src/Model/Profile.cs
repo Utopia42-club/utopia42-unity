@@ -10,13 +10,11 @@ namespace src.Model
 
         static Profile()
         {
-            LOADING_PROFILE.bio = "Loading...";
             LOADING_PROFILE.name = "Loading...";
             LOADING_PROFILE.imageUrl = null;
             LOADING_PROFILE.walletId = "";
             LOADING_PROFILE.links = null;
             
-            FAILED_TO_LOAD_PROFILE.bio = "Failed to load";
             FAILED_TO_LOAD_PROFILE.name = "Failed to load";
             FAILED_TO_LOAD_PROFILE.imageUrl = null;
             FAILED_TO_LOAD_PROFILE.walletId = "";

@@ -81,7 +81,12 @@ namespace src.MetaBlocks.ImageBlock
         private void RenderFaces()
         {
             foreach (var img in images)
+            {
+                var selectable = img.GetComponent<MetaFocusable>();
+                if(selectable != null)
+                    selectable.UnFocus();
                 DestroyImmediate(img);
+            }
             images.Clear();
 
             MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
@@ -107,7 +112,7 @@ namespace src.MetaBlocks.ImageBlock
             var meshRenderer = imgFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
             {
-                DestroyImmediate(meshRenderer);
+                DestroyImmediate(imgFace.gameObject);
                 DestroyImmediate(imgFace);
                 UpdateStateAndIcon(face.index, StateMsg.OutOfBound);
                 return;
@@ -115,7 +120,7 @@ namespace src.MetaBlocks.ImageBlock
 
             imgFace.Init(meshRenderer, props.url, this, face.index);
             images.Add(go);
-            var faceSelectable = imgFace.gameObject.AddComponent<FaceSelectable>();
+            var faceSelectable = go.AddComponent<FaceFocusable>();
             faceSelectable.Initialize(this, face);
         }
 

@@ -20,6 +20,8 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private GameObject tdObjectContainer;
         private GameObject tdObject;
+        private BoxCollider tdObjectBoxCollider;
+        private TdObjectFocusable tdObjectFocusable;
 
         private SnackItem snackItem;
         private Land land;
@@ -57,6 +59,8 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             if (!canEdit) return;
             SetupDefaultSnack();
+            if (tdObjectBoxCollider != null)
+                Player.INSTANCE.ShowTdObjectHighlightBox(tdObjectBoxCollider);
         }
 
         public void ExitMovingState()
@@ -83,11 +87,19 @@ namespace src.MetaBlocks.TdObjectBlock
             snackItem = Snack.INSTANCE.ShowLines(GetDefaultSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
+                {
+                    Player.INSTANCE.HideTdObjectHighlightBox();
                     EditProps();
+                }
+
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetKeyDown(KeyCode.V) && tdObjectContainer != null)
+                {
+                    Player.INSTANCE.HideTdObjectHighlightBox();
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
+                }
+
                 if (Input.GetButtonDown("Delete"))
                 {
                     GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
@@ -114,7 +126,10 @@ namespace src.MetaBlocks.TdObjectBlock
             snackItem = Snack.INSTANCE.ShowLines(lines, () =>
             {
                 if (Input.GetKeyDown(KeyCode.X))
+                {
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
+                }
+
                 if (Input.GetKeyDown(KeyCode.H))
                     SetToMovingState(!helpMode);
             });
@@ -166,6 +181,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem.Remove();
                 snackItem = null;
             }
+
+            Player.INSTANCE.HideTdObjectHighlightBox();
         }
 
         public void UpdateStateAndIcon(StateMsg msg)
@@ -189,17 +206,15 @@ namespace src.MetaBlocks.TdObjectBlock
             var rotation = properties.rotation?.ToVector3() ?? Vector3.zero;
             var initialPosition = properties.initialPosition?.ToVector3() ?? Vector3.zero;
             var initialScale = properties.initialScale;
+            var detectCollision = properties.detectCollision;
 
             if (currentUrl.Equals(properties.url) && tdObjectContainer != null)
             {
-                LoadGameObject(scale, offset, rotation, initialPosition, initialScale);
+                LoadGameObject(scale, offset, rotation, initialPosition, initialScale, detectCollision);
             }
             else
             {
-                DestroyImmediate(tdObjectContainer);
-                tdObjectContainer = null;
-                tdObject = null;
-
+                DestroyObject();
                 UpdateStateAndIcon(StateMsg.Loading);
                 StartCoroutine(LoadZip(properties.url, go =>
                 {
@@ -209,7 +224,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     tdObject = go;
                     tdObject.name = TdObjectBlockType.Name;
 
-                    LoadGameObject(scale, offset, rotation, initialPosition, initialScale);
+                    LoadGameObject(scale, offset, rotation, initialPosition, initialScale, detectCollision);
                 }));
 
                 currentUrl = properties.url;
@@ -217,15 +232,14 @@ namespace src.MetaBlocks.TdObjectBlock
         }
 
         public void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation, Vector3 initialPosition,
-            float initialScale)
+            float initialScale, bool detectCollision)
         {
-            var initializedBefore = initialScale != 0;
-            if (!initializedBefore)
+            if (initialScale == 0) // Not initialized before
             {
                 tdObject.transform.localScale = Vector3.one;
                 tdObject.transform.localPosition = Vector3.zero;
                 var center = GetObjectCenter(tdObject);
-                var size = GetObjectSize(tdObject, center);
+                var size = GetObjectSize(center, tdObject);
 
                 var maxD = new[] {size.x, size.y, size.z}.Max();
                 if (maxD > 10f)
@@ -235,30 +249,35 @@ namespace src.MetaBlocks.TdObjectBlock
                     center = GetObjectCenter(tdObject);
                 }
                 else
-                {
                     initialScale = 1;
-                }
 
                 initialPosition = new Vector3(-center.x, -center.y, -center.z);
                 InitializeProps(initialPosition, initialScale);
                 return;
             }
 
+            if (tdObjectBoxCollider == null)
+            {
+                tdObjectBoxCollider = tdObject.AddComponent<BoxCollider>();
+                tdObjectFocusable = tdObject.AddComponent<TdObjectFocusable>();
+                tdObjectFocusable.Initialize(this);
+                tdObjectBoxCollider.center = GetObjectCenter(tdObject, false);
+                tdObjectBoxCollider.size = GetObjectSize(tdObjectBoxCollider.center, tdObject, false);
+            }
+
             tdObject.transform.SetParent(tdObjectContainer.transform, false);
-
             tdObject.transform.localScale = initialScale * Vector3.one;
+            tdObject.transform.localPosition = initialPosition;
+
             tdObjectContainer.transform.localScale = scale;
-
-            tdObject.transform.localPosition = (Vector3) initialPosition;
-            tdObjectContainer.transform.localPosition = (Vector3) offset;
-
+            tdObjectContainer.transform.localPosition = offset;
             tdObjectContainer.transform.eulerAngles = rotation;
 
-            var bc = getBoxCollider(tdObject);
-            var land = GetBlock().land;
-            if (land != null && !InLand(bc))
+            tdObject.layer =
+                detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
+            if (GetBlock().land != null && !InLand(tdObjectBoxCollider))
             {
-                DestroyOnFailure();
+                DestroyObject();
                 UpdateStateAndIcon(StateMsg.OutOfBound);
             }
             else
@@ -267,31 +286,30 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        private void DestroyOnFailure()
+        private void DestroyObject()
         {
+            if (tdObjectFocusable != null)
+            {
+                tdObjectFocusable.UnFocus();
+                tdObjectFocusable = null;
+            }
+
+            if (tdObject != null)
+            {
+                DestroyImmediate(tdObject.gameObject);
+                DestroyImmediate(tdObject);
+                tdObject = null;
+            }
+
             if (tdObjectContainer != null)
             {
+                DestroyImmediate(tdObjectContainer.gameObject);
                 DestroyImmediate(tdObjectContainer);
                 tdObjectContainer = null;
             }
 
-            tdObject = null;
+            tdObjectBoxCollider = null;
         }
-
-        private BoxCollider getBoxCollider(GameObject tdObject)
-        {
-            var bc = tdObject.GetComponent<BoxCollider>();
-            if (bc == null)
-            {
-                bc = tdObject.AddComponent<BoxCollider>();
-                var tdObjectSelectable = tdObject.AddComponent<TdObjectSelectable>();
-                tdObjectSelectable.Initialize(this);
-            }
-            bc.center = GetObjectCenter(tdObject, false);
-            bc.size = GetObjectSize(tdObject, bc.center, false);
-            return bc;
-        }
-
 
         public void InitializeProps(Vector3 initialPosition, float initialScale)
         {
@@ -335,46 +353,53 @@ namespace src.MetaBlocks.TdObjectBlock
             });
         }
 
-        private static Vector3 GetObjectCenter(GameObject loadedObject, bool usingMeshRenderer = true)
+        private static Vector3 GetObjectCenter(GameObject loadedObject, bool local = true)
         {
-            var center = Vector3.zero;
-
-            foreach (Transform child in loadedObject.transform)
-            {
-                if (usingMeshRenderer)
-                {
-                    var r = child.gameObject.GetComponent<MeshRenderer>();
-                    if (r != null)
-                        center += r.bounds.center;
-                }
-                else
-                {
-                    var r = child.gameObject.GetComponent<MeshFilter>().mesh;
-                    if (r != null)
-                        center += r.bounds.center;
-                }
-            }
-
-            return center / loadedObject.transform.childCount;
+            var center = GetRendererCenter(loadedObject);
+            return local ? loadedObject.transform.InverseTransformPoint(center) : center;
         }
 
-        private static Vector3 GetObjectSize(GameObject loadedObject, Vector3 center, bool usingMeshRenderer = true)
+        private static Vector3 GetRendererCenter(GameObject loadedObject)
+        {
+            float
+                minX = float.PositiveInfinity,
+                maxX = float.NegativeInfinity,
+                minY = float.PositiveInfinity,
+                maxY = float.NegativeInfinity,
+                minZ = float.PositiveInfinity,
+                maxZ = float.NegativeInfinity;
+
+            foreach (var child in loadedObject.GetComponentsInChildren<MeshRenderer>())
+            {
+                var bounds = child.bounds;
+                var min = bounds.min;
+                var max = bounds.max;
+
+                if (min.x < minX) minX = min.x;
+                if (min.y < minY) minY = min.y;
+                if (min.z < minZ) minZ = min.z;
+
+                if (max.x > maxX) maxX = max.x;
+                if (max.y > maxY) maxY = max.y;
+                if (max.z > maxZ) maxZ = max.z;
+            }
+
+            return new Vector3((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
+        }
+
+        private static Vector3 GetObjectSize(Vector3 center, GameObject loadedObject, bool local = true)
+        {
+            var loadedObjectTransform = loadedObject.transform;
+            var size = GetRendererSize(local ? loadedObjectTransform.TransformPoint(center) : center, loadedObject);
+            return local ? loadedObjectTransform.InverseTransformVector(size) : size;
+        }
+
+        private static Vector3 GetRendererSize(Vector3 center, GameObject loadedObject)
         {
             var bounds = new Bounds(center, Vector3.zero);
-            foreach (Transform child in loadedObject.transform)
+            foreach (var child in loadedObject.GetComponentsInChildren<MeshRenderer>())
             {
-                if (usingMeshRenderer)
-                {
-                    var r = child.gameObject.GetComponent<MeshRenderer>();
-                    if (r != null)
-                        bounds.Encapsulate(r.bounds);
-                }
-                else
-                {
-                    var r = child.gameObject.GetComponent<MeshFilter>().mesh;
-                    if (r != null)
-                        bounds.Encapsulate(r.bounds);
-                }
+                bounds.Encapsulate(child.bounds);
             }
 
             return bounds.size;
@@ -395,18 +420,18 @@ namespace src.MetaBlocks.TdObjectBlock
             switch (webRequest.result)
             {
                 case UnityWebRequest.Result.InProgress:
-                    DestroyOnFailure();
+                    DestroyObject();
                     UpdateStateAndIcon(StateMsg.SizeLimit);
                     break;
                 case UnityWebRequest.Result.ConnectionError:
                 case UnityWebRequest.Result.DataProcessingError:
                     Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
-                    DestroyOnFailure();
+                    DestroyObject();
                     UpdateStateAndIcon(StateMsg.InvalidUrl);
                     break;
                 case UnityWebRequest.Result.ProtocolError:
                     Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
-                    DestroyOnFailure();
+                    DestroyObject();
                     UpdateStateAndIcon(StateMsg.InvalidUrl);
                     break;
                 case UnityWebRequest.Result.Success:
@@ -417,9 +442,9 @@ namespace src.MetaBlocks.TdObjectBlock
                             var go = new OBJLoader().LoadZip(stream);
                             consumer.Invoke(go);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
-                            DestroyOnFailure();
+                            DestroyObject();
                             UpdateStateAndIcon(StateMsg.InvalidData);
                         }
                     }

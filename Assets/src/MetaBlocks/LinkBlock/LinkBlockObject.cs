@@ -108,11 +108,8 @@ namespace src.MetaBlocks.LinkBlock
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                Debug.Log(value.url);
-                Debug.Log(value.pos);
                 if (value.pos != null) value.url = null;
                 if (value.IsEmpty()) value = null;
-                Debug.Log(value);
                 GetBlock().SetProps(value, land);
                 manager.CloseDialog(dialog);
                 UpdateSnacks();

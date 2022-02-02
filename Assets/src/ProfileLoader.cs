@@ -45,6 +45,12 @@ namespace src
             yield return RestClient.INSATANCE.GetProfile(walletId, profile =>
             {
                 loadingWallets.Remove(walletId);
+                if (profile == null)
+                {
+                    profile = new Profile();
+                    profile.walletId = walletId;
+                    profile.name = "No profile";
+                }
                 profileCache[walletId] = profile;
                 consumer.Invoke(profile);
                 if (loadListeners.ContainsKey(walletId))
@@ -56,7 +62,7 @@ namespace src
             });
             if (!success)
             {
-                if (timeout > 20)
+                if (timeout > 8)
                 {
                     failed.Invoke();
                     loadingWallets.Remove(walletId);
@@ -67,7 +73,7 @@ namespace src
                 }
 
                 yield return new WaitForSeconds(timeout);
-                yield return doLoad(1.5f * timeout, walletId, consumer, failed);
+                yield return doLoad(2f * timeout, walletId, consumer, failed);
             }
         }
 

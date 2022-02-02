@@ -32,6 +32,11 @@ namespace src.Canvas.Map
             instance = this;
             gameObject.SetActive(false);
             manager = GameManager.INSTANCE;
+            manager.stateChange.AddListener((state) =>
+            {
+                if (gameObject.activeSelf && state != GameManager.State.PROFILE_DIALOG && state != GameManager.State.MAP)
+                    Close();
+            });
             editButton.GetComponent<ActionButton>().AddListener(() => manager.EditProfile());
             closeButton.AddListener(Close);
             transferButton.onClick.AddListener(DoTransfer);
@@ -70,7 +75,7 @@ namespace src.Canvas.Map
             SetProfile(profile);
             manager.SetProfileDialogState(true);
         }
-        
+
         public void SetProfile(Profile profile)
         {
             if (profile == null)

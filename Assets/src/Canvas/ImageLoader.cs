@@ -16,10 +16,8 @@ namespace src.Canvas
                 return;
 
             this.url = url;
-            if (url == null)
-                GetComponent<Image>().overrideSprite = emptySprite;
-            else
-                StartCoroutine(LoadFromLikeCoroutine());
+            GetComponent<Image>().overrideSprite = emptySprite;
+            StartCoroutine(LoadFromLikeCoroutine());
         }
 
         // this section will be run independently

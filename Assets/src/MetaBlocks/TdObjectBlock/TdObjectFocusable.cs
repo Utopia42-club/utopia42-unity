@@ -3,19 +3,24 @@ using UnityEngine;
 
 namespace src.MetaBlocks.TdObjectBlock
 {
-    public class TdObjectSelectable : MetaSelectable
+    public class TdObjectFocusable : MetaFocusable
     {
         public override void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null)
         {
-            if(Initialized) return;
+            if (initialized) return;
             this.metaBlockObject = metaBlockObject;
-            Initialized = true;
+            initialized = true;
         }
 
-        public override void Select()
+        public override void Focus()
         {
-            if(!Initialized) return;
+            if (!initialized) return;
             metaBlockObject.Focus(null);
+        }
+
+        public override Vector3 GetBlockPosition()
+        {
+            return transform.parent.parent.position;
         }
     }
 }
