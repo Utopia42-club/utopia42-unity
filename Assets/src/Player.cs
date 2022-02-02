@@ -426,18 +426,12 @@ namespace src
 
         private void ConfirmMove()
         {
-            foreach (var block in selectedBlocks)
-            {
-                if (block.position.Equals(block.highlight.position)) return;
+            var movedBlocks = selectedBlocks.Where(block => block.IsMoved()).ToList();
+            foreach (var block in movedBlocks)
                 block.Remove(world);
-            }
-            
-            foreach (var block in selectedBlocks)
-            {
-                if (block.position.Equals(block.highlight.position)) return;
+            foreach (var block in movedBlocks)
                 if (Player.INSTANCE.CanEdit(Vectors.FloorToInt(block.highlight.position), out var land))
                     block.PutInPosition(world, block.highlight.position, land);
-            }
         }
 
         private void DeleteSelection()

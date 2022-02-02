@@ -118,5 +118,10 @@ namespace src
         {
             highlight.position += delta;
         }
+        
+        public bool IsMoved()
+        {
+            return !position.Equals(highlight.position);
+        }
     }
 }
