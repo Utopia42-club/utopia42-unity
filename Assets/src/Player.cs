@@ -411,22 +411,45 @@ namespace src
                 }
 
                 var minPoint = new Vector3(minX, minY, minZ);
+                var conflictWithPlayer = false;
+                var currVox = Vectors.FloorToInt(transform.position);
                 ClearSelection();
                 foreach (var srcBlock in copiedBlocks)
                 {
                     var newPosition = srcBlock.position - minPoint + placeBlockPosInt;
-                    if (CanEdit(Vectors.FloorToInt(newPosition), out var land))
+                    if (newPosition.Equals(currVox) || newPosition.Equals(currVox + Vector3Int.up)
+                                                    || newPosition.Equals(currVox + 2 * Vector3Int.up))
                     {
-                        srcBlock.PutInPosition(world, newPosition, land);
-                        AddNewSelectedBlock(newPosition);
+                        conflictWithPlayer = true;
+                        break;
                     }
                 }
+
+                if (!conflictWithPlayer)
+                    foreach (var srcBlock in copiedBlocks)
+                    {
+                        var newPosition = srcBlock.position - minPoint + placeBlockPosInt;
+                        if (CanEdit(Vectors.FloorToInt(newPosition), out var land))
+                        {
+                            srcBlock.PutInPosition(world, newPosition, land);
+                            AddNewSelectedBlock(newPosition);
+                        }
+                    }
             }
         }
 
         private void ConfirmMove()
         {
             var movedBlocks = selectedBlocks.Where(block => block.IsMoved()).ToList();
+            var currVox = Vectors.FloorToInt(transform.position);
+            foreach (var block in movedBlocks)
+            {
+                var position = block.highlight.position;
+                if (position.Equals(currVox) || position.Equals(currVox + Vector3Int.up)
+                                             || position.Equals(currVox + 2 * Vector3Int.up))
+                    return;
+            }
+
             foreach (var block in movedBlocks)
                 block.Remove(world);
             foreach (var block in movedBlocks)
