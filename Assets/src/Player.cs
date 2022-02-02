@@ -362,7 +362,7 @@ namespace src
             }
 
             lines.Add("X : cancel");
-            lines.Add("C : confirm movement");
+            lines.Add("ENTER : confirm movement");
             lines.Add("Del : delete selected blocks");
             lines.Add("CTRL+C/V : copy/paste selection");
             lines.Add("CTRL+CLICK : select/unselect block");
@@ -383,7 +383,7 @@ namespace src
                     AddNewCopiedBlock(block.highlight.position);
                 ExitBlockSelectionMovement();
             }
-            else if (Input.GetKeyDown(KeyCode.C))
+            if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
             {
                 ConfirmMove();
                 ExitBlockSelectionMovement();
