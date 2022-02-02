@@ -89,6 +89,7 @@ namespace src.MetaBlocks.VideoBlock
             public int width;
             public int height;
             public float previewTime = 0;
+            public bool detectCollision = true;
 
             public override bool Equals(object obj)
             {
@@ -97,7 +98,7 @@ namespace src.MetaBlocks.VideoBlock
                     return false;
                 var prop = obj as FaceProps;
                 return Equals(url, prop.url) && Equals(width, prop.width) && Equals(height, prop.height)
-                       && Equals(previewTime, prop.previewTime);
+                       && Equals(previewTime, prop.previewTime) && Equals(detectCollision, prop.detectCollision);
             }
 
             public FaceProps Clone()
@@ -107,7 +108,8 @@ namespace src.MetaBlocks.VideoBlock
                     url = url,
                     width = width,
                     height = height,
-                    previewTime = previewTime
+                    previewTime = previewTime,
+                    detectCollision = detectCollision
                 };
             }
         }

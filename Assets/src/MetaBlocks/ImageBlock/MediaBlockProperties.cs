@@ -88,6 +88,7 @@ namespace src.MetaBlocks.ImageBlock
             public string url;
             public int width;
             public int height;
+            public bool detectCollision = true;
 
             public override bool Equals(object obj)
             {
@@ -95,7 +96,8 @@ namespace src.MetaBlocks.ImageBlock
                 if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                     return false;
                 var prop = obj as FaceProps;
-                return Equals(url, prop.url) && Equals(width, prop.width) && Equals(height, prop.height);
+                return Equals(url, prop.url) && Equals(width, prop.width) && Equals(height, prop.height) &&
+                       Equals(detectCollision, prop.detectCollision);
             }
 
             public FaceProps Clone()
@@ -105,6 +107,7 @@ namespace src.MetaBlocks.ImageBlock
                     url = url,
                     width = width,
                     height = height,
+                    detectCollision = detectCollision
                 };
             }
         }

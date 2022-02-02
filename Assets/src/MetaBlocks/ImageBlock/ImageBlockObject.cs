@@ -83,10 +83,11 @@ namespace src.MetaBlocks.ImageBlock
             foreach (var img in images)
             {
                 var selectable = img.GetComponent<MetaFocusable>();
-                if(selectable != null)
+                if (selectable != null)
                     selectable.UnFocus();
                 DestroyImmediate(img);
             }
+
             images.Clear();
 
             MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
@@ -119,6 +120,9 @@ namespace src.MetaBlocks.ImageBlock
             }
 
             imgFace.Init(meshRenderer, props.url, this, face.index);
+            go.layer = props.detectCollision
+                ? LayerMask.NameToLayer("Default")
+                : LayerMask.NameToLayer("3DColliderOff");
             images.Add(go);
             var faceSelectable = go.AddComponent<FaceFocusable>();
             faceSelectable.Initialize(this, face);

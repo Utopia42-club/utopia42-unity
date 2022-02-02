@@ -161,6 +161,9 @@ namespace src.MetaBlocks.VideoBlock
             }
 
             vidFace.Init(meshRenderer, props.url, props.previewTime);
+            go.layer = props.detectCollision
+                ? LayerMask.NameToLayer("Default")
+                : LayerMask.NameToLayer("3DColliderOff");
             videos[face] = vidFace;
             vidFace.loading.AddListener(l =>
             {
