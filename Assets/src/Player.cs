@@ -281,16 +281,20 @@ namespace src
 
             if (placeBlock.gameObject.activeSelf && Input.GetMouseButtonDown(1))
             {
-                var vp = new VoxelPosition(placeBlock.position);
-                var chunk = world.GetChunkIfInited(vp.chunk);
-                if (chunk != null)
-                {
-                    var type = VoxelService.INSTANCE.GetBlockType(selectedBlockId);
-                    if (type is MetaBlockType)
-                        chunk.PutMeta(vp, type, placeLand);
-                    else
-                        chunk.PutVoxel(vp, type, placeLand);
-                }
+                PutBlock(placeBlock.position, VoxelService.INSTANCE.GetBlockType(selectedBlockId));
+            }
+        }
+
+        public void PutBlock(Vector3 pos, BlockType type)
+        {
+            var vp = new VoxelPosition(pos);
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk != null)
+            {
+                if (type is MetaBlockType)
+                    chunk.PutMeta(vp, type, placeLand);
+                else
+                    chunk.PutVoxel(vp, type, placeLand);
             }
         }
 

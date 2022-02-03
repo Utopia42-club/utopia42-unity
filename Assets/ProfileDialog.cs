@@ -21,12 +21,16 @@ public class ProfileDialog : MonoBehaviour
     private readonly List<GameObject> links = new List<GameObject>();
     private GameManager manager;
 
-    // Start is called before the first frame update
     void Start()
     {
         instance = this;
         gameObject.SetActive(false);
         manager = GameManager.INSTANCE;
+        manager.stateChange.AddListener((state) =>
+        {
+            if (gameObject.activeSelf && state != GameManager.State.PROFILE_DIALOG)
+                Close();
+        });
         closeButton.AddListener(Close);
         editButton.GetComponent<ActionButton>().AddListener(() => manager.EditProfile());
     }
@@ -48,7 +52,6 @@ public class ProfileDialog : MonoBehaviour
             foreach (var link in links) DestroyImmediate(link);
             links.Clear();
         }
-
         gameObject.SetActive(false);
         manager.SetProfileDialogState(false);
     }

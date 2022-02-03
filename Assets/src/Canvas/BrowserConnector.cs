@@ -108,17 +108,6 @@ namespace src.Canvas
                 CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
             }
         }
-        
-        public void RunPlugin(String url)
-        {
-            if (WebBridge.IsPresent())
-            {
-                var data = new Dictionary<string, object>();
-                data.Add("url", url);
-                Debug.Log("goingToRunCode");
-                WebBridge.Call<object>("runPlugin", data);
-            }
-        }
 
         private void CallUrl(string method, string parameters, Action onDone, Action onCancel)
         {
