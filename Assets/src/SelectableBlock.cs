@@ -123,7 +123,10 @@ namespace src
         private void RotateAround(Vector3 center, Vector3 axis)
         {
             var vector3 = Quaternion.AngleAxis(90, axis) * (highlight.position + 0.5f * Vector3.one - center);
+            var oldPos = highlight.position;
             highlight.position = center + vector3 - 0.5f * Vector3.one;
+            if (tdHighlight != null)
+                tdHighlight.position += highlight.position - oldPos;
         }
 
         public void Move(Vector3Int delta)
@@ -162,7 +165,7 @@ namespace src
             highlightBox.localScale = size;
             highlightBox.position = colliderTransform.TransformPoint(minPos);
             highlightBox.gameObject.SetActive(true);
-            
+
             return highlightBox;
         }
     }
