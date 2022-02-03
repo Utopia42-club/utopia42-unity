@@ -9,7 +9,7 @@ namespace src
 {
     public class SelectableBlock
     {
-        public Vector3 position { get; private set; }
+        public Vector3 position;
         private Land land;
         public readonly Transform highlight;
 
