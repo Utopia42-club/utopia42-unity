@@ -20,7 +20,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private GameObject tdObjectContainer;
         private GameObject tdObject;
-        private BoxCollider tdObjectBoxCollider;
+        public BoxCollider TdObjectBoxCollider { private set; get; }
         private TdObjectFocusable tdObjectFocusable;
 
         private SnackItem snackItem;
@@ -59,8 +59,8 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             if (!canEdit) return;
             SetupDefaultSnack();
-            if (tdObjectBoxCollider != null)
-                Player.INSTANCE.ShowTdObjectHighlightBox(tdObjectBoxCollider);
+            if (TdObjectBoxCollider != null)
+                Player.INSTANCE.ShowTdObjectHighlightBox(TdObjectBoxCollider);
         }
 
         public void ExitMovingState()
@@ -256,13 +256,13 @@ namespace src.MetaBlocks.TdObjectBlock
                 return;
             }
 
-            if (tdObjectBoxCollider == null)
+            if (TdObjectBoxCollider == null)
             {
-                tdObjectBoxCollider = tdObject.AddComponent<BoxCollider>();
+                TdObjectBoxCollider = tdObject.AddComponent<BoxCollider>();
                 tdObjectFocusable = tdObject.AddComponent<TdObjectFocusable>();
                 tdObjectFocusable.Initialize(this);
-                tdObjectBoxCollider.center = GetObjectCenter(tdObject, false);
-                tdObjectBoxCollider.size = GetObjectSize(tdObjectBoxCollider.center, tdObject, false);
+                TdObjectBoxCollider.center = GetObjectCenter(tdObject, false);
+                TdObjectBoxCollider.size = GetObjectSize(TdObjectBoxCollider.center, tdObject, false);
             }
 
             tdObject.transform.SetParent(tdObjectContainer.transform, false);
@@ -275,7 +275,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             tdObject.layer =
                 detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
-            if (GetBlock().land != null && !InLand(tdObjectBoxCollider))
+            if (GetBlock().land != null && !InLand(TdObjectBoxCollider))
             {
                 DestroyObject();
                 UpdateStateAndIcon(StateMsg.OutOfBound);
@@ -308,7 +308,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 tdObjectContainer = null;
             }
 
-            tdObjectBoxCollider = null;
+            TdObjectBoxCollider = null;
         }
 
         public void InitializeProps(Vector3 initialPosition, float initialScale)

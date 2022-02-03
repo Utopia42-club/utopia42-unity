@@ -7,7 +7,7 @@ namespace src.MetaBlocks
 {
     public class MetaBlock
     {
-        private MetaBlockObject blockObject;
+        public MetaBlockObject blockObject { private set; get; }
         public readonly Land land;
         public readonly MetaBlockType type;
         private object properties;
@@ -23,7 +23,7 @@ namespace src.MetaBlocks
         {
             if (blockObject != null) throw new System.Exception("Already rendered.");
             GameObject go = new GameObject("MetaBlock");
-            blockObject = (MetaBlockObject)go.AddComponent(type.componentType);
+            blockObject = (MetaBlockObject) go.AddComponent(type.componentType);
             go.transform.parent = parent;
             go.transform.localPosition = position;
             blockObject.Initialize(this, chunk);
@@ -46,6 +46,7 @@ namespace src.MetaBlocks
                 blockObject.Focus(face);
                 return true;
             }
+
             return false;
         }
 
@@ -64,7 +65,7 @@ namespace src.MetaBlocks
             if (Equals(properties, props)) return;
             properties = props;
             VoxelService.INSTANCE.MarkLandChanged(land);
-            if (blockObject != null) 
+            if (blockObject != null)
                 blockObject.OnDataUpdate();
         }
 
@@ -80,4 +81,3 @@ namespace src.MetaBlocks
         }
     }
 }
-

@@ -1,4 +1,5 @@
 using System;
+using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -12,6 +13,7 @@ namespace src
         public Vector3 position;
         private Land land;
         public readonly Transform highlight;
+        public readonly Transform tdHighlight;
 
         private readonly byte blockTypeId;
         private readonly byte metaBlockTypeId;
@@ -20,7 +22,8 @@ namespace src
 
         private const float SelectedBlocksHighlightAlpha = 0.3f;
 
-        private SelectableBlock(Vector3 pos, byte blockTypeId, Transform highlight, byte metaBlockTypeId,
+        private SelectableBlock(Vector3 pos, byte blockTypeId, Transform highlight, Transform tdHighlight,
+            byte metaBlockTypeId,
             object metaProperties, Land land)
         {
             metaAttached = true;
@@ -29,6 +32,7 @@ namespace src
             this.metaBlockTypeId = metaBlockTypeId;
             this.metaProperties = metaProperties;
             this.highlight = highlight;
+            this.tdHighlight = tdHighlight;
             this.land = land;
         }
 
@@ -41,7 +45,8 @@ namespace src
             this.land = land;
         }
 
-        public static SelectableBlock Create(Vector3 position, World world, Transform highlight, Land land, bool showHighlight = true)
+        public static SelectableBlock Create(Vector3 position, World world, Transform highlightModel,
+            Transform tdHighlightModel, Land land, bool showHighlight = true)
         {
             if (world == null) return null;
             var vp = new VoxelPosition(position);
@@ -52,7 +57,7 @@ namespace src
             if (!blockType.isSolid) return null;
             var blockTypeId = blockType.id;
 
-            var blockHighlight = Object.Instantiate(highlight, position, Quaternion.identity);
+            var blockHighlight = Object.Instantiate(highlightModel, position, Quaternion.identity);
             var material = blockHighlight.GetComponentInChildren<MeshRenderer>().material;
             Color color = material.color;
             color.a = Mathf.Clamp(SelectedBlocksHighlightAlpha, 0, 1);
@@ -62,7 +67,14 @@ namespace src
             var meta = chunk.GetMetaAt(vp);
             if (meta != null)
             {
-                return new SelectableBlock(position, blockTypeId, blockHighlight, meta.type.id,
+                if (meta.blockObject is TdObjectBlockObject)
+                {
+                    return new SelectableBlock(position, blockTypeId, blockHighlight,
+                        CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
+                            tdHighlightModel), meta.type.id, ((ICloneable) meta.GetProps()).Clone(), land);
+                }
+
+                return new SelectableBlock(position, blockTypeId, blockHighlight, null, meta.type.id,
                     ((ICloneable) meta.GetProps()).Clone(), land);
             }
 
@@ -102,7 +114,7 @@ namespace src
         {
             RotateAround(center, Vector3.forward);
         }
-        
+
         public void RotateAroundX(Vector3 center)
         {
             RotateAround(center, Vector3.right);
@@ -117,11 +129,41 @@ namespace src
         public void Move(Vector3Int delta)
         {
             highlight.position += delta;
+            if (tdHighlight != null)
+                tdHighlight.position += delta;
         }
-        
+
         public bool IsMoved()
         {
             return !position.Equals(highlight.position);
+        }
+
+        public void DestroyHighlights()
+        {
+            Object.DestroyImmediate(highlight.gameObject);
+            if (tdHighlight != null)
+                Object.DestroyImmediate(tdHighlight.gameObject);
+        }
+
+        private static Transform CreateObjectHighlightBox(BoxCollider boxCollider, Transform model)
+        {
+            var highlightBox = Object.Instantiate(model, default, Quaternion.identity);
+
+            var colliderTransform = boxCollider.transform;
+            highlightBox.transform.rotation = colliderTransform.rotation;
+
+            var size = boxCollider.size;
+            var minPos = boxCollider.center - size / 2;
+
+            var gameObjectTransform = boxCollider.gameObject.transform;
+            size.Scale(gameObjectTransform.localScale);
+            size.Scale(gameObjectTransform.parent.localScale);
+
+            highlightBox.localScale = size;
+            highlightBox.position = colliderTransform.TransformPoint(minPos);
+            highlightBox.gameObject.SetActive(true);
+            
+            return highlightBox;
         }
     }
 }

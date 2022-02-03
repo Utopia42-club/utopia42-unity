@@ -6,7 +6,7 @@ namespace src
 {
     public abstract class MetaFocusable : MonoBehaviour
     {
-        protected MetaBlockObject metaBlockObject;
+        public MetaBlockObject metaBlockObject { protected set; get; }
         protected bool initialized = false;
 
         public abstract void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null);

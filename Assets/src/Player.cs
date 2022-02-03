@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using src.Canvas;
 using src.MetaBlocks;
+using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace src
 {
@@ -139,6 +141,10 @@ namespace src
 
                     if (!selectionActive)
                         metaFocusable.Focus();
+                    else if(metaFocusable.metaBlockObject is TdObjectBlockObject)
+                    {
+                        ShowTdObjectHighlightBox(((TdObjectBlockObject) metaFocusable.metaBlockObject).TdObjectBoxCollider);
+                    }
                     focusedMeta = metaFocusable;
                     return;
                 }
@@ -271,7 +277,7 @@ namespace src
                 {
                     foreach (var index in indicesToRemove.OrderByDescending(i => i))
                     {
-                        DestroyImmediate(selectedBlocks[index].highlight.gameObject);
+                        selectedBlocks[index].DestroyHighlights();
                         selectedBlocks.RemoveAt(index);
                         if (selectedBlocks.Count == 0)
                         {
@@ -318,7 +324,7 @@ namespace src
         {
             if (CanEdit(Vectors.FloorToInt(position), out var land))
             {
-                var selectedBlock = SelectableBlock.Create(position, world, highlightBlock, land);
+                var selectedBlock = SelectableBlock.Create(position, world, highlightBlock, tdObjectHighlightBox, land);
                 if (selectedBlock != null)
                 {
                     selectedBlocks.Add(selectedBlock);
@@ -336,7 +342,8 @@ namespace src
         {
             if (CanEdit(Vectors.FloorToInt(position), out var land))
             {
-                var copiedBlock = SelectableBlock.Create(position, world, highlightBlock, land, false);
+                var copiedBlock =
+                    SelectableBlock.Create(position, world, highlightBlock, tdObjectHighlightBox, land, false);
                 if (copiedBlock != null)
                     copiedBlocks.Add(copiedBlock);
             }
@@ -514,7 +521,7 @@ namespace src
         private void ClearSelection()
         {
             foreach (var block in selectedBlocks)
-                DestroyImmediate(block.highlight.gameObject);
+                block.DestroyHighlights();
             selectedBlocks.Clear();
         }
 
