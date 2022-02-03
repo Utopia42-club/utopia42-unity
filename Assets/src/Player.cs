@@ -51,7 +51,12 @@ namespace src
         public float castStep = 0.01f;
         public byte selectedBlockId = 1;
 
-        private bool movingSelectionState = false;
+        private bool selectionActive = false; // whether we have any selected any blocks or not
+
+        private bool
+            movingSelectionAllowed =
+                false; // whether we can move the selections using arrow keys and space (only mean sth when selectionActive = true) 
+
         private SnackItem snackItem;
         private Vector3Int placeBlockPosInt;
 
@@ -98,16 +103,14 @@ namespace src
 
         private void UpdatePlayerPosition()
         {
-            if (!movingSelectionState)
-            {
-                var moveDirection = transform.forward * vertical + transform.right * horizontal;
-                controller.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
-            }
+            if (selectionActive && movingSelectionAllowed) return;
+            var moveDirection = transform.forward * vertical + transform.right * horizontal;
+            controller.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
 
             if (controller.isGrounded && velocity.y < 0 || floating)
                 velocity.y = 0f;
 
-            if (jumpRequest && !movingSelectionState)
+            if (jumpRequest)
                 velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
 
             if (!floating && !controller.isGrounded)
@@ -134,7 +137,8 @@ namespace src
                         focusedMeta.UnFocus();
                     }
 
-                    metaFocusable.Focus();
+                    if (!selectionActive)
+                        metaFocusable.Focus();
                     focusedMeta = metaFocusable;
                     return;
                 }
@@ -200,7 +204,7 @@ namespace src
 
         private void HandleBlockMovement()
         {
-            if (!(selectedBlocks.Count > 0 && movingSelectionState)) return;
+            if (!(selectedBlocks.Count > 0 && selectionActive)) return;
 
             var rotateAroundX = Input.GetKeyDown(KeyCode.R) &&
                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) &&
@@ -209,21 +213,26 @@ namespace src
                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
             var rotateAroundY = Input.GetKeyDown(KeyCode.R);
             var rotation = rotateAroundY || rotateAroundZ || rotateAroundX;
-
-            var moveDown = Input.GetButtonDown("Jump") &&
-                           (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-            var moveUp = !moveDown && Input.GetButtonDown("Jump");
-
-            var moveDirection = Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical")
-                ? (transform.forward * vertical + transform.right * horizontal).normalized
-                : Vector3.zero;
-            var movement = moveUp || moveDown || moveDirection.magnitude > castStep;
-
-            if (!rotation && !movement) return;
-
             var center = selectedBlocks[0].highlight.position + 0.5f * Vector3.one;
-            var delta = Vectors.FloorToInt(center + moveDirection) - selectedBlocks[0].highlight.position +
+
+            Vector3 delta = default;
+            if (movingSelectionAllowed)
+            {
+                var moveDown = Input.GetButtonDown("Jump") &&
+                               (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+                var moveUp = !moveDown && Input.GetButtonDown("Jump");
+
+                var moveDirection = Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical")
+                    ? (transform.forward * vertical + transform.right * horizontal).normalized
+                    : Vector3.zero;
+                var movement = moveUp || moveDown || moveDirection.magnitude > castStep;
+
+                if (!rotation && !movement) return;
+
+                delta = Vectors.FloorToInt(center + moveDirection) - selectedBlocks[0].highlight.position +
                         (moveUp ? Vector3.up : moveDown ? Vector3.down : Vector3.zero);
+            }
+            else if (!rotation) return;
 
             foreach (var block in selectedBlocks)
             {
@@ -233,7 +242,8 @@ namespace src
                     block.RotateAroundZ(center);
                 else if (rotateAroundY)
                     block.RotateAroundY(center);
-                block.Move(Vectors.FloorToInt(delta));
+                if (movingSelectionAllowed)
+                    block.Move(Vectors.FloorToInt(delta));
             }
         }
 
@@ -312,8 +322,12 @@ namespace src
                 if (selectedBlock != null)
                 {
                     selectedBlocks.Add(selectedBlock);
-                    if (selectedBlocks.Count == 1 && !movingSelectionState)
-                        SetBlockSelectionMovement();
+                    if (selectedBlocks.Count == 1 && !selectionActive)
+                    {
+                        selectionActive = true;
+                        movingSelectionAllowed = false;
+                        SetBlockSelectionSnack();
+                    }
                 }
             }
         }
@@ -328,33 +342,42 @@ namespace src
             }
         }
 
-        private void SetBlockSelectionMovement(bool help = false)
+        private void SetBlockSelectionSnack(bool help = false)
         {
-            movingSelectionState = true;
             if (snackItem != null)
             {
                 snackItem.Remove();
                 snackItem = null;
             }
 
-            snackItem = Snack.INSTANCE.ShowLines(GetMovingSnackLines(help), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(help), () =>
             {
                 if (Input.GetKeyDown(KeyCode.H))
-                    SetBlockSelectionMovement(!help);
+                    SetBlockSelectionSnack(!help);
+                if (Input.GetKeyDown(KeyCode.V) &&
+                    !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl))
+                {
+                    movingSelectionAllowed = !movingSelectionAllowed;
+                    SetBlockSelectionSnack(help);
+                }
             });
         }
 
-        private static List<string> GetMovingSnackLines(bool helpMode)
+        private List<string> GetSnackLines(bool helpMode)
         {
             var lines = new List<string>();
             if (helpMode)
             {
-                lines.Add("W : forward");
-                lines.Add("S : backward");
-                lines.Add("SPACE : up");
-                lines.Add("SHIFT+SPACE : down");
-                lines.Add("A : left");
-                lines.Add("D : right");
+                if (movingSelectionAllowed)
+                {
+                    lines.Add("W : forward");
+                    lines.Add("S : backward");
+                    lines.Add("SPACE : up");
+                    lines.Add("SHIFT+SPACE : down");
+                    lines.Add("A : left");
+                    lines.Add("D : right");
+                }
+
                 lines.Add("R : rotate around y");
                 lines.Add("SHIFT+R : rotate around z");
                 lines.Add("CTRL+SHIFT+R : rotate around x");
@@ -370,6 +393,10 @@ namespace src
             lines.Add("Del : delete selected blocks");
             lines.Add("CTRL+C/V : copy/paste selection");
             lines.Add("CTRL+CLICK : select/unselect block");
+            if (movingSelectionAllowed)
+                lines.Add("V : set player as movement target");
+            else
+                lines.Add("V : set selection as movement target");
             return lines;
         }
 
@@ -387,6 +414,7 @@ namespace src
                     AddNewCopiedBlock(block.highlight.position);
                 ExitBlockSelectionMovement();
             }
+
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
             {
                 ConfirmMove();
@@ -420,7 +448,7 @@ namespace src
                 ClearSelection();
                 foreach (var srcBlock in copiedBlocks)
                 {
-                    var newPosition = srcBlock.position - minPoint + placeBlockPosInt;
+                    var newPosition = TruncateFloor(srcBlock.position - minPoint + placeBlockPosInt);
                     if (newPosition.Equals(currVox) || newPosition.Equals(currVox + Vector3Int.up)
                                                     || newPosition.Equals(currVox + 2 * Vector3Int.up))
                     {
@@ -432,8 +460,8 @@ namespace src
                 if (!conflictWithPlayer)
                     foreach (var srcBlock in copiedBlocks)
                     {
-                        var newPosition = srcBlock.position - minPoint + placeBlockPosInt;
-                        if (CanEdit(Vectors.FloorToInt(newPosition), out var land))
+                        var newPosition = TruncateFloor(srcBlock.position - minPoint + placeBlockPosInt);
+                        if (CanEdit(newPosition, out var land))
                         {
                             srcBlock.PutInPosition(world, newPosition, land);
                             AddNewSelectedBlock(newPosition);
@@ -457,8 +485,11 @@ namespace src
             foreach (var block in movedBlocks)
                 block.Remove(world);
             foreach (var block in movedBlocks)
-                if (Player.INSTANCE.CanEdit(Vectors.FloorToInt(block.highlight.position), out var land))
-                    block.PutInPosition(world, block.highlight.position, land);
+            {
+                var pos = TruncateFloor(block.highlight.position);
+                if (Player.INSTANCE.CanEdit(pos, out var land))
+                    block.PutInPosition(world, pos, land);
+            }
         }
 
         private void DeleteSelection()
@@ -476,7 +507,8 @@ namespace src
             }
 
             ClearSelection();
-            movingSelectionState = false;
+            selectionActive = false;
+            movingSelectionAllowed = false;
         }
 
         private void ClearSelection()
@@ -548,7 +580,8 @@ namespace src
                     focusedMetaBlock.UnFocus();
                 focusedMetaBlock = metaToFocus;
                 focusedMetaFace = faceToFocus;
-                if (focusedMetaBlock != null)
+
+                if (focusedMetaBlock != null && !selectionActive)
                 {
                     if (!focusedMetaBlock.Focus(focusedMetaFace))
                     {
@@ -628,6 +661,14 @@ namespace src
         public static Player INSTANCE
         {
             get { return GameObject.Find("Player").GetComponent<Player>(); }
+        }
+
+        private static Vector3Int TruncateFloor(Vector3 vector)
+        {
+            vector.x = Mathf.Round(vector.x * 1000) / 1000;
+            vector.y = Mathf.Round(vector.y * 1000) / 1000;
+            vector.z = Mathf.Round(vector.z * 1000) / 1000;
+            return Vectors.FloorToInt(vector);
         }
     }
 }

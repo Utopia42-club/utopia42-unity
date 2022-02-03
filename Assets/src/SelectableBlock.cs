@@ -69,7 +69,7 @@ namespace src
             return new SelectableBlock(position, blockTypeId, blockHighlight, land);
         }
 
-        public void PutInPosition(World world, Vector3 pos, Land land)
+        public void PutInPosition(World world, Vector3Int pos, Land land)
         {
             var vp = new VoxelPosition(pos);
             var chunk = world.GetChunkIfInited(vp.chunk);
