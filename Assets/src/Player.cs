@@ -169,7 +169,7 @@ namespace src
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            if (rotationMode != (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.LeftAlt)))
+            if (rotationMode != Input.GetKey(KeyCode.R))
             {
                 rotationMode = !rotationMode;
                 if (!rotationMode)
@@ -416,8 +416,8 @@ namespace src
                     lines.Add("D : right");
                 }
 
-                lines.Add("ALT + horizontal mouse movement : rotate around y axis");
-                lines.Add("ALT + vertical mouse movement : rotate around player right axis");
+                lines.Add("R + horizontal mouse movement : rotate around y axis");
+                lines.Add("R + vertical mouse movement : rotate around player right axis");
             }
             else
             {
@@ -694,6 +694,15 @@ namespace src
         public void HideTdObjectHighlightBox()
         {
             tdObjectHighlightBox.gameObject.SetActive(false);
+        }
+
+        public void ReCreateTdObjectHighlightIfSelected(Vector3 position)
+        {
+            foreach (var s in selectedBlocks.Where(s => s.position.Equals(position)))
+            {
+                s.ReCreateTdObjectHighlight(world, tdObjectHighlightBox);
+                return;
+            }
         }
 
         public static Player INSTANCE

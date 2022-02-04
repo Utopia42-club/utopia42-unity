@@ -10,10 +10,10 @@ namespace src
 {
     public class SelectableBlock
     {
-        public Vector3 position;
+        public Vector3 position { get; private set; }
         private Land land;
         public readonly Transform highlight;
-        public readonly Transform tdHighlight;
+        private Transform tdHighlight;
 
         private readonly byte blockTypeId;
         private readonly byte metaBlockTypeId;
@@ -71,7 +71,7 @@ namespace src
                 {
                     return new SelectableBlock(position, blockTypeId, blockHighlight,
                         CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
-                            tdHighlightModel), meta.type.id, ((ICloneable) meta.GetProps()).Clone(), land);
+                            tdHighlightModel, showHighlight), meta.type.id, ((ICloneable) meta.GetProps()).Clone(), land);
                 }
 
                 return new SelectableBlock(position, blockTypeId, blockHighlight, null, meta.type.id,
@@ -130,11 +130,14 @@ namespace src
         {
             Object.DestroyImmediate(highlight.gameObject);
             if (tdHighlight != null)
+            {
                 Object.DestroyImmediate(tdHighlight.gameObject);
+            }
         }
 
-        private static Transform CreateObjectHighlightBox(BoxCollider boxCollider, Transform model)
+        private static Transform CreateObjectHighlightBox(BoxCollider boxCollider, Transform model, bool active = true)
         {
+            if (boxCollider == null) return null;
             var highlightBox = Object.Instantiate(model, default, Quaternion.identity);
 
             var colliderTransform = boxCollider.transform;
@@ -149,9 +152,20 @@ namespace src
 
             highlightBox.localScale = size;
             highlightBox.position = colliderTransform.TransformPoint(minPos);
-            highlightBox.gameObject.SetActive(true);
+            highlightBox.gameObject.SetActive(active);
 
             return highlightBox;
+        }
+
+        public void ReCreateTdObjectHighlight(World world, Transform tdObjectHighlightBox)
+        {
+            if (!metaAttached || tdHighlight != null || world == null) return;
+            var vp = new VoxelPosition(position);
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk == null) return;
+            var meta = chunk.GetMetaAt(vp);
+            tdHighlight = CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
+                tdObjectHighlightBox);
         }
     }
 }

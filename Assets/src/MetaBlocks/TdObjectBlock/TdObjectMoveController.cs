@@ -41,7 +41,7 @@ namespace src.MetaBlocks.TdObjectBlock
             scaleUp = Input.GetKey(KeyCode.RightBracket);
             scaleDown = Input.GetKey(KeyCode.LeftBracket);
 
-            if (rotationMode == (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.LeftAlt))) return;
+            if (rotationMode == Input.GetKey(KeyCode.R)) return;
             rotationMode = !rotationMode;
             if (!rotationMode)
                 mouseLook.RemoveRotationTarget();

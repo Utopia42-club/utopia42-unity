@@ -149,8 +149,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 lines.Add("D : right");
                 lines.Add("] : scale up");
                 lines.Add("[ : scale down");
-                lines.Add("ALT + horizontal mouse movement : rotate around y axis");
-                lines.Add("ALT + vertical mouse movement : rotate around player right axis");
+                lines.Add("R + horizontal mouse movement : rotate around y axis");
+                lines.Add("R + vertical mouse movement : rotate around player right axis");
             }
             else
             {
@@ -283,6 +283,7 @@ namespace src.MetaBlocks.TdObjectBlock
             else
             {
                 UpdateStateAndIcon(StateMsg.Ok);
+                Player.INSTANCE.ReCreateTdObjectHighlightIfSelected(transform.position);
             }
         }
 
