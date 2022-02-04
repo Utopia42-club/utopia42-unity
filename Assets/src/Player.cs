@@ -14,18 +14,21 @@ namespace src
 {
     public class Player : MonoBehaviour
     {
+        private const float CastStep = 0.01f;
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
 
+        [SerializeField] private Transform cam;
+        [SerializeField] private World world;
+        [SerializeField] private MouseLook mouseLook;
+        [SerializeField] private float walkSpeed = 6f;
+        [SerializeField] private float sprintSpeed = 12f;
+        [SerializeField] private float jumpHeight = 1;
+        [SerializeField] private float gravity = -9.8f;
+        [SerializeField] private float selectionRotationSensitivity = 0.3f;
+
+        [NonSerialized] public byte selectedBlockId = 1;
+
         private bool sprinting;
-
-        public Transform cam;
-        public World world;
-
-        public float walkSpeed = 6f;
-        public float sprintSpeed = 12f;
-        public float jumpHeight = 1;
-        public float gravity = -9.8f;
-
         private float horizontal;
         private float vertical;
         private Vector3 velocity = Vector3.zero;
@@ -33,13 +36,10 @@ namespace src
         private Land placeLand;
         private bool jumpRequest;
         private bool floating = false;
-
         private Vector3Int lastChunk;
-
         private List<Land> ownedLands = new List<Land>();
         private List<SelectableBlock> selectedBlocks = new List<SelectableBlock>();
         private List<SelectableBlock> copiedBlocks = new List<SelectableBlock>();
-
         public Transform highlightBlock;
         public Transform placeBlock;
         public Transform tdObjectHighlightBox;
@@ -50,14 +50,14 @@ namespace src
         private Collider hitCollider;
         private CharacterController controller;
 
-        public float castStep = 0.01f;
-        public byte selectedBlockId = 1;
-
         private bool selectionActive = false; // whether we have any selected any blocks or not
 
         private bool
             movingSelectionAllowed =
                 false; // whether we can move the selections using arrow keys and space (only mean sth when selectionActive = true) 
+
+        private bool rotationMode = false;
+        private Vector3 rotationSum = Vector3.zero;
 
         private SnackItem snackItem;
         private Vector3Int placeBlockPosInt;
@@ -141,10 +141,12 @@ namespace src
 
                     if (!selectionActive)
                         metaFocusable.Focus();
-                    else if(metaFocusable.metaBlockObject is TdObjectBlockObject)
+                    else if (metaFocusable.metaBlockObject is TdObjectBlockObject)
                     {
-                        ShowTdObjectHighlightBox(((TdObjectBlockObject) metaFocusable.metaBlockObject).TdObjectBoxCollider);
+                        ShowTdObjectHighlightBox(((TdObjectBlockObject) metaFocusable.metaBlockObject)
+                            .TdObjectBoxCollider);
                     }
+
                     focusedMeta = metaFocusable;
                     return;
                 }
@@ -167,6 +169,16 @@ namespace src
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
+            if (rotationMode != (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.LeftAlt)))
+            {
+                rotationMode = !rotationMode;
+                if (!rotationMode)
+                    mouseLook.RemoveRotationTarget();
+                else if (selectedBlocks.Count > 0 && selectionActive)
+                {
+                    mouseLook.SetRotationTarget(HandleBlockRotation);
+                }
+            }
 
             GetMovementInputs();
             HandleBlockMovement();
@@ -208,56 +220,73 @@ namespace src
                 floating = !floating;
         }
 
-        private void HandleBlockMovement()
+        private void HandleBlockRotation(Vector3 rotation)
         {
-            if (!(selectedBlocks.Count > 0 && selectionActive)) return;
+            rotationSum += rotation;
+            var absY = Mathf.Abs(rotationSum.y);
+            var absX = Mathf.Abs(rotationSum.x);
 
-            var rotateAroundX = Input.GetKeyDown(KeyCode.R) &&
-                                (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) &&
-                                (Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl));
-            var rotateAroundZ = Input.GetKeyDown(KeyCode.R) &&
-                                (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-            var rotateAroundY = Input.GetKeyDown(KeyCode.R);
-            var rotation = rotateAroundY || rotateAroundZ || rotateAroundX;
+            if (Mathf.Max(absX, absY) < selectionRotationSensitivity * 90)
+                return;
+
+            Vector3 rotationAxis = default;
+            if (absY > absX)
+            {
+                rotationAxis = rotationSum.y > 0 ? Vector3.up : Vector3.down;
+            }
+            else
+            {
+                var right = transform.right;
+                Vector3 axis = default;
+                if (Mathf.Abs(right.x) > Mathf.Abs(right.z))
+                    axis = right.x < 0 ? Vector3.left : Vector3.right;
+                else
+                    axis = right.z < 0 ? Vector3.back : Vector3.forward;
+
+                rotationAxis = rotationSum.x > 0 ? axis : -axis;
+            }
+
             var center = selectedBlocks[0].highlight.position + 0.5f * Vector3.one;
 
-            Vector3 delta = default;
-            if (movingSelectionAllowed)
-            {
-                var moveDown = Input.GetButtonDown("Jump") &&
-                               (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-                var moveUp = !moveDown && Input.GetButtonDown("Jump");
+            foreach (var block in selectedBlocks)
+                block.RotateAround(center, rotationAxis);
 
-                var moveDirection = Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical")
-                    ? (transform.forward * vertical + transform.right * horizontal).normalized
-                    : Vector3.zero;
-                var movement = moveUp || moveDown || moveDirection.magnitude > castStep;
+            rotationSum = Vector3.zero;
+        }
 
-                if (!rotation && !movement) return;
+        private void HandleBlockMovement()
+        {
+            if (!(selectedBlocks.Count > 0 && selectionActive) || !movingSelectionAllowed) return;
 
-                delta = Vectors.FloorToInt(center + moveDirection) - selectedBlocks[0].highlight.position +
-                        (moveUp ? Vector3.up : moveDown ? Vector3.down : Vector3.zero);
-            }
-            else if (!rotation) return;
+            var moveDown = Input.GetButtonDown("Jump") &&
+                           (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            var moveUp = !moveDown && Input.GetButtonDown("Jump");
 
+            var moveDirection = Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical")
+                ? (transform.forward * vertical + transform.right * horizontal).normalized
+                : Vector3.zero;
+            var movement = moveUp || moveDown || moveDirection.magnitude > CastStep;
+
+            if (!movement) return;
+
+            var delta = Vectors.FloorToInt(
+                Vectors.FloorToInt(selectedBlocks[0].highlight.position + 0.5f * Vector3.one + moveDirection) -
+                selectedBlocks[0].highlight.position +
+                (moveUp ? Vector3.up : moveDown ? Vector3.down : Vector3.zero));
             foreach (var block in selectedBlocks)
             {
-                if (rotateAroundX)
-                    block.RotateAroundX(center);
-                else if (rotateAroundZ)
-                    block.RotateAroundZ(center);
-                else if (rotateAroundY)
-                    block.RotateAroundY(center);
-                if (movingSelectionAllowed)
-                    block.Move(Vectors.FloorToInt(delta));
+                block.Move(delta);
             }
         }
 
         private void HandleBlockSelection()
         {
+            if (rotationMode) return;
             var selectVoxel = (highlightBlock.gameObject.activeSelf || focusedMeta != null) &&
                               Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftControl) ||
-                                                              Input.GetKey(KeyCode.RightControl));
+                                                              Input.GetKey(KeyCode.RightControl) ||
+                                                              Input.GetKey(KeyCode.LeftCommand) ||
+                                                              Input.GetKey(KeyCode.RightCommand));
             var deleteVoxel = !selectVoxel && highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0);
 
             if (selectVoxel)
@@ -362,7 +391,8 @@ namespace src
                 if (Input.GetKeyDown(KeyCode.H))
                     SetBlockSelectionSnack(!help);
                 if (Input.GetKeyDown(KeyCode.V) &&
-                    !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl))
+                    !(Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
                 {
                     movingSelectionAllowed = !movingSelectionAllowed;
                     SetBlockSelectionSnack(help);
@@ -375,6 +405,7 @@ namespace src
             var lines = new List<string>();
             if (helpMode)
             {
+                lines.Add("H : exit help");
                 if (movingSelectionAllowed)
                 {
                     lines.Add("W : forward");
@@ -385,10 +416,8 @@ namespace src
                     lines.Add("D : right");
                 }
 
-                lines.Add("R : rotate around y");
-                lines.Add("SHIFT+R : rotate around z");
-                lines.Add("CTRL+SHIFT+R : rotate around x");
-                lines.Add("H : exit help");
+                lines.Add("ALT + horizontal mouse movement : rotate around y axis");
+                lines.Add("ALT + vertical mouse movement : rotate around player right axis");
             }
             else
             {
@@ -414,7 +443,8 @@ namespace src
                 ExitBlockSelectionMovement();
             }
             else if (Input.GetKeyDown(KeyCode.C) &&
-                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
             {
                 copiedBlocks.Clear();
                 foreach (var block in selectedBlocks)
@@ -434,7 +464,8 @@ namespace src
             }
             else if (placeBlock.gameObject.activeSelf && copiedBlocks.Count > 0 &&
                      Input.GetKeyDown(KeyCode.V) &&
-                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
             {
                 var minX = float.PositiveInfinity;
                 var minY = float.PositiveInfinity;
@@ -527,7 +558,7 @@ namespace src
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
         {
-            var epsilon = cam.forward * castStep;
+            var epsilon = cam.forward * CastStep;
             placeBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
 
             var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
@@ -602,14 +633,14 @@ namespace src
 
         private Voxels.Face FindFocusedFace(Vector3 blockLocalHitPoint)
         {
-            if (blockLocalHitPoint.x < castStep) return Voxels.Face.LEFT;
-            if (Math.Abs(blockLocalHitPoint.x - 1) < castStep) return Voxels.Face.RIGHT;
+            if (blockLocalHitPoint.x < CastStep) return Voxels.Face.LEFT;
+            if (Math.Abs(blockLocalHitPoint.x - 1) < CastStep) return Voxels.Face.RIGHT;
 
-            if (blockLocalHitPoint.z < castStep) return Voxels.Face.BACK;
-            if (Math.Abs(blockLocalHitPoint.z - 1) < castStep) return Voxels.Face.FRONT;
+            if (blockLocalHitPoint.z < CastStep) return Voxels.Face.BACK;
+            if (Math.Abs(blockLocalHitPoint.z - 1) < CastStep) return Voxels.Face.FRONT;
 
-            if (blockLocalHitPoint.y < castStep) return Voxels.Face.BOTTOM;
-            if (Math.Abs(blockLocalHitPoint.y - 1) < castStep) return Voxels.Face.TOP;
+            if (blockLocalHitPoint.y < CastStep) return Voxels.Face.BOTTOM;
+            if (Math.Abs(blockLocalHitPoint.y - 1) < CastStep) return Voxels.Face.TOP;
 
             return null;
         }

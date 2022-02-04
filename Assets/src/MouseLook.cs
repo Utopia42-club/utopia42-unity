@@ -9,6 +9,7 @@ namespace src
         public Transform playerBody;
         private float xRotation = 0f;
         private Action onUpdate = () => { };
+        private Action<Vector3> rotationTarget = null;
 
         void Start()
         {
@@ -23,7 +24,7 @@ namespace src
                 {
                     Cursor.lockState = CursorLockMode.Locked;
                     Cursor.visible = false;
-                    this.onUpdate = () => this.DoUpdate();
+                    this.onUpdate = DoUpdate;
                 }
                 else
                 {
@@ -47,14 +48,26 @@ namespace src
             if (Mathf.Abs(mouseX) > 20 || Mathf.Abs(mouseY) > 20)
                 return;
 
-            //camera's x rotation (look up and down)
-            xRotation -= mouseY;
-            xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-
-            transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
-
-            playerBody.Rotate(Vector3.up * mouseX);
+            if (rotationTarget == null)
+            {
+                // camera's x rotation (look up and down)
+                xRotation -= mouseY;
+                xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+                transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
+                playerBody.Rotate(Vector3.up * mouseX);
+            }
+            else
+                rotationTarget.Invoke(Vector3.up * mouseX + Vector3.right * mouseY);
         }
 
+        public void SetRotationTarget(Action<Vector3> action)
+        {
+            rotationTarget = action;
+        }
+
+        public void RemoveRotationTarget()
+        {
+            rotationTarget = null;
+        }
     }
 }

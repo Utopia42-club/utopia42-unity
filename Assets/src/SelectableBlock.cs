@@ -105,22 +105,7 @@ namespace src
             }
         }
 
-        public void RotateAroundY(Vector3 center)
-        {
-            RotateAround(center, Vector3.up);
-        }
-
-        public void RotateAroundZ(Vector3 center)
-        {
-            RotateAround(center, Vector3.forward);
-        }
-
-        public void RotateAroundX(Vector3 center)
-        {
-            RotateAround(center, Vector3.right);
-        }
-
-        private void RotateAround(Vector3 center, Vector3 axis)
+        public void RotateAround(Vector3 center, Vector3 axis)
         {
             var vector3 = Quaternion.AngleAxis(90, axis) * (highlight.position + 0.5f * Vector3.one - center);
             var oldPos = highlight.position;
