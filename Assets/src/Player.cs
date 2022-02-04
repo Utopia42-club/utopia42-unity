@@ -446,7 +446,7 @@ namespace src
                      (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
             {
-                copiedBlocks.Clear();
+                ClearClipboard();
                 foreach (var block in selectedBlocks)
                     AddNewCopiedBlock(block.highlight.position);
                 ExitBlockSelectionMovement();
@@ -554,6 +554,13 @@ namespace src
             foreach (var block in selectedBlocks)
                 block.DestroyHighlights();
             selectedBlocks.Clear();
+        }
+        
+        private void ClearClipboard()
+        {
+            foreach (var block in copiedBlocks)
+                block.DestroyHighlights();
+            copiedBlocks.Clear();
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
