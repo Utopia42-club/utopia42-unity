@@ -69,5 +69,10 @@ namespace src
         {
             rotationTarget = null;
         }
+
+        public static MouseLook INSTANCE
+        {
+            get { return GameObject.Find("Main Camera").GetComponent<MouseLook>(); }
+        }
     }
 }

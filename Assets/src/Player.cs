@@ -525,7 +525,7 @@ namespace src
             foreach (var block in movedBlocks)
             {
                 var pos = TruncateFloor(block.highlight.position);
-                if (Player.INSTANCE.CanEdit(pos, out var land))
+                if (CanEdit(pos, out var land))
                     block.PutInPosition(world, pos, land);
             }
         }

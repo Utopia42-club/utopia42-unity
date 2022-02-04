@@ -6,9 +6,13 @@ namespace src.MetaBlocks.TdObjectBlock
     internal class TdObjectMoveController : MonoBehaviour
     {
         private const float MoveSpeed = 1f;
+
         private static readonly Vector3 ScaleDelta = 0.005f * Vector3.one;
-        private static readonly Vector3 RotationDeltaY = 1f * Vector3.up;
-        private static readonly Vector3 RotationDeltaZ = 1f * Vector3.forward;
+        // private static readonly Vector3 RotationDeltaY = 1f * Vector3.up;
+        // private static readonly Vector3 RotationDeltaZ = 1f * Vector3.forward;
+
+        private MouseLook mouseLook;
+        private Player player;
 
         private Transform scaleTarget;
         private Transform rotateTarget;
@@ -22,6 +26,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private bool rotateZ = false;
         private bool scaleUp = false;
         private bool scaleDown = false;
+        private bool rotationMode = false;
 
         private void Update()
         {
@@ -33,10 +38,20 @@ namespace src.MetaBlocks.TdObjectBlock
                 ? (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift) ? -1 : +1)
                 : 0;
 
-            rotateY = Input.GetKey(KeyCode.R);
-            rotateZ = Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.R) || Input.GetKey(KeyCode.RightShift) && Input.GetKey(KeyCode.R);
             scaleUp = Input.GetKey(KeyCode.RightBracket);
             scaleDown = Input.GetKey(KeyCode.LeftBracket);
+
+            if (rotationMode == (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.LeftAlt))) return;
+            rotationMode = !rotationMode;
+            if (!rotationMode)
+                mouseLook.RemoveRotationTarget();
+            else
+                mouseLook.SetRotationTarget(rotation =>
+                {
+                    var rotateTargetTransform = rotateTarget.transform;
+                    rotateTargetTransform.Rotate(rotateTargetTransform.InverseTransformVector(rotation.y * Vector3.up +
+                        rotation.x * player.transform.right));
+                });
         }
 
         private void FixedUpdate()
@@ -49,9 +64,6 @@ namespace src.MetaBlocks.TdObjectBlock
                            MoveSpeed;
             moveTarget.position += velocity;
 
-            if (rotateZ) RotateAroundZ();
-            else if (rotateY) RotateAroundY();
-            
             if (scaleUp) ScaleUp();
             if (scaleDown) ScaleDown();
         }
@@ -61,18 +73,8 @@ namespace src.MetaBlocks.TdObjectBlock
             this.moveTarget = moveTarget;
             this.scaleTarget = scaleTarget;
             this.rotateTarget = rotateTarget;
-        }
-
-        private void RotateAroundY()
-        {
-            if (rotateTarget == null) return;
-            rotateTarget.transform.Rotate(RotationDeltaY);
-        }
-        
-        private void RotateAroundZ()
-        {
-            if (rotateTarget == null) return;
-            rotateTarget.transform.Rotate(RotationDeltaZ);
+            mouseLook = MouseLook.INSTANCE;
+            player = Player.INSTANCE;
         }
 
         private void ScaleUp()
@@ -85,7 +87,8 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             if (scaleTarget == null) return;
             var scale = scaleTarget.transform.localScale - ScaleDelta;
-            scaleTarget.transform.localScale = new Vector3(Mathf.Max(scale.x, 0.1f), Mathf.Max(scale.y, 0.1f), Mathf.Max(scale.z, 0.1f));
+            scaleTarget.transform.localScale = new Vector3(Mathf.Max(scale.x, 0.1f), Mathf.Max(scale.y, 0.1f),
+                Mathf.Max(scale.z, 0.1f));
         }
 
         internal bool IsAttached()

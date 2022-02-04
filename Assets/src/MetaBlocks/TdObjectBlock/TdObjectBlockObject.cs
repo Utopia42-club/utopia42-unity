@@ -140,17 +140,17 @@ namespace src.MetaBlocks.TdObjectBlock
             var lines = new List<string>();
             if (helpMode)
             {
+                lines.Add("H : exit help");
                 lines.Add("W : forward");
                 lines.Add("S : backward");
                 lines.Add("SPACE : up");
                 lines.Add("SHIFT+SPACE : down");
                 lines.Add("A : left");
                 lines.Add("D : right");
-                lines.Add("R : rotate around y");
-                lines.Add("SHIFT+R : rotate around z");
                 lines.Add("] : scale up");
                 lines.Add("[ : scale down");
-                lines.Add("H : exit help");
+                lines.Add("ALT + horizontal mouse movement : rotate around y axis");
+                lines.Add("ALT + vertical mouse movement : rotate around player right axis");
             }
             else
             {
