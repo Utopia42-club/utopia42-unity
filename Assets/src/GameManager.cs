@@ -21,6 +21,7 @@ namespace src
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
         private State state = State.LOADING;
         private List<Dialog> dialogs = new List<Dialog>();
+        private bool captureAllKeyboardInputOrig;
 
         void Start()
         {
@@ -149,7 +150,7 @@ namespace src
         {
             if (worldInited &&
                 (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
-                 || state == State.PROFILE_DIALOG))
+                 || state == State.PROFILE_DIALOG || state == State.FREEZE))
                 SetState(State.PLAYING);
             if (state == State.DIALOG && dialogs.Count > 0)
                 CloseDialog(dialogs[dialogs.Count - 1]);
@@ -391,6 +392,24 @@ namespace src
                 SetState(State.PLAYING);
         }
 
+        public void FreezeGame()
+        {
+            SetState(State.FREEZE);
+#if UNITY_WEBGL
+
+            captureAllKeyboardInputOrig = WebGLInput.captureAllKeyboardInput; 
+            WebGLInput.captureAllKeyboardInput = false;
+#endif
+        }
+
+        public void UnFreezeGame()
+        {
+            ReturnToGame();
+#if UNITY_WEBGL
+            WebGLInput.captureAllKeyboardInput = captureAllKeyboardInputOrig == null || captureAllKeyboardInputOrig;
+#endif
+        }
+
         public static GameManager INSTANCE
         {
             get { return GameObject.Find("GameManager").GetComponent<GameManager>(); }
@@ -407,7 +426,8 @@ namespace src
             HELP,
             DIALOG,
             PROFILE_DIALOG,
-            MOVING_OBJECT
+            MOVING_OBJECT,
+            FREEZE
         }
     }
 }
