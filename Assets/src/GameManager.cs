@@ -26,6 +26,10 @@ namespace src
         void Start()
         {
             SetState(State.SETTINGS);
+            stateChange.AddListener(newState =>
+            {
+                BrowserConnector.INSTANCE.ReportGameState(newState, () => { }, () => { });
+            });
         }
 
         private void InitPlayerForWallet(Vector3? startingPosition)
@@ -233,7 +237,6 @@ namespace src
             Loading.INSTANCE.UpdateText("Saving Changes To Files...");
             StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, result =>
             {
-                SetState(State.BROWSER_CONNECTION);
                 //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
                 BrowserConnector.INSTANCE.Save(result, () => StartCoroutine(ReloadOwnerLands()),
                     () => SetState(State.PLAYING));
@@ -242,7 +245,6 @@ namespace src
 
         public void Buy(List<Land> lands)
         {
-            SetState(State.BROWSER_CONNECTION);
             BrowserConnector.INSTANCE.Buy(lands,
                 () => StartCoroutine(ReloadOwnerLands()),
                 () => SetState(State.PLAYING));
@@ -250,7 +252,6 @@ namespace src
 
         public void Transfer(long landId)
         {
-            SetState(State.BROWSER_CONNECTION);
             BrowserConnector.INSTANCE.Transfer(landId,
                 () => StartCoroutine(ReloadLands()),
                 () => SetState(State.PLAYING));
@@ -281,7 +282,6 @@ namespace src
             }
             else
             {
-                SetState(State.BROWSER_CONNECTION);
                 BrowserConnector.INSTANCE.SetNft(land.id, false,
                     () => StartCoroutine(ReloadLands()),
                     () => SetState(State.PLAYING));
@@ -292,7 +292,6 @@ namespace src
         {
             StartCoroutine(RestClient.INSATANCE.SetLandMetadata(new LandMetadata(landId, key), () =>
             {
-                SetState(State.BROWSER_CONNECTION);
                 BrowserConnector.INSTANCE.SetNft(landId, true,
                     () => StartCoroutine(ReloadLands()),
                     () => SetState(State.PLAYING));
@@ -347,7 +346,6 @@ namespace src
         {
             if (LandProfileDialog.INSTANCE.gameObject.activeSelf)
                 LandProfileDialog.INSTANCE.Close();
-            SetState(State.BROWSER_CONNECTION);
             BrowserConnector.INSTANCE.EditProfile(() =>
             {
                 SetState(State.PLAYING);
@@ -397,7 +395,7 @@ namespace src
             SetState(State.FREEZE);
 #if UNITY_WEBGL
 
-            captureAllKeyboardInputOrig = WebGLInput.captureAllKeyboardInput; 
+            captureAllKeyboardInputOrig = WebGLInput.captureAllKeyboardInput;
             WebGLInput.captureAllKeyboardInput = false;
 #endif
         }
@@ -421,7 +419,6 @@ namespace src
             SETTINGS,
             PLAYING,
             MAP,
-            BROWSER_CONNECTION,
             INVENTORY,
             HELP,
             DIALOG,

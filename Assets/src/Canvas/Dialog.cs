@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -8,17 +9,12 @@ namespace src.Canvas
 {
     public class Dialog : MonoBehaviour
     {
-        [SerializeField]
-        private GameObject actionPrefab;
-        [SerializeField]
-        private TextMeshProUGUI headerLabel;
-        [SerializeField]
-        private ActionButton closeButton;
-        [SerializeField]
-        private GameObject contentWrapper;
-        [SerializeField]
-        private GameObject footer;
-        private List<UnityAction> onCloseActions = new List<UnityAction>();
+        [SerializeField] private GameObject actionPrefab;
+        [SerializeField] private TextMeshProUGUI headerLabel;
+        [SerializeField] private ActionButton closeButton;
+        [SerializeField] private GameObject contentWrapper;
+        [SerializeField] private GameObject footer;
+        private List<Action> onCloseActions = new List<Action>();
         private GameObject content;
 
         void Start()
@@ -51,8 +47,19 @@ namespace src.Canvas
             return this;
         }
 
+        public Dialog withOnClose(Action action)
+        {
+            onCloseActions.Add(action.Invoke);
+            return this;
+        }
+
         private void Close()
         {
+            foreach (var action in onCloseActions)
+            {
+                action.Invoke();
+            }
+
             GameManager.INSTANCE.CloseDialog(this);
         }
     }
