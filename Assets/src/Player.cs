@@ -287,38 +287,40 @@ namespace src
                                                               Input.GetKey(KeyCode.RightControl) ||
                                                               Input.GetKey(KeyCode.LeftCommand) ||
                                                               Input.GetKey(KeyCode.RightCommand));
-            var deleteVoxel = !selectVoxel && highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0);
 
-            if (selectVoxel)
+            var multipleSelect = selectVoxel && selectedBlocks.Count > 0 &&
+                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+
+            if (multipleSelect) // TODO: add limit
+            {
+                var lastSelectedPosition = TruncateFloor(selectedBlocks.Last().position);
+                var currentSelectedPosition =
+                    TruncateFloor(focusedMeta == null ? highlightBlock.position : focusedMeta.GetBlockPosition());
+
+                var from = new Vector3Int(Mathf.Min(lastSelectedPosition.x, currentSelectedPosition.x),
+                    Mathf.Min(lastSelectedPosition.y, currentSelectedPosition.y),
+                    Mathf.Min(lastSelectedPosition.z, currentSelectedPosition.z));
+                var to = new Vector3Int(Mathf.Max(lastSelectedPosition.x, currentSelectedPosition.x),
+                    Mathf.Max(lastSelectedPosition.y, currentSelectedPosition.y),
+                    Mathf.Max(lastSelectedPosition.z, currentSelectedPosition.z));
+
+                for (var x = from.x; x <= to.x; x++)
+                for (var y = from.y; y <= to.y; y++)
+                for (var z = from.z; z <= to.z; z++)
+                {
+                    var position = new Vector3Int(x, y, z);
+                    if (position.Equals(lastSelectedPosition) || position.Equals(currentSelectedPosition)) continue;
+                    SelectBlockAtPosition(position);
+                }
+                SelectBlockAtPosition(currentSelectedPosition);
+            }
+            else if (selectVoxel)
             {
                 var selectedBlockPosition =
                     focusedMeta == null ? highlightBlock.position : focusedMeta.GetBlockPosition();
-
-                // Remove any existing selections
-                var indicesToRemove = new List<int>();
-                for (int i = 0; i < selectedBlocks.Count; i++)
-                {
-                    if (selectedBlocks[i].position.Equals(selectedBlockPosition))
-                        indicesToRemove.Add(i);
-                }
-
-                if (indicesToRemove.Count > 0)
-                {
-                    foreach (var index in indicesToRemove.OrderByDescending(i => i))
-                    {
-                        selectedBlocks[index].DestroyHighlights();
-                        selectedBlocks.RemoveAt(index);
-                        if (selectedBlocks.Count == 0)
-                        {
-                            ExitBlockSelectionMovement();
-                            break;
-                        }
-                    }
-                }
-                else AddNewSelectedBlock(selectedBlockPosition);
+                SelectBlockAtPosition(selectedBlockPosition);
             }
-
-            if (deleteVoxel)
+            else if (highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))
             {
                 var vp = new VoxelPosition(highlightBlock.position);
                 var chunk = world.GetChunkIfInited(vp.chunk);
@@ -334,6 +336,32 @@ namespace src
             {
                 PutBlock(placeBlock.position, VoxelService.INSTANCE.GetBlockType(selectedBlockId));
             }
+        }
+
+        private void SelectBlockAtPosition(Vector3 position)
+        {
+            // Remove any existing selections
+            var indicesToRemove = new List<int>();
+            for (int i = 0; i < selectedBlocks.Count; i++)
+            {
+                if (selectedBlocks[i].position.Equals(position))
+                    indicesToRemove.Add(i);
+            }
+
+            if (indicesToRemove.Count > 0)
+            {
+                foreach (var index in indicesToRemove.OrderByDescending(i => i))
+                {
+                    selectedBlocks[index].DestroyHighlights();
+                    selectedBlocks.RemoveAt(index);
+                    if (selectedBlocks.Count == 0)
+                    {
+                        ExitBlockSelectionMovement();
+                        break;
+                    }
+                }
+            }
+            else AddNewSelectedBlock(position);
         }
 
         public void PutBlock(Vector3 pos, BlockType type)
@@ -354,15 +382,13 @@ namespace src
             if (CanEdit(Vectors.FloorToInt(position), out var land))
             {
                 var selectedBlock = SelectableBlock.Create(position, world, highlightBlock, tdObjectHighlightBox, land);
-                if (selectedBlock != null)
+                if (selectedBlock == null) return;
+                selectedBlocks.Add(selectedBlock);
+                if (selectedBlocks.Count == 1 && !selectionActive)
                 {
-                    selectedBlocks.Add(selectedBlock);
-                    if (selectedBlocks.Count == 1 && !selectionActive)
-                    {
-                        selectionActive = true;
-                        movingSelectionAllowed = false;
-                        SetBlockSelectionSnack();
-                    }
+                    selectionActive = true;
+                    movingSelectionAllowed = false;
+                    SetBlockSelectionSnack();
                 }
             }
         }
@@ -555,7 +581,7 @@ namespace src
                 block.DestroyHighlights();
             selectedBlocks.Clear();
         }
-        
+
         private void ClearClipboard()
         {
             foreach (var block in copiedBlocks)
