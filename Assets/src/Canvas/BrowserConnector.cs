@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using src.Model;
 using src.Service.Ethereum;
 using src.Utils;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,20 +12,11 @@ namespace src.Canvas
     public class BrowserConnector : MonoBehaviour
     {
         private string currentUrl;
-        [SerializeField] private Button doneButton;
-
-        [SerializeField] private Button cancelButton;
         //[SerializeField]
         //private Button copyUrlButton;
 
         void Start()
         {
-            var manager = GameManager.INSTANCE;
-            gameObject.SetActive(manager.GetState() == GameManager.State.BROWSER_CONNECTION);
-            manager.stateChange.AddListener(state =>
-            {
-                gameObject.SetActive(state == GameManager.State.BROWSER_CONNECTION);
-            });
             //copyUrlButton.onClick.AddListener(() => GUIUtility.systemCopyBuffer = currentUrl);
         }
 
@@ -36,7 +28,7 @@ namespace src.Canvas
                 var orig = WebGLInput.captureAllKeyboardInput;
                 WebGLInput.captureAllKeyboardInput = false;
                 WebBridge.Call<object>("editProfile", null);
-                ResetButtons(() =>
+                OpenDialog(() =>
                 {
                     WebGLInput.captureAllKeyboardInput = orig;
                     onDone();
@@ -56,7 +48,7 @@ namespace src.Canvas
             if (WebBridge.IsPresent())
             {
                 WebBridge.Call<object>("transfer", landId);
-                ResetButtons(onDone, onCancel);
+                OpenDialog(onDone, onCancel);
             }
             else
                 CallUrl("transfer", landId.ToString(), onDone, onCancel);
@@ -70,7 +62,7 @@ namespace src.Canvas
                 data.Add("landId", landId);
                 data.Add("nft", value);
                 WebBridge.Call<object>("setNft", data);
-                ResetButtons(onDone, onCancel);
+                OpenDialog(onDone, onCancel);
             }
             else
                 CallUrl("setNft", $"{landId}_{value}", onDone, onCancel);
@@ -82,7 +74,7 @@ namespace src.Canvas
             if (WebBridge.IsPresent())
             {
                 WebBridge.Call<object>("save", data);
-                ResetButtons(onDone, onCancel);
+                OpenDialog(onDone, onCancel);
             }
             else
             {
@@ -98,7 +90,7 @@ namespace src.Canvas
             if (WebBridge.IsPresent())
             {
                 WebBridge.Call<object>("buy", lands);
-                ResetButtons(onDone, onCancel);
+                OpenDialog(onDone, onCancel);
             }
             else
             {
@@ -106,6 +98,14 @@ namespace src.Canvas
                 foreach (var l in lands)
                     parameters.Add(string.Join("_", new long[] {l.x1, l.y1, l.x2, l.y2}));
                 CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
+            }
+        }
+
+        public void ReportGameState(GameManager.State state, Action onDone, Action onCancel)
+        {
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("reportGameState", state.ToString());
             }
         }
 
@@ -123,7 +123,7 @@ namespace src.Canvas
                     network);
 
             Application.OpenURL(currentUrl);
-            ResetButtons(onDone, onCancel);
+            OpenDialog(onDone, onCancel);
         }
 
         private void CallUrl(string method, Action onDone, Action onCancel)
@@ -131,12 +131,24 @@ namespace src.Canvas
             CallUrl(method, null, onDone, onCancel);
         }
 
-        private void ResetButtons(Action onDone, Action onCancel)
+        private void OpenDialog(Action onDone, Action onCancel)
         {
-            cancelButton.onClick.RemoveAllListeners();
-            doneButton.onClick.RemoveAllListeners();
-            doneButton.onClick.AddListener(() => onDone.Invoke());
-            cancelButton.onClick.AddListener(() => onCancel.Invoke());
+            var manager = GameManager.INSTANCE;
+            var dialog = manager.OpenDialog();
+            dialog.WithContent("Dialog/TextContent");
+            dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
+                "Accept the transaction on your browser. Click RELOAD when it is confirmed.";
+            dialog.withOnClose(onCancel.Invoke);
+            dialog.WithAction("CANCEL", () =>
+            {
+                onCancel.Invoke();
+                manager.CloseDialog(dialog);
+            });
+            dialog.WithAction("RELOAD", () =>
+            {
+                onDone.Invoke();
+                manager.CloseDialog(dialog);
+            });
         }
 
         public static BrowserConnector INSTANCE
