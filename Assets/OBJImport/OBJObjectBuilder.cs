@@ -76,14 +76,14 @@ public class OBJObjectBuilder {
 		Material[] materialArray = new Material[_materialIndices.Count];
 		foreach (var kvp in _materialIndices) {
 			Material material = null;
-			if (_loader.Materials == null) {
+			if (_loader.materials == null) {
 				material = OBJLoaderHelper.CreateNullMaterial();
 				material.name = kvp.Key;
 			} else {
-				if (!_loader.Materials.TryGetValue(kvp.Key, out material)) {
+				if (!_loader.materials.TryGetValue(kvp.Key, out material)) {
 					material = OBJLoaderHelper.CreateNullMaterial();
 					material.name = kvp.Key;
-					_loader.Materials[kvp.Key] = material;
+					_loader.materials[kvp.Key] = material;
 				}
 			}
 			materialArray[submesh] = material;
@@ -176,9 +176,9 @@ public class OBJObjectBuilder {
 				remap = _vertices.Count;
 
 				//add new verts and what not
-				_vertices.Add((vertexIndex >= 0 && vertexIndex < _loader.Vertices.Count) ? _loader.Vertices[vertexIndex] : Vector3.zero);
-				_normals.Add((normalIndex >= 0 && normalIndex < _loader.Normals.Count) ? _loader.Normals[normalIndex] : Vector3.zero);
-				_uvs.Add((uvIndex >= 0 && uvIndex < _loader.UVs.Count) ? _loader.UVs[uvIndex] : Vector2.zero);
+				_vertices.Add((vertexIndex >= 0 && vertexIndex < _loader.vertices.Count) ? _loader.vertices[vertexIndex] : Vector3.zero);
+				_normals.Add((normalIndex >= 0 && normalIndex < _loader.normals.Count) ? _loader.normals[normalIndex] : Vector3.zero);
+				_uvs.Add((uvIndex >= 0 && uvIndex < _loader.uVs.Count) ? _loader.uVs[uvIndex] : Vector2.zero);
 
 				//mark recalc flag
 				if (normalIndex < 0)

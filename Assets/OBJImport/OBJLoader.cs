@@ -19,45 +19,44 @@ using System;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace Dummiesman
 {
-    public enum SplitMode {
+    public enum SplitMode
+    {
         None,
         Object,
         Material
     }
-    
+
     public class OBJLoader
     {
         //options
         /// <summary>
         /// Determines how objects will be created
         /// </summary>
-        public SplitMode SplitMode = SplitMode.Object;
+        private SplitMode splitMode = SplitMode.Object;
 
-        //global lists, accessed by objobjectbuilder
-        internal List<Vector3> Vertices = new List<Vector3>();
-        internal List<Vector3> Normals = new List<Vector3>();
-        internal List<Vector2> UVs = new List<Vector2>();
-
-        //materials, accessed by objobjectbuilder
-        internal Dictionary<string, Material> Materials;
+        //accessed by builder
+        internal readonly List<Vector3> vertices = new List<Vector3>();
+        internal readonly List<Vector3> normals = new List<Vector3>();
+        internal readonly List<Vector2> uVs = new List<Vector2>();
+        internal Dictionary<string, Material> materials;
 
         //file info for files loaded from file path, used for GameObject naming and MTL finding
-        private FileInfo _objInfo;
-        
-        private Dictionary<string,ZipArchiveEntry> _zipMap;
+        private FileInfo objInfo;
+
+        private Dictionary<string, ZipArchiveEntry> zipMap;
+        private Dictionary<string, OBJObjectBuilder> builderDictionary;
 
 #if UNITY_EDITOR
         [MenuItem("GameObject/Import From OBJ")]
         static void ObjLoadMenu()
         {
-            string pth =  EditorUtility.OpenFilePanel("Import OBJ", "", "obj");
+            string pth = EditorUtility.OpenFilePanel("Import OBJ", "", "obj");
             if (!string.IsNullOrEmpty(pth))
             {
                 System.Diagnostics.Stopwatch s = new System.Diagnostics.Stopwatch();
@@ -65,7 +64,7 @@ namespace Dummiesman
 
                 var loader = new OBJLoader
                 {
-                    SplitMode = SplitMode.Object,
+                    splitMode = SplitMode.Object,
                 };
                 loader.Load(pth);
 
@@ -81,27 +80,26 @@ namespace Dummiesman
         /// <param name="mtlLibPath"></param>
         private void LoadMaterialLibrary(string mtlLibPath)
         {
-            if (_zipMap != null)
+            if (zipMap != null)
             {
-                if (!_zipMap.ContainsKey(mtlLibPath)) return;
-                using var stream = _zipMap[mtlLibPath].Open();
-                Materials = new MTLLoader(_zipMap).Load(stream);
+                if (!zipMap.ContainsKey(mtlLibPath)) return;
+                using var stream = zipMap[mtlLibPath].Open();
+                materials = new MTLLoader(zipMap).Load(stream);
                 return;
             }
-            
-            if (_objInfo != null)
+
+            if (objInfo != null)
             {
-                if (File.Exists(Path.Combine(_objInfo.Directory.FullName, mtlLibPath)))
+                if (File.Exists(Path.Combine(objInfo.Directory.FullName, mtlLibPath)))
                 {
-                    Materials = new MTLLoader().Load(Path.Combine(_objInfo.Directory.FullName, mtlLibPath));
+                    materials = new MTLLoader().Load(Path.Combine(objInfo.Directory.FullName, mtlLibPath));
                     return;
                 }
             }
 
             if (File.Exists(mtlLibPath))
             {
-                Materials = new MTLLoader().Load(mtlLibPath);
-                return;
+                materials = new MTLLoader().Load(mtlLibPath);
             }
         }
 
@@ -112,10 +110,38 @@ namespace Dummiesman
         /// <returns>Returns a GameObject represeting the OBJ file, with each imported object as a child.</returns>
         public GameObject Load(Stream input)
         {
-            var reader = new StreamReader(input);
+            CreateBuilderDictionary(input);
+            return BuildBuilderDictionary();
+        }
+
+        public GameObject BuildBuilderDictionary()
+        {
+            if (builderDictionary == null || builderDictionary.Count == 0) return null;
+            //finally, put it all together
+            GameObject obj =
+                new GameObject(objInfo != null
+                    ? Path.GetFileNameWithoutExtension(objInfo.Name)
+                    : "WavefrontObject"); // TODO: change the name
+            obj.transform.localScale = new Vector3(1f, 1f, 1f);
+
+            foreach (var builder in builderDictionary)
+            {
+                //empty object
+                if (builder.Value.PushedFaceCount == 0)
+                    continue;
+                var builtObj = builder.Value.Build();
+                builtObj.transform.SetParent(obj.transform, false);
+            }
+
+            return obj;
+        }
+
+        public void CreateBuilderDictionary(Stream input = null)
+        {
+            var reader = new StreamReader(input ?? zipMap["obj"].Open());
             //var reader = new StringReader(inputReader.ReadToEnd());
 
-            Dictionary<string, OBJObjectBuilder> builderDict = new Dictionary<string, OBJObjectBuilder>();
+            builderDictionary = new Dictionary<string, OBJObjectBuilder>();
             OBJObjectBuilder currentBuilder = null;
             string currentMaterial = "default";
 
@@ -126,80 +152,88 @@ namespace Dummiesman
             List<int> uvIndices = new List<int>();
 
             //helper func
-            Action<string> setCurrentObjectFunc = (string objectName) =>
+            Action<string> setCurrentObjectFunc = objectName =>
             {
-                if (!builderDict.TryGetValue(objectName, out currentBuilder))
+                if (!builderDictionary.TryGetValue(objectName, out currentBuilder))
                 {
                     currentBuilder = new OBJObjectBuilder(objectName, this);
-                    builderDict[objectName] = currentBuilder;
+                    builderDictionary[objectName] = currentBuilder;
                 }
             };
 
             //create default object
             setCurrentObjectFunc.Invoke("default");
 
-			//var buffer = new DoubleBuffer(reader, 256 * 1024);
-			var buffer = new CharWordReader(reader, 4 * 1024);
+            //var buffer = new DoubleBuffer(reader, 256 * 1024);
+            var buffer = new CharWordReader(reader, 4 * 1024);
 
-			//do the reading
-			while (true)
+            //do the reading
+            while (true)
             {
-				buffer.SkipWhitespaces();
+                buffer.SkipWhitespaces();
 
-				if (buffer.endReached == true) {
-					break;
-				}
+                if (buffer.endReached)
+                {
+                    break;
+                }
 
-				buffer.ReadUntilWhiteSpace();
-				
+                buffer.ReadUntilWhiteSpace();
+
                 //comment or blank
                 if (buffer.Is("#"))
                 {
-					buffer.SkipUntilNewLine();
+                    buffer.SkipUntilNewLine();
                     continue;
                 }
-				
-				if (Materials == null && buffer.Is("mtllib")) {
-					buffer.SkipWhitespaces();
-					buffer.ReadUntilNewLine();
-					string mtlLibPath = buffer.GetString();
-					LoadMaterialLibrary(mtlLibPath);
-					continue;
-				}
-				
-				if (buffer.Is("v")) {
-					Vertices.Add(buffer.ReadVector());
-					continue;
-				}
 
-				//normal
-				if (buffer.Is("vn")) {
-                    Normals.Add(buffer.ReadVector());
+                if (materials == null && buffer.Is("mtllib"))
+                {
+                    buffer.SkipWhitespaces();
+                    buffer.ReadUntilNewLine();
+                    string mtlLibPath = buffer.GetString();
+                    LoadMaterialLibrary(mtlLibPath);
+                    continue;
+                }
+
+                if (buffer.Is("v"))
+                {
+                    vertices.Add(buffer.ReadVector());
+                    continue;
+                }
+
+                //normal
+                if (buffer.Is("vn"))
+                {
+                    normals.Add(buffer.ReadVector());
                     continue;
                 }
 
                 //uv
-				if (buffer.Is("vt")) {
-                    UVs.Add(buffer.ReadVector());
+                if (buffer.Is("vt"))
+                {
+                    uVs.Add(buffer.ReadVector());
                     continue;
                 }
 
                 //new material
-				if (buffer.Is("usemtl")) {
-					buffer.SkipWhitespaces();
-					buffer.ReadUntilNewLine();
-					string materialName = buffer.GetString();
+                if (buffer.Is("usemtl"))
+                {
+                    buffer.SkipWhitespaces();
+                    buffer.ReadUntilNewLine();
+                    string materialName = buffer.GetString();
                     currentMaterial = materialName;
 
-                    if(SplitMode == SplitMode.Material)
+                    if (splitMode == SplitMode.Material)
                     {
                         setCurrentObjectFunc.Invoke(materialName);
                     }
+
                     continue;
                 }
 
                 //new object
-                if ((buffer.Is("o") || buffer.Is("g")) && SplitMode == SplitMode.Object) {
+                if ((buffer.Is("o") || buffer.Is("g")) && splitMode == SplitMode.Object)
+                {
                     buffer.ReadUntilNewLine();
                     string objectName = buffer.GetString(1);
                     setCurrentObjectFunc.Invoke(objectName);
@@ -212,45 +246,52 @@ namespace Dummiesman
                     //loop through indices
                     while (true)
                     {
-						bool newLinePassed;
-						buffer.SkipWhitespaces(out newLinePassed);
-						if (newLinePassed == true) {
-							break;
-						}
+                        bool newLinePassed;
+                        buffer.SkipWhitespaces(out newLinePassed);
+                        if (newLinePassed)
+                        {
+                            break;
+                        }
 
                         int vertexIndex = int.MinValue;
                         int normalIndex = int.MinValue;
                         int uvIndex = int.MinValue;
 
-						vertexIndex = buffer.ReadInt();
-						if (buffer.currentChar == '/') {
-							buffer.MoveNext();
-							if (buffer.currentChar != '/') {
-								uvIndex = buffer.ReadInt();
-							}
-							if (buffer.currentChar == '/') {
-								buffer.MoveNext();
-								normalIndex = buffer.ReadInt();
-							}
-						}
+                        vertexIndex = buffer.ReadInt();
+                        if (buffer.currentChar == '/')
+                        {
+                            buffer.MoveNext();
+                            if (buffer.currentChar != '/')
+                            {
+                                uvIndex = buffer.ReadInt();
+                            }
+
+                            if (buffer.currentChar == '/')
+                            {
+                                buffer.MoveNext();
+                                normalIndex = buffer.ReadInt();
+                            }
+                        }
 
                         //"postprocess" indices
                         if (vertexIndex > int.MinValue)
                         {
                             if (vertexIndex < 0)
-                                vertexIndex = Vertices.Count - vertexIndex;
+                                vertexIndex = vertices.Count - vertexIndex;
                             vertexIndex--;
                         }
+
                         if (normalIndex > int.MinValue)
                         {
                             if (normalIndex < 0)
-                                normalIndex = Normals.Count - normalIndex;
+                                normalIndex = normals.Count - normalIndex;
                             normalIndex--;
                         }
+
                         if (uvIndex > int.MinValue)
                         {
                             if (uvIndex < 0)
-                                uvIndex = UVs.Count - uvIndex;
+                                uvIndex = uVs.Count - uvIndex;
                             uvIndex--;
                         }
 
@@ -268,27 +309,11 @@ namespace Dummiesman
                     normalIndices.Clear();
                     uvIndices.Clear();
 
-					continue;
+                    continue;
                 }
 
-				buffer.SkipUntilNewLine();
+                buffer.SkipUntilNewLine();
             }
-
-            //finally, put it all together
-            GameObject obj = new GameObject(_objInfo != null ? Path.GetFileNameWithoutExtension(_objInfo.Name) : "WavefrontObject"); // TODO: change the name
-            obj.transform.localScale = new Vector3(1f, 1f, 1f);
-
-            
-            foreach (var builder in builderDict)
-            {
-                //empty object
-                if (builder.Value.PushedFaceCount == 0)
-                    continue;
-
-                var builtObj = builder.Value.Build();
-                builtObj.transform.SetParent(obj.transform, false);
-            }
-            return obj;
         }
 
         /// <summary>
@@ -300,7 +325,7 @@ namespace Dummiesman
         public GameObject Load(Stream input, Stream mtlInput)
         {
             var mtlLoader = new MTLLoader();
-            Materials = mtlLoader.Load(mtlInput);
+            materials = mtlLoader.Load(mtlInput);
 
             return Load(input);
         }
@@ -313,11 +338,11 @@ namespace Dummiesman
         /// <returns>Returns a GameObject represeting the OBJ file, with each imported object as a child.</returns>
         public GameObject Load(string path, string mtlPath)
         {
-            _objInfo = new FileInfo(path);
+            objInfo = new FileInfo(path);
             if (!string.IsNullOrEmpty(mtlPath) && File.Exists(mtlPath))
             {
                 var mtlLoader = new MTLLoader();
-                Materials = mtlLoader.Load(mtlPath);
+                materials = mtlLoader.Load(mtlPath);
 
                 using (var fs = new FileStream(path, FileMode.Open))
                 {
@@ -343,58 +368,57 @@ namespace Dummiesman
             return Load(path, null);
         }
 
-        private GameObject LoadZip(ZipArchive zip)
+        private void LoadZip(ZipArchive zip)
+        {
+            InitZipMap(zip);
+            InitMaterialsForZip();
+        }
+
+        public void InitMaterialsForZip()
+        {
+            if (zipMap.ContainsKey("mtl"))
+            {
+                using var stream = zipMap["mtl"].Open();
+                materials = new MTLLoader(zipMap).Load(stream);
+            }
+        }
+
+        public void InitZipMap(ZipArchive zip)
         {
             var separator = Path.DirectorySeparatorChar.ToString().Equals("/") ? "/" : "\\\\";
-            _zipMap = new Dictionary<string, ZipArchiveEntry>();
+            zipMap = new Dictionary<string, ZipArchiveEntry>();
             List<ZipArchiveEntry> entries = new List<ZipArchiveEntry>(zip.Entries);
             entries.Sort(new SortArchiveEntries());
             foreach (var entry in entries)
             {
-                if(entry.FullName.StartsWith("__MACOSX")) continue;
+                if (entry.FullName.StartsWith("__MACOSX")) continue;
 
                 var fullName = new Regex(@"\\\\").Replace(entry.FullName, separator);
                 fullName = new Regex(@"/").Replace(fullName, separator);
                 if (fullName.EndsWith(separator)) continue;
 
-                if (_zipMap.ContainsKey(fullName) || fullName.Equals("")) continue;
-                
-                _zipMap.Add(fullName, entry);
+                if (zipMap.ContainsKey(fullName) || fullName.Equals("")) continue;
 
-                var modifiedFullname = new Regex(separator.Equals("/") ? @"^[\S\s]+?/" : @"^[\S\s]+?\\\\").Replace(fullName, "");
-                if(!_zipMap.ContainsKey(modifiedFullname))
-                    _zipMap.Add(modifiedFullname, entry);
-                
+                zipMap.Add(fullName, entry);
+
+                var modifiedFullname =
+                    new Regex(separator.Equals("/") ? @"^[\S\s]+?/" : @"^[\S\s]+?\\\\").Replace(fullName, "");
+                if (!zipMap.ContainsKey(modifiedFullname))
+                    zipMap.Add(modifiedFullname, entry);
+
                 var type = entry.Name.Split('.').Last().ToLower();
-                if ((type.Equals("mtl") || type.Equals("obj")) && !_zipMap.ContainsKey(type))
-                    _zipMap.Add(type, entry);
+                if ((type.Equals("mtl") || type.Equals("obj")) && !zipMap.ContainsKey(type))
+                    zipMap.Add(type, entry);
             }
-
-            if (!_zipMap.ContainsKey("obj")) throw new InvalidDataException("Obj file not found");
-
-            if (_zipMap.ContainsKey("mtl"))
-            {
-                using var stream = _zipMap["mtl"].Open();
-                Materials = new MTLLoader(_zipMap).Load(stream);
-            }
-
-            using (var stream = _zipMap["obj"].Open())
-            {
-                return Load(stream);
-            }
+            if (!zipMap.ContainsKey("obj")) throw new InvalidDataException("Obj file not found");
         }
-        
-        public GameObject LoadZip(string path)
-        {
-            if (!File.Exists(path)) return null; // TODO ?
-            using var zipFile = ZipFile.OpenRead(path);
-            return LoadZip(zipFile);
-        }
-        
-        public GameObject LoadZip(Stream zip)
+
+        public GameObject LoadZip(Stream zip) // not thread safe
         {
             using var zipFile = new ZipArchive(zip);
-            return LoadZip(zipFile);
+            LoadZip(zipFile);
+            CreateBuilderDictionary();
+            return BuildBuilderDictionary();
         }
     }
 }
@@ -403,6 +427,6 @@ class SortArchiveEntries : IComparer<ZipArchiveEntry>
 {
     public int Compare(ZipArchiveEntry x, ZipArchiveEntry y)
     {
-        return String.Compare(x.FullName, y.FullName, StringComparison.Ordinal);
+        return String.Compare(x?.FullName, y?.FullName, StringComparison.Ordinal);
     }
 }

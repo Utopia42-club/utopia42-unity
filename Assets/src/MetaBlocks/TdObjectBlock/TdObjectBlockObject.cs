@@ -406,7 +406,7 @@ namespace src.MetaBlocks.TdObjectBlock
             return bounds.size;
         }
 
-        private IEnumerator LoadZip(string url, Action<GameObject> consumer)
+        private IEnumerator LoadZip(string url, Action<GameObject> onSucess)
         {
             using var webRequest = UnityWebRequest.Get(url);
             var op = webRequest.SendWebRequest();
@@ -436,20 +436,25 @@ namespace src.MetaBlocks.TdObjectBlock
                     UpdateStateAndIcon(StateMsg.InvalidUrl);
                     break;
                 case UnityWebRequest.Result.Success:
-                    using (var stream = new MemoryStream(webRequest.downloadHandler.data))
-                    {
-                        try
-                        {
-                            var go = new OBJLoader().LoadZip(stream);
-                            consumer.Invoke(go);
-                        }
-                        catch (Exception)
-                        {
-                            DestroyObject();
-                            UpdateStateAndIcon(StateMsg.InvalidData);
-                        }
-                    }
+                    // non-threaded
+                    // try
+                    // {
+                    //     using var stream = new MemoryStream(webRequest.downloadHandler.data);
+                    //     var go = new OBJLoader().LoadZip(stream);
+                    //     onSucess.Invoke(go);
+                    // }
+                    // catch (Exception)
+                    // {
+                    //     DestroyObject();
+                    //     UpdateStateAndIcon(StateMsg.InvalidData);
+                    // }
 
+                    // threaded
+                    TdObjectLoader.INSTANCE.InitTask(webRequest.downloadHandler.data, onSucess, () =>
+                    {
+                        DestroyObject();
+                        UpdateStateAndIcon(StateMsg.InvalidData);
+                    });
                     break;
             }
         }
