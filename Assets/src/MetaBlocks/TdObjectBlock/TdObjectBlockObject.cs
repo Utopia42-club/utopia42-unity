@@ -283,7 +283,7 @@ namespace src.MetaBlocks.TdObjectBlock
             else
             {
                 UpdateStateAndIcon(StateMsg.Ok);
-                Player.INSTANCE.ReCreateTdObjectHighlightIfSelected(Vectors.FloorToInt(transform.position));
+                BlockSelectionController.INSTANCE.ReCreateTdObjectHighlightIfSelected(Vectors.FloorToInt(transform.position));
             }
         }
 

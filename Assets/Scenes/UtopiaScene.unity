@@ -840,7 +840,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1050669706}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1076,6 +1076,7 @@ GameObject:
   - component: {fileID: 144663239}
   - component: {fileID: 144663240}
   - component: {fileID: 144663241}
+  - component: {fileID: 144663242}
   m_Layer: 2
   m_Name: Player
   m_TagString: Untagged
@@ -1112,15 +1113,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cam: {fileID: 963194228}
   world: {fileID: 1828913042}
-  mouseLook: {fileID: 963194229}
   walkSpeed: 6
   sprintSpeed: 12
   jumpHeight: 1
   gravity: -9.8
-  selectionRotationSensitivity: 0.3
   highlightBlock: {fileID: 960974167}
   placeBlock: {fileID: 865122078}
   tdObjectHighlightBox: {fileID: 1559789645}
+  placeLand:
+    id: 0
+    x1: 0
+    y1: 0
+    x2: 0
+    y2: 0
+    ipfsKey: 
+    time: 0
+    isNft: 0
+    owner: 
+    ownerIndex: 0
 --- !u!143 &144663241
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1139,6 +1149,19 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0.88, z: 0}
+--- !u!114 &144663242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 144663238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81293fa1e3b04024bf8de62b3c01b1a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  selectionRotationSensitivity: 0.3
 --- !u!1 &165036037
 GameObject:
   m_ObjectHideFlags: 0
@@ -3602,7 +3625,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 236.65498, y: -77.629295}
+  m_AnchoredPosition: {x: 236.65498, y: -77.63}
   m_SizeDelta: {x: 368.81, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442934151
@@ -13860,7 +13883,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1925748159}
   m_HandleRect: {fileID: 1925748158}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
