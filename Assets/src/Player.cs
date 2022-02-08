@@ -8,7 +8,6 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace src
 {
@@ -38,8 +37,6 @@ namespace src
         private bool floating = false;
         private Vector3Int lastChunk;
         private List<Land> ownedLands = new List<Land>();
-        private List<SelectableBlock> selectedBlocks = new List<SelectableBlock>();
-        private List<SelectableBlock> copiedBlocks = new List<SelectableBlock>();
         public Transform highlightBlock;
         public Transform placeBlock;
         public Transform tdObjectHighlightBox;
@@ -50,6 +47,8 @@ namespace src
         private Collider hitCollider;
         private CharacterController controller;
 
+        private List<SelectableBlock> selectedBlocks = new List<SelectableBlock>();
+        private List<SelectableBlock> copiedBlocks = new List<SelectableBlock>();
         private bool selectionActive = false; // whether we have any selected any blocks or not
 
         private bool
@@ -246,7 +245,7 @@ namespace src
                 rotationAxis = rotationSum.x > 0 ? axis : -axis;
             }
 
-            var center = selectedBlocks[0].highlight.position + 0.5f * Vector3.one;
+            var center = selectedBlocks[0].HighlightPosition + 0.5f * Vector3.one;
 
             foreach (var block in selectedBlocks)
                 block.RotateAround(center, rotationAxis);
@@ -270,8 +269,8 @@ namespace src
             if (!movement) return;
 
             var delta = Vectors.FloorToInt(
-                Vectors.FloorToInt(selectedBlocks[0].highlight.position + 0.5f * Vector3.one + moveDirection) -
-                selectedBlocks[0].highlight.position +
+                Vectors.FloorToInt(selectedBlocks[0].HighlightPosition + 0.5f * Vector3.one + moveDirection) -
+                selectedBlocks[0].HighlightPosition +
                 (moveUp ? Vector3.up : moveDown ? Vector3.down : Vector3.zero));
             foreach (var block in selectedBlocks)
             {
@@ -293,9 +292,9 @@ namespace src
 
             if (multipleSelect) // TODO: add limit
             {
-                var lastSelectedPosition = TruncateFloor(selectedBlocks.Last().position);
+                var lastSelectedPosition = selectedBlocks.Last().Position;
                 var currentSelectedPosition =
-                    TruncateFloor(focusedMeta == null ? highlightBlock.position : focusedMeta.GetBlockPosition());
+                    Vectors.FloorToInt(focusedMeta == null ? highlightBlock.position : focusedMeta.GetBlockPosition());
 
                 var from = new Vector3Int(Mathf.Min(lastSelectedPosition.x, currentSelectedPosition.x),
                     Mathf.Min(lastSelectedPosition.y, currentSelectedPosition.y),
@@ -312,12 +311,13 @@ namespace src
                     if (position.Equals(lastSelectedPosition) || position.Equals(currentSelectedPosition)) continue;
                     SelectBlockAtPosition(position);
                 }
+
                 SelectBlockAtPosition(currentSelectedPosition);
             }
             else if (selectVoxel)
             {
                 var selectedBlockPosition =
-                    focusedMeta == null ? highlightBlock.position : focusedMeta.GetBlockPosition();
+                    Vectors.FloorToInt(focusedMeta == null ? highlightBlock.position : focusedMeta.GetBlockPosition());
                 SelectBlockAtPosition(selectedBlockPosition);
             }
             else if (highlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))
@@ -338,13 +338,13 @@ namespace src
             }
         }
 
-        private void SelectBlockAtPosition(Vector3 position)
+        private void SelectBlockAtPosition(Vector3Int position)
         {
             // Remove any existing selections
             var indicesToRemove = new List<int>();
             for (int i = 0; i < selectedBlocks.Count; i++)
             {
-                if (selectedBlocks[i].position.Equals(position))
+                if (selectedBlocks[i].Position.Equals(position))
                     indicesToRemove.Add(i);
             }
 
@@ -377,9 +377,9 @@ namespace src
             }
         }
 
-        private void AddNewSelectedBlock(Vector3 position)
+        private void AddNewSelectedBlock(Vector3Int position)
         {
-            if (CanEdit(Vectors.FloorToInt(position), out var land))
+            if (CanEdit(position, out var land))
             {
                 var selectedBlock = SelectableBlock.Create(position, world, highlightBlock, tdObjectHighlightBox, land);
                 if (selectedBlock == null) return;
@@ -393,9 +393,9 @@ namespace src
             }
         }
 
-        private void AddNewCopiedBlock(Vector3 position)
+        private void AddNewCopiedBlock(Vector3Int position)
         {
-            if (CanEdit(Vectors.FloorToInt(position), out var land))
+            if (CanEdit(position, out var land))
             {
                 var copiedBlock =
                     SelectableBlock.Create(position, world, highlightBlock, tdObjectHighlightBox, land, false);
@@ -474,7 +474,7 @@ namespace src
             {
                 ClearClipboard();
                 foreach (var block in selectedBlocks)
-                    AddNewCopiedBlock(block.highlight.position);
+                    AddNewCopiedBlock(block.HighlightPosition);
                 ExitBlockSelectionMovement();
             }
 
@@ -493,26 +493,26 @@ namespace src
                      (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
             {
-                var minX = float.PositiveInfinity;
-                var minY = float.PositiveInfinity;
-                var minZ = float.PositiveInfinity;
+                var minX = int.MaxValue;
+                var minY = int.MaxValue;
+                var minZ = int.MaxValue;
                 foreach (var srcBlock in copiedBlocks)
                 {
-                    if (srcBlock.position.x < minX)
-                        minX = srcBlock.position.x;
-                    if (srcBlock.position.y < minY)
-                        minY = srcBlock.position.y;
-                    if (srcBlock.position.z < minZ)
-                        minZ = srcBlock.position.z;
+                    if (srcBlock.Position.x < minX)
+                        minX = srcBlock.Position.x;
+                    if (srcBlock.Position.y < minY)
+                        minY = srcBlock.Position.y;
+                    if (srcBlock.Position.z < minZ)
+                        minZ = srcBlock.Position.z;
                 }
 
-                var minPoint = new Vector3(minX, minY, minZ);
+                var minPoint = new Vector3Int(minX, minY, minZ);
                 var conflictWithPlayer = false;
                 var currVox = Vectors.FloorToInt(transform.position);
                 ClearSelection();
                 foreach (var srcBlock in copiedBlocks)
                 {
-                    var newPosition = TruncateFloor(srcBlock.position - minPoint + placeBlockPosInt);
+                    var newPosition = srcBlock.Position - minPoint + placeBlockPosInt;
                     if (newPosition.Equals(currVox) || newPosition.Equals(currVox + Vector3Int.up)
                                                     || newPosition.Equals(currVox + 2 * Vector3Int.up))
                     {
@@ -524,7 +524,7 @@ namespace src
                 if (!conflictWithPlayer)
                     foreach (var srcBlock in copiedBlocks)
                     {
-                        var newPosition = TruncateFloor(srcBlock.position - minPoint + placeBlockPosInt);
+                        var newPosition = srcBlock.Position - minPoint + placeBlockPosInt;
                         if (CanEdit(newPosition, out var land))
                         {
                             srcBlock.PutInPosition(world, newPosition, land);
@@ -540,7 +540,7 @@ namespace src
             var currVox = Vectors.FloorToInt(transform.position);
             foreach (var block in movedBlocks)
             {
-                var position = block.highlight.position;
+                var position = block.HighlightPosition;
                 if (position.Equals(currVox) || position.Equals(currVox + Vector3Int.up)
                                              || position.Equals(currVox + 2 * Vector3Int.up))
                     return;
@@ -550,7 +550,7 @@ namespace src
                 block.Remove(world);
             foreach (var block in movedBlocks)
             {
-                var pos = TruncateFloor(block.highlight.position);
+                var pos = block.HighlightPosition;
                 if (CanEdit(pos, out var land))
                     block.PutInPosition(world, pos, land);
             }
@@ -729,9 +729,9 @@ namespace src
             tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
-        public void ReCreateTdObjectHighlightIfSelected(Vector3 position)
+        public void ReCreateTdObjectHighlightIfSelected(Vector3Int position)
         {
-            foreach (var s in selectedBlocks.Where(s => s.position.Equals(position)))
+            foreach (var s in selectedBlocks.Where(s => s.Position.Equals(position)))
             {
                 s.ReCreateTdObjectHighlight(world, tdObjectHighlightBox);
                 return;
@@ -741,14 +741,6 @@ namespace src
         public static Player INSTANCE
         {
             get { return GameObject.Find("Player").GetComponent<Player>(); }
-        }
-
-        private static Vector3Int TruncateFloor(Vector3 vector)
-        {
-            vector.x = Mathf.Round(vector.x * 1000) / 1000;
-            vector.y = Mathf.Round(vector.y * 1000) / 1000;
-            vector.z = Mathf.Round(vector.z * 1000) / 1000;
-            return Vectors.FloorToInt(vector);
         }
     }
 }

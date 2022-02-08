@@ -10,9 +10,9 @@ namespace src
 {
     public class SelectableBlock
     {
-        public Vector3 position { get; private set; }
-        private Land land;
-        public readonly Transform highlight;
+        public Vector3Int Position { get; }
+        private readonly Land land;
+        private readonly Transform highlight;
         private Transform tdHighlight;
 
         private readonly byte blockTypeId;
@@ -22,12 +22,12 @@ namespace src
 
         private const float SelectedBlocksHighlightAlpha = 0.3f;
 
-        private SelectableBlock(Vector3 pos, byte blockTypeId, Transform highlight, Transform tdHighlight,
+        private SelectableBlock(Vector3Int pos, byte blockTypeId, Transform highlight, Transform tdHighlight,
             byte metaBlockTypeId,
             object metaProperties, Land land)
         {
             metaAttached = true;
-            position = pos;
+            Position = pos;
             this.blockTypeId = blockTypeId;
             this.metaBlockTypeId = metaBlockTypeId;
             this.metaProperties = metaProperties;
@@ -36,16 +36,16 @@ namespace src
             this.land = land;
         }
 
-        private SelectableBlock(Vector3 pos, byte blockTypeId, Transform highlight, Land land)
+        private SelectableBlock(Vector3Int pos, byte blockTypeId, Transform highlight, Land land)
         {
             metaAttached = false;
-            position = pos;
+            Position = pos;
             this.blockTypeId = blockTypeId;
             this.highlight = highlight;
             this.land = land;
         }
 
-        public static SelectableBlock Create(Vector3 position, World world, Transform highlightModel,
+        public static SelectableBlock Create(Vector3Int position, World world, Transform highlightModel,
             Transform tdHighlightModel, Land land, bool showHighlight = true)
         {
             if (world == null) return null;
@@ -71,7 +71,8 @@ namespace src
                 {
                     return new SelectableBlock(position, blockTypeId, blockHighlight,
                         CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
-                            tdHighlightModel, showHighlight), meta.type.id, ((ICloneable) meta.GetProps()).Clone(), land);
+                            tdHighlightModel, showHighlight), meta.type.id, ((ICloneable) meta.GetProps()).Clone(),
+                        land);
                 }
 
                 return new SelectableBlock(position, blockTypeId, blockHighlight, null, meta.type.id,
@@ -95,7 +96,7 @@ namespace src
 
         public void Remove(World world)
         {
-            var vp = new VoxelPosition(position);
+            var vp = new VoxelPosition(Position);
             var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk != null)
             {
@@ -105,13 +106,13 @@ namespace src
             }
         }
 
-        public void RotateAround(Vector3 center, Vector3 axis)
+        public void RotateAround(Vector3 center, Vector3 axis) // TODO: Do the the truncate floor here if necessary
         {
             var vector3 = Quaternion.AngleAxis(90, axis) * (highlight.position + 0.5f * Vector3.one - center);
-            var oldPos = highlight.position;
-            highlight.position = center + vector3 - 0.5f * Vector3.one;
+            var oldPos = HighlightPosition;
+            highlight.position = TruncateFloor(center + vector3 - 0.5f * Vector3.one);
             if (tdHighlight != null)
-                tdHighlight.position += highlight.position - oldPos;
+                tdHighlight.position += HighlightPosition - oldPos;
         }
 
         public void Move(Vector3Int delta)
@@ -123,7 +124,7 @@ namespace src
 
         public bool IsMoved()
         {
-            return !position.Equals(highlight.position);
+            return !Position.Equals(HighlightPosition);
         }
 
         public void DestroyHighlights()
@@ -160,12 +161,22 @@ namespace src
         public void ReCreateTdObjectHighlight(World world, Transform tdObjectHighlightBox)
         {
             if (!metaAttached || tdHighlight != null || world == null) return;
-            var vp = new VoxelPosition(position);
+            var vp = new VoxelPosition(Position);
             var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk == null) return;
             var meta = chunk.GetMetaAt(vp);
             tdHighlight = CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
                 tdObjectHighlightBox);
+        }
+
+        public Vector3Int HighlightPosition => Vectors.FloorToInt(highlight.position);
+
+        private static Vector3Int TruncateFloor(Vector3 vector)
+        {
+            vector.x = Mathf.Round(vector.x * 1000) / 1000;
+            vector.y = Mathf.Round(vector.y * 1000) / 1000;
+            vector.z = Mathf.Round(vector.z * 1000) / 1000;
+            return Vectors.FloorToInt(vector);
         }
     }
 }
