@@ -99,7 +99,7 @@ namespace Dummiesman
             }
             else
             {
-                if(!zipMap.ContainsKey(fn)) return null;
+                if (!zipMap.ContainsKey(fn)) return null;
                 using var stream = zipMap[fn].Open();
                 using var ms = new MemoryStream();
                 stream.CopyTo(ms);
