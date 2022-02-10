@@ -21,14 +21,14 @@ mergeInto(LibraryManager.library, {
     callAsyncOnBridge: function (cid, fn, p) {
         var functionName = Pointer_stringify(fn);
         var parameter = JSON.parse(Pointer_stringify(p));
-        var callId = Pointer_stringify(cid);
+        var id = Pointer_stringify(cid);
 
         window.bridge[functionName](parameter).subscribe(
             {
                 next: function (r) {
-                    console.log("responding to js, callid: ", callId, "body: ", JSON.stringify(r));
-                    var result = JSON.stringify({ callId: callId, body: JSON.stringify(r) });
-                    window.bridge.unityInstance.SendMessage('WebBridge', 'Responde', result);
+                    console.log("responding to js, id: ", id, "body: ", JSON.stringify(r));
+                    var result = JSON.stringify({ id: id, body: JSON.stringify(r) });
+                    window.bridge.unityInstance.SendMessage('WebBridge', 'Respond', result);
                 },
                 error: function (err) {
                     console.error(err);

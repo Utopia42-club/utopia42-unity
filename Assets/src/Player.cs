@@ -362,6 +362,11 @@ namespace src
             tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
+        public Vector3 GetCurrentPosition()
+        {
+            return controller.center;
+        }
+
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
     }
 }
