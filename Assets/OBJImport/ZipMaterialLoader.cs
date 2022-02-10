@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Dummiesman;
 using UnityEngine;
 
@@ -27,15 +28,6 @@ namespace Dummiesman
         public ZipMaterialLoader(Dictionary<string, ZipArchiveEntry> zipMap)
         {
             this.zipMap = zipMap;
-        }
-
-        protected override Texture2D TextureLoadFunction(string path, bool isNormalMap)
-        {
-            if (!zipMap.ContainsKey(path)) return null;
-            var tex = ImageLoader.LoadTexture(path, zipMap);
-            if (isNormalMap)
-                tex = ImageUtils.ConvertToNormalMap(tex);
-            return tex;
         }
 
         public void Load(Stream input)
@@ -79,15 +71,26 @@ namespace Dummiesman
 
                 if (splitLine[0] == "map_Kd" || splitLine[0] == "map_kd")
                 {
-                    currentMaterial.mapKd = splitLine;
-                    currentMaterial.mapKdLine = processedLine;
+                    var texturePath = GetTexturePath(processedLine, splitLine);
+                    if (texturePath != null)
+                    {
+                        currentMaterial.mapKdTexturePath = texturePath;
+                        currentMaterial.mapKdTextureBytes = LoadTextureBytes(texturePath);
+                    }
+
                     continue;
                 }
 
                 if (splitLine[0] == "map_Bump" || splitLine[0] == "map_bump")
                 {
-                    currentMaterial.mapBump = splitLine;
-                    currentMaterial.mapBumpLine = processedLine;
+                    var texturePath = GetTexturePath(processedLine, splitLine);
+                    if (texturePath != null)
+                    {
+                        currentMaterial.mapBumpTexturePath = texturePath;
+                        currentMaterial.mapBumpTextureBytes = LoadTextureBytes(texturePath);
+                        currentMaterial.mapBumpScale = GetArgValue(splitLine, "-bm", 1.0f);
+                    }
+
                     continue;
                 }
 
@@ -105,8 +108,13 @@ namespace Dummiesman
 
                 if (splitLine[0] == "map_Ka" || splitLine[0] == "map_ka")
                 {
-                    currentMaterial.mapKa = splitLine;
-                    currentMaterial.mapKaLine = processedLine;
+                    var texturePath = GetTexturePath(processedLine, splitLine);
+                    if (texturePath != null)
+                    {
+                        currentMaterial.mapKaTexturePath = texturePath;
+                        currentMaterial.mapKaTextureBytes = LoadTextureBytes(texturePath);
+                    }
+
                     continue;
                 }
 
@@ -123,6 +131,28 @@ namespace Dummiesman
             }
         }
 
+        private byte[] LoadTextureBytes(string fn)
+        {
+            if (!zipMap.ContainsKey(fn)) return null;
+            using var stream = zipMap[fn].Open();
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            return ms.ToArray();
+        }
+
+        private string GetTexturePath(string processedLine, string[] splitLine)
+        {
+            var texNameCmpIdx = GetTexNameIndex(splitLine);
+            if (texNameCmpIdx < 0)
+                return null;
+            var texNameIdx = processedLine.IndexOf(splitLine[texNameCmpIdx]);
+            var texturePath = processedLine.Substring(texNameIdx);
+            var separator = Path.DirectorySeparatorChar.ToString().Equals("/") ? "/" : "\\\\";
+            texturePath = new Regex(@"\\\\").Replace(texturePath, separator);
+            texturePath = new Regex(@"/").Replace(texturePath, separator);
+            return texturePath;
+        }
+
         private class MaterialData
         {
             public string name;
@@ -133,14 +163,15 @@ namespace Dummiesman
             public string[] tr;
             public string[] ns;
 
-            public string[] mapKd;
-            public string mapKdLine;
+            public byte[] mapKdTextureBytes;
+            public string mapKdTexturePath;
 
-            public string[] mapKa;
-            public string mapKaLine;
+            public byte[] mapKaTextureBytes;
+            public string mapKaTexturePath;
 
-            public string[] mapBump;
-            public string mapBumpLine;
+            public byte[] mapBumpTextureBytes;
+            public string mapBumpTexturePath;
+            public float mapBumpScale;
 
             public Material Build(ZipMaterialLoader loader)
             {
@@ -157,44 +188,35 @@ namespace Dummiesman
                 }
 
                 // mapKd
-                if (mapKd != null)
+                if (mapKdTexturePath != null)
                 {
-                    var texturePath = loader.GetTexPathFromMapStatement(mapKdLine, mapKd);
-                    if (texturePath != null)
+                    var kdTexture = ImageLoader.LoadTextureFromBytes(mapKdTextureBytes, mapKdTexturePath);
+                    material.SetTexture(MainTex, kdTexture);
+
+                    //set transparent mode if the texture has transparency
+                    if (kdTexture != null && (kdTexture.format == TextureFormat.DXT5 ||
+                                              kdTexture.format == TextureFormat.ARGB32))
                     {
-                        var kdTexture = loader.TryLoadTexture(texturePath, false);
-                        material.SetTexture(MainTex, kdTexture);
+                        OBJLoaderHelper.EnableMaterialTransparency(material);
+                    }
 
-                        //set transparent mode if the texture has transparency
-                        if (kdTexture != null && (kdTexture.format == TextureFormat.DXT5 ||
-                                                  kdTexture.format == TextureFormat.ARGB32))
-                        {
-                            OBJLoaderHelper.EnableMaterialTransparency(material);
-                        }
-
-                        //flip texture if this is a dds
-                        if (Path.GetExtension(texturePath).ToLower() == ".dds")
-                        {
-                            material.mainTextureScale = new Vector2(1f, -1f);
-                        }
+                    //flip texture if this is a dds
+                    if (Path.GetExtension(mapKdTexturePath).ToLower() == ".dds")
+                    {
+                        material.mainTextureScale = new Vector2(1f, -1f);
                     }
                 }
 
                 // mapBump
-                if (mapBump != null)
+                if (mapBumpTexturePath != null)
                 {
-                    var texturePath = loader.GetTexPathFromMapStatement(mapBumpLine, mapBump);
-                    if (texturePath != null)
+                    var bumpTexture = ImageLoader.LoadTextureFromBytes(mapBumpTextureBytes, mapBumpTexturePath);
+                    bumpTexture = ImageUtils.ConvertToNormalMap(bumpTexture);
+                    if (bumpTexture != null)
                     {
-                        var bumpTexture = loader.TryLoadTexture(texturePath, true);
-                        var bumpScale = loader.GetArgValue(mapBump, "-bm", 1.0f);
-
-                        if (bumpTexture != null)
-                        {
-                            material.SetTexture(BumpMap, bumpTexture);
-                            material.SetFloat(BumpScale, bumpScale);
-                            material.EnableKeyword("_NORMALMAP");
-                        }
+                        material.SetTexture(BumpMap, bumpTexture);
+                        material.SetFloat(BumpScale, mapBumpScale);
+                        material.EnableKeyword("_NORMALMAP");
                     }
                 }
 
@@ -210,13 +232,10 @@ namespace Dummiesman
                 }
 
                 // mapKa
-                if (mapKa != null)
+                if (mapKaTexturePath != null)
                 {
-                    var texturePath = loader.GetTexPathFromMapStatement(mapKaLine, mapKa);
-                    if (texturePath != null)
-                    {
-                        material.SetTexture(EmissionMap, loader.TryLoadTexture(texturePath, false));
-                    }
+                    material.SetTexture(EmissionMap,
+                        ImageLoader.LoadTextureFromBytes(mapKaTextureBytes, mapKaTexturePath));
                 }
 
 

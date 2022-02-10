@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.IO.Compression;
-using System.Threading;
 using System.Threading.Tasks;
 using Dummiesman;
 using UnityEngine;
@@ -23,6 +21,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 {
                     task.zipObjectLoader.Init(task.stream);
                     buildTasks.Enqueue(task);
+                    task.stream.Close();
                 }
                 catch (Exception)
                 {
@@ -35,10 +34,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private void Update()
         {
             if (buildTasks.Count > 0 && buildTasks.TryDequeue(out var loadedTask))
-            {
                 loadedTask.onSuccess.Invoke(loadedTask.zipObjectLoader.BuildObject());
-                loadedTask.stream.Close();
-            }
 
             if (failedTasks.Count > 0 && failedTasks.TryDequeue(out var failedTask))
                 failedTask.onFailure.Invoke();

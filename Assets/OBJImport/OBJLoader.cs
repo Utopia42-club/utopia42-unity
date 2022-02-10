@@ -102,10 +102,10 @@ namespace Dummiesman
         public GameObject Load(Stream input)
         {
             CreateBuilderDictionary(input);
-            return BuildBuilderDictionary();
+            return BuildObject();
         }
 
-        protected virtual GameObject BuildBuilderDictionary()
+        protected GameObject BuildObject()
         {
             if (builderDictionary == null || builderDictionary.Count == 0) return null;
             //finally, put it all together

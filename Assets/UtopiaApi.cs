@@ -11,7 +11,7 @@ public class UtopiaApi : MonoBehaviour
     public void PlaceBlock(String request)
     {
         var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
-        player.PutBlock(new Vector3(req.x, req.y, req.z), VoxelService.INSTANCE.GetBlockType(req.type));
+        player.PutBlock(new Vector3(req.x, req.y, req.z), VoxelService.INSTANCE.GetBlockType(req.type), true);
     }
 
     public class PlaceBlockRequest

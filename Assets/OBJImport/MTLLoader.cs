@@ -31,7 +31,7 @@ public class MTLLoader
     /// <param name="path">The path supplied by the OBJ file, converted to OS path seperation</param>
     /// <param name="isNormalMap">Whether the loader is requesting we convert this into a normal map</param>
     /// <returns>Texture2D if found, or NULL if missing</returns>
-    protected virtual Texture2D TextureLoadFunction(string path, bool isNormalMap)
+    private Texture2D TextureLoadFunction(string path, bool isNormalMap)
     {
         //find it
         foreach (var searchPath in SearchPaths)
@@ -58,7 +58,7 @@ public class MTLLoader
         return null;
     }
 
-    protected Texture2D TryLoadTexture(string texturePath, bool normalMap)
+    private Texture2D TryLoadTexture(string texturePath, bool normalMap)
     {
         var separator = Path.DirectorySeparatorChar.ToString().Equals("/") ? "/" : "\\\\";
         //swap directory seperator char
@@ -90,7 +90,7 @@ public class MTLLoader
         return -1;
     }
 
-    private int GetTexNameIndex(string[] components)
+    protected int GetTexNameIndex(string[] components)
     {
         for (int i = 1; i < components.Length; i++)
         {

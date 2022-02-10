@@ -13,12 +13,11 @@ namespace Dummiesman
         private Dictionary<string, ZipArchiveEntry> zipMap = new Dictionary<string, ZipArchiveEntry>();
         private string mtlLibPath = null;
         private ZipMaterialLoader zipMaterialLoader;
-        private ZipArchive zipFile;
 
-        protected override GameObject BuildBuilderDictionary()
+        public GameObject BuildObject() // not thread safe
         {
             materials = zipMaterialLoader?.Materials;
-            return base.BuildBuilderDictionary();
+            return base.BuildObject();
         }
 
         protected override void LoadMaterialLibrary(string libPath)
@@ -67,18 +66,10 @@ namespace Dummiesman
 
         public void Init(Stream zip) // thread safe
         {
-            zipFile = new ZipArchive(zip);
+            using var zipFile = new ZipArchive(zip);
             InitZipMap(zipFile);
             CreateBuilderDictionary(zipMap["obj"].Open(), out mtlLibPath, false);
             LoadMaterial();
-        }
-
-        public GameObject BuildObject() // not thread safe
-        {
-            materials = zipMaterialLoader?.Materials;
-            var obj = BuildBuilderDictionary();
-            zipFile?.Dispose();
-            return obj;
         }
     }
 }
