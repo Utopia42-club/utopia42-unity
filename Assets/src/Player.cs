@@ -322,7 +322,7 @@ namespace src
             return null;
         }
 
-        public void PutBlock(Vector3 pos, BlockType type)
+        public void PutBlock(Vector3 pos, BlockType type, bool apiCall = false)
         {
             var vp = new VoxelPosition(pos);
             var chunk = world.GetChunkIfInited(vp.chunk);
@@ -332,6 +332,13 @@ namespace src
                     chunk.PutMeta(vp, type, placeLand);
                 else
                     chunk.PutVoxel(vp, type, placeLand);
+            }
+            else if (apiCall && CanEdit(Vectors.FloorToInt(pos), out var ownerLand) && ownerLand != null)
+            {
+                if (type is MetaBlockType)
+                    VoxelService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand);
+                else
+                    VoxelService.INSTANCE.AddChange(vp, type.id, ownerLand);
             }
         }
 

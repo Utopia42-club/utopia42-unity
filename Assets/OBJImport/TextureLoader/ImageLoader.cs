@@ -88,26 +88,18 @@ namespace Dummiesman
         /// <param name="normalMap"></param>
         /// <param name="zipMap"></param>
         /// <returns></returns>
-        public static Texture2D LoadTexture(string fn, Dictionary<string, ZipArchiveEntry> zipMap = null)
-        {
-            byte[] textureBytes;
-            if (zipMap == null)
-            {
-                if (!File.Exists(fn))
-                    return null;
-                textureBytes = File.ReadAllBytes(fn);
-            }
-            else
-            {
-                if(!zipMap.ContainsKey(fn)) return null;
-                using var stream = zipMap[fn].Open();
-                using var ms = new MemoryStream();
-                stream.CopyTo(ms);
-                textureBytes = ms.ToArray();
-            }
 
-            string ext = Path.GetExtension(fn).ToLower();
-            string name = Path.GetFileName(fn);
+        private static byte[] LoadTextureBytes(string fn)
+        {
+            if (!File.Exists(fn))
+                return null;
+            return File.ReadAllBytes(fn);
+        }
+
+        public static Texture2D LoadTextureFromBytes(byte[] textureBytes, string fn)
+        {
+            var ext = Path.GetExtension(fn).ToLower();
+            var name = Path.GetFileName(fn);
             Texture2D returnTex = null;
 
             switch (ext)
@@ -170,6 +162,11 @@ namespace Dummiesman
             }
 
             return returnTex;
+        }
+        
+        public static Texture2D LoadTexture(string fn) // not thread safe
+        {
+            return LoadTextureFromBytes(LoadTextureBytes(fn), fn);
         }
     }
 }

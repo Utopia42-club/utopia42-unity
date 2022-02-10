@@ -19,18 +19,11 @@ using System.IO.Compression;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-public class MTLLoader {
-    public List<string> SearchPaths = new List<string>() { "%FileName%_Textures", string.Empty};
+public class MTLLoader
+{
+    private List<string> SearchPaths = new List<string>() {"%FileName%_Textures", string.Empty};
 
     private FileInfo _objFileInfo = null;
-    private Dictionary<string, ZipArchiveEntry> zipMap;
-
-    public MTLLoader(Dictionary<string, ZipArchiveEntry> zipMap)
-    {
-        this.zipMap = zipMap;
-    }
-    
-    public MTLLoader() {}
 
     /// <summary>
     /// The texture loading function. Overridable for stream loading purposes.
@@ -38,23 +31,15 @@ public class MTLLoader {
     /// <param name="path">The path supplied by the OBJ file, converted to OS path seperation</param>
     /// <param name="isNormalMap">Whether the loader is requesting we convert this into a normal map</param>
     /// <returns>Texture2D if found, or NULL if missing</returns>
-    public virtual Texture2D TextureLoadFunction(string path, bool isNormalMap)
+    private Texture2D TextureLoadFunction(string path, bool isNormalMap)
     {
-        if (zipMap != null)
-        {
-            if (!zipMap.ContainsKey(path)) return null;
-            var tex = ImageLoader.LoadTexture(path, zipMap);
-            if(isNormalMap)
-                tex = ImageUtils.ConvertToNormalMap(tex);
-            return tex;
-        }
-        
         //find it
         foreach (var searchPath in SearchPaths)
         {
             //replace variables and combine path
-            string processedPath = (_objFileInfo != null) ? searchPath.Replace("%FileName%", Path.GetFileNameWithoutExtension(_objFileInfo.Name)) 
-                                                          : searchPath;
+            string processedPath = (_objFileInfo != null)
+                ? searchPath.Replace("%FileName%", Path.GetFileNameWithoutExtension(_objFileInfo.Name))
+                : searchPath;
             string filePath = Path.Combine(processedPath, path);
 
             //return if exists
@@ -62,7 +47,7 @@ public class MTLLoader {
             {
                 var tex = ImageLoader.LoadTexture(filePath);
 
-                if(isNormalMap)
+                if (isNormalMap)
                     tex = ImageUtils.ConvertToNormalMap(tex);
 
                 return tex;
@@ -82,7 +67,7 @@ public class MTLLoader {
 
         return TextureLoadFunction(texturePath, normalMap);
     }
-    
+
     private int GetArgValueCount(string arg)
     {
         switch (arg)
@@ -101,41 +86,45 @@ public class MTLLoader {
             case "-t":
                 return 3;
         }
+
         return -1;
     }
 
-    private int GetTexNameIndex(string[] components)
+    protected int GetTexNameIndex(string[] components)
     {
-        for(int i=1; i < components.Length; i++)
+        for (int i = 1; i < components.Length; i++)
         {
             var cmpSkip = GetArgValueCount(components[i]);
-            if(cmpSkip < 0)
+            if (cmpSkip < 0)
             {
                 return i;
             }
+
             i += cmpSkip;
         }
+
         return -1;
     }
 
-    private float GetArgValue(string[] components, string arg, float fallback = 1f)
+    protected float GetArgValue(string[] components, string arg, float fallback = 1f)
     {
         string argLower = arg.ToLower();
-        for(int i=1; i < components.Length - 1; i++)
+        for (int i = 1; i < components.Length - 1; i++)
         {
             var cmp = components[i].ToLower();
-            if(argLower == cmp)
+            if (argLower == cmp)
             {
-                return OBJLoaderHelper.FastFloatParse(components[i+1]);
+                return OBJLoaderHelper.FastFloatParse(components[i + 1]);
             }
         }
+
         return fallback;
     }
 
-    private string GetTexPathFromMapStatement(string processedLine, string[] splitLine)
+    protected string GetTexPathFromMapStatement(string processedLine, string[] splitLine)
     {
         int texNameCmpIdx = GetTexNameIndex(splitLine);
-        if(texNameCmpIdx < 0)
+        if (texNameCmpIdx < 0)
         {
             Debug.LogError($"texNameCmpIdx < 0 on line {processedLine}. Texture not loaded.");
             return null;
@@ -177,7 +166,7 @@ public class MTLLoader {
             {
                 string materialName = processedLine.Substring(7);
 
-                var newMtl = new Material(Shader.Find("Standard (Specular setup)")) { name = materialName };
+                var newMtl = new Material(Shader.Find("Standard (Specular setup)")) {name = materialName};
                 mtlDict[materialName] = newMtl;
                 currentMaterial = newMtl;
 
@@ -202,7 +191,7 @@ public class MTLLoader {
             if (splitLine[0] == "map_Kd" || splitLine[0] == "map_kd")
             {
                 string texturePath = GetTexPathFromMapStatement(processedLine, splitLine);
-                if(texturePath == null)
+                if (texturePath == null)
                 {
                     continue; //invalid args or sth
                 }
@@ -211,13 +200,14 @@ public class MTLLoader {
                 currentMaterial.SetTexture("_MainTex", KdTexture);
 
                 //set transparent mode if the texture has transparency
-                if(KdTexture != null && (KdTexture.format == TextureFormat.DXT5 || KdTexture.format == TextureFormat.ARGB32))
+                if (KdTexture != null &&
+                    (KdTexture.format == TextureFormat.DXT5 || KdTexture.format == TextureFormat.ARGB32))
                 {
                     OBJLoaderHelper.EnableMaterialTransparency(currentMaterial);
                 }
 
                 //flip texture if this is a dds
-                if(Path.GetExtension(texturePath).ToLower() == ".dds")
+                if (Path.GetExtension(texturePath).ToLower() == ".dds")
                 {
                     currentMaterial.mainTextureScale = new Vector2(1f, -1f);
                 }
@@ -229,7 +219,7 @@ public class MTLLoader {
             if (splitLine[0] == "map_Bump" || splitLine[0] == "map_bump")
             {
                 string texturePath = GetTexPathFromMapStatement(processedLine, splitLine);
-                if(texturePath == null)
+                if (texturePath == null)
                 {
                     continue; //invalid args or sth
                 }
@@ -237,7 +227,8 @@ public class MTLLoader {
                 var bumpTexture = TryLoadTexture(texturePath, true);
                 float bumpScale = GetArgValue(splitLine, "-bm", 1.0f);
 
-                if (bumpTexture != null) {
+                if (bumpTexture != null)
+                {
                     currentMaterial.SetTexture("_BumpMap", bumpTexture);
                     currentMaterial.SetFloat("_BumpScale", bumpScale);
                     currentMaterial.EnableKeyword("_NORMALMAP");
@@ -265,7 +256,7 @@ public class MTLLoader {
             if (splitLine[0] == "map_Ka" || splitLine[0] == "map_ka")
             {
                 string texturePath = GetTexPathFromMapStatement(processedLine, splitLine);
-                if(texturePath == null)
+                if (texturePath == null)
                 {
                     continue; //invalid args or sth
                 }
@@ -278,12 +269,12 @@ public class MTLLoader {
             if (splitLine[0] == "d" || splitLine[0] == "Tr")
             {
                 float visibility = OBJLoaderHelper.FastFloatParse(splitLine[1]);
-                
-                //tr statement is just d inverted
-                if(splitLine[0] == "Tr")
-                    visibility = 1f - visibility;  
 
-                if(visibility < (1f - Mathf.Epsilon))
+                //tr statement is just d inverted
+                if (splitLine[0] == "Tr")
+                    visibility = 1f - visibility;
+
+                if (visibility < (1f - Mathf.Epsilon))
                 {
                     var currentColor = currentMaterial.GetColor("_Color");
 
@@ -292,6 +283,7 @@ public class MTLLoader {
 
                     OBJLoaderHelper.EnableMaterialTransparency(currentMaterial);
                 }
+
                 continue;
             }
 
@@ -313,7 +305,7 @@ public class MTLLoader {
     /// </summary>
     /// <param name="path">The path to the MTL file</param>
     /// <returns>Dictionary containing loaded materials</returns>
-	public Dictionary<string, Material> Load(string path)
+    public Dictionary<string, Material> Load(string path)
     {
         _objFileInfo = new FileInfo(path); //get file info
         SearchPaths.Add(_objFileInfo.Directory.FullName); //add root path to search dir
@@ -322,6 +314,5 @@ public class MTLLoader {
         {
             return Load(fs); //actually load
         }
-        
     }
 }

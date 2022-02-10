@@ -49,7 +49,6 @@ namespace Dummiesman
         //file info for files loaded from file path, used for GameObject naming and MTL finding
         private FileInfo objInfo;
 
-        private Dictionary<string, ZipArchiveEntry> zipMap;
         private Dictionary<string, OBJObjectBuilder> builderDictionary;
 
 #if UNITY_EDITOR
@@ -77,29 +76,21 @@ namespace Dummiesman
         /// <summary>
         /// Helper function to load mtllib statements
         /// </summary>
-        /// <param name="mtlLibPath"></param>
-        private void LoadMaterialLibrary(string mtlLibPath)
+        /// <param name="libPath"></param>
+        protected virtual void LoadMaterialLibrary(string libPath)
         {
-            if (zipMap != null)
-            {
-                if (!zipMap.ContainsKey(mtlLibPath)) return;
-                using var stream = zipMap[mtlLibPath].Open();
-                materials = new MTLLoader(zipMap).Load(stream);
-                return;
-            }
-
             if (objInfo != null)
             {
-                if (File.Exists(Path.Combine(objInfo.Directory.FullName, mtlLibPath)))
+                if (File.Exists(Path.Combine(objInfo.Directory.FullName, libPath)))
                 {
-                    materials = new MTLLoader().Load(Path.Combine(objInfo.Directory.FullName, mtlLibPath));
+                    materials = new MTLLoader().Load(Path.Combine(objInfo.Directory.FullName, libPath));
                     return;
                 }
             }
 
-            if (File.Exists(mtlLibPath))
+            if (File.Exists(libPath))
             {
-                materials = new MTLLoader().Load(mtlLibPath);
+                materials = new MTLLoader().Load(libPath);
             }
         }
 
@@ -111,10 +102,10 @@ namespace Dummiesman
         public GameObject Load(Stream input)
         {
             CreateBuilderDictionary(input);
-            return BuildBuilderDictionary();
+            return BuildObject();
         }
 
-        public GameObject BuildBuilderDictionary()
+        protected GameObject BuildObject()
         {
             if (builderDictionary == null || builderDictionary.Count == 0) return null;
             //finally, put it all together
@@ -136,9 +127,20 @@ namespace Dummiesman
             return obj;
         }
 
-        public void CreateBuilderDictionary(Stream input = null)
+        private void CreateBuilderDictionary(Stream input)
         {
-            var reader = new StreamReader(input ?? zipMap["obj"].Open());
+            CreateBuilderDictionary(input, out _);
+        }
+
+        protected virtual void CreateBuilderDictionary(Stream input, out string mtlLibPath, bool tryLoadMaterial = true)
+        {
+            if (input == null)
+            {
+                mtlLibPath = null;
+                return;
+            }
+
+            var reader = new StreamReader(input);
             //var reader = new StringReader(inputReader.ReadToEnd());
 
             builderDictionary = new Dictionary<string, OBJObjectBuilder>();
@@ -186,12 +188,13 @@ namespace Dummiesman
                     continue;
                 }
 
-                if (materials == null && buffer.Is("mtllib"))
+                if (buffer.Is("mtllib") && materials == null)
                 {
                     buffer.SkipWhitespaces();
                     buffer.ReadUntilNewLine();
-                    string mtlLibPath = buffer.GetString();
-                    LoadMaterialLibrary(mtlLibPath);
+                    mtlLibPath = buffer.GetString();
+                    if (tryLoadMaterial)
+                        LoadMaterialLibrary(mtlLibPath);
                     continue;
                 }
 
@@ -314,6 +317,8 @@ namespace Dummiesman
 
                 buffer.SkipUntilNewLine();
             }
+
+            mtlLibPath = null;
         }
 
         /// <summary>
@@ -322,7 +327,7 @@ namespace Dummiesman
         /// <param name="input">Input OBJ stream</param>
         /// /// <param name="mtlInput">Input MTL stream</param>
         /// <returns>Returns a GameObject represeting the OBJ file, with each imported object as a child.</returns>
-        public GameObject Load(Stream input, Stream mtlInput)
+        protected GameObject Load(Stream input, Stream mtlInput)
         {
             var mtlLoader = new MTLLoader();
             materials = mtlLoader.Load(mtlInput);
@@ -336,7 +341,7 @@ namespace Dummiesman
         /// <param name="path">Input OBJ path</param>
         /// /// <param name="mtlPath">Input MTL path</param>
         /// <returns>Returns a GameObject represeting the OBJ file, with each imported object as a child.</returns>
-        public GameObject Load(string path, string mtlPath)
+        private GameObject Load(string path, string mtlPath)
         {
             objInfo = new FileInfo(path);
             if (!string.IsNullOrEmpty(mtlPath) && File.Exists(mtlPath))
@@ -367,66 +372,5 @@ namespace Dummiesman
         {
             return Load(path, null);
         }
-
-        private void LoadZip(ZipArchive zip)
-        {
-            InitZipMap(zip);
-            InitMaterialsForZip();
-        }
-
-        public void InitMaterialsForZip()
-        {
-            if (zipMap.ContainsKey("mtl"))
-            {
-                using var stream = zipMap["mtl"].Open();
-                materials = new MTLLoader(zipMap).Load(stream);
-            }
-        }
-
-        public void InitZipMap(ZipArchive zip)
-        {
-            var separator = Path.DirectorySeparatorChar.ToString().Equals("/") ? "/" : "\\\\";
-            zipMap = new Dictionary<string, ZipArchiveEntry>();
-            List<ZipArchiveEntry> entries = new List<ZipArchiveEntry>(zip.Entries);
-            entries.Sort(new SortArchiveEntries());
-            foreach (var entry in entries)
-            {
-                if (entry.FullName.StartsWith("__MACOSX")) continue;
-
-                var fullName = new Regex(@"\\\\").Replace(entry.FullName, separator);
-                fullName = new Regex(@"/").Replace(fullName, separator);
-                if (fullName.EndsWith(separator)) continue;
-
-                if (zipMap.ContainsKey(fullName) || fullName.Equals("")) continue;
-
-                zipMap.Add(fullName, entry);
-
-                var modifiedFullname =
-                    new Regex(separator.Equals("/") ? @"^[\S\s]+?/" : @"^[\S\s]+?\\\\").Replace(fullName, "");
-                if (!zipMap.ContainsKey(modifiedFullname))
-                    zipMap.Add(modifiedFullname, entry);
-
-                var type = entry.Name.Split('.').Last().ToLower();
-                if ((type.Equals("mtl") || type.Equals("obj")) && !zipMap.ContainsKey(type))
-                    zipMap.Add(type, entry);
-            }
-            if (!zipMap.ContainsKey("obj")) throw new InvalidDataException("Obj file not found");
-        }
-
-        public GameObject LoadZip(Stream zip) // not thread safe
-        {
-            using var zipFile = new ZipArchive(zip);
-            LoadZip(zipFile);
-            CreateBuilderDictionary();
-            return BuildBuilderDictionary();
-        }
-    }
-}
-
-class SortArchiveEntries : IComparer<ZipArchiveEntry>
-{
-    public int Compare(ZipArchiveEntry x, ZipArchiveEntry y)
-    {
-        return String.Compare(x?.FullName, y?.FullName, StringComparison.Ordinal);
     }
 }
