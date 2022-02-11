@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
@@ -326,12 +327,19 @@ namespace src
         {
             var vp = new VoxelPosition(pos);
             var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk == null && apiCall)
+                chunk = world.GetChunkIfInited(vp.chunk, true);
+
             if (chunk != null)
             {
                 if (type is MetaBlockType)
                     chunk.PutMeta(vp, type, placeLand);
                 else
-                    chunk.PutVoxel(vp, type, placeLand);
+                {
+                    if (apiCall) CollisionFreePutVoxel(vp, () => chunk.PutVoxel(vp, type, placeLand));
+                    else
+                        chunk.PutVoxel(vp, type, placeLand);
+                }
             }
             else if (apiCall && CanEdit(Vectors.FloorToInt(pos), out var ownerLand) && ownerLand != null)
             {
@@ -340,6 +348,30 @@ namespace src
                 else
                     VoxelService.INSTANCE.AddChange(vp, type.id, ownerLand);
             }
+        }
+
+        private void CollisionFreePutVoxel(VoxelPosition vp, Action putBlock)
+        {
+            var playerPosition = transform.position;
+            var currVox = Vectors.FloorToInt(playerPosition);
+            var globalPosition = vp.ToWorld();
+            if (!globalPosition.Equals(currVox))
+            {
+                putBlock.Invoke();
+                return;
+            }
+
+            var floatingOld = floating;
+            if (!floating) floating = true;
+            gameObject.layer = LayerMask.NameToLayer("Default");
+            controller.Move(GameManager.INSTANCE.FindStartingY(playerPosition, voxelPosition =>
+            {
+                var global = voxelPosition.ToWorld();
+                return global.Equals(globalPosition);
+            }) - playerPosition);
+            putBlock.Invoke();
+            gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            floating = floatingOld;
         }
 
         private VoxelPosition ComputePosition()

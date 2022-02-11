@@ -106,16 +106,22 @@ namespace src
             SetState(State.PLAYING);
         }
 
-        private Vector3 FindStartingY(Vector3 pos)
+        public Vector3 FindStartingY(Vector3 pos, Func<VoxelPosition, bool> willBeSolid = null)
         {
             var service = VoxelService.INSTANCE;
+            Func<VoxelPosition, bool> isSolid;
+            if (willBeSolid == null)
+                isSolid = voxelPosition => service.IsSolid(voxelPosition);
+            else
+                isSolid = voxelPosition => service.IsSolid(voxelPosition) || willBeSolid(voxelPosition);
+
             var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, 0f, .5f);
             while (true)
             {
                 bool coll = false;
                 for (int i = -1; i < 3; i++)
                 {
-                    if (coll = service.IsSolid(new VoxelPosition(feet + Vector3Int.up * i)))
+                    if (coll = isSolid(new VoxelPosition(feet + Vector3Int.up * i)))
                     {
                         feet += Vector3Int.up * Math.Max(1, i + 2);
                         break;
@@ -394,7 +400,6 @@ namespace src
         {
             SetState(State.FREEZE);
 #if UNITY_WEBGL
-
             captureAllKeyboardInputOrig = WebGLInput.captureAllKeyboardInput;
             WebGLInput.captureAllKeyboardInput = false;
 #endif
