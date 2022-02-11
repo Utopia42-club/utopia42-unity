@@ -24,7 +24,7 @@ namespace src
         public GameObject cursorSlot;
         public GameObject help;
         public Player player;
-        
+
         void Start()
         {
             GameManager.INSTANCE.stateChange.AddListener(state =>
@@ -60,9 +60,10 @@ namespace src
                 {
                     var chunk = PopRequest();
                     if (chunks.ContainsKey(chunk.coordinate))
-                        chunks.Remove(chunk.coordinate);//FIXME Memory leak?
+                        chunks.Remove(chunk.coordinate); //FIXME Memory leak?
                 }
             }
+
             if (creatingChunks) return false;
             if (clean)
             {
@@ -74,6 +75,7 @@ namespace src
                         chunk.chunkObject = null;
                     }
                 }
+
                 chunkRequests.Clear();
 
                 foreach (var chunk in garbageChunks.Values)
@@ -122,6 +124,7 @@ namespace src
                     }
                 }
             }
+
             creatingChunks = false;
             yield break;
         }
@@ -159,6 +162,7 @@ namespace src
                                 chunk.SetActive(true);
                             }
                         }
+
                         if (!chunk.IsInited()) chunkRequests.Add(chunk);
                         unseens.Remove(key);
                     }
@@ -174,6 +178,7 @@ namespace src
                     //Destroy(ch.chunkObject);
                     chunks.Remove(key);
                 }
+
                 ch.SetActive(false);
                 if (ch.IsInited())
                     garbageChunks[key] = ch;
@@ -192,10 +197,12 @@ namespace src
             }
         }
 
-        public Chunk GetChunkIfInited(Vector3Int chunkPos)
+        public Chunk GetChunkIfInited(Vector3Int chunkPos, bool checkGarbage = false)
         {
             Chunk chunk;
-            if (chunks.TryGetValue(chunkPos, out chunk) && chunk.IsInited() && chunk.IsActive())
+            if (checkGarbage && garbageChunks.TryGetValue(chunkPos, out chunk) && chunk.IsInited())
+                return chunk;
+            if (!checkGarbage && chunks.TryGetValue(chunkPos, out chunk) && chunk.IsInited() && chunk.IsActive())
                 return chunk;
             return null;
         }
@@ -211,10 +218,7 @@ namespace src
 
         public static World INSTANCE
         {
-            get
-            {
-                return GameObject.Find("World").GetComponent<World>();
-            }
+            get { return GameObject.Find("World").GetComponent<World>(); }
         }
     }
 }
