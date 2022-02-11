@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Nethereum.RPC.Eth;
 using src.Model;
 using src.Service.Ethereum;
 using src.Utils;
@@ -28,7 +29,9 @@ namespace src.Canvas
                 var orig = WebGLInput.captureAllKeyboardInput;
                 WebGLInput.captureAllKeyboardInput = false;
                 WebBridge.Call<object>("editProfile", null);
-                OpenDialog(() =>
+                OpenDialog(
+                    "Edit your profile on your browser. Click RELOAD when it is done"
+                    ,() =>
                 {
                     WebGLInput.captureAllKeyboardInput = orig;
                     onDone();
@@ -133,11 +136,16 @@ namespace src.Canvas
 
         private void OpenDialog(Action onDone, Action onCancel)
         {
+            OpenDialog(null, onDone, onCancel);
+        }
+
+        private void OpenDialog(String message, Action onDone, Action onCancel)
+        {
             var manager = GameManager.INSTANCE;
             var dialog = manager.OpenDialog();
             dialog.WithContent("Dialog/TextContent");
             dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
-                "Accept the transaction on your browser. Click RELOAD when it is confirmed.";
+                message ?? "Accept the transaction on your browser. Click RELOAD when it is confirmed.";
             dialog.withOnClose(onCancel.Invoke);
             dialog.WithAction("CANCEL", () =>
             {

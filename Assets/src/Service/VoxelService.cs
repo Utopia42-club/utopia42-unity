@@ -65,6 +65,13 @@ namespace src.Service
             types[35] = new MarkerBlockType(35);
         }
 
+        public List<string> GetBlockTypes()
+        {
+            return types.Values
+                .Where(blockType => !(blockType is MetaBlockType))
+                .Select(x => x.name).ToList();
+        }
+
         public Dictionary<Vector3Int, MetaBlock> GetMetaBlocks(Vector3Int coordinate)
         {
             Dictionary<Vector3Int, MetaBlock> blocks;
