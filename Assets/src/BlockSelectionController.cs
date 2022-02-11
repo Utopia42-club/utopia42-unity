@@ -260,8 +260,7 @@ namespace src
                 foreach (var srcBlock in copiedBlocks)
                 {
                     var newPosition = srcBlock.Position - minPoint + player.PlaceBlockPosInt;
-                    if (newPosition.Equals(currVox) || newPosition.Equals(currVox + Vector3Int.up)
-                                                    || newPosition.Equals(currVox + 2 * Vector3Int.up))
+                    if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up))
                     {
                         conflictWithPlayer = true;
                         break;

@@ -323,55 +323,37 @@ namespace src
             return null;
         }
 
-        public void PutBlock(Vector3 pos, BlockType type, bool apiCall = false)
+        public bool PutBlock(Vector3 pos, BlockType type, bool apiCall = false)
         {
             var vp = new VoxelPosition(pos);
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk == null && apiCall)
-                chunk = world.GetChunkIfInited(vp.chunk, true);
+            var playerPos = Vectors.FloorToInt(transform.position);
+            var blockPos = vp.ToWorld();
+            if (apiCall && !(type is MetaBlockType) &&
+                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up)))
+                return false;
 
+            var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk != null)
             {
                 if (type is MetaBlockType)
                     chunk.PutMeta(vp, type, placeLand);
                 else
-                {
-                    if (apiCall) CollisionFreePutVoxel(vp, () => chunk.PutVoxel(vp, type, placeLand));
-                    else
-                        chunk.PutVoxel(vp, type, placeLand);
-                }
+                    chunk.PutVoxel(vp, type, placeLand);
+                return true;
             }
-            else if (apiCall && CanEdit(Vectors.FloorToInt(pos), out var ownerLand) && ownerLand != null)
+
+            if (apiCall && CanEdit(Vectors.FloorToInt(pos), out var ownerLand))
             {
+                world.DestroyGarbageChunkIfExists(vp.chunk);
                 if (type is MetaBlockType)
                     VoxelService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand);
                 else
                     VoxelService.INSTANCE.AddChange(vp, type.id, ownerLand);
-            }
-        }
 
-        private void CollisionFreePutVoxel(VoxelPosition vp, Action putBlock)
-        {
-            var playerPosition = transform.position;
-            var currVox = Vectors.FloorToInt(playerPosition);
-            var globalPosition = vp.ToWorld();
-            if (!globalPosition.Equals(currVox))
-            {
-                putBlock.Invoke();
-                return;
+                return true;
             }
 
-            var floatingOld = floating;
-            if (!floating) floating = true;
-            gameObject.layer = LayerMask.NameToLayer("Default");
-            controller.Move(GameManager.INSTANCE.FindStartingY(playerPosition, voxelPosition =>
-            {
-                var global = voxelPosition.ToWorld();
-                return global.Equals(globalPosition);
-            }) - playerPosition);
-            putBlock.Invoke();
-            gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
-            floating = floatingOld;
+            return false;
         }
 
         private VoxelPosition ComputePosition()

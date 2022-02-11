@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using src.Model;
 using src.Service;
 using UnityEngine;
+using Vector3 = UnityEngine.Vector3;
 
 namespace src
 {
@@ -197,12 +199,16 @@ namespace src
             }
         }
 
-        public Chunk GetChunkIfInited(Vector3Int chunkPos, bool checkGarbage = false)
+        public void DestroyGarbageChunkIfExists(Vector3Int chunkPos)
         {
-            Chunk chunk;
-            if (checkGarbage && garbageChunks.TryGetValue(chunkPos, out chunk) && chunk.IsInited())
-                return chunk;
-            if (!checkGarbage && chunks.TryGetValue(chunkPos, out chunk) && chunk.IsInited() && chunk.IsActive())
+            if (!garbageChunks.TryGetValue(chunkPos, out var chunk)) return;
+            Destroy(chunk.chunkObject);
+            garbageChunks.Remove(chunkPos);
+        }
+
+        public Chunk GetChunkIfInited(Vector3Int chunkPos)
+        {
+            if (chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInited() && chunk.IsActive())
                 return chunk;
             return null;
         }
