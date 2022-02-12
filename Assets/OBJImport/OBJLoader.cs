@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using System;
+using System.Collections;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -105,7 +106,7 @@ namespace Dummiesman
             return BuildObject();
         }
 
-        protected GameObject BuildObject()
+        protected GameObject BuildObject() // blocking
         {
             if (builderDictionary == null || builderDictionary.Count == 0) return null;
             //finally, put it all together
@@ -126,13 +127,40 @@ namespace Dummiesman
 
             return obj;
         }
+        
+        protected IEnumerator BuildObject(Action<GameObject> onSuccess, int perFrame = 5) // non-blocking
+        {
+            if (builderDictionary == null || builderDictionary.Count == 0) yield break;
+            //finally, put it all together
+            GameObject obj =
+                new GameObject(objInfo != null
+                    ? Path.GetFileNameWithoutExtension(objInfo.Name)
+                    : "WavefrontObject"); // TODO: change the name
+            obj.transform.localScale = new Vector3(1f, 1f, 1f);
+            obj.gameObject.SetActive(false);
+
+            var buildCount = 0;
+            foreach (var builder in builderDictionary)
+            {
+                //empty object
+                if (builder.Value.PushedFaceCount == 0)
+                    continue;
+                var builtObj = builder.Value.Build();
+                builtObj.transform.SetParent(obj.transform, false);
+                if (++buildCount <= perFrame) continue;
+                buildCount = 0;
+                yield return null;
+            }
+            obj.gameObject.SetActive(true);
+            onSuccess(obj);
+        }
 
         private void CreateBuilderDictionary(Stream input)
         {
             CreateBuilderDictionary(input, out _);
         }
 
-        protected virtual void CreateBuilderDictionary(Stream input, out string mtlLibPath, bool tryLoadMaterial = true)
+        protected void CreateBuilderDictionary(Stream input, out string mtlLibPath, bool tryLoadMaterial = true)
         {
             if (input == null)
             {

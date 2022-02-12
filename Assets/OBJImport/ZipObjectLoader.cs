@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -14,10 +15,23 @@ namespace Dummiesman
         private string mtlLibPath = null;
         private ZipMaterialLoader zipMaterialLoader;
 
-        public GameObject BuildObject() // not thread safe
+        public GameObject BuildObject() // not thread safe | blocking
         {
             materials = zipMaterialLoader?.Materials;
             return base.BuildObject();
+        }
+
+        public IEnumerator BuildObject(Action<GameObject> onSuccess, int perFrame = 5) // non-blocking
+        {
+            if (zipMaterialLoader == null)
+            {
+                materials = new Dictionary<string, Material>();
+                yield return base.BuildObject(onSuccess, perFrame);
+                yield break;
+            }
+
+            yield return zipMaterialLoader.SetMaterials((mats => { materials = mats; }), perFrame);
+            yield return base.BuildObject(onSuccess, perFrame);
         }
 
         protected override void LoadMaterialLibrary(string libPath)
@@ -64,6 +78,17 @@ namespace Dummiesman
             if (!zipMap.ContainsKey("obj")) throw new InvalidDataException("Obj file not found");
         }
 
+        public IEnumerator Init(Stream zip, Action onSuccess)
+        {
+            using var zipFile = new ZipArchive(zip);
+            InitZipMap(zipFile);
+            yield return null;
+            CreateBuilderDictionary(zipMap["obj"].Open(), out mtlLibPath, false);
+            yield return null;
+            LoadMaterial();
+            yield return null;
+            onSuccess.Invoke();
+        }
         public void Init(Stream zip) // thread safe
         {
             using var zipFile = new ZipArchive(zip);
