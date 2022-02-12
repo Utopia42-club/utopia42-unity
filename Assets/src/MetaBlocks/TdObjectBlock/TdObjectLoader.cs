@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
 using Dummiesman;
+using UnityEditor;
 using UnityEngine;
 
 namespace src.MetaBlocks.TdObjectBlock
@@ -14,27 +15,50 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public void InitTask(byte[] data, Action<GameObject> onSuccess, Action onFailure)
         {
-            Task.Run(() =>
+            var task = new TdObjectLoadTask(data, onSuccess, onFailure);
+            Action next = () =>
             {
-                var task = new TdObjectLoadTask(data, onSuccess, onFailure);
+                buildTasks.Enqueue(task);
+                task.stream.Close();
+            };
+            Action failed = () =>
+            {
+                failedTasks.Enqueue(task);
+                task.stream.Close();
+            };
+
+
+            if (Application.platform == RuntimePlatform.WebGLPlayer && !PlayerSettings.WebGL.threadsSupport)
+            {
                 try
                 {
-                    task.zipObjectLoader.Init(task.stream);
-                    buildTasks.Enqueue(task);
-                    task.stream.Close();
+                    StartCoroutine(task.zipObjectLoader.Init(task.stream, next));
                 }
                 catch (Exception)
                 {
-                    failedTasks.Enqueue(task);
-                    task.stream.Close();
+                    failed.Invoke();
                 }
-            });
+            }
+            else
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        task.zipObjectLoader.Init(task.stream);
+                        next.Invoke();
+                    }
+                    catch (Exception)
+                    {
+                        failed.Invoke();
+                    }
+                });
         }
 
         private void Update()
         {
             if (buildTasks.Count > 0 && buildTasks.TryDequeue(out var loadedTask))
-                loadedTask.onSuccess.Invoke(loadedTask.zipObjectLoader.BuildObject());
+                StartCoroutine(loadedTask.zipObjectLoader.BuildObject(loadedTask.onSuccess, 5)); // non-blocking
+            // loadedTask.onSuccess.Invoke(loadedTask.zipObjectLoader.BuildObject()); // blocking
 
             if (failedTasks.Count > 0 && failedTasks.TryDequeue(out var failedTask))
                 failedTask.onFailure.Invoke();

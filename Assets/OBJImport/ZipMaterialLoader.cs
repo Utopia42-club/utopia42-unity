@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -23,7 +25,22 @@ namespace Dummiesman
         private List<MaterialData> mtlList;
 
         public Dictionary<string, Material> Materials => mtlList?.ToDictionary(materialData => materialData.name,
-            materialData => materialData.Build(this));
+            materialData => materialData.Build(this)); // blocking
+
+        public IEnumerator SetMaterials(Action<Dictionary<string, Material>> action, int perFrame = 5)
+        {
+            var materials = new Dictionary<string, Material>();
+            var buildCount = 0;
+            foreach (var item in mtlList)
+            {
+                materials.Add(item.name, item.Build(this));
+                if (++buildCount < perFrame) continue;
+                buildCount = 0;
+                yield return null;
+            }
+
+            action.Invoke(materials);
+        }
 
         public ZipMaterialLoader(Dictionary<string, ZipArchiveEntry> zipMap)
         {
