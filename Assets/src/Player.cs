@@ -326,10 +326,10 @@ namespace src
         public bool PutBlock(Vector3 pos, BlockType type, bool apiCall = false)
         {
             var vp = new VoxelPosition(pos);
-            var playerPos = Vectors.FloorToInt(transform.position);
+            var playerPos = Vectors.TruncateFloor(transform.position);
             var blockPos = vp.ToWorld();
             if (apiCall && !(type is MetaBlockType) &&
-                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up)))
+                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) || playerPos.Equals(blockPos - Vector3Int.up)))
                 return false;
 
             var chunk = world.GetChunkIfInited(vp.chunk);

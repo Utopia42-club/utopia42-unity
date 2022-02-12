@@ -18,6 +18,20 @@ namespace src.Utils
             return FloorToInt(vec.x, vec.y, vec.z);
         }
 
+        public static Vector3Int TruncateFloor(float x, float y, float z, int truncatePrecision = 3)
+        {
+            return TruncateFloor(new Vector3(x, y, z), truncatePrecision);
+        }
+
+        public static Vector3Int TruncateFloor(Vector3 vector, int truncatePrecision = 3)
+        {
+            var constant = Mathf.Pow(10, truncatePrecision);
+            vector.x = Mathf.Round(vector.x * constant) / constant;
+            vector.y = Mathf.Round(vector.y * constant) / constant;
+            vector.z = Mathf.Round(vector.z * constant) / constant;
+            return FloorToInt(vector);
+        }
+
         public static Vector3Int ParseKey(string key)
         {
             string[] xyz = key.Split('_');
@@ -35,6 +49,5 @@ namespace src.Utils
         {
             return string.Format("{0}_{1}_{2}", x, y, z);
         }
-
     }
 }

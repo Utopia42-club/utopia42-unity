@@ -28,7 +28,7 @@ namespace src.MetaBlocks.TdObjectBlock
             };
 
 
-            if (Application.platform == RuntimePlatform.WebGLPlayer && !PlayerSettings.WebGL.threadsSupport)
+            if (Application.platform == RuntimePlatform.WebGLPlayer)
             {
                 try
                 {

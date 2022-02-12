@@ -14,8 +14,8 @@ namespace src.Model
 
         public VoxelPosition(float x, float y, float z)
         {
-            chunk = Vectors.FloorToInt(x / Chunk.CHUNK_WIDTH, y / Chunk.CHUNK_HEIGHT, z / Chunk.CHUNK_WIDTH);
-            local = Vectors.FloorToInt(x, y, z);
+            chunk = Vectors.TruncateFloor(x / Chunk.CHUNK_WIDTH, y / Chunk.CHUNK_HEIGHT, z / Chunk.CHUNK_WIDTH);
+            local = Vectors.TruncateFloor(x, y, z);
             local.x -= chunk.x * Chunk.CHUNK_WIDTH;
             local.y -= chunk.y * Chunk.CHUNK_HEIGHT;
             local.z -= chunk.z * Chunk.CHUNK_WIDTH;

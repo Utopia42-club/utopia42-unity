@@ -110,7 +110,7 @@ namespace src
         {
             var vector3 = Quaternion.AngleAxis(90, axis) * (highlight.position + 0.5f * Vector3.one - center);
             var oldPos = HighlightPosition;
-            highlight.position = TruncateFloor(center + vector3 - 0.5f * Vector3.one);
+            highlight.position = Vectors.TruncateFloor(center + vector3 - 0.5f * Vector3.one);
             if (tdHighlight != null)
                 tdHighlight.position += HighlightPosition - oldPos;
         }
@@ -170,13 +170,5 @@ namespace src
         }
 
         public Vector3Int HighlightPosition => Vectors.FloorToInt(highlight.position);
-
-        private static Vector3Int TruncateFloor(Vector3 vector)
-        {
-            vector.x = Mathf.Round(vector.x * 1000) / 1000;
-            vector.y = Mathf.Round(vector.y * 1000) / 1000;
-            vector.z = Mathf.Round(vector.z * 1000) / 1000;
-            return Vectors.FloorToInt(vector);
-        }
     }
 }

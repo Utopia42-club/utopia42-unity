@@ -255,12 +255,12 @@ namespace src
 
                 var minPoint = new Vector3Int(minX, minY, minZ);
                 var conflictWithPlayer = false;
-                var currVox = Vectors.FloorToInt(transform.position);
+                var currVox = Vectors.TruncateFloor(transform.position);
                 ClearSelection();
                 foreach (var srcBlock in copiedBlocks)
                 {
                     var newPosition = srcBlock.Position - minPoint + player.PlaceBlockPosInt;
-                    if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up))
+                    if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) || currVox.Equals(newPosition - Vector3Int.up))
                     {
                         conflictWithPlayer = true;
                         break;
@@ -312,12 +312,11 @@ namespace src
         private void ConfirmMove()
         {
             var movedBlocks = selectedBlocks.Where(block => block.IsMoved()).ToList();
-            var currVox = Vectors.FloorToInt(transform.position);
+            var currVox = Vectors.TruncateFloor(transform.position);
             foreach (var block in movedBlocks)
             {
                 var position = block.HighlightPosition;
-                if (position.Equals(currVox) || position.Equals(currVox + Vector3Int.up)
-                                             || position.Equals(currVox + 2 * Vector3Int.up))
+                if (currVox.Equals(position) || currVox.Equals(position + Vector3Int.up) || currVox.Equals(position - Vector3Int.up))
                     return;
             }
 
