@@ -8,11 +8,12 @@ public class UtopiaApi : MonoBehaviour
 {
     public Player player;
 
-    public void PlaceBlock(String request)
+    public string PlaceBlock(String request)
     {
         var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
-        player.PutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
-            VoxelService.INSTANCE.GetBlockType(req.type), true); // TODO: use return value
+        var placed = player.PutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
+            VoxelService.INSTANCE.GetBlockType(req.type), true);
+        return JsonConvert.SerializeObject(placed);
     }
 
     public string GetPlayerPosition()
