@@ -20,15 +20,15 @@ namespace src
             UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
             yield return request.SendWebRequest();
 
-            if (request.result == UnityWebRequest.Result.ProtocolError || 
-                request.result == UnityWebRequest.Result.ConnectionError)
+            if (request.result == UnityWebRequest.Result.ConnectionError)
             {
-                block.UpdateStateAndIcon(faceIndex, StateMsg.InvalidUrlOrData); // TODO ?
+                block.UpdateStateAndIcon(faceIndex, StateMsg.ConnectionError);
                 yield break;
             }
-            if (request.result == UnityWebRequest.Result.DataProcessingError)
+            
+            if (request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.DataProcessingError)
             {
-                block.UpdateStateAndIcon(faceIndex, StateMsg.InvalidData);
+                block.UpdateStateAndIcon(faceIndex, StateMsg.InvalidUrlOrData);
                 yield break;
             }
             material.mainTexture = ((DownloadHandlerTexture)request.downloadHandler).texture;
