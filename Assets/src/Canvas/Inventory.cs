@@ -15,7 +15,7 @@ namespace src.Canvas
         {
             var manager = GameManager.INSTANCE;
 
-            for (int i = 1; i < VoxelService.INSTANCE.GetBlockTypesCount(); i++)
+            for (var i = 1; i < VoxelService.INSTANCE.GetBlockTypesCount(); i++)
             {
                 GameObject newSlot = Instantiate(slotPrefab, transform);
 

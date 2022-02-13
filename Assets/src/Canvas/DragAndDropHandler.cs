@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -30,16 +31,29 @@ namespace src.Canvas
 
             cursorSlot.transform.position = Input.mousePosition;
 
+            if (Input.GetMouseButtonDown(1))
+            {
+                ClearCursorSlot();
+            }
+            
             if (Input.GetMouseButtonDown(0))
             {
                 HandleSlotClick(CheckForSlot());
             }
         }
 
+        private void ClearCursorSlot()
+        {
+            cursorItemSlot.SetStack(null);
+        }
+
         private void HandleSlotClick(ItemSlotUI clickedSlot)
         {
             if (clickedSlot == null)
+            {
+                ClearCursorSlot();
                 return;
+            }
 
             if (!cursorSlot.HasItem() && !clickedSlot.HasItem())
                 return;
@@ -66,8 +80,8 @@ namespace src.Canvas
             {
                 if (cursorSlot.itemSlot.GetStack().id != clickedSlot.itemSlot.GetStack().id)
                 {
-                    ItemStack oldCursorSlot = cursorSlot.itemSlot.HandOverStack();
-                    ItemStack oldSlot = clickedSlot.itemSlot.HandOverStack();
+                    var oldCursorSlot = cursorSlot.itemSlot.HandOverStack();
+                    var oldSlot = clickedSlot.itemSlot.HandOverStack();
 
                     clickedSlot.itemSlot.SetStack(oldCursorSlot);
                     // cursorSlot.itemSlot.SetStack(oldSlot);
@@ -77,19 +91,15 @@ namespace src.Canvas
 
         private ItemSlotUI CheckForSlot()
         {
-            pointerEventData = new PointerEventData(eventSystem);
-            pointerEventData.position = Input.mousePosition;
+            pointerEventData = new PointerEventData(eventSystem)
+            {
+                position = Input.mousePosition
+            };
 
-            List<RaycastResult> results = new List<RaycastResult>();
+            var results = new List<RaycastResult>();
             raycaster.Raycast(pointerEventData, results);
 
-            foreach (RaycastResult result in results)
-            {
-                if (result.gameObject.tag == "ItemSlotUI")
-                    return result.gameObject.GetComponent<ItemSlotUI>();
-            }
-
-            return null;
+            return (from result in results where result.gameObject.CompareTag("ItemSlotUI") select result.gameObject.GetComponent<ItemSlotUI>()).FirstOrDefault();
         }
     }
 }
