@@ -9,7 +9,7 @@ namespace src.MetaBlocks
             return msg switch
             {
                 StateMsg.Loading => LoadingMsg(type),
-                StateMsg.InvalidUrl => InvalidObjUrlMsg(type),
+                StateMsg.InvalidUrlOrData => InvalidObjUrlOrDataMsg(type),
                 StateMsg.InvalidData => InvalidObjDataMsg(type),
                 StateMsg.OutOfBound => OutOfBoundMsg(type),
                 StateMsg.ConnectionError => ConnectionErrorMsg(type),
@@ -22,37 +22,39 @@ namespace src.MetaBlocks
         {
             return $"Loading {type} ...";
         }
-        
-        private static string InvalidObjUrlMsg(string type)
+
+        private static string InvalidObjUrlOrDataMsg(string type)
         {
-            return $"Invalid {type} url";
+            return $"Invalid {type} url/data";
         }
-        
+
         private static string InvalidObjDataMsg(string type)
         {
             return $"Invalid {type} data";
         }
-        
+
         private static string OutOfBoundMsg(string type)
         {
-            return $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1): "")} exceeds land boundaries";
+            return
+                $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1) : "")} exceeds land boundaries";
         }
-        
+
         private static string ConnectionErrorMsg(string type)
         {
             return "Connection Error";
         }
-        
+
         private static string SizeLimitMsg(string type)
         {
-            return $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1): "")} exceeds the size limit of {TdObjectBlockObject.DownloadLimitMb} MB";
+            return
+                $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1) : "")} exceeds the size limit of {TdObjectBlockObject.DownloadLimitMb} MB";
         }
     }
 
     public enum StateMsg
     {
         Loading,
-        InvalidUrl,
+        InvalidUrlOrData,
         InvalidData,
         OutOfBound,
         ConnectionError,

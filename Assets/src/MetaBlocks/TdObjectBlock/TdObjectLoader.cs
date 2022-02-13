@@ -57,8 +57,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private void Update()
         {
             if (buildTasks.Count > 0 && buildTasks.TryDequeue(out var loadedTask))
-                StartCoroutine(loadedTask.zipObjectLoader.BuildObject(loadedTask.onSuccess, 1)); // non-blocking
-            // loadedTask.onSuccess.Invoke(loadedTask.zipObjectLoader.BuildObject()); // blocking
+                StartCoroutine(loadedTask.zipObjectLoader.BuildObject(loadedTask.onSuccess, 10)); // non-blocking
 
             if (failedTasks.Count > 0 && failedTasks.TryDequeue(out var failedTask))
                 failedTask.onFailure.Invoke();

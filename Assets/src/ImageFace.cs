@@ -23,7 +23,7 @@ namespace src
             if (request.result == UnityWebRequest.Result.ProtocolError || 
                 request.result == UnityWebRequest.Result.ConnectionError)
             {
-                block.UpdateStateAndIcon(faceIndex, StateMsg.InvalidUrl); // TODO ?
+                block.UpdateStateAndIcon(faceIndex, StateMsg.InvalidUrlOrData); // TODO ?
                 yield break;
             }
             if (request.result == UnityWebRequest.Result.DataProcessingError)
