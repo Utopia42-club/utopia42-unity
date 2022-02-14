@@ -19,11 +19,17 @@ namespace src.Canvas.Map
         private bool drawing = false;
         private GameObject drawingObject;
         public Map map;
+        private GameManager gameManager;
 
         private const float MoveSpeed = 5f;
         private const float BoostedMoveSpeed = 15f;
 
         private const float MaxZoomOutScale = 0.25f;
+
+        private void Start()
+        {
+            gameManager = GameManager.INSTANCE;
+        }
 
         void Update()
         {
@@ -33,7 +39,7 @@ namespace src.Canvas.Map
             var realPosition = Vectors.FloorToInt(mouseLocalPos);
             positionText.text = $"{realPosition.x} {realPosition.y}";
 
-            if (!map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen())
+            if (IsInputEnabled())
             {
                 if (!drawing && !dragging)
                 {
@@ -67,13 +73,19 @@ namespace src.Canvas.Map
                     Drag(mousePosInt);
                 else if (drawing)
                     Draw(realPosition);
-                
+
                 if (Input.GetMouseButtonDown(1))
                     GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
                 HandleKeyboardInput();
             }
 
             SetLinesPos(mousePosInt);
+        }
+
+        private bool IsInputEnabled()
+        {
+            return !map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen() &&
+                   gameManager.GetState() != GameManager.State.OWNED_LANDS_DIALOG;
         }
 
         private Vector3 ScreenToLandContainerLocal(Vector3 pos)
@@ -235,6 +247,12 @@ namespace src.Canvas.Map
 
             var scale = (float) new[] {widthRatio, heightRatio, MaxZoomOutScale}.Min();
             landRect.landContainer.localScale = new Vector3(scale, scale, 1);
+        }
+
+        public void NavigateInMap(Land land)
+        {
+            landRect.SetTargetLand(land);
+            MoveToLandCenter(land);
         }
     }
 }

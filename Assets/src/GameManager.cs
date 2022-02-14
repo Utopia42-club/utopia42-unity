@@ -18,10 +18,14 @@ namespace src
     public class GameManager : MonoBehaviour
     {
         private bool worldInited = false;
+
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
         private State state = State.LOADING;
+        private State previousState;
+
         private List<Dialog> dialogs = new List<Dialog>();
         private bool captureAllKeyboardInputOrig;
+        private Dialog ownedLandsListDialog;
 
         void Start()
         {
@@ -30,6 +34,37 @@ namespace src
             {
                 BrowserConnector.INSTANCE.ReportGameState(newState, () => { }, () => { });
             });
+        }
+        
+        void Update()
+        {
+            if (Input.GetButtonDown("Cancel"))
+                ReturnToGame();
+            else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
+                SetState(State.SETTINGS);
+            else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
+                SetState(State.PLAYING);
+            else if (Input.GetButtonDown("Map"))
+            {
+                if (state == State.MAP && !LandProfileDialog.INSTANCE.gameObject.activeSelf)
+                    SetState(State.PLAYING);
+                else if (state == State.PLAYING)
+                    SetState(State.MAP);
+            }
+            else if (Input.GetButtonDown("Inventory"))
+            {
+                if (state == State.INVENTORY)
+                    SetState(State.PLAYING);
+                else if (state == State.PLAYING)
+                    SetState(State.INVENTORY);
+            }
+            else if (Input.GetButtonDown("OwnedLandsList"))
+            {
+                if (state == State.PLAYING || state == State.MAP)
+                    ShowOwnedLandsList();
+                else
+                    CloseOwnedLandsList();
+            }
         }
 
         private void InitPlayerForWallet(Vector3? startingPosition)
@@ -62,28 +97,7 @@ namespace src
             pos = FindStartingY(pos.Value);
             StartCoroutine(DoMovePlayerTo(pos.Value, true));
         }
-
-        internal void Help()
-        {
-            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
-                SetState(State.HELP);
-        }
-
-        public void MovePlayerTo(Vector3 pos)
-        {
-            StartCoroutine(DoMovePlayerTo(pos, false));
-        }
-
-        private IEnumerator DoMovePlayerTo(Vector3 pos, bool clean)
-        {
-            SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Positioning the player...");
-            yield return null;
-            pos = FindStartingY(pos);
-            Player.INSTANCE.transform.position = pos;
-            yield return InitWorld(pos, clean);
-        }
-
+        
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
             SetState(State.LOADING);
@@ -104,6 +118,27 @@ namespace src
 
             worldInited = true;
             SetState(State.PLAYING);
+        }
+
+        internal void Help()
+        {
+            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
+                SetState(State.HELP);
+        }
+
+        public void MovePlayerTo(Vector3 pos)
+        {
+            StartCoroutine(DoMovePlayerTo(pos, false));
+        }
+
+        private IEnumerator DoMovePlayerTo(Vector3 pos, bool clean)
+        {
+            SetState(State.LOADING);
+            Loading.INSTANCE.UpdateText("Positioning the player...");
+            yield return null;
+            pos = FindStartingY(pos);
+            Player.INSTANCE.transform.position = pos;
+            yield return InitWorld(pos, clean);
         }
 
         public Vector3 FindStartingY(Vector3 pos, Func<VoxelPosition, bool> willBeSolid = null)
@@ -132,28 +167,22 @@ namespace src
             }
         }
 
-        void Update()
+        private void ShowOwnedLandsList()
         {
-            if (Input.GetButtonDown("Cancel"))
-                ReturnToGame();
-            else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
-                SetState(State.SETTINGS);
-            else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
-                SetState(State.PLAYING);
-            else if (Input.GetButtonDown("Map"))
-            {
-                if (state == State.MAP && !LandProfileDialog.INSTANCE.gameObject.activeSelf)
-                    SetState(State.PLAYING);
-                else if (state == State.PLAYING)
-                    SetState(State.MAP);
-            }
-            else if (Input.GetButtonDown("Inventory"))
-            {
-                if (state == State.INVENTORY)
-                    SetState(State.PLAYING);
-                else if (state == State.PLAYING)
-                    SetState(State.INVENTORY);
-            }
+            ownedLandsListDialog = OpenDialog(State.OWNED_LANDS_DIALOG);
+            ownedLandsListDialog
+                .WithTitle("Owned Lands")
+                .WithContent(OwnedLandsDialogContent.PREFAB);
+            var content = ownedLandsListDialog.GetContent().GetComponent<OwnedLandsDialogContent>();
+            content.SetLands(VoxelService.INSTANCE.GetLandsFor(Settings.WalletId()));
+            ownedLandsListDialog.withOnClose(CloseOwnedLandsList);
+        }
+
+        private void CloseOwnedLandsList()
+        {
+            if (!ownedLandsListDialog) return;
+            CloseDialog(ownedLandsListDialog, previousState);
+            ownedLandsListDialog = null;
         }
 
         public void ReturnToGame()
@@ -221,6 +250,7 @@ namespace src
 
         private void SetState(State state)
         {
+            previousState = this.state;
             this.state = state;
             stateChange.Invoke(state);
         }
@@ -379,21 +409,21 @@ namespace src
             yield return InitWorld(player.transform.position, true);
         }
 
-        public Dialog OpenDialog()
+        public Dialog OpenDialog(State targetState = State.DIALOG)
         {
             var go = Instantiate(Resources.Load<GameObject>("Dialog/Dialog"), GameObject.Find("Canvas").transform);
-            SetState(State.DIALOG);
+            SetState(targetState);
             var dialog = go.GetComponent<Dialog>();
             dialogs.Add(dialog);
             return dialog;
         }
 
-        public void CloseDialog(Dialog dialog)
+        public void CloseDialog(Dialog dialog, State targetState = State.PLAYING)
         {
             Destroy(dialog.gameObject);
             dialogs.Remove(dialog);
             if (dialogs.Count == 0)
-                SetState(State.PLAYING);
+                SetState(targetState);
         }
 
         public void FreezeGame()
@@ -412,11 +442,16 @@ namespace src
             WebGLInput.captureAllKeyboardInput = captureAllKeyboardInputOrig == null || captureAllKeyboardInputOrig;
 #endif
         }
-
-        public static GameManager INSTANCE
+        
+        public void NavigateInMap(Land land)
         {
-            get { return GameObject.Find("GameManager").GetComponent<GameManager>(); }
+            CloseOwnedLandsList();
+            SetState(State.MAP);
+            var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
+            mapInputManager.NavigateInMap(land);
         }
+
+        public static GameManager INSTANCE => GameObject.Find("GameManager").GetComponent<GameManager>();
 
         public enum State
         {
@@ -429,7 +464,8 @@ namespace src
             DIALOG,
             PROFILE_DIALOG,
             MOVING_OBJECT,
-            FREEZE
+            FREEZE,
+            OWNED_LANDS_DIALOG,
         }
     }
 }

@@ -17,15 +17,20 @@ namespace src.Canvas.Map
         [SerializeField] public GameObject landPrefab;
 
         public SelectionHandler selectedLand;
+        private Land targetLand;
 
         void Start()
         {
             var manager = GameManager.INSTANCE;
-            if (manager.GetState() == GameManager.State.MAP) Init();
+            if (manager.GetState() == GameManager.State.MAP)
+                Init();
 
-            manager.stateChange.AddListener(s =>
+            manager.stateChange.AddListener(state =>
             {
-                if (s == GameManager.State.MAP) Init();
+                if (gameObject.activeInHierarchy && state == GameManager.State.OWNED_LANDS_DIALOG)
+                    return;
+                if (state == GameManager.State.MAP)
+                    Init();
                 else
                 {
                     DestroyRects();
@@ -39,14 +44,19 @@ namespace src.Canvas.Map
             if (!service.IsInitialized()) return;
             landContainer.localScale = Vector3.one;
 
-            var playerPos = Player.INSTANCE.transform.position;
-            playerPosIndicator.localPosition = new Vector3(playerPos.x, playerPos.z, 0);
-            var transform = GetComponent<RectTransform>();
-            transform.anchoredPosition = new Vector3(-playerPos.x, -playerPos.z, 0);
+            if (targetLand == null)
+            {
+                var playerPos = Player.INSTANCE.transform.position;
+                playerPosIndicator.localPosition = new Vector3(playerPos.x, playerPos.z, 0);
+                var transform = GetComponent<RectTransform>();
+                transform.anchoredPosition = new Vector3(-playerPos.x, -playerPos.z, 0);
+            }
+            else
+                targetLand = null;
 
             foreach (var entry in service.GetOwnersLands())
             {
-                bool owner = entry.Key.Equals(Settings.WalletId());
+                var owner = entry.Key.Equals(Settings.WalletId());
                 foreach (var land in entry.Value)
                     Add(land.x1, land.x2, land.y1, land.y2,
                         owner ? land.isNft ? Colors.MAP_OWNED_LAND_NFT : Colors.MAP_OWNED_LAND :
@@ -62,36 +72,26 @@ namespace src.Canvas.Map
             drawnLandIndicators.Clear();
         }
 
-
-        internal void OpenDialogForLand(SelectionHandler selectionHandler)
-        {
-            if (selectedLand != null && selectionHandler != selectedLand)
-                selectedLand.SetSelected(false, true);
-            selectedLand = selectionHandler;
-            if (!selectedLand) return;
-            var landProfileDialog = LandProfileDialog.INSTANCE;
-            landProfileDialog.Open(selectedLand.land, Profile.LOADING_PROFILE);
-            ProfileLoader.INSTANCE.load(selectedLand.walletId, landProfileDialog.SetProfile,
-                () => landProfileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
-        }
-
         private GameObject Add(long x1, long x2, long y1, long y2, Color color, Land land, string walletId)
         {
             var landObject = Instantiate(landPrefab);
-            var transform = landObject.GetComponent<RectTransform>();
-            SelectionHandler selectionHandler = landObject.GetComponent<SelectionHandler>();
+
+            var selectionHandler = landObject.GetComponent<SelectionHandler>();
             selectionHandler.land = land;
             selectionHandler.walletId = walletId;
             selectionHandler.rectPane = this;
-
-            transform.SetParent(landContainer);
-            transform.SetAsFirstSibling();
-            transform.pivot = new Vector2(0, 0);
-            transform.localPosition = new Vector3(x1, y1, 0);
-            transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y2 - y1);
-            transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x2 - x1);
-            landObject.GetComponent<Image>().color = color;
             landIndicators.Add(landObject);
+
+            var landTransform = landObject.GetComponent<RectTransform>();
+            landTransform.SetParent(landContainer);
+            landTransform.SetAsFirstSibling();
+            landTransform.pivot = new Vector2(0, 0);
+            landTransform.localPosition = new Vector3(x1, y1, 0);
+            landTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y2 - y1);
+            landTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x2 - x1);
+
+            landObject.GetComponent<Image>().color = color;
+
             return landObject;
         }
 
@@ -234,6 +234,23 @@ namespace src.Canvas.Map
         public void ShowPlayerPosIndicator()
         {
             playerPosIndicator.gameObject.SetActive(true);
+        }
+
+        internal void OpenDialogForLand(SelectionHandler selectionHandler)
+        {
+            if (selectedLand != null && selectionHandler != selectedLand)
+                selectedLand.SetSelected(false, true);
+            selectedLand = selectionHandler;
+            if (!selectedLand) return;
+            var landProfileDialog = LandProfileDialog.INSTANCE;
+            landProfileDialog.Open(selectedLand.land, Profile.LOADING_PROFILE);
+            ProfileLoader.INSTANCE.load(selectedLand.walletId, landProfileDialog.SetProfile,
+                () => landProfileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
+        }
+
+        public void SetTargetLand(Land land)
+        {
+            targetLand = land;
         }
     }
 }

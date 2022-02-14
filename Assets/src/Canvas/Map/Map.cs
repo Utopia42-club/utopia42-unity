@@ -15,20 +15,22 @@ namespace src.Canvas.Map
             GameManager.INSTANCE.stateChange.AddListener(
                 state =>
                 {
+                    if (gameObject.activeInHierarchy && state == GameManager.State.OWNED_LANDS_DIALOG)
+                        return;
                     gameObject.SetActive(state == GameManager.State.MAP);
                     CloseLandBuyDialogState();
                 }
             );
         }
-        
+
         public IEnumerator TakeNftScreenShot(Land land, Action<byte[]> consumer)
         {
             var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
             mapInputManager.PrepareForScreenShot(land);
-            if(LandProfileDialog.INSTANCE.gameObject.activeInHierarchy)
+            if (LandProfileDialog.INSTANCE.gameObject.activeInHierarchy)
                 LandProfileDialog.INSTANCE.Close();
             yield return new WaitForEndOfFrame();
-            
+
             // var screenshot = ScreenCapture.CaptureScreenshotAsTexture();
             var width = Screen.width;
             var height = Screen.height;
