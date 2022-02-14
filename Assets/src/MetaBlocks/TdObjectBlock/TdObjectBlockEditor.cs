@@ -1,3 +1,4 @@
+using src.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -41,9 +42,9 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 var props = new TdObjectBlockProperties();
                 props.url = url.text.Trim();
-                props.scale = SerializableVector3.@from(new Vector3(float.Parse(scaleX.text), float.Parse(scaleY.text), float.Parse(scaleZ.text)));
-                props.offset = SerializableVector3.@from(new Vector3(float.Parse(offsetX.text), float.Parse(offsetY.text), float.Parse(offsetZ.text)));
-                props.rotation = SerializableVector3.@from(new Vector3(float.Parse(rotationX.text), float.Parse(rotationY.text), float.Parse(rotationZ.text)));
+                props.scale = SerializableVector3.From(new Vector3(float.Parse(scaleX.text), float.Parse(scaleY.text), float.Parse(scaleZ.text)));
+                props.offset = SerializableVector3.From(new Vector3(float.Parse(offsetX.text), float.Parse(offsetY.text), float.Parse(offsetZ.text)));
+                props.rotation = SerializableVector3.From(new Vector3(float.Parse(rotationX.text), float.Parse(rotationY.text), float.Parse(rotationZ.text)));
                 props.detectCollision = detectCollision.isOn;
                 return props;
             }

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
@@ -12,12 +13,15 @@ using src.MetaBlocks.TdObjectBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
 using src.Service.Migration;
+using src.Utils;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 
 namespace src.Service
 {
     public class VoxelService
     {
+        private const byte MarkerBlockTypeId = 35;
         public static VoxelService INSTANCE = new VoxelService();
         private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
         private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
@@ -62,7 +66,7 @@ namespace src.Service
             types[32] = new VideoBlockType(32);
             types[33] = new LinkBlockType(33);
             types[34] = new TdObjectBlockType(34);
-            types[35] = new MarkerBlockType(35);
+            types[35] = new MarkerBlockType(MarkerBlockTypeId);
         }
 
         public List<string> GetBlockTypes()
@@ -353,9 +357,24 @@ namespace src.Service
                 metadata.properties = JsonConvert.SerializeObject(properties);
                 metadata.type = metaBlock.type.name;
                 land.metadata[key] = metadata;
-            }, m => m.GetProps() != null);
+            }, m => m.GetProps() != null && !m.type.inMemory);
 
             return result;
+        }
+
+        public List<Marker> GetMarkers()
+        {
+            var markers = new List<Marker>();
+            foreach (var chunkMetas in metaBlocks)
+            foreach (var voxelMeta in chunkMetas.Value)
+            {
+                var props = voxelMeta.Value.GetProps();
+                if (!(props is MarkerBlockProperties properties)) continue;
+                var vp = new VoxelPosition(chunkMetas.Key, voxelMeta.Key);
+                markers.Add(new Marker(properties.name, vp.ToWorld()));
+            }
+
+            return markers;
         }
 
         /*

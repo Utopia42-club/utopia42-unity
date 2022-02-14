@@ -313,7 +313,7 @@ namespace src.MetaBlocks.TdObjectBlock
         public void InitializeProps(Vector3 initialPosition, float initialScale)
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
-            props.initialPosition = SerializableVector3.@from(initialPosition);
+            props.initialPosition = SerializableVector3.From(initialPosition);
             props.initialScale = initialScale;
             GetBlock().SetProps(props, land);
         }
@@ -322,9 +322,9 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
             if (tdObjectContainer == null) return;
-            props.offset = SerializableVector3.@from(tdObjectContainer.transform.localPosition);
-            props.rotation = SerializableVector3.@from(tdObjectContainer.transform.eulerAngles);
-            props.scale = SerializableVector3.@from(tdObjectContainer.transform.localScale);
+            props.offset = SerializableVector3.From(tdObjectContainer.transform.localPosition);
+            props.rotation = SerializableVector3.From(tdObjectContainer.transform.eulerAngles);
+            props.scale = SerializableVector3.From(tdObjectContainer.transform.localScale);
             GetBlock().SetProps(props, land);
         }
 
