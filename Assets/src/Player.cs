@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
@@ -329,7 +328,8 @@ namespace src
             var playerPos = Vectors.TruncateFloor(transform.position);
             var blockPos = vp.ToWorld();
             if (apiCall && !(type is MetaBlockType) &&
-                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) || playerPos.Equals(blockPos - Vector3Int.up)))
+                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
+                 playerPos.Equals(blockPos - Vector3Int.up)))
                 return false;
 
             var chunk = world.GetChunkIfInited(vp.chunk);
