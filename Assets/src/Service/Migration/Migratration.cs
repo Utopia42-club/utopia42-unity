@@ -24,6 +24,6 @@ namespace src.Service.Migration
             return targetVersion;
         }
 
-        public abstract LandDetails Migrate(LandDetails details);
+        public abstract LandDetails Migrate(Land land, LandDetails details);
     }
 }

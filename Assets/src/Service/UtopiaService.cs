@@ -229,19 +229,18 @@ namespace src.Service
         {
             if (IsInitialized()) yield break;
             var migrationService = new MigrationService();
-            if (!migrationService.GetLatestVersion().Equals("0.1.0"))
-                throw new Exception("Unsupported migration latest verison.");
+            if (!migrationService.GetLatestVersion().Equals("0.2.0"))
+                throw new Exception("Unsupported migration latest version.");
             var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
             var metaBlocks = new Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>>();
 
-            yield return LoadDetails(loading, land =>
+            yield return LoadDetails(loading, (land, details) =>
             {
-                land = migrationService.Migrate(land);
-                var met = new Metadata();
-                if (land.metadata != null)
-                    ReadMetadata(land, metaBlocks);
-                if (land.changes != null)
-                    ReadChanges(land, changes);
+                details = migrationService.Migrate(land, details);
+                if (details.metadata != null)
+                    ReadMetadata(land, details, metaBlocks);
+                if (details.changes != null)
+                    ReadChanges(land, details, changes);
             });
 
             this.changes = changes;
@@ -250,14 +249,14 @@ namespace src.Service
             yield break;
         }
 
-        private void ReadChanges(LandDetails land, Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes)
+        private void ReadChanges(Land land, LandDetails details, Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes)
         {
-            foreach (var entry in land.changes)
+            foreach (var entry in details.changes)
             {
                 var change = entry.Value;
                 var pos = LandDetails.PraseKey(entry.Key) +
-                          new Vector3Int((int) land.region.x1, 0, (int) land.region.y1);
-                if (land.region.Contains(ref pos))
+                          new Vector3Int((int) land.x1, 0, (int) land.y1);
+                if (land.Contains(ref pos))
                 {
                     var type = GetBlockType(change.name);
                     if (type == null) continue;
@@ -271,22 +270,22 @@ namespace src.Service
             }
         }
 
-        private void ReadMetadata(LandDetails land,
+        private void ReadMetadata(Land land, LandDetails details,
             Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks)
         {
-            foreach (var entry in land.metadata)
+            foreach (var entry in details.metadata)
             {
                 var meta = entry.Value;
                 var pos = LandDetails.PraseKey(entry.Key) +
-                          new Vector3Int((int) land.region.x1, 0, (int) land.region.y1);
+                          new Vector3Int((int) land.x1, 0, (int) land.y1);
                 var position = new VoxelPosition(pos);
-                if (land.region.Contains(ref pos))
+                if (land.Contains(ref pos))
                 {
                     var type = (MetaBlockType) GetBlockType(meta.type);
                     if (type == null) continue;
                     try
                     {
-                        var block = type.New(land.region, meta.properties);
+                        var block = type.New(land, meta.properties);
                         Dictionary<Vector3Int, MetaBlock> chunk;
                         if (!metaBlocks.TryGetValue(position.chunk, out chunk))
                             metaBlocks[position.chunk] = chunk = new Dictionary<Vector3Int, MetaBlock>();
@@ -300,7 +299,7 @@ namespace src.Service
             }
         }
 
-        private IEnumerator LoadDetails(Loading loading, Action<LandDetails> consumer)
+        private IEnumerator LoadDetails(Loading loading, Action<Land, LandDetails> consumer)
         {
             loading.UpdateText("Loading Lands\n0/0");
             yield return landRegistry.ReloadLands();
@@ -312,7 +311,7 @@ namespace src.Service
             foreach (var land in landRegistry.GetLands().Values)
             {
                 if (!string.IsNullOrWhiteSpace(land.ipfsKey))
-                    enums[index] = IpfsClient.INSATANCE.GetLandDetails(land, consumer);
+                    enums[index] = IpfsClient.INSATANCE.GetLandDetails(land, details=> consumer(land, details));
                 index++;
             }
 
@@ -324,42 +323,42 @@ namespace src.Service
                 }
         }
 
-        public List<LandDetails> GetLandsChanges(string wallet, List<Land> lands)
+        public Dictionary<long, LandDetails> GetLandsChanges(string wallet, List<Land> lands)
         {
-            var result = new List<LandDetails>();
+            var filteredLands = new List<Land>();
+            var landDetailsMap = new Dictionary<long, LandDetails>();
             for (int i = 0; i < lands.Count; i++)
             {
-                var l = lands[i];
-                if (changedLands.Contains(l))
+                var land = lands[i];
+                if (changedLands.Contains(land))
                 {
-                    var ld = new LandDetails();
-                    ld.changes = new Dictionary<string, VoxelChange>();
-                    ld.metadata = new Dictionary<string, Metadata>();
-                    // If the changes file is copied from another land, region points to the wrong land.
-                    ld.region = l;
-                    ld.v = "0.1.0";
-                    ld.wallet = wallet;
-                    result.Add(ld);
+                    var details = new LandDetails();
+                    details.changes = new Dictionary<string, VoxelChange>();
+                    details.metadata = new Dictionary<string, Metadata>();
+                    details.v = "0.2.0";
+                    details.wallet = wallet;
+                    landDetailsMap[land.id] = details;
+                    filteredLands.Add(land);
                 }
             }
 
-            Stream(result, changes, (key, type, land) =>
+            Stream(filteredLands, changes, (key, type, land) =>
             {
                 var change = new VoxelChange();
                 change.name = GetBlockType(type).name;
-                land.changes[key] = change;
+                landDetailsMap[land.id].changes[key] = change;
             }, m => true); //Filter can check if the block is default
-            Stream(result, metaBlocks, (key, metaBlock, land) =>
+            Stream(filteredLands, metaBlocks, (key, metaBlock, land) =>
             {
                 var properties = metaBlock.GetProps();
                 if (properties == null) return;
                 var metadata = new Metadata();
                 metadata.properties = JsonConvert.SerializeObject(properties);
                 metadata.type = metaBlock.type.name;
-                land.metadata[key] = metadata;
+                landDetailsMap[land.id].metadata[key] = metadata;
             }, m => m.GetProps() != null && !m.type.inMemory);
 
-            return result;
+            return landDetailsMap;
         }
 
         public List<Marker> GetMarkers()
@@ -382,8 +381,8 @@ namespace src.Service
      *
      *  For each item in the values that passes the filter, finds the corresponding land and calls the consumer with: position key, value, land
      */
-        private void Stream<T>(List<LandDetails> lands, Dictionary<Vector3Int, Dictionary<Vector3Int, T>> values,
-            Action<string, T, LandDetails> consumer, Func<T, bool> filter)
+        private void Stream<T>(List<Land> lands, Dictionary<Vector3Int, Dictionary<Vector3Int, T>> values,
+            Action<string, T, Land> consumer, Func<T, bool> filter)
         {
             foreach (var chunkEntry in values)
             {
@@ -395,14 +394,13 @@ namespace src.Service
                     {
                         var vpos = voxelEntry.Key;
                         var worldPos = VoxelPosition.ToWorld(cpos, vpos);
-                        foreach (var landDetails in lands)
+                        foreach (var land in lands)
                         {
-                            var land = landDetails.region;
                             if (land.Contains(ref worldPos))
                             {
                                 var key = LandDetails.FormatKey(worldPos -
                                                                 new Vector3Int((int) land.x1, 0, (int) land.y1));
-                                consumer(key, voxelEntry.Value, landDetails);
+                                consumer(key, voxelEntry.Value, land);
                                 break;
                             }
                         }

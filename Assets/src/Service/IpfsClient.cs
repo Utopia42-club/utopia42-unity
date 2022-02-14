@@ -36,23 +36,19 @@ namespace src.Service
                         break;
                     case UnityWebRequest.Result.Success:
                         var details = JsonConvert.DeserializeObject<LandDetails>(webRequest.downloadHandler.text);
-                        details.region = land;
                         consumer.Invoke(details);
                         break;
                 }
             }
         }
 
-        public IEnumerator Upload(List<LandDetails> details, Action<Dictionary<long, string>> success)
+        public IEnumerator Upload(Dictionary<long, LandDetails> details, Action<Dictionary<long, string>> success)
         {
-            var result = new Dictionary<long, string>();
+            var newIpfsKeys = new Dictionary<long, string>();
             string url = SERVER_URL + "/add?stream-channels=true&progress=false";
-            foreach (var landDetail in details)
+            foreach (var entry in details)
             {
-                if (string.IsNullOrWhiteSpace(landDetail.region.ipfsKey) && landDetail.changes.Count == 0)
-                    continue;
-
-                string data = JsonConvert.SerializeObject(landDetail);
+                string data = JsonConvert.SerializeObject(entry.Value);
                 var form = new List<IMultipartFormSection>();
                 form.Add(new MultipartFormDataSection("file", data));
                 using (UnityWebRequest webRequest = UnityWebRequest.Post(url, form))
@@ -73,13 +69,13 @@ namespace src.Service
                             break;
                         case UnityWebRequest.Result.Success:
                             var response = JsonConvert.DeserializeObject<IpfsResponse>(webRequest.downloadHandler.text);
-                            result[landDetail.region.id] = response.hash;
+                            newIpfsKeys[entry.Key] = response.hash;
                             break;
                     }
                 }
             }
 
-            success.Invoke(result);
+            success.Invoke(newIpfsKeys);
             yield break;
         }
 

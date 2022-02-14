@@ -4,14 +4,12 @@ using UnityEngine;
 
 namespace src.Model
 {
-    [System.Serializable]
+    [Serializable]
     public class LandDetails
     {
         public string v;
         public string wallet;
         public Dictionary<string, Metadata> metadata;
-        [Obsolete("Field is deprecated! Using this field might cause problems.")]
-        public Land region;
         public Dictionary<string, VoxelChange> changes;
 
         public static Vector3Int PraseKey(string key)

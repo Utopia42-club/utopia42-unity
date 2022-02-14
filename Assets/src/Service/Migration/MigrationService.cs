@@ -11,10 +11,11 @@ namespace src.Service.Migration
         public MigrationService()
         {
             migrations.Add(new GlobalToLocalMigration());
-            latestVersion = new Version(0, 1, 0);
+            migrations.Add( new RemoveRegionMigration());
+            latestVersion = new Version(0, 2, 0);
         }
 
-        public LandDetails Migrate(LandDetails details)
+        public LandDetails Migrate(Land land, LandDetails details)
         {
             var version = new Version(details.v);
             while (!version.Equals(latestVersion))
@@ -23,7 +24,7 @@ namespace src.Service.Migration
                 {
                     if (m.Accepts(version))
                     {
-                        details = m.Migrate(details);
+                        details = m.Migrate(land, details);
                         version = m.GetTarget();
                     }
                 }
