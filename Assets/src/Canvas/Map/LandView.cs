@@ -8,7 +8,9 @@ public class LandView : MonoBehaviour
 {
     private Land land;
 
-    public TextMeshProUGUI label;
+    public TextMeshProUGUI firstLabel;
+    public TextMeshProUGUI secondLabel;
+    public GameObject nftToggle;
     public ActionButton navigateInMap;
 
     void Start()
@@ -19,6 +21,14 @@ public class LandView : MonoBehaviour
     public void SetLand(Land land)
     {
         this.land = land;
-        label.SetText("Land " + land.id + " in  " + land.x1 + "," + land.y1 + "," + land.x2 + "," + land.y2);
+        firstLabel.SetText("Land #" + land.id);
+        secondLabel.SetText("Size: " + GetLandSize(land) + " (" + land.x1 + ", " + land.y1 + ", " + land.x2 + ", " +
+                            land.y2 + ")");
+        nftToggle.SetActive(land.isNft);
+    }
+
+    private long GetLandSize(Land land1)
+    {
+        return (land1.x2 - land1.x1) * (land1.y2 - land1.y1);
     }
 }

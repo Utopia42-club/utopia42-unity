@@ -82,15 +82,23 @@ namespace src.Canvas.Map
             selectionHandler.rectPane = this;
             landIndicators.Add(landObject);
 
+            var outlineWidth = 4;
+            var newX1 = x1 + outlineWidth;
+            var newX2 = x2 - outlineWidth;
+            var newY1 = y1 + outlineWidth;
+            var newY2 = y2 - outlineWidth;
+
             var landTransform = landObject.GetComponent<RectTransform>();
             landTransform.SetParent(landContainer);
             landTransform.SetAsFirstSibling();
             landTransform.pivot = new Vector2(0, 0);
-            landTransform.localPosition = new Vector3(x1, y1, 0);
-            landTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y2 - y1);
-            landTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, x2 - x1);
+            landTransform.localPosition = new Vector3(newX1, newY1, 0);
+            landTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newY2 - newY1);
+            landTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newX2 - newX1);
 
-            landObject.GetComponent<Image>().color = color;
+            var outline = landObject.GetComponent<Outline>();
+            outline.effectColor = color;
+            outline.effectDistance = new Vector2(outlineWidth, outlineWidth);
 
             return landObject;
         }

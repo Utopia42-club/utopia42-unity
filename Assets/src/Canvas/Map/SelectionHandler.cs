@@ -14,12 +14,12 @@ namespace src.Canvas.Map
 
         private bool selected;
         private Color orgColor;
-        private Image image;
+        private Outline outline;
 
         // Start is called before the first frame update
         void Start()
         {
-            image = GetComponent<Image>();
+            outline = GetComponent<Outline>();
         }
 
         // Update is called once per frame
@@ -33,12 +33,12 @@ namespace src.Canvas.Map
             if (selected)
             {
                 rectPane.OpenDialogForLand(this);
-                orgColor = image.color;
-                image.color = Color.Lerp(orgColor, Color.black, .2f);
+                orgColor = outline.effectColor;
+                outline.effectColor = Color.Lerp(orgColor, Color.black, .2f);
             }
             else
             {
-                image.color = orgColor;
+                outline.effectColor = orgColor;
                 if (!fromParent)
                     rectPane.OpenDialogForLand(null);
             }

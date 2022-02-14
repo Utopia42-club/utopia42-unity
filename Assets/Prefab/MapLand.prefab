@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3225101866230538275}
   - component: {fileID: 6395537916211676425}
   - component: {fileID: 3778121097775900436}
+  - component: {fileID: 7029889104358722702}
   m_Layer: 0
   m_Name: MapLand
   m_TagString: Untagged
@@ -52,7 +53,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   transformButton: {fileID: 0}
   rectPane: {fileID: 0}
-  landId: 
+  land:
+    id: 0
+    x1: 0
+    y1: 0
+    x2: 0
+    y2: 0
+    ipfsKey: 
+    time: 0
+    isNft: 0
+    owner: 
+    ownerIndex: 0
+  walletId: 
 --- !u!222 &6395537916211676425
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -91,3 +103,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7029889104358722702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2168551042784005155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
+  m_EffectDistance: {x: 4, y: 4}
+  m_UseGraphicAlpha: 1
