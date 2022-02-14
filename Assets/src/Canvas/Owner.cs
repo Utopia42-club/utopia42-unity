@@ -116,7 +116,7 @@ namespace src.Canvas
                 return true;
             }
 
-            var land = VoxelService.INSTANCE.GetLandByPosition(position);
+            var land = UtopiaService.INSTANCE.GetLandByPosition(position);
             if (land == null && currentLand == null) return false;
 
             prevLand = currentLand;

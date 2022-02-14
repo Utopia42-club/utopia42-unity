@@ -54,8 +54,8 @@ namespace src
             chunkObject.transform.position = position;
             chunkObject.name = "Chunck " + coordinate;
 
-            VoxelService.INSTANCE.FillChunk(coordinate, voxels);
-            metaBlocks = VoxelService.INSTANCE.GetMetaBlocks(coordinate);
+            UtopiaService.INSTANCE.FillChunk(coordinate, voxels);
+            metaBlocks = UtopiaService.INSTANCE.GetMetaBlocks(coordinate);
             DrawVoxels();
             DrawMetaBlocks();
             //var block = new ImageBlockTpe(50).New("{front:{height:5, width:5, url:\"https://www.wpbeginner.com/wp-content/uploads/2020/03/ultimate-small-business-resource-180x180.png\"}}");
@@ -86,7 +86,7 @@ namespace src
             for (int y = 0; y < voxels.GetLength(1); y++)
             for (int x = 0; x < voxels.GetLength(0); x++)
             for (int z = 0; z < voxels.GetLength(2); z++)
-                if (VoxelService.INSTANCE.GetBlockType(voxels[x, y, z]).isSolid)
+                if (UtopiaService.INSTANCE.GetBlockType(voxels[x, y, z]).isSolid)
                     AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, uvs);
         }
 
@@ -103,7 +103,7 @@ namespace src
             if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
                 throw new ArgumentException("Invalid local position: " + localPos);
 
-            return VoxelService.INSTANCE.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
+            return UtopiaService.INSTANCE.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
         }
 
         public MetaBlock GetMetaAt(VoxelPosition vp)
@@ -140,7 +140,7 @@ namespace src
             };
 
             byte blockId = voxels[pos.x, pos.y, pos.z];
-            var type = VoxelService.INSTANCE.GetBlockType(blockId);
+            var type = UtopiaService.INSTANCE.GetBlockType(blockId);
             if (!type.isSolid) return;
 
             foreach (Voxels.Face face in Voxels.Face.FACES)
@@ -200,7 +200,7 @@ namespace src
         public void DeleteVoxel(VoxelPosition pos, Land land)
         {
             voxels[pos.local.x, pos.local.y, pos.local.z] = 0; //FIXME
-            VoxelService.INSTANCE.AddChange(pos, 0, land);
+            UtopiaService.INSTANCE.AddChange(pos, 0, land);
             OnChanged(pos);
         }
 
@@ -209,14 +209,14 @@ namespace src
             if (type.isSolid)
             {
                 voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
-                VoxelService.INSTANCE.AddChange(pos, type.id, land);
+                UtopiaService.INSTANCE.AddChange(pos, type.id, land);
                 OnChanged(pos);
             }
         }
 
         public void PutMeta(VoxelPosition pos, BlockType type, Land land)
         {
-            metaBlocks = VoxelService.INSTANCE.AddMetaBlock(pos, type.id, land);
+            metaBlocks = UtopiaService.INSTANCE.AddMetaBlock(pos, type.id, land);
             metaBlocks[pos.local].RenderAt(chunkObject.transform, pos.local, this);
         }
 
@@ -224,7 +224,7 @@ namespace src
         {
             var block = metaBlocks[pos.local];
             metaBlocks.Remove(pos.local);
-            VoxelService.INSTANCE.OnMetaRemoved(block);
+            UtopiaService.INSTANCE.OnMetaRemoved(block);
             block.Destroy();
         }
 

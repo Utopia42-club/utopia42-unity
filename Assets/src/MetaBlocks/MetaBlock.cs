@@ -64,7 +64,7 @@ namespace src.MetaBlocks
         {
             if (Equals(properties, props)) return;
             properties = props;
-            VoxelService.INSTANCE.MarkLandChanged(land);
+            UtopiaService.INSTANCE.MarkLandChanged(land);
             if (blockObject != null)
                 blockObject.OnDataUpdate();
         }

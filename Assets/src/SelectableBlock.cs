@@ -86,10 +86,10 @@ namespace src
         {
             var vp = new VoxelPosition(pos);
             var chunk = world.GetChunkIfInited(vp.chunk);
-            chunk.PutVoxel(vp, VoxelService.INSTANCE.GetBlockType(blockTypeId), land);
+            chunk.PutVoxel(vp, UtopiaService.INSTANCE.GetBlockType(blockTypeId), land);
             if (metaAttached)
             {
-                chunk.PutMeta(vp, VoxelService.INSTANCE.GetBlockType(metaBlockTypeId), land);
+                chunk.PutMeta(vp, UtopiaService.INSTANCE.GetBlockType(metaBlockTypeId), land);
                 chunk.GetMetaAt(vp).SetProps(metaProperties, land);
             }
         }

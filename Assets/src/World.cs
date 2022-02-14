@@ -219,7 +219,7 @@ namespace src
             Chunk chunk;
             if (chunks.TryGetValue(vp.chunk, out chunk) && chunk.IsInited())
                 return chunk.GetBlock(vp.local).isSolid;
-            return VoxelService.INSTANCE.IsSolid(vp);
+            return UtopiaService.INSTANCE.IsSolid(vp);
         }
 
         public static World INSTANCE
