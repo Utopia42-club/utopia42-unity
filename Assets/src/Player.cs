@@ -91,7 +91,7 @@ namespace src
             string wallet = Settings.WalletId();
             if (wallet != null)
             {
-                var service = VoxelService.INSTANCE;
+                var service = UtopiaService.INSTANCE;
                 lands = service.GetLandsFor(wallet);
                 service.RefreshChangedLands(lands);
             }
@@ -227,7 +227,7 @@ namespace src
                 highlightBlock.position = posInt;
                 highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
 
-                if (VoxelService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType)
+                if (UtopiaService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType)
                 {
                     if (chunk.GetMetaAt(vp) == null)
                     {
@@ -346,9 +346,9 @@ namespace src
             {
                 world.DestroyGarbageChunkIfExists(vp.chunk);
                 if (type is MetaBlockType)
-                    VoxelService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand);
+                    UtopiaService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand);
                 else
-                    VoxelService.INSTANCE.AddChange(vp, type.id, ownerLand);
+                    UtopiaService.INSTANCE.AddChange(vp, type.id, ownerLand);
 
                 return true;
             }

@@ -19,17 +19,17 @@ using UnityEngine.Assertions.Must;
 
 namespace src.Service
 {
-    public class VoxelService
+    public class UtopiaService
     {
         private const byte MarkerBlockTypeId = 35;
-        public static VoxelService INSTANCE = new VoxelService();
+        public static UtopiaService INSTANCE = new UtopiaService();
         private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
         private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
         private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
         private HashSet<Land> changedLands = new HashSet<Land>();
         private readonly LandRegistry landRegistry = new LandRegistry();
 
-        public VoxelService()
+        public UtopiaService()
         {
             types[0] = new BlockType(0, "air", false, 0, 0, 0, 0, 0, 0);
             types[1] = new BlockType(1, "grass", true, 10, 10, 10, 10, 7, 11);

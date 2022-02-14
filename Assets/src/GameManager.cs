@@ -143,7 +143,7 @@ namespace src
 
         public Vector3 FindStartingY(Vector3 pos, Func<VoxelPosition, bool> willBeSolid = null)
         {
-            var service = VoxelService.INSTANCE;
+            var service = UtopiaService.INSTANCE;
             Func<VoxelPosition, bool> isSolid;
             if (willBeSolid == null)
                 isSolid = voxelPosition => service.IsSolid(voxelPosition);
@@ -174,7 +174,7 @@ namespace src
                 .WithTitle("Owned Lands")
                 .WithContent(OwnedLandsDialogContent.PREFAB);
             var content = ownedLandsListDialog.GetContent().GetComponent<OwnedLandsDialogContent>();
-            content.SetLands(VoxelService.INSTANCE.GetLandsFor(Settings.WalletId()));
+            content.SetLands(UtopiaService.INSTANCE.GetLandsFor(Settings.WalletId()));
             ownedLandsListDialog.withOnClose(CloseOwnedLandsList);
         }
 
@@ -207,7 +207,7 @@ namespace src
             {
                 EthereumClientService.INSTANCE.SetNetwork(network);
                 SetState(State.LOADING);
-                StartCoroutine(VoxelService.INSTANCE.Initialize(Loading.INSTANCE,
+                StartCoroutine(UtopiaService.INSTANCE.Initialize(Loading.INSTANCE,
                     () => this.InitPlayerForWallet(startingPosition)));
             }
             else
@@ -265,7 +265,7 @@ namespace src
             var lands = Player.INSTANCE.GetOwnedLands();
             if (lands == null || lands.Count == 0) return;
             var wallet = Settings.WalletId();
-            var service = VoxelService.INSTANCE;
+            var service = UtopiaService.INSTANCE;
             if (!service.HasChange()) return;
 
             var worldChanges = service.GetLandsChanges(wallet, lands);
@@ -393,7 +393,7 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Reloading Lands...");
-            yield return VoxelService.INSTANCE.ReloadLands();
+            yield return UtopiaService.INSTANCE.ReloadLands();
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.transform.position, true);
@@ -403,7 +403,7 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Reloading Your Lands...");
-            yield return VoxelService.INSTANCE.ReloadLandsFor(Settings.WalletId());
+            yield return UtopiaService.INSTANCE.ReloadLandsFor(Settings.WalletId());
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.transform.position, true);

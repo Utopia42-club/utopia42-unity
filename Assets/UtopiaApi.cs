@@ -14,7 +14,7 @@ public partial class UtopiaApi : MonoBehaviour
     {
         var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
         var placed = player.PutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
-            VoxelService.INSTANCE.GetBlockType(req.type), true);
+            UtopiaService.INSTANCE.GetBlockType(req.type), true);
         return JsonConvert.SerializeObject(placed);
     }
 
@@ -26,17 +26,17 @@ public partial class UtopiaApi : MonoBehaviour
 
     public string GetMarkers()
     {
-        return JsonConvert.SerializeObject(VoxelService.INSTANCE.GetMarkers());
+        return JsonConvert.SerializeObject(UtopiaService.INSTANCE.GetMarkers());
     }
 
     public string GetPlayerLands(string walletId)
     {
-        return JsonConvert.SerializeObject(VoxelService.INSTANCE.GetLandsFor(walletId));
+        return JsonConvert.SerializeObject(UtopiaService.INSTANCE.GetLandsFor(walletId));
     }
 
     public string GetBlockTypes()
     {
-        return JsonConvert.SerializeObject(VoxelService.INSTANCE.GetBlockTypes());
+        return JsonConvert.SerializeObject(UtopiaService.INSTANCE.GetBlockTypes());
     }
 
     private class PlaceBlockRequest
