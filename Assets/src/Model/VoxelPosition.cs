@@ -8,6 +8,16 @@ namespace src.Model
         public readonly Vector3Int chunk;
         public readonly Vector3Int local;
 
+        public VoxelPosition(SerializableVector3Int position)
+            : this(position.x, position.y, position.z)
+        {
+        }
+        
+        public VoxelPosition(SerializableVector3 position)
+            : this(position.x, position.y, position.z)
+        {
+        }
+        
         public VoxelPosition(Vector3 position)
             : this(position.x, position.y, position.z)
         {

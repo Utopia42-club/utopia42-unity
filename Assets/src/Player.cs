@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
@@ -313,12 +312,12 @@ namespace src
 
         private Land FindOwnedLand(Vector3Int position)
         {
-            if (highlightLand != null && highlightLand.Contains(ref position))
+            if (highlightLand != null && highlightLand.Contains(position))
                 return highlightLand;
-            if (placeLand != null && placeLand.Contains(ref position))
+            if (placeLand != null && placeLand.Contains(position))
                 return placeLand;
             foreach (var land in ownedLands)
-                if (land.Contains(ref position))
+                if (land.Contains(position))
                     return land;
             return null;
         }
@@ -329,7 +328,8 @@ namespace src
             var playerPos = Vectors.TruncateFloor(transform.position);
             var blockPos = vp.ToWorld();
             if (apiCall && !(type is MetaBlockType) &&
-                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) || playerPos.Equals(blockPos - Vector3Int.up)))
+                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
+                 playerPos.Equals(blockPos - Vector3Int.up)))
                 return false;
 
             var chunk = world.GetChunkIfInited(vp.chunk);

@@ -110,7 +110,8 @@ namespace src.Canvas.Map
         {
             this.land = land;
             landIdLabel.SetText(land.id.ToString());
-            landSizeLabel.SetText(((land.x2 - land.x1) * (land.y2 - land.y1)).ToString());
+            var rect = land.ToRect();
+            landSizeLabel.SetText((rect.width * rect.height).ToString());
             landNftIcon.SetActive(land.isNft);
             transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Settings.WalletId()));
             toggleNftButton.gameObject.SetActive(land.owner.Equals(Settings.WalletId()));

@@ -14,7 +14,7 @@ namespace src.Service.Migration
 
         public override LandDetails Migrate(Land land, LandDetails details)
         {
-            var pivot = new Vector3Int((int) land.x1, 0, (int) land.y1);
+            var pivot = land.startCoordinate.ToVector3();
 
             var newChanges = new Dictionary<string, VoxelChange>();
 

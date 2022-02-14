@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Nethereum.JsonRpc.UnityClient;
 using Nethereum.Web3;
+using src.Model;
 using src.Service.Ethereum.ContractDefinition;
 using Land = src.Model.Land;
 
@@ -95,10 +96,8 @@ namespace src.Service.Ethereum
                 {
                     var land = new Land();
                     land.id = (long) contractLand.Id;
-                    land.x1 = (long) contractLand.X1;
-                    land.y1 = (long) contractLand.Y1;
-                    land.x2 = (long) contractLand.X2;
-                    land.y2 = (long) contractLand.Y2;
+                    land.startCoordinate = new SerializableVector3Int((int) contractLand.X1, 0, (int) contractLand.Y1);
+                    land.endCoordinate = new SerializableVector3Int((int) contractLand.X2, 0, (int) contractLand.Y2);
                     land.ipfsKey = contractLand.Hash;
                     land.time = (long) contractLand.Time;
                     land.isNft = contractLand.IsNFT;
@@ -126,7 +125,9 @@ namespace src.Service.Ethereum
                 {
                     foreach (var land in lands)
                     {
-                        if (land.owner == null || land.owner.Length == 0 || land.x1 == land.x2 || land.y1 == land.y2)
+                        if (land.owner == null || land.owner.Length == 0 ||
+                            land.startCoordinate.x == land.endCoordinate.x
+                            || land.startCoordinate.z == land.endCoordinate.z)
                             continue;
                         resultLands.Add(land);
                     }

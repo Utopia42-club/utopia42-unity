@@ -107,7 +107,7 @@ namespace src.MetaBlocks
         {
             if (block.land == null)
                 return true;
-            return p.x >= block.land.x1 && p.x <= block.land.x2 && p.z >= block.land.y1 && p.z <= block.land.y2;
+            return block.land.Contains(p);
         }
     }
 }

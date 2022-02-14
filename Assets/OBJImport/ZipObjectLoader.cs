@@ -15,13 +15,13 @@ namespace Dummiesman
         private string mtlLibPath = null;
         private ZipMaterialLoader zipMaterialLoader;
 
-        public GameObject BuildObject() // not thread safe | blocking
+        public GameObject Build3DObject() // not thread safe | blocking
         {
             materials = zipMaterialLoader?.Materials;
             return base.BuildObject();
         }
 
-        public IEnumerator BuildObject(Action<GameObject> onSuccess, int perFrame = 5) // non-blocking
+        public IEnumerator Build3DObject(Action<GameObject> onSuccess, int perFrame = 5) // non-blocking
         {
             if (zipMaterialLoader == null)
             {

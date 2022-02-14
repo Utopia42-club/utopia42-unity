@@ -1,18 +1,19 @@
-using src.Utils;
+using System;
+using src.Model;
 using UnityEngine;
 
 namespace src.MetaBlocks.MarkerBlock
 {
-    [System.Serializable]
+    [Serializable]
     public class Marker
     {
         public string name;
-        public SerializableVector3 position;
+        public SerializableVector3Int position;
 
-        public Marker(string name, Vector3 position)
+        public Marker(string name, Vector3Int position)
         {
             this.name = name;
-            this.position = SerializableVector3.From(position);
+            this.position = new SerializableVector3Int(position);
         }
     }
 }

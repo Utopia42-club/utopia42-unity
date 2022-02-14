@@ -1,19 +1,18 @@
 using System;
-using src.Utils;
-using UnityEngine;
+using src.Model;
 
 namespace src.MetaBlocks.TdObjectBlock
 {
-    [System.Serializable]
-    public class TdObjectBlockProperties: ICloneable
+    [Serializable]
+    public class TdObjectBlockProperties : ICloneable
     {
         public string url;
 
-        public SerializableVector3 scale = SerializableVector3.From(Vector3.one);
-        public SerializableVector3 offset = SerializableVector3.From(Vector3.zero);
-        public SerializableVector3 rotation = SerializableVector3.From(Vector3.zero);
+        public SerializableVector3 scale = SerializableVector3.One;
+        public SerializableVector3 offset = SerializableVector3.Zero;
+        public SerializableVector3 rotation = SerializableVector3.Zero;
 
-        public SerializableVector3 initialPosition = SerializableVector3.From(Vector3.zero);
+        public SerializableVector3 initialPosition = SerializableVector3.Zero;
         public float initialScale = 0;
 
         public bool detectCollision = true;

@@ -124,8 +124,8 @@ namespace src.Service
 
         private IEnumerable<Vector2Int> ChunksForLand(Land land)
         {
-            var startPos = new VoxelPosition(land.x1, 0, land.y1);
-            var endPos = new VoxelPosition(land.x2, 0, land.y2);
+            var startPos = new VoxelPosition(land.startCoordinate);
+            var endPos = new VoxelPosition(land.endCoordinate);
 
             for (int cx = startPos.chunk.x; cx <= endPos.chunk.x; cx++)
             {

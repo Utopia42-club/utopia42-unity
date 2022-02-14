@@ -1122,10 +1122,14 @@ MonoBehaviour:
   tdObjectHighlightBox: {fileID: 1559789645}
   placeLand:
     id: 0
-    x1: 0
-    y1: 0
-    x2: 0
-    y2: 0
+    startCoordinate:
+      x: 0
+      y: 0
+      z: 0
+    endCoordinate:
+      x: 0
+      y: 0
+      z: 0
     ipfsKey: 
     time: 0
     isNft: 0
@@ -3625,7 +3629,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 236.65498, y: -77.62998}
+  m_AnchoredPosition: {x: 236.65498, y: -77.63002}
   m_SizeDelta: {x: 368.81, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442934151
@@ -13870,7 +13874,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1925748159}
   m_HandleRect: {fileID: 1925748158}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -15642,7 +15646,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 310bf78257a366256913ac6f4b4ddd62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  light: {fileID: 1787637088}
+  spotLight: {fileID: 1787637088}
 --- !u!108 &1787637088
 Light:
   m_ObjectHideFlags: 0
@@ -18971,10 +18975,14 @@ MonoBehaviour:
   toggleNftButton: {fileID: 1279475341}
   land:
     id: 0
-    x1: 0
-    y1: 0
-    x2: 0
-    y2: 0
+    startCoordinate:
+      x: 0
+      y: 0
+      z: 0
+    endCoordinate:
+      x: 0
+      y: 0
+      z: 0
     ipfsKey: 
     time: 0
     isNft: 0

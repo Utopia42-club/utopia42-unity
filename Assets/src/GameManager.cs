@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using src.Canvas;
 using src.Canvas.Map;
 using src.MetaBlocks.TdObjectBlock;
@@ -35,7 +34,7 @@ namespace src
                 BrowserConnector.INSTANCE.ReportGameState(newState, () => { }, () => { });
             });
         }
-        
+
         void Update()
         {
             if (Input.GetButtonDown("Cancel"))
@@ -78,26 +77,26 @@ namespace src
             var player = Player.INSTANCE;
             player.ResetLands();
 
-            var pos = startingPosition;
+            Vector3 pos;
 
-            if (pos == null)
+            if (startingPosition == null)
             {
                 pos = new Vector3(0, Chunk.CHUNK_HEIGHT + 10, 0);
                 var lands = player.GetOwnedLands();
                 if (lands.Count > 0)
                 {
                     var land = lands[0];
-                    pos = new Vector3(
-                        ((float) (land.x1 + land.x2)) / 2,
-                        Chunk.CHUNK_HEIGHT + 10,
-                        ((float) (land.y1 + land.y2)) / 2);
+                    pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
+                    pos /= 2;
+                    pos.y = Chunk.CHUNK_HEIGHT + 10;
                 }
             }
+            else pos = startingPosition.Value;
 
-            pos = FindStartingY(pos.Value);
-            StartCoroutine(DoMovePlayerTo(pos.Value, true));
+            pos = FindStartingY(pos);
+            StartCoroutine(DoMovePlayerTo(pos, true));
         }
-        
+
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
             SetState(State.LOADING);
@@ -442,7 +441,7 @@ namespace src
             WebGLInput.captureAllKeyboardInput = captureAllKeyboardInputOrig == null || captureAllKeyboardInputOrig;
 #endif
         }
-        
+
         public void NavigateInMap(Land land)
         {
             CloseOwnedLandsList();

@@ -14,7 +14,7 @@ namespace src.Canvas.Map
         public Button buyButton;
         public Button cancelButton;
         public Map map;
-    
+
         private GameManager manager;
         private RectTransform rectTransform;
         private Land land;
@@ -31,29 +31,27 @@ namespace src.Canvas.Map
             var lands = new List<Land> {land};
             GameManager.INSTANCE.Buy(lands);
         }
-    
+
         private void Close()
         {
             map.CloseLandBuyDialogState();
         }
-    
+
         public void SetRect(RectTransform rectTransform)
         {
             var land = new Land();
             var rect = rectTransform.rect;
             var localPosition = rectTransform.localPosition;
-            land.x1 = (long) localPosition.x;
-            land.y1 = (long) localPosition.y;
-            land.x2 = land.x1 + (long) rect.width;
-            land.y2 = land.y1 + (long) rect.height;
-            
+            land.startCoordinate = new SerializableVector3Int((int) localPosition.x, 0, (int) localPosition.y);
+            land.endCoordinate = new SerializableVector3Int((int) localPosition.x + (int) rect.width, 0,
+                (int) localPosition.y + (int) rect.height);
+
             this.land = land;
             landSizeLabel.SetText((rect.width * rect.height).ToString());
             landPriceLabel.SetText("Calculating...");
-            StartCoroutine(EthereumClientService.INSTANCE.GetLandPrice(land.x1, land.x2, land.y1, land.y2, price =>
-            {
-                landPriceLabel.SetText(price.ToString());
-            }));
+            StartCoroutine(EthereumClientService.INSTANCE.GetLandPrice(land.startCoordinate.x, land.endCoordinate.x,
+                land.startCoordinate.z, land.endCoordinate.z,
+                price => { landPriceLabel.SetText(price.ToString()); }));
         }
     }
 }

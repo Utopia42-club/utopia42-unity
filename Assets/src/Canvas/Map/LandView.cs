@@ -19,6 +19,7 @@ public class LandView : MonoBehaviour
     public void SetLand(Land land)
     {
         this.land = land;
-        label.SetText("Land " + land.id + " in  " + land.x1 + "," + land.y1 + "," + land.x2 + "," + land.y2);
+        label.SetText("Land " + land.id + " in  " + land.startCoordinate.ToVector3() + " - " +
+                      land.endCoordinate.ToVector3());
     }
 }

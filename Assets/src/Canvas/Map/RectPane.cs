@@ -58,7 +58,7 @@ namespace src.Canvas.Map
             {
                 var owner = entry.Key.Equals(Settings.WalletId());
                 foreach (var land in entry.Value)
-                    Add(land.x1, land.x2, land.y1, land.y2,
+                    Add(land.startCoordinate.x, land.endCoordinate.x, land.startCoordinate.z, land.endCoordinate.z,
                         owner ? land.isNft ? Colors.MAP_OWNED_LAND_NFT : Colors.MAP_OWNED_LAND :
                         land.isNft ? Colors.MAP_OTHERS_LAND_NFT : Colors.MAP_OTHERS_LAND, land, entry.Key);
             }
@@ -72,7 +72,7 @@ namespace src.Canvas.Map
             drawnLandIndicators.Clear();
         }
 
-        private GameObject Add(long x1, long x2, long y1, long y2, Color color, Land land, string walletId)
+        private GameObject Add(int x1, int x2, int y1, int y2, Color color, Land land, string walletId)
         {
             var landObject = Instantiate(landPrefab);
 
@@ -102,7 +102,7 @@ namespace src.Canvas.Map
             landIndicators.Remove(drawingObject);
         }
 
-        internal GameObject DrawAt(long x, long y)
+        internal GameObject DrawAt(int x, int y)
         {
             GameObject obj = Add(x, x, y, y, Colors.PRIMARY_COLOR, null, Settings.WalletId());
             drawnLandIndicators.Add(obj);
@@ -211,10 +211,10 @@ namespace src.Canvas.Map
                 var transform = indicator.GetComponent<RectTransform>();
                 var r = transform.rect;
                 var land = new Land();
-                land.x1 = (long) transform.localPosition.x;
-                land.y1 = (long) transform.localPosition.y;
-                land.x2 = land.x1 + (long) r.width;
-                land.y2 = land.y1 + (long) r.height;
+
+                var localPosition = transform.localPosition;
+                land.startCoordinate = new SerializableVector3Int((int) localPosition.x, 0, (int) localPosition.y);
+                land.endCoordinate = new SerializableVector3Int(land.startCoordinate.x+(int)r.width, 0,land.startCoordinate.z+(int)r.height);
                 drawn.Add(land);
             }
 

@@ -1,9 +1,8 @@
 using System;
 using Newtonsoft.Json;
 using src;
-using src.MetaBlocks.MarkerBlock;
+using src.Model;
 using src.Service;
-using src.Utils;
 using UnityEngine;
 
 public partial class UtopiaApi : MonoBehaviour
@@ -21,7 +20,7 @@ public partial class UtopiaApi : MonoBehaviour
     public string GetPlayerPosition()
     {
         var pos = Player.INSTANCE.transform.position;
-        return JsonConvert.SerializeObject(SerializableVector3.From(pos));
+        return JsonConvert.SerializeObject(new SerializableVector3(pos));
     }
 
     public string GetMarkers()
@@ -42,6 +41,6 @@ public partial class UtopiaApi : MonoBehaviour
     private class PlaceBlockRequest
     {
         public string type;
-        public SerializableVector3 position;
+        public SerializableVector3Int position;
     }
 }

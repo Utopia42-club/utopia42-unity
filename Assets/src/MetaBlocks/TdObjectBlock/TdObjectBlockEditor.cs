@@ -1,4 +1,4 @@
-using src.Utils;
+using src.Model;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,33 +7,22 @@ namespace src.MetaBlocks.TdObjectBlock
     public class TdObjectBlockEditor : MonoBehaviour
     {
         public static readonly string PREFAB = "MetaBlocks/TdObjectBlockEditor";
-        [SerializeField]
-        public InputField url;
+        [SerializeField] public InputField url;
 
-        [SerializeField]
-        public InputField scaleX;
-        [SerializeField]
-        public InputField scaleY;
-        [SerializeField]
-        public InputField scaleZ;
-        
-        [SerializeField]
-        public InputField offsetX;
-        [SerializeField]
-        public InputField offsetY;
-        [SerializeField]
-        public InputField offsetZ;
-        
-        [SerializeField]
-        public InputField rotationX;
-        [SerializeField]
-        public InputField rotationY;
-        [SerializeField]
-        public InputField rotationZ;
-        
-        [SerializeField]
-        public Toggle detectCollision;
-        
+        [SerializeField] public InputField scaleX;
+        [SerializeField] public InputField scaleY;
+        [SerializeField] public InputField scaleZ;
+
+        [SerializeField] public InputField offsetX;
+        [SerializeField] public InputField offsetY;
+        [SerializeField] public InputField offsetZ;
+
+        [SerializeField] public InputField rotationX;
+        [SerializeField] public InputField rotationY;
+        [SerializeField] public InputField rotationZ;
+
+        [SerializeField] public Toggle detectCollision;
+
         public TdObjectBlockProperties GetValue()
         {
             if (HasValue(url) && HasValue(scaleX) && HasValue(scaleY) && HasValue(scaleZ)
@@ -42,15 +31,19 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 var props = new TdObjectBlockProperties();
                 props.url = url.text.Trim();
-                props.scale = SerializableVector3.From(new Vector3(float.Parse(scaleX.text), float.Parse(scaleY.text), float.Parse(scaleZ.text)));
-                props.offset = SerializableVector3.From(new Vector3(float.Parse(offsetX.text), float.Parse(offsetY.text), float.Parse(offsetZ.text)));
-                props.rotation = SerializableVector3.From(new Vector3(float.Parse(rotationX.text), float.Parse(rotationY.text), float.Parse(rotationZ.text)));
+                props.scale = new SerializableVector3(float.Parse(scaleX.text), float.Parse(scaleY.text),
+                    float.Parse(scaleZ.text));
+                props.offset = new SerializableVector3(float.Parse(offsetX.text), float.Parse(offsetY.text),
+                    float.Parse(offsetZ.text));
+                props.rotation = new SerializableVector3(float.Parse(rotationX.text), float.Parse(rotationY.text),
+                    float.Parse(rotationZ.text));
                 props.detectCollision = detectCollision.isOn;
                 return props;
             }
+
             return null;
         }
-        
+
         public void SetValue(TdObjectBlockProperties value)
         {
             if (value == null)
@@ -68,20 +61,22 @@ namespace src.MetaBlocks.TdObjectBlock
                 detectCollision.isOn = true;
                 return;
             }
-            
-            url.text =  value.url == null ? "" : value.url;
+
+            url.text = value.url == null ? "" : value.url;
             if (value.scale != null)
             {
                 scaleX.text = value.scale.x.ToString();
                 scaleY.text = value.scale.y.ToString();
                 scaleZ.text = value.scale.z.ToString();
             }
+
             if (value.offset != null)
             {
                 offsetX.text = value.offset.x.ToString();
                 offsetY.text = value.offset.y.ToString();
                 offsetZ.text = value.offset.z.ToString();
             }
+
             if (value.rotation != null)
             {
                 rotationX.text = value.rotation.x.ToString();
@@ -98,4 +93,3 @@ namespace src.MetaBlocks.TdObjectBlock
         }
     }
 }
-

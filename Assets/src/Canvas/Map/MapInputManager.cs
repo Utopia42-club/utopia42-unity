@@ -231,7 +231,8 @@ namespace src.Canvas.Map
 
         private void MoveToLandCenter(Land land)
         {
-            var landCenter = new Vector3((land.x1 + land.x2) * 0.5f, (land.y1 + land.y2) * 0.5f, 0);
+            var c = ((Vector3)(land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3())) / 2;
+            var landCenter = new Vector3(c.x, c.z, 0);
             var landContainerScale = landRect.landContainer.localScale;
             landCenter.Scale(new Vector3(landContainerScale.x, landContainerScale.y, 0));
             landRect.GetComponent<RectTransform>().localPosition = -landCenter;
@@ -239,11 +240,10 @@ namespace src.Canvas.Map
 
         private void ZoomOutOnLand(Land land)
         {
-            var width = Math.Abs(land.x2 - land.x1);
-            var height = Math.Abs(land.y2 - land.y1);
+            var rect = land.ToRect();
 
-            var widthRatio = Screen.width / (width * 1.5);
-            var heightRatio = Screen.height / (height * 1.5);
+            var widthRatio = Screen.width / (rect.width * 1.5);
+            var heightRatio = Screen.height / (rect.height * 1.5);
 
             var scale = (float) new[] {widthRatio, heightRatio, MaxZoomOutScale}.Min();
             landRect.landContainer.localScale = new Vector3(scale, scale, 1);

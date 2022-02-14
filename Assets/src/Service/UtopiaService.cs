@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
@@ -13,9 +12,7 @@ using src.MetaBlocks.TdObjectBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
 using src.Service.Migration;
-using src.Utils;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 
 namespace src.Service
 {
@@ -146,7 +143,7 @@ namespace src.Service
                     {
                         var pos = new Vector3Int(x + position.x * Chunk.CHUNK_WIDTH, 0,
                             z + position.z * Chunk.CHUNK_WIDTH);
-                        var land = lands.FirstOrDefault(land => land.Contains(ref pos));
+                        var land = lands.FirstOrDefault(land => land.Contains(pos));
                         if (land != null)
                         {
                             body = dirt;
@@ -249,14 +246,15 @@ namespace src.Service
             yield break;
         }
 
-        private void ReadChanges(Land land, LandDetails details, Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes)
+        private void ReadChanges(Land land, LandDetails details,
+            Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes)
         {
+            var landStart = land.startCoordinate.ToVector3();
             foreach (var entry in details.changes)
             {
                 var change = entry.Value;
-                var pos = LandDetails.PraseKey(entry.Key) +
-                          new Vector3Int((int) land.x1, 0, (int) land.y1);
-                if (land.Contains(ref pos))
+                var pos = LandDetails.PraseKey(entry.Key) + landStart;
+                if (land.Contains(pos))
                 {
                     var type = GetBlockType(change.name);
                     if (type == null) continue;
@@ -273,13 +271,13 @@ namespace src.Service
         private void ReadMetadata(Land land, LandDetails details,
             Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks)
         {
+            var landStart = land.startCoordinate.ToVector3();
             foreach (var entry in details.metadata)
             {
                 var meta = entry.Value;
-                var pos = LandDetails.PraseKey(entry.Key) +
-                          new Vector3Int((int) land.x1, 0, (int) land.y1);
+                var pos = LandDetails.PraseKey(entry.Key) + landStart;
                 var position = new VoxelPosition(pos);
-                if (land.Contains(ref pos))
+                if (land.Contains(pos))
                 {
                     var type = (MetaBlockType) GetBlockType(meta.type);
                     if (type == null) continue;
@@ -311,7 +309,7 @@ namespace src.Service
             foreach (var land in landRegistry.GetLands().Values)
             {
                 if (!string.IsNullOrWhiteSpace(land.ipfsKey))
-                    enums[index] = IpfsClient.INSATANCE.GetLandDetails(land, details=> consumer(land, details));
+                    enums[index] = IpfsClient.INSATANCE.GetLandDetails(land, details => consumer(land, details));
                 index++;
             }
 
@@ -396,10 +394,9 @@ namespace src.Service
                         var worldPos = VoxelPosition.ToWorld(cpos, vpos);
                         foreach (var land in lands)
                         {
-                            if (land.Contains(ref worldPos))
+                            if (land.Contains(worldPos))
                             {
-                                var key = LandDetails.FormatKey(worldPos -
-                                                                new Vector3Int((int) land.x1, 0, (int) land.y1));
+                                var key = LandDetails.FormatKey(worldPos - land.startCoordinate.ToVector3());
                                 consumer(key, voxelEntry.Value, land);
                                 break;
                             }
@@ -479,7 +476,7 @@ namespace src.Service
             var vp = new VoxelPosition(position);
 
             var lands = landRegistry.GetLandsForChunk(new Vector2Int(vp.chunk.x, vp.chunk.z));
-            return lands?.FirstOrDefault(l => l.Contains(position.x, position.z));
+            return lands?.FirstOrDefault(l => l.Contains(position));
         }
 
         public IEnumerator ReloadLandsFor(string wallet)

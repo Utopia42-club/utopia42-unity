@@ -33,12 +33,26 @@ namespace src.MetaBlocks.ImageBlock
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            if ((obj == null) || GetType() != obj.GetType())
                 return false;
             var prop = obj as MediaBlockProperties;
             return Equals(front, prop.front) && Equals(back, prop.back) &&
                    Equals(top, prop.top) && Equals(bottom, prop.bottom) &&
                    Equals(left, prop.left) && Equals(right, prop.right);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (front != null ? front.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (back != null ? back.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (right != null ? right.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (left != null ? left.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (top != null ? top.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (bottom != null ? bottom.GetHashCode() : 0);
+                return hashCode;
+            }
         }
 
         public object Clone()

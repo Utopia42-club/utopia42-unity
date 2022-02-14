@@ -99,7 +99,7 @@ namespace src.Canvas
             {
                 List<string> parameters = new List<string>();
                 foreach (var l in lands)
-                    parameters.Add(string.Join("_", new long[] {l.x1, l.y1, l.x2, l.y2}));
+                    parameters.Add(string.Join("_", new long[] {l.startCoordinate.x, l.startCoordinate.z, l.startCoordinate.z, l.endCoordinate.z}));
                 CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
             }
         }

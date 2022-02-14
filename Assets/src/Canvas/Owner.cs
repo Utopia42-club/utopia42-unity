@@ -105,9 +105,9 @@ namespace src.Canvas
 
         private bool IsLandChanged(Vector3 position)
         {
-            if (currentLand != null && currentLand.Contains(ref position))
+            if (currentLand != null && currentLand.Contains(position))
                 return false;
-            if (prevLand != null && prevLand.Contains(ref position))
+            if (prevLand != null && prevLand.Contains(position))
             {
                 prevLand = currentLand;
                 prevWallet = currentWallet;

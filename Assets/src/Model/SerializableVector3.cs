@@ -1,22 +1,34 @@
+using System;
 using UnityEngine;
 
-namespace src.Utils
+namespace src.Model
 {
-    [System.Serializable]
+    [Serializable]
     public class SerializableVector3
     {
+        public static SerializableVector3 Max =>
+            new SerializableVector3(float.MaxValue, float.MaxValue, float.MaxValue);
+
+        public static SerializableVector3 Min =>
+            new SerializableVector3(float.MinValue, float.MinValue, float.MinValue);
+
+        public static SerializableVector3 Zero => new SerializableVector3(0, 0, 0);
+        public static SerializableVector3 One => new SerializableVector3(1, 1, 1);
+
+
         public float x;
         public float y;
         public float z;
 
-        public static SerializableVector3 From(Vector3 vector3)
+        public SerializableVector3(Vector3 v) : this(v.x, v.y, v.z)
         {
-            return new SerializableVector3
-            {
-                x = vector3.x,
-                y = vector3.y,
-                z = vector3.z
-            };
+        }
+
+        public SerializableVector3(float x, float y, float z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
         }
 
         public Vector3 ToVector3()
@@ -50,12 +62,7 @@ namespace src.Utils
 
         public SerializableVector3 Clone()
         {
-            return new SerializableVector3
-            {
-                x = x,
-                y = y,
-                z = z
-            };
+            return new SerializableVector3(x, y, z);
         }
     }
 }
