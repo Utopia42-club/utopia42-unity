@@ -260,7 +260,8 @@ namespace src
                 foreach (var srcBlock in copiedBlocks)
                 {
                     var newPosition = srcBlock.Position - minPoint + player.PlaceBlockPosInt;
-                    if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) || currVox.Equals(newPosition - Vector3Int.up))
+                    if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
+                        currVox.Equals(newPosition - Vector3Int.up))
                     {
                         conflictWithPlayer = true;
                         break;
@@ -316,7 +317,8 @@ namespace src
             foreach (var block in movedBlocks)
             {
                 var position = block.HighlightPosition;
-                if (currVox.Equals(position) || currVox.Equals(position + Vector3Int.up) || currVox.Equals(position - Vector3Int.up))
+                if (currVox.Equals(position) || currVox.Equals(position + Vector3Int.up) ||
+                    currVox.Equals(position - Vector3Int.up))
                     return;
             }
 
@@ -388,6 +390,10 @@ namespace src
                     lines.Add("D : right");
                 }
 
+                lines.Add("CTRL+C/V : copy/paste selection");
+                lines.Add("CTRL+CLICK : select/unselect block");
+                lines.Add(
+                    "CTRL+SHIFT+CLICK : select/unselect all blocks between the last selected block and current block");
                 lines.Add("R + horizontal mouse movement : rotate around y axis");
                 lines.Add("R + vertical mouse movement : rotate around player right axis");
             }
@@ -399,8 +405,6 @@ namespace src
             lines.Add("X : cancel");
             lines.Add("ENTER : confirm movement");
             lines.Add("Del : delete selected blocks");
-            lines.Add("CTRL+C/V : copy/paste selection");
-            lines.Add("CTRL+CLICK : select/unselect block");
             if (movingSelectionAllowed)
                 lines.Add("V : set player as movement target");
             else

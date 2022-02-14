@@ -1,10 +1,12 @@
 using System;
 using Newtonsoft.Json;
 using src;
+using src.MetaBlocks.MarkerBlock;
 using src.Service;
+using src.Utils;
 using UnityEngine;
 
-public class UtopiaApi : MonoBehaviour
+public partial class UtopiaApi : MonoBehaviour
 {
     public Player player;
 
@@ -19,18 +21,12 @@ public class UtopiaApi : MonoBehaviour
     public string GetPlayerPosition()
     {
         var pos = Player.INSTANCE.transform.position;
-        return JsonConvert.SerializeObject(new Position(pos.x, pos.y, pos.z));
+        return JsonConvert.SerializeObject(SerializableVector3.From(pos));
     }
 
     public string GetMarkers()
     {
-        var markers = new Marker[]
-        {
-            new Marker("Marker 1", new Position(1, 2, 3)),
-            new Marker("Marker 2", new Position(2, 3, 4)),
-            new Marker("Marker 3", new Position(3, 4, 5)),
-        };
-        return JsonConvert.SerializeObject(markers);
+        return JsonConvert.SerializeObject(VoxelService.INSTANCE.GetMarkers());
     }
 
     public string GetPlayerLands(string walletId)
@@ -43,35 +39,9 @@ public class UtopiaApi : MonoBehaviour
         return JsonConvert.SerializeObject(VoxelService.INSTANCE.GetBlockTypes());
     }
 
-    private class Position
-    {
-        public float x;
-        public float y;
-        public float z;
-
-        public Position(float x, float y, float z)
-        {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-    }
-
     private class PlaceBlockRequest
     {
         public string type;
-        public Position position;
-    }
-
-    private class Marker
-    {
-        public string name;
-        public Position position;
-
-        public Marker(string name, Position position)
-        {
-            this.name = name;
-            this.position = position;
-        }
+        public SerializableVector3 position;
     }
 }

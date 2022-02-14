@@ -7,9 +7,16 @@ namespace src.Model
     {
         public readonly Vector3Int chunk;
         public readonly Vector3Int local;
+
         public VoxelPosition(Vector3 position)
             : this(position.x, position.y, position.z)
         {
+        }
+
+        public VoxelPosition(Vector3Int chunk, Vector3Int local)
+        {
+            this.chunk = chunk;
+            this.local = local;
         }
 
         public VoxelPosition(float x, float y, float z)
@@ -32,6 +39,5 @@ namespace src.Model
                 chunk.y * Chunk.CHUNK_HEIGHT + local.y,
                 chunk.z * Chunk.CHUNK_WIDTH + local.z);
         }
-
     }
 }
