@@ -1,31 +1,45 @@
+using System;
 using System.Collections.Generic;
 using src.Model;
 using src.Utils;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace src.Canvas.Map
 {
-    public class LandProfileDialog : MonoBehaviour
+    public class LandProfileDialog : MonoBehaviour, IPointerClickHandler
     {
         private static LandProfileDialog instance;
 
         public ActionButton closeButton;
-        public TextMeshProUGUI nameLabel;
+
+        [Header("Profile")] public TextMeshProUGUI nameLabel;
         public TextMeshProUGUI bioLabel;
         public ImageLoader profileImage;
         public GameObject socialLinks;
         public SocialLink socialLinkPrefab;
         public GameObject editButton;
         private readonly List<GameObject> links = new List<GameObject>();
-        public TextMeshProUGUI landIdLabel;
+
+        [Header("Land")] public TextMeshProUGUI landIdLabel;
         public TextMeshProUGUI landSizeLabel;
+        public Button landColorButton;
+        public GameObject colorPickerPrefab;
         public GameObject landNftIcon;
+        public GameObject colorPickerPlaceHolder;
         public Button transferButton;
         public Button toggleNftButton;
         public Land land;
+
+        private bool isColorPickerOpen;
+        private GameObject pickerInstance;
+
         private GameManager manager;
+        private Image landColorButtonImage;
+        private FlexibleColorPicker picker;
 
         void Start()
         {
@@ -34,13 +48,44 @@ namespace src.Canvas.Map
             manager = GameManager.INSTANCE;
             manager.stateChange.AddListener((state) =>
             {
-                if (gameObject.activeSelf && state != GameManager.State.PROFILE_DIALOG && state != GameManager.State.MAP)
+                if (gameObject.activeSelf && state != GameManager.State.PROFILE_DIALOG &&
+                    state != GameManager.State.MAP)
                     Close();
             });
             editButton.GetComponent<ActionButton>().AddListener(() => manager.EditProfile());
             closeButton.AddListener(Close);
             transferButton.onClick.AddListener(DoTransfer);
             toggleNftButton.onClick.AddListener(DoToggleNft);
+            landColorButton.onClick.AddListener(ToggleColorPicker);
+            landColorButtonImage = landColorButton.GetComponent<Image>();
+        }
+
+        private void Update()
+        {
+            if (picker != null)
+            {
+                landColorButtonImage.color = picker.color;
+            }
+        }
+
+        private void ToggleColorPicker()
+        {
+            if (!Settings.WalletId().Equals(land.owner))
+                return;
+            if (isColorPickerOpen)
+            {
+                isColorPickerOpen = false;
+                Destroy(pickerInstance);
+                picker = null;
+                pickerInstance = null;
+            }
+            else
+            {
+                pickerInstance = Instantiate(colorPickerPrefab, colorPickerPlaceHolder.transform);
+                picker = pickerInstance.GetComponent<FlexibleColorPicker>();
+                // picker.SetNewColor(land.color); //FIXME
+                isColorPickerOpen = true;
+            }
         }
 
         private void DoTransfer()
@@ -64,10 +109,19 @@ namespace src.Canvas.Map
                 links.Clear();
             }
 
+            if (isColorPickerOpen)
+                ToggleColorPicker();
+
             gameObject.SetActive(false);
             manager.SetProfileDialogState(false);
         }
 
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (isColorPickerOpen)
+                ToggleColorPicker();
+        }
+        
         public void Open(Land land, Profile profile)
         {
             gameObject.SetActive(true);
@@ -114,6 +168,8 @@ namespace src.Canvas.Map
             landNftIcon.SetActive(land.isNft);
             transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Settings.WalletId()));
             toggleNftButton.gameObject.SetActive(land.owner.Equals(Settings.WalletId()));
+            // landColorButtonImage.color = land.color; //FIXME
+
             if (toggleNftButton.gameObject.activeSelf)
             {
                 toggleNftButton.GetComponentInChildren<TextMeshProUGUI>().text =
