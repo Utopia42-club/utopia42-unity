@@ -16,7 +16,7 @@ namespace src.Service.Migration
         {
             var pivot = land.startCoordinate.ToVector3();
 
-            var newChanges = new Dictionary<string, VoxelChange>();
+            var newChanges = new Dictionary<string, Block>();
 
             foreach (var change in details.changes)
             {

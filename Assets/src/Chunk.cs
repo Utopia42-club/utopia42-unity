@@ -5,6 +5,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using MetaBlock = src.MetaBlocks.MetaBlock;
 
 namespace src
 {

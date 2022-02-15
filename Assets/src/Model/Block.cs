@@ -1,7 +1,7 @@
 ﻿namespace src.Model
 {
     [System.Serializable]
-    public class VoxelChange
+    public class Block
     {
         public string name;
 

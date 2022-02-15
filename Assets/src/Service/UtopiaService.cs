@@ -13,6 +13,7 @@ using src.MetaBlocks.VideoBlock;
 using src.Model;
 using src.Service.Migration;
 using UnityEngine;
+using MetaBlock = src.Model.MetaBlock;
 
 namespace src.Service
 {
@@ -22,7 +23,7 @@ namespace src.Service
         public static UtopiaService INSTANCE = new UtopiaService();
         private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
         private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
-        private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
+        private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlocks.MetaBlock>> metaBlocks = null;
         private HashSet<Land> changedLands = new HashSet<Land>();
         private readonly LandRegistry landRegistry = new LandRegistry();
 
@@ -73,9 +74,9 @@ namespace src.Service
                 .Select(x => x.name).ToList();
         }
 
-        public Dictionary<Vector3Int, MetaBlock> GetMetaBlocks(Vector3Int coordinate)
+        public Dictionary<Vector3Int, MetaBlocks.MetaBlock> GetMetaBlocks(Vector3Int coordinate)
         {
-            Dictionary<Vector3Int, MetaBlock> blocks;
+            Dictionary<Vector3Int, MetaBlocks.MetaBlock> blocks;
             metaBlocks.TryGetValue(coordinate, out blocks);
             return blocks;
         }
@@ -187,12 +188,12 @@ namespace src.Service
             return types.Values.Count;
         }
 
-        public MetaBlock GetMetaAt(VoxelPosition vp)
+        public MetaBlocks.MetaBlock GetMetaAt(VoxelPosition vp)
         {
-            Dictionary<Vector3Int, MetaBlock> chunk;
+            Dictionary<Vector3Int, MetaBlocks.MetaBlock> chunk;
             if (metaBlocks.TryGetValue(vp.chunk, out chunk))
             {
-                MetaBlock block;
+                MetaBlocks.MetaBlock block;
                 if (chunk.TryGetValue(vp.local, out block))
                 {
                     return block;
@@ -229,7 +230,7 @@ namespace src.Service
             if (!migrationService.GetLatestVersion().Equals("0.2.0"))
                 throw new Exception("Unsupported migration latest version.");
             var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
-            var metaBlocks = new Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>>();
+            var metaBlocks = new Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlocks.MetaBlock>>();
 
             yield return LoadDetails(loading, (land, details) =>
             {
@@ -269,7 +270,7 @@ namespace src.Service
         }
 
         private void ReadMetadata(Land land, LandDetails details,
-            Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks)
+            Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlocks.MetaBlock>> metaBlocks)
         {
             var landStart = land.startCoordinate.ToVector3();
             foreach (var entry in details.metadata)
@@ -284,9 +285,9 @@ namespace src.Service
                     try
                     {
                         var block = type.New(land, meta.properties);
-                        Dictionary<Vector3Int, MetaBlock> chunk;
+                        Dictionary<Vector3Int, MetaBlocks.MetaBlock> chunk;
                         if (!metaBlocks.TryGetValue(position.chunk, out chunk))
-                            metaBlocks[position.chunk] = chunk = new Dictionary<Vector3Int, MetaBlock>();
+                            metaBlocks[position.chunk] = chunk = new Dictionary<Vector3Int, MetaBlocks.MetaBlock>();
                         chunk[position.local] = block;
                     }
                     catch (Exception ex)
@@ -331,8 +332,8 @@ namespace src.Service
                 if (changedLands.Contains(land))
                 {
                     var details = new LandDetails();
-                    details.changes = new Dictionary<string, VoxelChange>();
-                    details.metadata = new Dictionary<string, Metadata>();
+                    details.changes = new Dictionary<string, Block>();
+                    details.metadata = new Dictionary<string, MetaBlock>();
                     details.v = "0.2.0";
                     details.wallet = wallet;
                     landDetailsMap[land.id] = details;
@@ -342,7 +343,7 @@ namespace src.Service
 
             Stream(filteredLands, changes, (key, type, land) =>
             {
-                var change = new VoxelChange();
+                var change = new Block();
                 change.name = GetBlockType(type).name;
                 landDetailsMap[land.id].changes[key] = change;
             }, m => true); //Filter can check if the block is default
@@ -350,7 +351,7 @@ namespace src.Service
             {
                 var properties = metaBlock.GetProps();
                 if (properties == null) return;
-                var metadata = new Metadata();
+                var metadata = new MetaBlock();
                 metadata.properties = JsonConvert.SerializeObject(properties);
                 metadata.type = metaBlock.type.name;
                 landDetailsMap[land.id].metadata[key] = metadata;
@@ -412,18 +413,18 @@ namespace src.Service
             changedLands.Add(land);
         }
 
-        public void OnMetaRemoved(MetaBlock block)
+        public void OnMetaRemoved(MetaBlocks.MetaBlock block)
         {
             if (block.land != null)
                 changedLands.Add(block.land);
         }
 
-        public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, byte id, Land land)
+        public Dictionary<Vector3Int, MetaBlocks.MetaBlock> AddMetaBlock(VoxelPosition pos, byte id, Land land)
         {
-            Dictionary<Vector3Int, MetaBlock> metas;
+            Dictionary<Vector3Int, MetaBlocks.MetaBlock> metas;
             if (!metaBlocks.TryGetValue(pos.chunk, out metas))
             {
-                metas = new Dictionary<Vector3Int, MetaBlock>();
+                metas = new Dictionary<Vector3Int, MetaBlocks.MetaBlock>();
                 metaBlocks[pos.chunk] = metas;
             }
 

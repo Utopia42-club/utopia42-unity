@@ -9,8 +9,8 @@ namespace src.Model
     {
         public string v;
         public string wallet;
-        public Dictionary<string, Metadata> metadata;
-        public Dictionary<string, VoxelChange> changes;
+        public Dictionary<string, MetaBlock> metadata;
+        public Dictionary<string, Block> changes;
 
         public static Vector3Int PraseKey(string key)
         {
