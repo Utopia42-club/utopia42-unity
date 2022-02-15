@@ -31,7 +31,6 @@ namespace src.Model
             return id == land.id;
         }
 
-
         public bool Contains(ref Vector3Int position)
         {
             return Contains(position.x, position.z);

@@ -82,7 +82,7 @@ namespace src.Canvas.Map
             selectionHandler.rectPane = this;
             landIndicators.Add(landObject);
 
-            var outlineWidth = 4;
+            const int outlineWidth = 4;
             var newX1 = x1 + outlineWidth;
             var newX2 = x2 - outlineWidth;
             var newY1 = y1 + outlineWidth;
@@ -100,6 +100,13 @@ namespace src.Canvas.Map
             outline.effectColor = color;
             outline.effectDistance = new Vector2(outlineWidth, outlineWidth);
 
+            const int nftLogoDefaultSize = 30;
+            var nftLogo = landObject.transform.Find("NftLogo").gameObject.GetComponent<Image>();
+            nftLogo.gameObject.SetActive(land.isNft);
+            var nftLogoTransform = nftLogo.GetComponent<RectTransform>();
+            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Math.Min(newY2 - newY1, nftLogoDefaultSize));
+            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Math.Min(newX2 - newX1, nftLogoDefaultSize));
+            
             return landObject;
         }
 

@@ -1,34 +1,37 @@
-using src;
-using src.Canvas;
 using src.Model;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class LandView : MonoBehaviour
+namespace src.Canvas.Map
 {
-    private Land land;
-
-    public TextMeshProUGUI firstLabel;
-    public TextMeshProUGUI secondLabel;
-    public GameObject nftToggle;
-    public ActionButton navigateInMap;
-
-    void Start()
+    public class LandView : MonoBehaviour
     {
-        navigateInMap.AddListener(() => { GameManager.INSTANCE.NavigateInMap(land); });
-    }
+        private Land land;
 
-    public void SetLand(Land land)
-    {
-        this.land = land;
-        firstLabel.SetText("Land #" + land.id);
-        secondLabel.SetText("Size: " + GetLandSize(land) + " (" + land.x1 + ", " + land.y1 + ", " + land.x2 + ", " +
-                            land.y2 + ")");
-        nftToggle.SetActive(land.isNft);
-    }
+        public TextMeshProUGUI landIdLabel;
+        public TextMeshProUGUI coordinateLabel;
+        public TextMeshProUGUI sizeLabel;
+        public GameObject nftToggle;
+        public Button button;
 
-    private long GetLandSize(Land land1)
-    {
-        return (land1.x2 - land1.x1) * (land1.y2 - land1.y1);
+        private void Start()
+        {
+            button.onClick.AddListener(() => GameManager.INSTANCE.NavigateInMap(land));
+        }
+
+        public void SetLand(Land land)
+        {
+            this.land = land;
+            landIdLabel.SetText("#" + land.id);
+            coordinateLabel.SetText("(" + land.x1 + ", " + land.y1 + ", " + land.x2 + ", " + land.y2 + ")");
+            sizeLabel.SetText(GetLandSize(land).ToString());
+            nftToggle.SetActive(land.isNft);
+        }
+
+        private long GetLandSize(Land land1)
+        {
+            return (land1.x2 - land1.x1) * (land1.y2 - land1.y1);
+        }
     }
 }

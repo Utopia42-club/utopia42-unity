@@ -17,6 +17,8 @@ namespace src.Canvas.Map
 
         public void SetLands(List<Land> lands)
         {
+            if (lands == null)
+                return;
             foreach (var land in lands)
             {
                 var l = Instantiate(Resources.Load<GameObject>(LAND_VIEW_PREAB), landsList.transform);
@@ -32,6 +34,7 @@ namespace src.Canvas.Map
                 foreach (var land in landObjects) DestroyImmediate(land);
                 landObjects.Clear();
             }
+
             gameObject.SetActive(false);
         }
     }

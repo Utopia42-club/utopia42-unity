@@ -21,7 +21,7 @@ namespace src
 
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
         private State state = State.LOADING;
-        private State previousState;
+        private State? previousState;
 
         private List<Dialog> dialogs = new List<Dialog>();
         private bool captureAllKeyboardInputOrig;
@@ -35,7 +35,7 @@ namespace src
                 BrowserConnector.INSTANCE.ReportGameState(newState, () => { }, () => { });
             });
         }
-        
+
         void Update()
         {
             if (Input.GetButtonDown("Cancel"))
@@ -97,7 +97,7 @@ namespace src
             pos = FindStartingY(pos.Value);
             StartCoroutine(DoMovePlayerTo(pos.Value, true));
         }
-        
+
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
             SetState(State.LOADING);
@@ -175,13 +175,16 @@ namespace src
                 .WithContent(OwnedLandsDialogContent.PREFAB);
             var content = ownedLandsListDialog.GetContent().GetComponent<OwnedLandsDialogContent>();
             content.SetLands(UtopiaService.INSTANCE.GetLandsFor(Settings.WalletId()));
-            ownedLandsListDialog.withOnClose(CloseOwnedLandsList);
+            ownedLandsListDialog.withOnClose(() =>
+            {
+                ownedLandsListDialog = null;
+            });
         }
 
         private void CloseOwnedLandsList()
         {
             if (!ownedLandsListDialog) return;
-            CloseDialog(ownedLandsListDialog, previousState);
+            CloseDialog(ownedLandsListDialog);
             ownedLandsListDialog = null;
         }
 
@@ -208,7 +211,7 @@ namespace src
                 EthereumClientService.INSTANCE.SetNetwork(network);
                 SetState(State.LOADING);
                 StartCoroutine(UtopiaService.INSTANCE.Initialize(Loading.INSTANCE,
-                    () => this.InitPlayerForWallet(startingPosition)));
+                    () => InitPlayerForWallet(startingPosition)));
             }
             else
             {
@@ -418,12 +421,14 @@ namespace src
             return dialog;
         }
 
-        public void CloseDialog(Dialog dialog, State targetState = State.PLAYING)
+        public void CloseDialog(Dialog dialog, State? targetState = null)
         {
             Destroy(dialog.gameObject);
             dialogs.Remove(dialog);
             if (dialogs.Count == 0)
-                SetState(targetState);
+            {
+                SetState(targetState ?? (previousState ?? State.PLAYING));
+            }
         }
 
         public void FreezeGame()
@@ -442,7 +447,7 @@ namespace src
             WebGLInput.captureAllKeyboardInput = captureAllKeyboardInputOrig == null || captureAllKeyboardInputOrig;
 #endif
         }
-        
+
         public void NavigateInMap(Land land)
         {
             CloseOwnedLandsList();
