@@ -36,7 +36,7 @@ namespace src.MetaBlocks.LightBlock
             }
 
             var props = GetProps();
-            light.color = Color.yellow;
+            light.color = props.color;
             light.range = props.range;
             light.intensity = props.intensity;
         }
@@ -104,6 +104,7 @@ namespace src.MetaBlocks.LightBlock
                 {
                     props.intensity = value.intensity;
                     props.range = value.range;
+                    props.color = value.color;
                 }
 
                 GetBlock().SetProps(props, land);

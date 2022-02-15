@@ -185,7 +185,7 @@ namespace src.MetaBlocks.TdObjectBlock
             Player.INSTANCE.HideTdObjectHighlightBox();
         }
 
-        public void UpdateStateAndIcon(StateMsg msg)
+        private void UpdateStateAndIcon(StateMsg msg)
         {
             stateMsg = msg;
             if (snackItem != null)

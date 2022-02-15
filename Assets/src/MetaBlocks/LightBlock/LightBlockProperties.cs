@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace src.MetaBlocks.LightBlock
 {
@@ -7,6 +8,7 @@ namespace src.MetaBlocks.LightBlock
     {
         public float intensity;
         public float range;
+        public Color color;
 
         public LightBlockProperties()
         {
@@ -18,6 +20,7 @@ namespace src.MetaBlocks.LightBlock
             {
                 intensity = obj.intensity;
                 range = obj.range;
+                color = obj.color;
             }
         }
 
@@ -27,7 +30,7 @@ namespace src.MetaBlocks.LightBlock
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
 
-            return obj is LightBlockProperties props && intensity == props.intensity && range == props.range;
+            return obj is LightBlockProperties props && intensity == props.intensity && range == props.range && color.Equals(props.color);
         }
 
         public object Clone()
@@ -35,7 +38,8 @@ namespace src.MetaBlocks.LightBlock
             return new LightBlockProperties
             {
                 range = range,
-                intensity = intensity
+                intensity = intensity,
+                color = color,
             };
         }
     }
