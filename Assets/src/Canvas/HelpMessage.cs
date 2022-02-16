@@ -24,7 +24,7 @@ namespace src.Canvas
                     break;
                 case (GameManager.State.MAP):
                     gameObject.SetActive(true);
-                    textMesh.SetText("F2: Open Side Panel");
+                    textMesh.SetText("F2: Toggle Side Panel");
                     break;
                 default:
                     gameObject.SetActive(false);

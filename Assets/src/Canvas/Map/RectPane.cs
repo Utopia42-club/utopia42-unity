@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using src.Model;
 using src.Service;
 using UnityEngine;
 using UnityEngine.UI;
-using Debug = System.Diagnostics.Debug;
 
 namespace src.Canvas.Map
 {
@@ -102,9 +100,16 @@ namespace src.Canvas.Map
             outline.effectColor = color;
             outline.effectDistance = new Vector2(outlineWidth, outlineWidth);
 
+            Color? c = null;
+            if (land != null && land.properties != null && land.properties.color != null)
+            {
+                c = Colors.ConvertHexToColor(land.properties.color);
+            }
+            landObject.GetComponent<Image>().color = c ?? Colors.MAP_DEFAULT_LAND_COLOR;
+            
             const int nftLogoDefaultSize = 30;
             var nftLogo = landObject.transform.Find("NftLogo").gameObject.GetComponent<Image>();
-            nftLogo.gameObject.SetActive(land.isNft);
+            nftLogo.gameObject.SetActive(land != null && land.isNft);
             var nftLogoTransform = nftLogo.GetComponent<RectTransform>();
             nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
                 Math.Min(newY2 - newY1, nftLogoDefaultSize));
