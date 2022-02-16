@@ -8,7 +8,7 @@ namespace src.MetaBlocks.LightBlock
     {
         public float intensity;
         public float range;
-        public Color color;
+        public string hexColor;
 
         public LightBlockProperties()
         {
@@ -20,7 +20,7 @@ namespace src.MetaBlocks.LightBlock
             {
                 intensity = obj.intensity;
                 range = obj.range;
-                color = obj.color;
+                hexColor = obj.hexColor;
             }
         }
 
@@ -30,7 +30,7 @@ namespace src.MetaBlocks.LightBlock
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
 
-            return obj is LightBlockProperties props && intensity == props.intensity && range == props.range && color.Equals(props.color);
+            return obj is LightBlockProperties props && intensity == props.intensity && range == props.range && hexColor.Equals(props.hexColor);
         }
 
         public object Clone()
@@ -39,7 +39,7 @@ namespace src.MetaBlocks.LightBlock
             {
                 range = range,
                 intensity = intensity,
-                color = color,
+                hexColor = hexColor,
             };
         }
     }
