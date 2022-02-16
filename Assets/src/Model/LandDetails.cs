@@ -9,7 +9,7 @@ namespace src.Model
     {
         public string v;
         public string wallet;
-        public Dictionary<string, MetaBlock> metadata;
+        public Dictionary<string, MetaBlockData> metadata;
         public Dictionary<string, Block> changes;
 
         public static Vector3Int PraseKey(string key)

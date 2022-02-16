@@ -64,7 +64,7 @@ namespace src.MetaBlocks
         {
             if (Equals(properties, props)) return;
             properties = props;
-            UtopiaService.INSTANCE.MarkLandChanged(land);
+            WorldService.INSTANCE.MarkLandChanged(land);
             if (blockObject != null)
                 blockObject.OnDataUpdate();
         }

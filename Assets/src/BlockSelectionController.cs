@@ -179,7 +179,7 @@ namespace src
 
             if (player.PlaceBlock.gameObject.activeSelf && Input.GetMouseButtonDown(1))
             {
-                player.PutBlock(player.PlaceBlock.position, UtopiaService.INSTANCE.GetBlockType(player.selectedBlockId));
+                player.PutBlock(player.PlaceBlock.position, WorldService.INSTANCE.GetBlockType(player.selectedBlockId));
             }
         }
 

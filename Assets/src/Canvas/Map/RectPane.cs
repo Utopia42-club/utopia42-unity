@@ -40,7 +40,7 @@ namespace src.Canvas.Map
 
         private void Init()
         {
-            UtopiaService service = UtopiaService.INSTANCE;
+            WorldService service = WorldService.INSTANCE;
             if (!service.IsInitialized()) return;
             landContainer.localScale = Vector3.one;
 

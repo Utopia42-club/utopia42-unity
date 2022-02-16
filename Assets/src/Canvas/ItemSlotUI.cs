@@ -17,7 +17,7 @@ namespace src.Canvas
 
             if (itemSlot != null && itemSlot.GetStack() != null)
             {
-                slotIcon.sprite = UtopiaService.INSTANCE.GetBlockType(itemSlot.GetStack().id).GetIcon();
+                slotIcon.sprite = WorldService.INSTANCE.GetBlockType(itemSlot.GetStack().id).GetIcon();
                 slotAmount.text = "";
                 slotAmount.enabled = true;
                 slotIcon.enabled = true;

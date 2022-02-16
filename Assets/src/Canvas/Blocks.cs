@@ -15,7 +15,7 @@ namespace src.Canvas
             {
                 foreach (var sp in sprites)
                 {
-                    var id = UtopiaService.INSTANCE.GetBlockType(sp.name).id;
+                    var id = WorldService.INSTANCE.GetBlockType(sp.name).id;
                     blockIcons[id] = sp;
                 }
             }

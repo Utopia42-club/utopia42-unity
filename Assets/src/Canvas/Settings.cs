@@ -105,7 +105,7 @@ namespace src.Canvas
             }
 
             networkInput.interactable = !EthereumClientService.INSTANCE.IsInited();
-            saveGameButton.interactable = !IsGuest() && UtopiaService.INSTANCE.HasChange();
+            saveGameButton.interactable = !IsGuest() && WorldService.INSTANCE.HasChange();
             editProfileButton.interactable = !IsGuest();
 
             saveGameButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());

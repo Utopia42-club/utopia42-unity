@@ -15,7 +15,7 @@ namespace src.Canvas
         {
             var manager = GameManager.INSTANCE;
 
-            for (var i = 1; i < UtopiaService.INSTANCE.GetBlockTypesCount(); i++)
+            for (var i = 1; i < WorldService.INSTANCE.GetBlockTypesCount(); i++)
             {
                 GameObject newSlot = Instantiate(slotPrefab, transform);
 
