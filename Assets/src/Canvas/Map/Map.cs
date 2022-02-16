@@ -15,8 +15,6 @@ namespace src.Canvas.Map
             GameManager.INSTANCE.stateChange.AddListener(
                 state =>
                 {
-                    if (gameObject.activeInHierarchy && state == GameManager.State.OWNED_LANDS_DIALOG)
-                        return;
                     gameObject.SetActive(state == GameManager.State.MAP);
                     CloseLandBuyDialogState();
                 }

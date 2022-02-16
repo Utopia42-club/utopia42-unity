@@ -25,7 +25,6 @@ namespace src
 
         private List<Dialog> dialogs = new List<Dialog>();
         private bool captureAllKeyboardInputOrig;
-        private Dialog ownedLandsListDialog;
 
         void Start()
         {
@@ -57,13 +56,6 @@ namespace src
                     SetState(State.PLAYING);
                 else if (state == State.PLAYING)
                     SetState(State.INVENTORY);
-            }
-            else if (Input.GetButtonDown("OwnedLandsList"))
-            {
-                if (state == State.PLAYING || state == State.MAP)
-                    ShowOwnedLandsList();
-                else
-                    CloseOwnedLandsList();
             }
         }
 
@@ -165,27 +157,6 @@ namespace src
 
                 if (!coll) return feet;
             }
-        }
-
-        private void ShowOwnedLandsList()
-        {
-            ownedLandsListDialog = OpenDialog(State.OWNED_LANDS_DIALOG);
-            ownedLandsListDialog
-                .WithTitle("Owned Lands")
-                .WithContent(OwnedLandsDialogContent.PREFAB);
-            var content = ownedLandsListDialog.GetContent().GetComponent<OwnedLandsDialogContent>();
-            content.SetLands(UtopiaService.INSTANCE.GetLandsFor(Settings.WalletId()));
-            ownedLandsListDialog.withOnClose(() =>
-            {
-                ownedLandsListDialog = null;
-            });
-        }
-
-        private void CloseOwnedLandsList()
-        {
-            if (!ownedLandsListDialog) return;
-            CloseDialog(ownedLandsListDialog);
-            ownedLandsListDialog = null;
         }
 
         public void ReturnToGame()
@@ -450,8 +421,6 @@ namespace src
 
         public void NavigateInMap(Land land)
         {
-            CloseOwnedLandsList();
-            SetState(State.MAP);
             var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
             mapInputManager.NavigateInMap(land);
         }
@@ -469,8 +438,7 @@ namespace src
             DIALOG,
             PROFILE_DIALOG,
             MOVING_OBJECT,
-            FREEZE,
-            OWNED_LANDS_DIALOG,
+            FREEZE
         }
     }
 }

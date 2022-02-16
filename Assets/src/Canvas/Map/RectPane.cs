@@ -27,8 +27,6 @@ namespace src.Canvas.Map
 
             manager.stateChange.AddListener(state =>
             {
-                if (gameObject.activeInHierarchy && state == GameManager.State.OWNED_LANDS_DIALOG)
-                    return;
                 if (state == GameManager.State.MAP)
                     Init();
                 else
