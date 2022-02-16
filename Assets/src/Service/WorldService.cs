@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
+using src.MetaBlocks.LightBlock;
 using src.MetaBlocks.LinkBlock;
 using src.MetaBlocks.MarkerBlock;
 using src.MetaBlocks.TdObjectBlock;
@@ -64,7 +65,8 @@ namespace src.Service
             types[32] = new VideoBlockType(32);
             types[33] = new LinkBlockType(33);
             types[34] = new TdObjectBlockType(34);
-            types[35] = new MarkerBlockType(MarkerBlockTypeId);
+            types[35] = new MarkerBlockType(35);
+            types[36] = new LightBlockType(36);
         }
 
         public List<string> GetNonMetaBlockTypes()

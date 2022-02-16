@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using src.MetaBlocks.MarkerBlock;
 using src.Model;
+using src.Service;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace src.Canvas.Map
 {
-    public class OwnedLandsDialogContent : MonoBehaviour
+    public class OwnedLands : MonoBehaviour
     {
         public static readonly string PREFAB = "OwnedLands";
         public static readonly string LAND_VIEW_PREAB = "LandView";
@@ -15,8 +14,15 @@ namespace src.Canvas.Map
 
         public GameObject landsList;
 
+        private void Start()
+        {
+            SetLands(UtopiaService.INSTANCE.GetLandsFor(Settings.WalletId()));
+        }
+
         public void SetLands(List<Land> lands)
         {
+            if (lands == null)
+                return;
             foreach (var land in lands)
             {
                 var l = Instantiate(Resources.Load<GameObject>(LAND_VIEW_PREAB), landsList.transform);
@@ -32,6 +38,7 @@ namespace src.Canvas.Map
                 foreach (var land in landObjects) DestroyImmediate(land);
                 landObjects.Clear();
             }
+
             gameObject.SetActive(false);
         }
     }

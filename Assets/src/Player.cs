@@ -21,6 +21,7 @@ namespace src
         [SerializeField] private float walkSpeed = 6f;
         [SerializeField] private float sprintSpeed = 12f;
         [SerializeField] private float jumpHeight = 1;
+        [SerializeField] private float sprintJumpHeight = 1.25f;
         [SerializeField] private float gravity = -9.8f;
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
@@ -116,7 +117,7 @@ namespace src
                 velocity.y = 0f;
 
             if (jumpRequest)
-                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                velocity.y = Mathf.Sqrt((sprinting ? sprintJumpHeight : jumpHeight) * -2f * gravity);
 
             if (!floating && !controller.isGrounded)
                 velocity.y += gravity * Time.fixedDeltaTime;

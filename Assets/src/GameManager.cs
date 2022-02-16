@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using src.Canvas;
 using src.Canvas.Map;
 using src.MetaBlocks.TdObjectBlock;
@@ -20,11 +21,10 @@ namespace src
 
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
         private State state = State.LOADING;
-        private State previousState;
+        private State? previousState;
 
         private List<Dialog> dialogs = new List<Dialog>();
         private bool captureAllKeyboardInputOrig;
-        private Dialog ownedLandsListDialog;
 
         void Start()
         {
@@ -56,13 +56,6 @@ namespace src
                     SetState(State.PLAYING);
                 else if (state == State.PLAYING)
                     SetState(State.INVENTORY);
-            }
-            else if (Input.GetButtonDown("OwnedLandsList"))
-            {
-                if (state == State.PLAYING || state == State.MAP)
-                    ShowOwnedLandsList();
-                else
-                    CloseOwnedLandsList();
             }
         }
 
@@ -142,7 +135,7 @@ namespace src
 
         public Vector3 FindStartingY(Vector3 pos, Func<VoxelPosition, bool> willBeSolid = null)
         {
-            var service = WorldService.INSTANCE;
+            var service = UtopiaService.INSTANCE;
             Func<VoxelPosition, bool> isSolid;
             if (willBeSolid == null)
                 isSolid = voxelPosition => service.IsSolid(voxelPosition);
@@ -164,24 +157,6 @@ namespace src
 
                 if (!coll) return feet;
             }
-        }
-
-        private void ShowOwnedLandsList()
-        {
-            ownedLandsListDialog = OpenDialog(State.OWNED_LANDS_DIALOG);
-            ownedLandsListDialog
-                .WithTitle("Owned Lands")
-                .WithContent(OwnedLandsDialogContent.PREFAB);
-            var content = ownedLandsListDialog.GetContent().GetComponent<OwnedLandsDialogContent>();
-            content.SetLands(WorldService.INSTANCE.GetLandsFor(Settings.WalletId()));
-            ownedLandsListDialog.withOnClose(CloseOwnedLandsList);
-        }
-
-        private void CloseOwnedLandsList()
-        {
-            if (!ownedLandsListDialog) return;
-            CloseDialog(ownedLandsListDialog, previousState);
-            ownedLandsListDialog = null;
         }
 
         public void ReturnToGame()
@@ -207,7 +182,7 @@ namespace src
                 EthereumClientService.INSTANCE.SetNetwork(network);
                 SetState(State.LOADING);
                 StartCoroutine(WorldService.INSTANCE.Initialize(Loading.INSTANCE,
-                    () => this.InitPlayerForWallet(startingPosition)));
+                    () => InitPlayerForWallet(startingPosition)));
             }
             else
             {
@@ -417,12 +392,14 @@ namespace src
             return dialog;
         }
 
-        public void CloseDialog(Dialog dialog, State targetState = State.PLAYING)
+        public void CloseDialog(Dialog dialog, State? targetState = null)
         {
             Destroy(dialog.gameObject);
             dialogs.Remove(dialog);
             if (dialogs.Count == 0)
-                SetState(targetState);
+            {
+                SetState(targetState ?? (previousState ?? State.PLAYING));
+            }
         }
 
         public void FreezeGame()
@@ -444,8 +421,6 @@ namespace src
 
         public void NavigateInMap(Land land)
         {
-            CloseOwnedLandsList();
-            SetState(State.MAP);
             var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
             mapInputManager.NavigateInMap(land);
         }
@@ -463,8 +438,7 @@ namespace src
             DIALOG,
             PROFILE_DIALOG,
             MOVING_OBJECT,
-            FREEZE,
-            OWNED_LANDS_DIALOG,
+            FREEZE
         }
     }
 }

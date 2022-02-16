@@ -4,6 +4,7 @@ using src.Model;
 using src.Utils;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace src.Canvas.Map
 {
@@ -13,7 +14,10 @@ namespace src.Canvas.Map
         [SerializeField] RectTransform horizontal;
         [SerializeField] TextMeshProUGUI positionText;
         [SerializeField] RectPane landRect;
+        [SerializeField] GameObject sidePanel;
+
         private bool dragging = false;
+        private bool scrollLock = false;
         private Vector3 lastDragPos;
         private Vector3Int startDrawPos;
         private bool drawing = false;
@@ -31,6 +35,12 @@ namespace src.Canvas.Map
             gameManager = GameManager.INSTANCE;
         }
 
+        private void OnEnable()
+        {
+            if (sidePanel.activeSelf)
+                ToggleSidePanel();
+        }
+
         void Update()
         {
             var mousePos = Input.mousePosition;
@@ -38,6 +48,11 @@ namespace src.Canvas.Map
             var mouseLocalPos = ScreenToLandContainerLocal(mousePos);
             var realPosition = Vectors.FloorToInt(mouseLocalPos);
             positionText.text = $"{realPosition.x} {realPosition.y}";
+
+            if (Input.GetButtonDown("Menu"))
+            {
+                ToggleSidePanel();
+            }
 
             if (IsInputEnabled())
             {
@@ -53,7 +68,7 @@ namespace src.Canvas.Map
                             StartDrag(mousePosInt);
                     }
 
-                    if (Input.mouseScrollDelta.y != 0)
+                    if (!scrollLock && Input.mouseScrollDelta.y != 0)
                     {
                         var multiplier = Input.mouseScrollDelta.y < 0 ? (float) 0.5 : 2;
                         var scale = landRect.landContainer.localScale.x * multiplier;
@@ -82,10 +97,24 @@ namespace src.Canvas.Map
             SetLinesPos(mousePosInt);
         }
 
+        public void ToggleSidePanel()
+        {
+            sidePanel.SetActive(!sidePanel.activeSelf);
+        }
+
+        public void LockScroll()
+        {
+            scrollLock = true;
+        }
+
+        public void UnLockScroll()
+        {
+            scrollLock = false;
+        }
+
         private bool IsInputEnabled()
         {
-            return !map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen() &&
-                   gameManager.GetState() != GameManager.State.OWNED_LANDS_DIALOG;
+            return !map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen();
         }
 
         private Vector3 ScreenToLandContainerLocal(Vector3 pos)
