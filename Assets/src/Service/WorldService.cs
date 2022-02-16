@@ -236,6 +236,7 @@ namespace src.Service
             yield return LoadDetails(loading, (land, details) =>
             {
                 details = migrationService.Migrate(land, details);
+                land.properties = details.properties;
                 if (details.metadata != null)
                     ReadMetadata(land, details, metaBlocks);
                 if (details.changes != null)
@@ -337,6 +338,7 @@ namespace src.Service
                     details.metadata = new Dictionary<string, MetaBlockData>();
                     details.v = "0.2.0";
                     details.wallet = wallet;
+                    details.properties = land.properties;
                     landDetailsMap[land.id] = details;
                     filteredLands.Add(land);
                 }
@@ -446,6 +448,28 @@ namespace src.Service
 
             vc[pos.local] = id;
             changedLands.Add(land);
+        }
+
+        public LandProperties GetLandProperties(int landId)
+        {
+            if (landRegistry.GetLands().TryGetValue(landId, out Land land))
+            {
+                return land.properties;
+            }
+
+            return null;
+        }
+        
+        public bool UpdateLandProperties(int landId, LandProperties properties)
+        {
+            if (landRegistry.GetLands().TryGetValue(landId, out Land land))
+            {
+                land.properties = properties;
+                MarkLandChanged(land);
+                return true;
+            }
+
+            return false;
         }
 
         internal void RefreshChangedLands(List<Land> ownerLands)
