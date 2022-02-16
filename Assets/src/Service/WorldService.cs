@@ -24,6 +24,7 @@ namespace src.Service
         private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
         private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
         private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
+        private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
         private HashSet<Land> changedLands = new HashSet<Land>();
         private readonly LandRegistry landRegistry = new LandRegistry();
 
@@ -365,17 +366,9 @@ namespace src.Service
 
         public List<Marker> GetMarkers()
         {
-            var markers = new List<Marker>();
-            foreach (var chunkMetas in metaBlocks)
-            foreach (var voxelMeta in chunkMetas.Value)
-            {
-                var props = voxelMeta.Value.GetProps();
-                if (!(props is MarkerBlockProperties properties)) continue;
-                var vp = new VoxelPosition(chunkMetas.Key, voxelMeta.Key);
-                markers.Add(new Marker(properties.name, vp.ToWorld()));
-            }
-
-            return markers;
+            return (from marker in markerBlocks
+                let props = (MarkerBlockProperties) marker.Value.GetProps()
+                select new Marker(props?.name, marker.Key)).ToList();
         }
 
         /*
@@ -416,8 +409,10 @@ namespace src.Service
             changedLands.Add(land);
         }
 
-        public void OnMetaRemoved(MetaBlock block)
+        public void OnMetaRemoved(MetaBlock block, Vector3Int position)
         {
+            if (block.type is MarkerBlockType)
+                markerBlocks.Remove(position);
             if (block.land != null)
                 changedLands.Add(block.land);
         }
@@ -431,7 +426,12 @@ namespace src.Service
                 metaBlocks[pos.chunk] = metas;
             }
 
-            metas[pos.local] = ((MetaBlockType) GetBlockType(id)).New(land, "");
+            var type = (MetaBlockType) GetBlockType(id);
+            metas[pos.local] = type.New(land, "");
+
+            if (type is MarkerBlockType)
+                markerBlocks.Add(pos.ToWorld(), metas[pos.local]);
+
             changedLands.Add(land);
 
             return metas;
@@ -459,7 +459,7 @@ namespace src.Service
 
             return null;
         }
-        
+
         public bool UpdateLandProperties(int landId, LandProperties properties)
         {
             if (landRegistry.GetLands().TryGetValue(landId, out Land land))

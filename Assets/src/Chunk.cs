@@ -225,7 +225,7 @@ namespace src
         {
             var block = metaBlocks[pos.local];
             metaBlocks.Remove(pos.local);
-            WorldService.INSTANCE.OnMetaRemoved(block);
+            WorldService.INSTANCE.OnMetaRemoved(block, new VoxelPosition(coordinate, pos.local).ToWorld()); // TODO ?
             block.Destroy();
         }
 
