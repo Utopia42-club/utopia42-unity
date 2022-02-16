@@ -40,6 +40,8 @@ namespace src.Canvas.Map
         private GameManager manager;
         private Image landColorButtonImage;
         private FlexibleColorPicker picker;
+        
+        private List<Action> onCloseActions = new List<Action>();
 
         void Start()
         {
@@ -65,7 +67,15 @@ namespace src.Canvas.Map
             if (picker != null)
             {
                 landColorButtonImage.color = picker.color;
+                var newColor = "#" + ColorUtility.ToHtmlStringRGB(picker.color);
+                land.properties ??= new LandProperties();
+                land.properties.color = newColor;
             }
+        }
+
+        public void WithOneClose(Action action)
+        {
+            onCloseActions.Add(action);
         }
 
         private void ToggleColorPicker()
@@ -83,7 +93,15 @@ namespace src.Canvas.Map
             {
                 pickerInstance = Instantiate(colorPickerPrefab, colorPickerPlaceHolder.transform);
                 picker = pickerInstance.GetComponent<FlexibleColorPicker>();
-                // picker.SetNewColor(land.color); //FIXME
+                if (land.properties != null && land.properties.color != null)
+                {
+                    var color = Colors.ConvertHexToColor(land.properties.color);
+                    if (color.HasValue)
+                        picker.SetColor(color.Value);
+                }
+                else
+                    picker.SetColor(Colors.MAP_DEFAULT_LAND_COLOR);
+
                 isColorPickerOpen = true;
             }
         }
@@ -114,6 +132,7 @@ namespace src.Canvas.Map
 
             gameObject.SetActive(false);
             manager.SetProfileDialogState(false);
+            onCloseActions.ForEach(action => action());   
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -121,7 +140,7 @@ namespace src.Canvas.Map
             if (isColorPickerOpen)
                 ToggleColorPicker();
         }
-        
+
         public void Open(Land land, Profile profile)
         {
             gameObject.SetActive(true);
@@ -169,7 +188,11 @@ namespace src.Canvas.Map
             landNftIcon.SetActive(land.isNft);
             transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Settings.WalletId()));
             toggleNftButton.gameObject.SetActive(land.owner.Equals(Settings.WalletId()));
-            // landColorButtonImage.color = land.color; //FIXME
+            
+            Color? color = null;
+            if (land.properties != null && land.properties.color != null)
+                color = Colors.ConvertHexToColor(land.properties.color);
+            landColorButtonImage.color = color ?? Colors.MAP_DEFAULT_LAND_COLOR;
 
             if (toggleNftButton.gameObject.activeSelf)
             {

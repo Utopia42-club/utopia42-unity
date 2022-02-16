@@ -41,6 +41,6 @@ public partial class UtopiaApi : MonoBehaviour
     private class PlaceBlockRequest
     {
         public string type;
-        public SerializableVector3Int position;
+        public SerializableVector3 position;
     }
 }

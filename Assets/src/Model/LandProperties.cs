@@ -2,6 +2,6 @@
 {
     public class LandProperties
     {
-        private string color;
+        public string color;
     }
 }

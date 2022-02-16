@@ -19,6 +19,10 @@ namespace src.Model
         public int y;
         public int z;
 
+        public SerializableVector3Int()
+        {
+        }
+
         public SerializableVector3Int(Vector3Int v) : this(v.x, v.y, v.z)
         {
         }

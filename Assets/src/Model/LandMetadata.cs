@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace src.Model
 {
-    [System.Serializable]
+    [Serializable]
     public class LandMetadata
     {
         public long landId;

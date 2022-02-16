@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -24,7 +23,6 @@ namespace src.Canvas
                         break;
                     default:
                         gameObject.SetActive(false);
-                        textMesh.SetText("");
                         break;
                 }
             });

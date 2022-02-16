@@ -20,6 +20,10 @@ namespace src.Model
         public float y;
         public float z;
 
+        public SerializableVector3()
+        {
+        }
+
         public SerializableVector3(Vector3 v) : this(v.x, v.y, v.z)
         {
         }

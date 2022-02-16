@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using src.Model;
 using src.Service;
 using UnityEngine;
 using UnityEngine.UI;
+using Debug = System.Diagnostics.Debug;
 
 namespace src.Canvas.Map
 {
@@ -11,8 +13,9 @@ namespace src.Canvas.Map
     {
         [SerializeField] internal Transform landContainer;
         [SerializeField] private RectTransform playerPosIndicator;
-        private readonly HashSet<GameObject> landIndicators = new HashSet<GameObject>();
+        private readonly Dictionary<long, GameObject> landIndicators = new Dictionary<long, GameObject>();
         private readonly HashSet<GameObject> drawnLandIndicators = new HashSet<GameObject>();
+
 
         [SerializeField] public GameObject landPrefab;
 
@@ -64,7 +67,7 @@ namespace src.Canvas.Map
 
         private void DestroyRects()
         {
-            foreach (var lo in landIndicators)
+            foreach (var lo in landIndicators.Values)
                 DestroyImmediate(lo);
             landIndicators.Clear();
             drawnLandIndicators.Clear();
@@ -78,7 +81,8 @@ namespace src.Canvas.Map
             selectionHandler.land = land;
             selectionHandler.walletId = walletId;
             selectionHandler.rectPane = this;
-            landIndicators.Add(landObject);
+            if (land != null)
+                landIndicators[land.id] = landObject;
 
             const int outlineWidth = 4;
             var newX1 = x1 + outlineWidth;
@@ -102,9 +106,11 @@ namespace src.Canvas.Map
             var nftLogo = landObject.transform.Find("NftLogo").gameObject.GetComponent<Image>();
             nftLogo.gameObject.SetActive(land.isNft);
             var nftLogoTransform = nftLogo.GetComponent<RectTransform>();
-            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Math.Min(newY2 - newY1, nftLogoDefaultSize));
-            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Math.Min(newX2 - newX1, nftLogoDefaultSize));
-            
+            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
+                Math.Min(newY2 - newY1, nftLogoDefaultSize));
+            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
+                Math.Min(newX2 - newX1, nftLogoDefaultSize));
+
             return landObject;
         }
 
@@ -112,7 +118,6 @@ namespace src.Canvas.Map
         {
             DestroyImmediate(drawingObject);
             drawnLandIndicators.Remove(drawingObject);
-            landIndicators.Remove(drawingObject);
         }
 
         internal GameObject DrawAt(int x, int y)
@@ -197,17 +202,17 @@ namespace src.Canvas.Map
         private int ForEachIndicator(int seed, Func<int, int, int, int, int, int> function, GameObject ignore)
         {
             var current = seed;
-            foreach (var li in landIndicators)
+            foreach (var li in landIndicators.Values)
             {
                 if (li != ignore)
                 {
                     var transform = li.GetComponent<RectTransform>();
                     var or = transform.rect;
                     var olp = transform.localPosition;
-                    int x1 = MapInputManager.RoundDown((int) olp.x);
-                    int x2 = MapInputManager.RoundUp(olp.x + (int) or.width);
-                    int y1 = MapInputManager.RoundDown((int) olp.y);
-                    int y2 = MapInputManager.RoundUp(olp.y + (int) or.height);
+                    var x1 = MapInputManager.RoundDown((int) olp.x);
+                    var x2 = MapInputManager.RoundUp(olp.x + (int) or.width);
+                    var y1 = MapInputManager.RoundDown((int) olp.y);
+                    var y2 = MapInputManager.RoundUp(olp.y + (int) or.height);
 
                     current = function.Invoke(x1, x2, y1, y2, current);
                 }
@@ -227,7 +232,8 @@ namespace src.Canvas.Map
 
                 var localPosition = transform.localPosition;
                 land.startCoordinate = new SerializableVector3Int((int) localPosition.x, 0, (int) localPosition.y);
-                land.endCoordinate = new SerializableVector3Int(land.startCoordinate.x+(int)r.width, 0,land.startCoordinate.z+(int)r.height);
+                land.endCoordinate = new SerializableVector3Int(land.startCoordinate.x + (int) r.width, 0,
+                    land.startCoordinate.z + (int) r.height);
                 drawn.Add(land);
             }
 
@@ -257,8 +263,18 @@ namespace src.Canvas.Map
             if (!selectedLand) return;
             var landProfileDialog = LandProfileDialog.INSTANCE;
             landProfileDialog.Open(selectedLand.land, Profile.LOADING_PROFILE);
+            landProfileDialog.WithOneClose(() => { UpdateLandColor(selectedLand.land); });
             ProfileLoader.INSTANCE.load(selectedLand.walletId, landProfileDialog.SetProfile,
                 () => landProfileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
+        }
+
+        private void UpdateLandColor(Land land)
+        {
+            if (land.properties != null && land.properties.color != null)
+            {
+                landIndicators[selectedLand.land.id].GetComponent<Image>().color =
+                    Colors.ConvertHexToColor(land.properties.color).Value;
+            }
         }
 
         public void SetTargetLand(Land land)

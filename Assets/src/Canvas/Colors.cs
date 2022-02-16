@@ -13,5 +13,14 @@ namespace src.Canvas
         public static readonly Color MAP_OTHERS_LAND_NFT = MAP_OTHERS_LAND;
         public static readonly Color MAP_GRID_LINES = new Color(41 / 255f, 128 / 255f, 185 / 255f, 0.6f);
         public static readonly Color MAP_GRID_ORIGIN_LINES = new Color(192 / 255f, 57 / 255f, 43 / 255f);
+        public static readonly Color MAP_DEFAULT_LAND_COLOR = new Color(149 / 255f, 165 / 255f, 166 / 255f);
+        
+        public static  Color? ConvertHexToColor(string hex)
+        {
+            var validColor = ColorUtility.TryParseHtmlString(hex, out var color);
+            if (validColor)
+                return color;
+            return null;
+        }
     }
 }
