@@ -11,6 +11,7 @@ namespace src.Model
         public string wallet;
         public Dictionary<string, MetaBlockData> metadata;
         public Dictionary<string, Block> changes;
+        public LandProperties properties;
 
         public static Vector3Int PraseKey(string key)
         {

@@ -100,6 +100,8 @@ namespace src.Canvas.Map
         public void ToggleSidePanel()
         {
             sidePanel.SetActive(!sidePanel.activeSelf);
+            if (!sidePanel.activeSelf)
+                UnLockScroll();
         }
 
         public void LockScroll()
@@ -260,7 +262,7 @@ namespace src.Canvas.Map
 
         private void MoveToLandCenter(Land land)
         {
-            var c = ((Vector3)(land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3())) / 2;
+            var c = ((Vector3) (land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3())) / 2;
             var landCenter = new Vector3(c.x, c.z, 0);
             var landContainerScale = landRect.landContainer.localScale;
             landCenter.Scale(new Vector3(landContainerScale.x, landContainerScale.y, 0));

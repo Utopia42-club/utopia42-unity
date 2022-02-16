@@ -14,6 +14,7 @@ namespace src.Model
         public bool isNft;
         public string owner;
         public long ownerIndex;
+        public LandProperties properties;
 
         public override int GetHashCode()
         {
