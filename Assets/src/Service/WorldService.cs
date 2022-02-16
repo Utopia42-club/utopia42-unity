@@ -81,7 +81,7 @@ namespace src.Service
             return blocks;
         }
 
-        public IEnumerator FillChunk(Vector3Int coordinate, byte[,,] voxels)
+        public void FillChunk(Vector3Int coordinate, byte[,,] voxels)
         {
             InitiateChunk(coordinate, voxels);
 
@@ -94,8 +94,6 @@ namespace src.Service
                     voxels[voxel.x, voxel.y, voxel.z] = change.Value;
                 }
             }
-
-            yield return null;
         }
 
 
