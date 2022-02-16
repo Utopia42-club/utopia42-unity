@@ -20,7 +20,6 @@ namespace src.Service
     //TODO refactor into several services
     public class WorldService
     {
-        private const byte MarkerBlockTypeId = 35;
         public static WorldService INSTANCE = new WorldService();
         private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
         private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;

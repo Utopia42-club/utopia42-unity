@@ -16,7 +16,7 @@ namespace src.Canvas.Map
 
         private void Start()
         {
-            SetLands(UtopiaService.INSTANCE.GetLandsFor(Settings.WalletId()));
+            SetLands(WorldService.INSTANCE.GetLandsFor(Settings.WalletId()));
         }
 
         public void SetLands(List<Land> lands)

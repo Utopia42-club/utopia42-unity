@@ -26,8 +26,10 @@ namespace src.Canvas.Map
         {
             this.land = land;
             landIdLabel.SetText("#" + land.id);
-            coordinateLabel.SetText("(" + land.startCoordinate.ToVector3() + " - " +
-                                    land.endCoordinate.ToVector3() + ")");
+            
+            var start = land.startCoordinate;
+            var end = land.startCoordinate;
+            coordinateLabel.SetText($"({start.x}, {start.z} - {end.x}, {end.z})");
             sizeLabel.SetText(GetLandSize(land).ToString());
             nftToggle.SetActive(land.isNft);
         }

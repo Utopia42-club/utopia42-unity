@@ -135,7 +135,7 @@ namespace src
 
         public Vector3 FindStartingY(Vector3 pos, Func<VoxelPosition, bool> willBeSolid = null)
         {
-            var service = UtopiaService.INSTANCE;
+            var service = WorldService.INSTANCE;
             Func<VoxelPosition, bool> isSolid;
             if (willBeSolid == null)
                 isSolid = voxelPosition => service.IsSolid(voxelPosition);

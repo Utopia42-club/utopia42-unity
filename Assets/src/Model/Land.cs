@@ -23,7 +23,7 @@ namespace src.Model
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            if ((obj == null) || GetType() != obj.GetType())
                 return false;
             var land = (Land) obj;
             return id == land.id;
@@ -37,7 +37,8 @@ namespace src.Model
 
         public Rect ToRect()
         {
-            return new Rect(x1, y1, x2 - x1, y2 - y1);
+            return new Rect(startCoordinate.x, startCoordinate.z, 
+                endCoordinate.x - startCoordinate.x, endCoordinate.z - startCoordinate.z);
         }
     }
 }
