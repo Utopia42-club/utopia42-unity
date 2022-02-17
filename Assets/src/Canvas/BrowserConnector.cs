@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Nethereum.RPC.Eth;
 using src.Model;
 using src.Service.Ethereum;
 using src.Utils;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace src.Canvas
 {
@@ -149,13 +147,13 @@ namespace src.Canvas
             dialog.withOnClose(onCancel.Invoke);
             dialog.WithAction("CANCEL", () =>
             {
-                onCancel.Invoke();
                 manager.CloseDialog(dialog);
+                onCancel.Invoke();
             });
             dialog.WithAction("RELOAD", () =>
             {
-                onDone.Invoke();
                 manager.CloseDialog(dialog);
+                onDone.Invoke();
             });
         }
 
