@@ -12,8 +12,10 @@ public partial class UtopiaApi : MonoBehaviour
     public string PlaceBlock(String request)
     {
         var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
+        Debug.Log(req);
         var placed = player.PutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
             WorldService.INSTANCE.GetBlockType(req.type), true);
+        Debug.Log(placed);
         return JsonConvert.SerializeObject(placed);
     }
 

@@ -144,9 +144,9 @@ namespace src.Canvas.Map
             var drawingRect = drawingObject.GetComponent<RectTransform>();
             var rect = drawingRect.rect;
             if ((long) rect.xMin == (long) rect.xMax || (long) rect.yMin == (long) rect.yMax)
-                landRect.Delete(drawingObject);
+                landRect.DeleteDrawingObject(drawingObject);
             else
-                map.OpenLandBuyDialogState(drawingRect, () => { landRect.Delete(drawingObject); });
+                map.OpenLandBuyDialogState(drawingRect, () => { landRect.DeleteDrawingObject(drawingObject); });
         }
 
         private void Draw(Vector3Int mousePos)

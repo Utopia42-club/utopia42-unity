@@ -4,7 +4,6 @@ using src.Model;
 using src.Utils;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -93,15 +92,7 @@ namespace src.Canvas.Map
             {
                 pickerInstance = Instantiate(colorPickerPrefab, colorPickerPlaceHolder.transform);
                 picker = pickerInstance.GetComponent<FlexibleColorPicker>();
-                if (land.properties != null && land.properties.color != null)
-                {
-                    var color = Colors.ConvertHexToColor(land.properties.color);
-                    if (color.HasValue)
-                        picker.SetColor(color.Value);
-                }
-                else
-                    picker.SetColor(Colors.MAP_DEFAULT_LAND_COLOR);
-
+                picker.SetColor(Colors.GetLandColor(land));
                 isColorPickerOpen = true;
             }
         }
@@ -189,11 +180,8 @@ namespace src.Canvas.Map
             transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Settings.WalletId()));
             toggleNftButton.gameObject.SetActive(land.owner.Equals(Settings.WalletId()));
             
-            Color? color = null;
-            if (land.properties != null && land.properties.color != null)
-                color = Colors.ConvertHexToColor(land.properties.color);
-            landColorButtonImage.color = color ?? Colors.MAP_DEFAULT_LAND_COLOR;
-
+            landColorButtonImage.color = Colors.GetLandColor(land);
+            
             if (toggleNftButton.gameObject.activeSelf)
             {
                 toggleNftButton.GetComponentInChildren<TextMeshProUGUI>().text =

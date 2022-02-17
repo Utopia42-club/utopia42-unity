@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using src.Model;
+using UnityEngine;
 
 namespace src.Canvas
 {
@@ -21,6 +22,16 @@ namespace src.Canvas
             if (validColor)
                 return color;
             return null;
+        }
+        
+        public static Color GetLandColor(Land land)
+        {
+            Color? color = null;
+            if (land != null && land.properties != null && land.properties.color != null)
+            {
+                color = ConvertHexToColor(land.properties.color);
+            }
+            return color ?? MAP_DEFAULT_LAND_COLOR;
         }
     }
 }
