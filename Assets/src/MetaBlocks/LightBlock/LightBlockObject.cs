@@ -29,6 +29,16 @@ namespace src.MetaBlocks.LightBlock
 
         public override void OnDataUpdate()
         {
+            ResetLight();
+        }
+
+        protected override void DoInitialize()
+        {
+            ResetLight();
+        }
+
+        private void ResetLight()
+        {
             if (light == null)
             {
                 light = gameObject.AddComponent<Light>();
@@ -42,10 +52,6 @@ namespace src.MetaBlocks.LightBlock
                 : LightBlockEditor.DefaultColor;
             light.range = props.range;
             light.intensity = props.intensity;
-        }
-
-        protected override void DoInitialize()
-        {
         }
 
 
