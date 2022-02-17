@@ -8,7 +8,7 @@ namespace src.MetaBlocks.LightBlock
     {
         private const float DefaultIntensity = 10;
         private const float DefaultRange = 10;
-        private static readonly Color DefaultColor = Color.yellow;
+        public static readonly Color DefaultColor = Color.yellow;
         public static readonly string PREFAB = "MetaBlocks/LightBlockEditor";
 
         [SerializeField] private InputField intensity;
@@ -21,7 +21,7 @@ namespace src.MetaBlocks.LightBlock
             if (colorImage != null && colorPicker != null)
                 colorImage.color = colorPicker.color;
         }
-        
+
         public LightBlockProperties GetValue()
         {
             if (HasValue(intensity) && HasValue(range) && colorPicker != null)
@@ -30,7 +30,7 @@ namespace src.MetaBlocks.LightBlock
                 {
                     intensity = float.Parse(intensity.text),
                     range = float.Parse(range.text),
-                    color = colorPicker.color
+                    hexColor = "#" + ColorUtility.ToHtmlStringRGB(colorPicker.color)
                 };
             }
 
@@ -49,7 +49,7 @@ namespace src.MetaBlocks.LightBlock
 
             intensity.text = value.intensity.ToString();
             range.text = value.range.ToString();
-            colorPicker.SetColor(value.color);
+            colorPicker.SetColor(ColorUtility.TryParseHtmlString(value.hexColor, out var color) ? color : DefaultColor);
         }
 
         private bool HasValue(InputField f)

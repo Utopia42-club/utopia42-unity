@@ -36,7 +36,10 @@ namespace src.MetaBlocks.LightBlock
             }
 
             var props = GetProps();
-            light.color = props.color;
+            if (props == null) return;
+            light.color = ColorUtility.TryParseHtmlString(props.hexColor, out var color)
+                ? color
+                : LightBlockEditor.DefaultColor;
             light.range = props.range;
             light.intensity = props.intensity;
         }
@@ -104,7 +107,7 @@ namespace src.MetaBlocks.LightBlock
                 {
                     props.intensity = value.intensity;
                     props.range = value.range;
-                    props.color = value.color;
+                    props.hexColor = value.hexColor;
                 }
 
                 GetBlock().SetProps(props, land);
