@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using src.Canvas;
 using src.Canvas.Map;
 using src.MetaBlocks.TdObjectBlock;
@@ -273,6 +272,11 @@ namespace src
             {
                 StartCoroutine(GameObject.Find("Map").GetComponent<Map>().TakeNftScreenShot(land, screenshot =>
                 {
+                    // using(var ms = new MemoryStream(screenshot)) {
+                    //     using(var fs = new FileStream("nftImg", FileMode.Create)) {
+                    //         ms.WriteTo(fs);
+                    //     }
+                    // }
                     StartCoroutine(IpfsClient.INSATANCE.UploadScreenShot(screenshot,
                         ipfsKey => SetLandMetadata(ipfsKey, land.id), () =>
                         {

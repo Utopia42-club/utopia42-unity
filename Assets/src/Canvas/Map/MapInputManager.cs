@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using src.Model;
 using src.Utils;
@@ -12,9 +11,11 @@ namespace src.Canvas.Map
     {
         [SerializeField] RectTransform vertical;
         [SerializeField] RectTransform horizontal;
-        [SerializeField] TextMeshProUGUI positionText;
         [SerializeField] RectPane landRect;
         [SerializeField] GameObject sidePanel;
+        [SerializeField] GameObject overlayPrefab;
+        [SerializeField] GameObject helpMessage;
+        [SerializeField] GameObject positionBox;
 
         private bool dragging = false;
         private bool scrollLock = false;
@@ -24,6 +25,8 @@ namespace src.Canvas.Map
         private GameObject drawingObject;
         public Map map;
         private GameManager gameManager;
+        private GameObject screenShotOverlay;
+        private TextMeshProUGUI positionText;
 
         private const float MoveSpeed = 5f;
         private const float BoostedMoveSpeed = 15f;
@@ -33,6 +36,7 @@ namespace src.Canvas.Map
         private void Start()
         {
             gameManager = GameManager.INSTANCE;
+            positionText = positionBox.GetComponentInChildren<TextMeshProUGUI>();
         }
 
         private void OnEnable()
@@ -250,6 +254,15 @@ namespace src.Canvas.Map
             horizontal.gameObject.SetActive(false);
             positionText.gameObject.SetActive(false);
             landRect.HidePlayerPosIndicator();
+            screenShotOverlay = Instantiate(overlayPrefab, landRect.landContainer.transform);
+            var rectSize = map.gameObject.GetComponent<RectTransform>().rect.size;
+            rectSize = rectSize * 1 / landRect.landContainer.localScale;
+            screenShotOverlay.GetComponentInChildren<RectTransform>().sizeDelta = rectSize;
+            screenShotOverlay.transform.position = map.transform.position;
+            landRect.MoveLandGameObjectToFront(land);
+            helpMessage.SetActive(false);
+            if (sidePanel.activeSelf)
+                ToggleSidePanel();
         }
 
         public void ScreenShotDone()
@@ -257,7 +270,9 @@ namespace src.Canvas.Map
             vertical.gameObject.SetActive(true);
             horizontal.gameObject.SetActive(true);
             positionText.gameObject.SetActive(true);
+            helpMessage.SetActive(true);
             landRect.ShowPlayerPosIndicator();
+            DestroyImmediate(screenShotOverlay);
         }
 
         private void MoveToLandCenter(Land land)

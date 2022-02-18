@@ -840,7 +840,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1050669706}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3636,7 +3636,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 236.65498, y: -77.63}
+  m_AnchoredPosition: {x: 236.65498, y: -77.62995}
   m_SizeDelta: {x: 368.81, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442934151
@@ -12230,9 +12230,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vertical: {fileID: 2015532234}
   horizontal: {fileID: 721501780}
-  positionText: {fileID: 1840768721}
   landRect: {fileID: 1022591947}
   sidePanel: {fileID: 1860170862}
+  overlayPrefab: {fileID: 6471512148112546801, guid: 507e8367ab43819f79c0c01f9c30ea9f, type: 3}
+  helpMessage: {fileID: 1493229558}
+  positionBox: {fileID: 673691859}
   map: {fileID: 218622210}
 --- !u!1 &1452519553
 GameObject:
@@ -14738,7 +14740,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1925748159}
   m_HandleRect: {fileID: 1925748158}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

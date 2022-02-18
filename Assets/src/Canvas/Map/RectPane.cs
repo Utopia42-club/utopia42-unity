@@ -277,5 +277,10 @@ namespace src.Canvas.Map
         {
             targetLand = land;
         }
+
+        public void MoveLandGameObjectToFront(Land land)
+        {
+            landIndicators[land.id].transform.SetAsLastSibling();
+        }
     }
 }
