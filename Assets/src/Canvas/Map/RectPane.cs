@@ -100,12 +100,7 @@ namespace src.Canvas.Map
             outline.effectColor = color;
             outline.effectDistance = new Vector2(outlineWidth, outlineWidth);
 
-            Color? c = null;
-            if (land != null && land.properties != null && land.properties.color != null)
-            {
-                c = Colors.ConvertHexToColor(land.properties.color);
-            }
-            landObject.GetComponent<Image>().color = c ?? Colors.MAP_DEFAULT_LAND_COLOR;
+            landObject.GetComponent<Image>().color = Colors.GetLandColor(land);
             
             const int nftLogoDefaultSize = 30;
             var nftLogo = landObject.transform.Find("NftLogo").gameObject.GetComponent<Image>();
@@ -119,7 +114,12 @@ namespace src.Canvas.Map
             return landObject;
         }
 
-        internal void Delete(GameObject drawingObject)
+        private void UpdateLandColor(Land land)
+        {
+            landIndicators[selectedLand.land.id].GetComponent<Image>().color = Colors.GetLandColor(land);
+        }
+
+        internal void DeleteDrawingObject(GameObject drawingObject)
         {
             DestroyImmediate(drawingObject);
             drawnLandIndicators.Remove(drawingObject);
@@ -271,15 +271,6 @@ namespace src.Canvas.Map
             landProfileDialog.WithOneClose(() => { UpdateLandColor(selectedLand.land); });
             ProfileLoader.INSTANCE.load(selectedLand.walletId, landProfileDialog.SetProfile,
                 () => landProfileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
-        }
-
-        private void UpdateLandColor(Land land)
-        {
-            if (land.properties != null && land.properties.color != null)
-            {
-                landIndicators[selectedLand.land.id].GetComponent<Image>().color =
-                    Colors.ConvertHexToColor(land.properties.color).Value;
-            }
         }
 
         public void SetTargetLand(Land land)

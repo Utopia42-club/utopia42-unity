@@ -5,14 +5,12 @@ using src.Model;
 using src.Service;
 using UnityEngine;
 
-public partial class UtopiaApi : MonoBehaviour
+public class UtopiaApi : MonoBehaviour
 {
-    public Player player;
-
     public string PlaceBlock(String request)
     {
         var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
-        var placed = player.PutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
+        var placed = Player.INSTANCE.PutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
             WorldService.INSTANCE.GetBlockType(req.type), true);
         return JsonConvert.SerializeObject(placed);
     }
