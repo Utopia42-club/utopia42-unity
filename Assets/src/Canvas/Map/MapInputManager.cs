@@ -92,9 +92,7 @@ namespace src.Canvas.Map
                     Drag(mousePosInt);
                 else if (drawing)
                     Draw(realPosition);
-
-                if (Input.GetMouseButtonDown(1))
-                    GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
+                
                 HandleKeyboardInput();
             }
 
@@ -123,7 +121,7 @@ namespace src.Canvas.Map
             return !map.IsLandBuyDialogOpen() && !map.IsLandProfileDialogOpen();
         }
 
-        private Vector3 ScreenToLandContainerLocal(Vector3 pos)
+        public Vector3 ScreenToLandContainerLocal(Vector3 pos)
         {
             var landRectTransform = landRect.GetComponent<RectTransform>();
             var local = pos - landRectTransform.position;
