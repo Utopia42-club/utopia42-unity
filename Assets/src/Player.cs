@@ -337,6 +337,7 @@ namespace src
             var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk != null)
             {
+                if (apiCall && !CanEdit(Vectors.FloorToInt(pos), out placeLand)) return false;
                 if (type is MetaBlockType)
                     chunk.PutMeta(vp, type, placeLand);
                 else
