@@ -102,7 +102,7 @@ namespace src
                 response = new Response
                 {
                     id = request.id,
-                    error = e.Message
+                    error = e.GetBaseException().Message
                 };
             }
             Call<string>("respond", JsonConvert.SerializeObject(response));
