@@ -83,15 +83,28 @@ namespace src
                 Debug.LogError("No component found with name: " + request.objectName);
                 return;
             }
+
             var method = component.GetType().GetMethod(request.methodName);
-            var result = request.parameter != null
-                ? (string) method!.Invoke(component, new object[] {request.parameter})
-                : (string) method!.Invoke(component, new object[] { });
-            var response = new Response
+            Response response;
+            try
             {
-                id = request.id,
-                body = result
-            };
+                var result = request.parameter != null
+                    ? (string) method!.Invoke(component, new object[] {request.parameter})
+                    : (string) method!.Invoke(component, new object[] { });
+                response = new Response
+                {
+                    id = request.id,
+                    body = result
+                };
+            }
+            catch (Exception e)
+            {
+                response = new Response
+                {
+                    id = request.id,
+                    error = e.Message
+                };
+            }
             Call<string>("respond", JsonConvert.SerializeObject(response));
         }
     }
@@ -102,12 +115,13 @@ namespace src
         public T body;
         public ConnectionDetail connection;
     };
-    
+
     [Serializable]
     class Response
     {
         public string id;
         public string body;
+        public string error;
     }
 
     [Serializable]
