@@ -66,7 +66,7 @@ namespace src.Service
             types[33] = new LinkBlockType(33);
             types[34] = new TdObjectBlockType(34);
             types[35] = new MarkerBlockType(35);
-            types[36] = new LightBlockType(36);
+            // types[36] = new LightBlockType(36);
         }
 
         public List<string> GetNonMetaBlockTypes()

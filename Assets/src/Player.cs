@@ -20,8 +20,8 @@ namespace src
         [SerializeField] private World world;
         [SerializeField] private float walkSpeed = 6f;
         [SerializeField] private float sprintSpeed = 12f;
-        [SerializeField] private float jumpHeight = 1;
-        [SerializeField] private float sprintJumpHeight = 1.25f;
+        [SerializeField] private float jumpHeight = 2;
+        [SerializeField] private float sprintJumpHeight = 2.5f;
         [SerializeField] private float gravity = -9.8f;
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
