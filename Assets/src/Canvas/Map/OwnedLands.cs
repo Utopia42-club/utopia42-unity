@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using src.Model;
 using src.Service;
@@ -16,11 +17,17 @@ namespace src.Canvas.Map
 
         private void Start()
         {
+            // SetLands(WorldService.INSTANCE.GetLandsFor(Settings.WalletId()));
+        }
+
+        private void OnEnable()
+        {
             SetLands(WorldService.INSTANCE.GetLandsFor(Settings.WalletId()));
         }
 
-        public void SetLands(List<Land> lands)
+        private void SetLands(List<Land> lands)
         {
+            ClearItems();
             if (lands == null)
                 return;
             foreach (var land in lands)
@@ -33,13 +40,14 @@ namespace src.Canvas.Map
 
         public void Close()
         {
-            if (landObjects.Count > 0)
-            {
-                foreach (var land in landObjects) DestroyImmediate(land);
-                landObjects.Clear();
-            }
-
+            ClearItems();
             gameObject.SetActive(false);
+        }
+
+        private void ClearItems()
+        {
+            foreach (var land in landObjects) DestroyImmediate(land);
+            landObjects.Clear();
         }
     }
 }
