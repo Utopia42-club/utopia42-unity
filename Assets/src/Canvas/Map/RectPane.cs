@@ -62,6 +62,8 @@ namespace src.Canvas.Map
         {
             foreach (var lo in landIndicators.Values)
                 DestroyImmediate(lo);
+            foreach (var lo in drawnLandIndicators)
+                DestroyImmediate(lo);
             landIndicators.Clear();
             drawnLandIndicators.Clear();
         }
@@ -74,6 +76,8 @@ namespace src.Canvas.Map
             mapLand.land = land;
             if (land.id != -1)
                 landIndicators[land.id] = landObject;
+            else
+                drawnLandIndicators.Add(landObject);
 
             const int outlineWidth = 7;
             var newX1 = land.startCoordinate.x + outlineWidth;
@@ -122,9 +126,7 @@ namespace src.Canvas.Map
                 owner = Settings.WalletId(),
                 id = -1
             };
-            var obj = Add(drawnLand, Colors.PRIMARY_COLOR);
-            drawnLandIndicators.Add(obj);
-            return obj;
+            return Add(drawnLand, Colors.PRIMARY_COLOR);
         }
 
         internal Rect ResolveCollisions(GameObject landIndicator, int x1, int x2, int y1, int y2, int dx1, int dx2,

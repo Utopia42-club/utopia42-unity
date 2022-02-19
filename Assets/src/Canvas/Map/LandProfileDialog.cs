@@ -123,7 +123,8 @@ namespace src.Canvas.Map
 
             gameObject.SetActive(false);
             manager.SetProfileDialogState(false);
-            onCloseActions.ForEach(action => action());   
+            onCloseActions.ForEach(action => action());
+            onCloseActions.Clear();
         }
 
         public void OnPointerClick(PointerEventData eventData)
