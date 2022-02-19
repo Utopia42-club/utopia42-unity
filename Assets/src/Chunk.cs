@@ -207,12 +207,9 @@ namespace src
 
         public void PutVoxel(VoxelPosition pos, BlockType type, Land land)
         {
-            if (type.isSolid)
-            {
-                voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
-                WorldService.INSTANCE.AddChange(pos, type.id, land);
-                OnChanged(pos);
-            }
+            voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
+            WorldService.INSTANCE.AddChange(pos, type.id, land);
+            OnChanged(pos);
         }
 
         public void PutMeta(VoxelPosition pos, BlockType type, Land land)
