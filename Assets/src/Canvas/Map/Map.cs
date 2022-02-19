@@ -64,5 +64,16 @@ namespace src.Canvas.Map
             landBuyDialog.gameObject.SetActive(false);
             landBuyDialogDismissCallback?.Invoke();
         }
+
+        public bool RequestClose()
+        {
+            if (IsLandProfileDialogOpen())
+            {
+                LandProfileDialog.INSTANCE.Close();
+                return false;
+            }
+
+            return true;
+        }
     }
 }

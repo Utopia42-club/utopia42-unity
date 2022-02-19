@@ -25,6 +25,8 @@ namespace src
         private List<Dialog> dialogs = new List<Dialog>();
         private bool captureAllKeyboardInputOrig;
 
+        public Map map;
+
         void Start()
         {
             SetState(State.SETTINGS);
@@ -37,7 +39,12 @@ namespace src
         void Update()
         {
             if (Input.GetButtonDown("Cancel"))
-                ReturnToGame();
+            {
+                if (state == State.PLAYING)
+                    SetState(State.SETTINGS);
+                else
+                    ReturnToGame();
+            }
             else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
                 SetState(State.SETTINGS);
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
@@ -161,10 +168,15 @@ namespace src
         public void ReturnToGame()
         {
             if (worldInited &&
-                (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
+                (state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
                  || state == State.PROFILE_DIALOG || state == State.FREEZE))
                 SetState(State.PLAYING);
-            if (state == State.DIALOG && dialogs.Count > 0)
+            else if (state == State.MAP)
+            {
+                if (map.RequestClose())
+                    SetState(State.PLAYING);
+            }
+            else if (state == State.DIALOG && dialogs.Count > 0)
                 CloseDialog(dialogs[dialogs.Count - 1]);
         }
 

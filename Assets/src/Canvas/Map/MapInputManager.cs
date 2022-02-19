@@ -3,7 +3,6 @@ using src.Model;
 using src.Utils;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace src.Canvas.Map
 {
@@ -58,7 +57,7 @@ namespace src.Canvas.Map
                 ToggleSidePanel();
             }
 
-            if (IsInputEnabled())
+            else if (IsInputEnabled())
             {
                 if (!drawing && !dragging)
                 {
@@ -92,7 +91,7 @@ namespace src.Canvas.Map
                     Drag(mousePosInt);
                 else if (drawing)
                     Draw(realPosition);
-                
+
                 HandleKeyboardInput();
             }
 
