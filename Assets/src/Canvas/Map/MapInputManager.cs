@@ -51,7 +51,7 @@ namespace src.Canvas.Map
             var mousePosInt = Vectors.FloorToInt(mousePos);
             var mouseLocalPos = ScreenToLandContainerLocal(mousePos);
             var realPosition = Vectors.FloorToInt(mouseLocalPos);
-            positionText.text = $"{realPosition.x} {realPosition.y}";
+            positionText.text = $"({realPosition.x}, {realPosition.y})";
 
             if (Input.GetButtonDown("Menu"))
             {

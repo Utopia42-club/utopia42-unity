@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using src.Model;
 using src.Service;
 using UnityEngine;
@@ -14,10 +15,8 @@ namespace src.Canvas.Map
         private readonly Dictionary<long, GameObject> landIndicators = new Dictionary<long, GameObject>();
         private readonly HashSet<GameObject> drawnLandIndicators = new HashSet<GameObject>();
 
-
         [SerializeField] public GameObject landPrefab;
 
-        public SelectionHandler selectedLand;
         private Land targetLand;
 
         void Start()
@@ -39,27 +38,23 @@ namespace src.Canvas.Map
 
         private void Init()
         {
-            WorldService service = WorldService.INSTANCE;
-            if (!service.IsInitialized()) return;
+            var worldService = WorldService.INSTANCE;
+            if (!worldService.IsInitialized()) return;
             landContainer.localScale = Vector3.one;
 
             if (targetLand == null)
             {
                 var playerPos = Player.INSTANCE.transform.position;
                 playerPosIndicator.localPosition = new Vector3(playerPos.x, playerPos.z, 0);
-                var transform = GetComponent<RectTransform>();
-                transform.anchoredPosition = new Vector3(-playerPos.x, -playerPos.z, 0);
+                var rectTransform = GetComponent<RectTransform>();
+                rectTransform.anchoredPosition = new Vector3(-playerPos.x, -playerPos.z, 0);
             }
             else
                 targetLand = null;
 
-            foreach (var entry in service.GetOwnersLands())
+            foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
             {
-                var owner = entry.Key.Equals(Settings.WalletId());
-                foreach (var land in entry.Value)
-                    Add(land.startCoordinate.x, land.endCoordinate.x, land.startCoordinate.z, land.endCoordinate.z,
-                        owner ? land.isNft ? Colors.MAP_OWNED_LAND_NFT : Colors.MAP_OWNED_LAND :
-                        land.isNft ? Colors.MAP_OTHERS_LAND_NFT : Colors.MAP_OTHERS_LAND, land, entry.Key);
+                Add(land, Colors.GetLandOutlineColor(land));
             }
         }
 
@@ -71,22 +66,20 @@ namespace src.Canvas.Map
             drawnLandIndicators.Clear();
         }
 
-        private GameObject Add(int x1, int x2, int y1, int y2, Color color, Land land, string walletId)
+        private GameObject Add(Land land, Color outlineColor)
         {
             var landObject = Instantiate(landPrefab);
 
-            var selectionHandler = landObject.GetComponent<SelectionHandler>();
-            selectionHandler.land = land;
-            selectionHandler.walletId = walletId;
-            selectionHandler.rectPane = this;
-            if (land != null)
+            var mapLand = landObject.GetComponent<MapLand>();
+            mapLand.land = land;
+            if (land.id != -1)
                 landIndicators[land.id] = landObject;
 
-            const int outlineWidth = 4;
-            var newX1 = x1 + outlineWidth;
-            var newX2 = x2 - outlineWidth;
-            var newY1 = y1 + outlineWidth;
-            var newY2 = y2 - outlineWidth;
+            const int outlineWidth = 7;
+            var newX1 = land.startCoordinate.x + outlineWidth;
+            var newX2 = land.endCoordinate.x - outlineWidth;
+            var newY1 = land.startCoordinate.z + outlineWidth;
+            var newY2 = land.endCoordinate.z - outlineWidth;
 
             var landTransform = landObject.GetComponent<RectTransform>();
             landTransform.SetParent(landContainer);
@@ -97,11 +90,11 @@ namespace src.Canvas.Map
             landTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newX2 - newX1);
 
             var outline = landObject.GetComponent<Outline>();
-            outline.effectColor = color;
+            outline.effectColor = outlineColor;
             outline.effectDistance = new Vector2(outlineWidth, outlineWidth);
 
             landObject.GetComponent<Image>().color = Colors.GetLandColor(land);
-            
+
             const int nftLogoDefaultSize = 30;
             var nftLogo = landObject.transform.Find("NftLogo").gameObject.GetComponent<Image>();
             nftLogo.gameObject.SetActive(land != null && land.isNft);
@@ -114,20 +107,22 @@ namespace src.Canvas.Map
             return landObject;
         }
 
-        private void UpdateLandColor(Land land)
-        {
-            landIndicators[selectedLand.land.id].GetComponent<Image>().color = Colors.GetLandColor(land);
-        }
-
         internal void DeleteDrawingObject(GameObject drawingObject)
         {
             DestroyImmediate(drawingObject);
             drawnLandIndicators.Remove(drawingObject);
         }
 
-        internal GameObject DrawAt(int x, int y)
+        internal GameObject DrawAt(int x, int z)
         {
-            GameObject obj = Add(x, x, y, y, Colors.PRIMARY_COLOR, null, Settings.WalletId());
+            var drawnLand = new Land
+            {
+                startCoordinate = new SerializableVector3Int(x, 0, z),
+                endCoordinate = new SerializableVector3Int(x, 0, z),
+                owner = Settings.WalletId(),
+                id = -1
+            };
+            var obj = Add(drawnLand, Colors.PRIMARY_COLOR);
             drawnLandIndicators.Add(obj);
             return obj;
         }
@@ -258,19 +253,6 @@ namespace src.Canvas.Map
         public void ShowPlayerPosIndicator()
         {
             playerPosIndicator.gameObject.SetActive(true);
-        }
-
-        internal void OpenDialogForLand(SelectionHandler selectionHandler)
-        {
-            if (selectedLand != null && selectionHandler != selectedLand)
-                selectedLand.SetSelected(false, true);
-            selectedLand = selectionHandler;
-            if (!selectedLand) return;
-            var landProfileDialog = LandProfileDialog.INSTANCE;
-            landProfileDialog.Open(selectedLand.land, Profile.LOADING_PROFILE);
-            landProfileDialog.WithOneClose(() => { UpdateLandColor(selectedLand.land); });
-            ProfileLoader.INSTANCE.load(selectedLand.walletId, landProfileDialog.SetProfile,
-                () => landProfileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
         public void SetTargetLand(Land land)

@@ -6,37 +6,32 @@ using UnityEngine.UI;
 
 namespace src.Canvas.Map
 {
-    public class SelectionHandler : MonoBehaviour, IPointerClickHandler
+    public class MapLand : MonoBehaviour, IPointerClickHandler
     {
-        public GameObject transformButton;
-        public RectPane rectPane;
         public Land land;
-        public string walletId;
-
-        private bool selected;
-        private Color orgColor;
-        private Outline outline;
 
         void Start()
         {
-            outline = GetComponent<Outline>();
         }
-        
-        public void SetSelected(bool selected, bool fromParent)
+
+        public void OpenLandDialog()
         {
-            this.selected = selected;
-            if (selected)
-            {
-                rectPane.OpenDialogForLand(this);
-                orgColor = outline.effectColor;
-                outline.effectColor = Color.Lerp(orgColor, Color.black, .2f);
-            }
-            else
-            {
-                outline.effectColor = orgColor;
-                if (!fromParent)
-                    rectPane.OpenDialogForLand(null);
-            }
+            var landProfileDialog = LandProfileDialog.INSTANCE;
+            landProfileDialog.Open(land, Profile.LOADING_PROFILE);
+            landProfileDialog.WithOneClose(RefreshView);
+            ProfileLoader.INSTANCE.load(land.owner, landProfileDialog.SetProfile,
+                () => landProfileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
+        }
+
+        private void RefreshView()
+        {
+            GetComponent<Image>().color = Colors.GetLandColor(land);
+        }
+
+        public void CloseLandDialog()
+        {
+            var landProfileDialog = LandProfileDialog.INSTANCE;
+            landProfileDialog.Close();
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -56,7 +51,7 @@ namespace src.Canvas.Map
             }
             else if (eventData.button == PointerEventData.InputButton.Right)
             {
-                SetSelected(true, false);
+                OpenLandDialog();
             }
         }
     }
