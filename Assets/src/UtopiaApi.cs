@@ -31,6 +31,11 @@ public class UtopiaApi : MonoBehaviour
         return JsonConvert.SerializeObject(WorldService.INSTANCE.GetLandsFor(walletId));
     }
 
+    public string GetCurrentLand()
+    {
+        return JsonConvert.SerializeObject(WorldService.INSTANCE.GetLandByPosition(Player.INSTANCE.transform.position));
+    }
+
     public string GetBlockTypes()
     {
         return JsonConvert.SerializeObject(WorldService.INSTANCE.GetNonMetaBlockTypes());
