@@ -10,11 +10,7 @@ namespace src.Canvas.Map
     {
         public Land land;
 
-        void Start()
-        {
-        }
-
-        public void OpenLandDialog()
+        private void OpenLandDialog()
         {
             var landProfileDialog = LandProfileDialog.INSTANCE;
             landProfileDialog.Open(land, Profile.LOADING_PROFILE);

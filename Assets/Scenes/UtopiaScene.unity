@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 452258355}
-  m_IndirectSpecularColor: {r: 0.4366753, g: 0.48427093, b: 0.5645238, a: 1}
+  m_IndirectSpecularColor: {r: 0.43668735, g: 0.48427862, b: 0.56453055, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -839,7 +839,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1050669707}
   m_HandleRect: {fileID: 1050669706}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3636,7 +3636,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 236.65498, y: -77.62985}
+  m_AnchoredPosition: {x: 236.65498, y: -77.62979}
   m_SizeDelta: {x: 368.81, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442934151
@@ -4028,6 +4028,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5d56af2c8588af479593310d7e1618c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  map: {fileID: 218622210}
 --- !u!4 &552704105
 Transform:
   m_ObjectHideFlags: 0
@@ -8139,7 +8140,6 @@ MonoBehaviour:
   landContainer: {fileID: 656378032}
   playerPosIndicator: {fileID: 772011280}
   landPrefab: {fileID: 2168551042784005155, guid: ca29a4f57c7be984ebb645d3b7d78e5a, type: 3}
-  selectedLand: {fileID: 0}
 --- !u!1 &1026607127
 GameObject:
   m_ObjectHideFlags: 0
@@ -14741,7 +14741,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1925748158}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99635965
+  m_Size: 0.99958634
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
