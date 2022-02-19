@@ -55,6 +55,7 @@ namespace src.MetaBlocks.LightBlock
 
         private void ResetLights()
         {
+            return;
             if (sideLights.Count == 0)
                 foreach (var position in LightLocalPositions)
                     sideLights.Add(CreateSideLight(position));
