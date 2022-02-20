@@ -76,6 +76,11 @@ namespace src.Service
                 .Select(x => x.name).ToList();
         }
 
+        public List<BlockType> GetBlockTypes()
+        {
+            return types.Values.ToList();
+        }
+
         public Dictionary<Vector3Int, MetaBlock> GetMetaBlocksForChunk(Vector3Int coordinate)
         {
             Dictionary<Vector3Int, MetaBlock> blocks;
@@ -183,11 +188,6 @@ namespace src.Service
 
             Debug.LogError("Invalid block type: " + name);
             return null;
-        }
-
-        public int GetBlockTypesCount()
-        {
-            return types.Values.Count;
         }
 
         public MetaBlock GetMetaAt(VoxelPosition vp)
@@ -512,7 +512,7 @@ namespace src.Service
 
         public bool IsInitialized()
         {
-            return this.changes != null;
+            return changes != null;
         }
 
         public IEnumerator ReloadLands()

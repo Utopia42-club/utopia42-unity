@@ -15,11 +15,12 @@ namespace src.Canvas
         {
             var manager = GameManager.INSTANCE;
 
-            for (var i = 1; i < WorldService.INSTANCE.GetBlockTypesCount(); i++)
+            foreach (var blockType in WorldService.INSTANCE.GetBlockTypes())
             {
+                if (blockType.name == "air")
+                    continue;
                 GameObject newSlot = Instantiate(slotPrefab, transform);
-
-                ItemStack stack = new ItemStack((byte)i, 64);
+                ItemStack stack = new ItemStack(blockType.id, 64);
                 ItemSlot slot = new ItemSlot();
                 slot.SetStack(stack);
                 slot.SetUi(newSlot.GetComponent<ItemSlotUI>());

@@ -7,7 +7,6 @@ namespace src.Canvas
     public class ItemSlotUI : MonoBehaviour
     {
         public ItemSlot itemSlot;
-        public Image slotImage;
         public Image slotIcon;
         public Text slotAmount;
 
@@ -43,9 +42,7 @@ namespace src.Canvas
 
         public void UpdateView()
         {
-            SetItemSlot(this.itemSlot);
+            SetItemSlot(itemSlot);
         }
-
-
     }
 }

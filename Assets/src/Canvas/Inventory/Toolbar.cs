@@ -36,8 +36,8 @@ namespace src.Canvas
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            bool dec = Input.GetButtonDown("Select Left");
-            bool inc = Input.GetButtonDown("Select Right");
+            var dec = Input.GetButtonDown("Select Left");
+            var inc = Input.GetButtonDown("Select Right");
             if (dec || inc)
             {
                 if (dec) selectedSlot--;
