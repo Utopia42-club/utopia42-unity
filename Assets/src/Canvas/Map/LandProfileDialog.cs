@@ -25,6 +25,7 @@ namespace src.Canvas.Map
 
         [Header("Land")] public TextMeshProUGUI landIdLabel;
         public TextMeshProUGUI landSizeLabel;
+        public TMP_InputField landNameField;
         public Button landColorButton;
         public GameObject colorPickerPrefab;
         public GameObject landNftIcon;
@@ -39,7 +40,7 @@ namespace src.Canvas.Map
         private GameManager manager;
         private Image landColorButtonImage;
         private FlexibleColorPicker picker;
-        
+
         private List<Action> onCloseActions = new List<Action>();
 
         void Start()
@@ -70,6 +71,9 @@ namespace src.Canvas.Map
                 land.properties ??= new LandProperties();
                 land.properties.color = newColor;
             }
+
+            land.properties ??= new LandProperties();
+            land.properties.name = landNameField.text;
         }
 
         public void WithOneClose(Action action)
@@ -180,14 +184,17 @@ namespace src.Canvas.Map
             landNftIcon.SetActive(land.isNft);
             transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Settings.WalletId()));
             toggleNftButton.gameObject.SetActive(land.owner.Equals(Settings.WalletId()));
-            
+
             landColorButtonImage.color = Colors.GetLandColor(land);
-            
+
             if (toggleNftButton.gameObject.activeSelf)
             {
                 toggleNftButton.GetComponentInChildren<TextMeshProUGUI>().text =
                     land.isNft ? "Remove NFT" : "Make NFT";
             }
+
+            landNameField.SetTextWithoutNotify(land.GetName());
+            landNameField.interactable = land.owner.Equals(Settings.WalletId());
         }
 
         public static LandProfileDialog INSTANCE => instance;

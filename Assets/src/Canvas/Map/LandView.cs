@@ -14,7 +14,9 @@ namespace src.Canvas.Map
         public TextMeshProUGUI landIdLabel;
         public TextMeshProUGUI coordinateLabel;
         public TextMeshProUGUI sizeLabel;
+        public TextMeshProUGUI nameLabel;
         public GameObject nftToggle;
+        public GameObject byIdSection;
         public Image colorImage;
         public Button button;
 
@@ -26,7 +28,18 @@ namespace src.Canvas.Map
         public void SetLand(Land land)
         {
             this.land = land;
-            landIdLabel.SetText("#" + land.id);
+            var name = land.GetName();
+            if (name != null && name.Trim().Length > 0)
+            {
+                nameLabel.SetText(name);
+                byIdSection.SetActive(false);
+            }
+            else
+            {
+                landIdLabel.SetText("#" + land.id);
+                byIdSection.SetActive(true);
+                nameLabel.gameObject.SetActive(false);
+            }
 
             var start = land.startCoordinate;
             var end = land.startCoordinate;
