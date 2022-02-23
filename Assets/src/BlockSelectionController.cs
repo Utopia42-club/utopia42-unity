@@ -1,11 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using src.Canvas;
-using src.MetaBlocks;
 using src.Model;
 using src.Service;
 using src.Utils;
+using TMPro;
 using UnityEngine;
 
 namespace src
@@ -13,6 +12,8 @@ namespace src
     public class BlockSelectionController : MonoBehaviour
     {
         [SerializeField] private float selectionRotationSensitivity = 0.3f;
+        [SerializeField] private TextMeshProUGUI selectedBlocksCountText;
+        [SerializeField] private RectTransform selectedBlocksCountTextContainer;
 
         private MouseLook mouseLook;
         private Player player;
@@ -199,6 +200,7 @@ namespace src
                 {
                     selectedBlocks[index].DestroyHighlights();
                     selectedBlocks.RemoveAt(index);
+                    UpdateCountMsg();
                     if (selectedBlocks.Count == 0)
                     {
                         ExitBlockSelectionMovement();
@@ -294,7 +296,10 @@ namespace src
                     SelectionActive = true;
                     movingSelectionAllowed = false;
                     SetBlockSelectionSnack();
+                    selectedBlocksCountTextContainer.gameObject.SetActive(true);
                 }
+
+                UpdateCountMsg();
             }
         }
 
@@ -343,6 +348,7 @@ namespace src
             foreach (var block in selectedBlocks)
                 block.DestroyHighlights();
             selectedBlocks.Clear();
+            UpdateCountMsg();
         }
 
         private void ClearClipboard()
@@ -350,6 +356,12 @@ namespace src
             foreach (var block in copiedBlocks)
                 block.DestroyHighlights();
             copiedBlocks.Clear();
+        }
+
+        private void UpdateCountMsg()
+        {
+            var count = selectedBlocks.Count;
+            selectedBlocksCountText.text = count == 1 ? "1 Block Selected" : count + " Blocks Selected";
         }
 
         private void SetBlockSelectionSnack(bool help = false)
@@ -423,6 +435,7 @@ namespace src
             ClearSelection();
             SelectionActive = false;
             movingSelectionAllowed = false;
+            selectedBlocksCountTextContainer.gameObject.SetActive(false);
         }
 
         public void ReCreateTdObjectHighlightIfSelected(Vector3Int position)
