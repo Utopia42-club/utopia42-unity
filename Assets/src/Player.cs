@@ -74,10 +74,7 @@ namespace src
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING)
-                {
                     hitCollider = null;
-                    blockSelectionController.ExitBlockSelectionMovement();
-                }
             });
         }
 

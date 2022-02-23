@@ -40,6 +40,11 @@ namespace src
             player = Player.INSTANCE;
             mouseLook = MouseLook.INSTANCE;
             world = World.INSTANCE;
+            GameManager.INSTANCE.stateChange.AddListener(state =>
+            {
+                if (state != GameManager.State.PLAYING && SelectionActive)
+                    ExitSelectionMode();
+            });
         }
 
         public void DoUpdate()
@@ -203,7 +208,7 @@ namespace src
                     UpdateCountMsg();
                     if (selectedBlocks.Count == 0)
                     {
-                        ExitBlockSelectionMovement();
+                        ExitSelectionMode();
                         break;
                     }
                 }
@@ -215,7 +220,7 @@ namespace src
         {
             if (Input.GetKeyDown(KeyCode.X))
             {
-                ExitBlockSelectionMovement();
+                ExitSelectionMode();
             }
             else if (Input.GetKeyDown(KeyCode.C) &&
                      (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
@@ -224,18 +229,18 @@ namespace src
                 ClearClipboard();
                 foreach (var block in selectedBlocks)
                     AddNewCopiedBlock(block.HighlightPosition);
-                ExitBlockSelectionMovement();
+                ExitSelectionMode();
             }
 
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
             {
                 ConfirmMove();
-                ExitBlockSelectionMovement();
+                ExitSelectionMode();
             }
             else if (Input.GetButtonDown("Delete"))
             {
                 DeleteSelection();
-                ExitBlockSelectionMovement();
+                ExitSelectionMode();
             }
             else if (player.PlaceBlock.gameObject.activeSelf && copiedBlocks.Count > 0 &&
                      Input.GetKeyDown(KeyCode.V) &&
@@ -348,7 +353,7 @@ namespace src
             foreach (var block in selectedBlocks)
                 block.DestroyHighlights();
             selectedBlocks.Clear();
-            UpdateCountMsg();
+            selectedBlocksCountTextContainer.gameObject.SetActive(false);
         }
 
         private void ClearClipboard()
@@ -424,7 +429,7 @@ namespace src
             return lines;
         }
 
-        public void ExitBlockSelectionMovement()
+        private void ExitSelectionMode()
         {
             if (snackItem != null)
             {
@@ -435,7 +440,6 @@ namespace src
             ClearSelection();
             SelectionActive = false;
             movingSelectionAllowed = false;
-            selectedBlocksCountTextContainer.gameObject.SetActive(false);
         }
 
         public void ReCreateTdObjectHighlightIfSelected(Vector3Int position)
