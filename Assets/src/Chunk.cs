@@ -230,11 +230,11 @@ namespace src
         {
             DrawVoxels();
             if (pos.local.x == voxels.GetLength(0) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.right).DrawVoxels();
+                world.GetChunkIfInited(pos.chunk + Vector3Int.right)?.DrawVoxels();
             if (pos.local.y == voxels.GetLength(1) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.up).DrawVoxels();
+                world.GetChunkIfInited(pos.chunk + Vector3Int.up)?.DrawVoxels();
             if (pos.local.z == voxels.GetLength(2) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.forward).DrawVoxels();
+                world.GetChunkIfInited(pos.chunk + Vector3Int.forward)?.DrawVoxels();
 
             if (pos.local.x == 0)
                 world.GetChunkIfInited(pos.chunk + Vector3Int.left).DrawVoxels();
