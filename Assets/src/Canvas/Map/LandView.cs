@@ -1,5 +1,3 @@
-using src;
-using src.Canvas;
 using src.Model;
 using TMPro;
 using UnityEngine;
@@ -11,12 +9,10 @@ namespace src.Canvas.Map
     {
         private Land land;
 
-        public TextMeshProUGUI landIdLabel;
         public TextMeshProUGUI coordinateLabel;
         public TextMeshProUGUI sizeLabel;
         public TextMeshProUGUI nameLabel;
         public GameObject nftToggle;
-        public GameObject byIdSection;
         public Image colorImage;
         public Button button;
 
@@ -29,17 +25,10 @@ namespace src.Canvas.Map
         {
             this.land = land;
             var name = land.GetName();
-            if (name != null && name.Trim().Length > 0)
-            {
-                nameLabel.SetText(name);
-                byIdSection.SetActive(false);
-            }
-            else
-            {
-                landIdLabel.SetText("#" + land.id);
-                byIdSection.SetActive(true);
-                nameLabel.gameObject.SetActive(false);
-            }
+            var s = (name != null && name.Trim().Length > 0 ? name : "Land");
+            if (s.Length > 13)
+                s = s.Substring(0, 13) + "...";
+            nameLabel.SetText(s + " " + "#" + land.id);
 
             var start = land.startCoordinate;
             var end = land.startCoordinate;
