@@ -6,6 +6,7 @@ using src.Service;
 using src.Utils;
 using UnityEngine;
 using MetaBlock = src.MetaBlocks.MetaBlock;
+using Object = UnityEngine.Object;
 
 namespace src
 {
@@ -167,17 +168,22 @@ namespace src
             }
         }
 
-        void CreateMesh(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+        private void CreateMesh(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
         {
-            Mesh mesh = new Mesh();
-            mesh.vertices = vertices.ToArray();
-            mesh.triangles = triangles.ToArray();
-            mesh.uv = uvs.ToArray();
+            var mesh = new Mesh
+            {
+                vertices = vertices.ToArray(),
+                triangles = triangles.ToArray(),
+                uv = uvs.ToArray()
+            };
 
             mesh.RecalculateNormals();
+            mesh.Optimize();
+            
+            Object.Destroy(meshFilter.sharedMesh);
+            Object.Destroy(meshCollider.sharedMesh);
 
             meshFilter.mesh = mesh;
-            meshCollider.sharedMesh = null;
             meshCollider.sharedMesh = mesh;
         }
 
