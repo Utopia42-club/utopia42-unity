@@ -50,7 +50,7 @@ namespace src
             meshRenderer = chunkObject.AddComponent<MeshRenderer>();
             meshCollider = chunkObject.AddComponent<MeshCollider>();
 
-            meshRenderer.material = world.material;
+            meshRenderer.materials = new[] {world.material, new Material(Shader.Find("Particles/Standard Surface"))};
             chunkObject.transform.SetParent(world.transform);
             chunkObject.transform.position = position;
             chunkObject.name = "Chunck " + coordinate;
@@ -74,21 +74,24 @@ namespace src
 
         private void DrawVoxels()
         {
-            List<Vector3> vertices = new List<Vector3>();
-            List<int> triangles = new List<int>();
-            List<Vector2> uvs = new List<Vector2>();
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            var coloredTriangles = new List<int>();
+            var uvs = new List<Vector2>();
+            var colors = new List<Color32>();
 
-            CreateMeshData(vertices, triangles, uvs);
-            CreateMesh(vertices, triangles, uvs);
+            CreateMeshData(vertices, triangles, coloredTriangles, uvs, colors);
+            CreateMesh(vertices, triangles, coloredTriangles, uvs, colors);
         }
 
-        void CreateMeshData(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+        void CreateMeshData(List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles, List<Vector2> uvs,
+            List<Color32> colors)
         {
             for (int y = 0; y < voxels.GetLength(1); y++)
             for (int x = 0; x < voxels.GetLength(0); x++)
             for (int z = 0; z < voxels.GetLength(2); z++)
                 if (WorldService.INSTANCE.GetBlockType(voxels[x, y, z]).isSolid)
-                    AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, uvs);
+                    AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, coloredTriangles, uvs, colors);
         }
 
         // Inputs: x,y,z local to this chunk
@@ -126,7 +129,8 @@ namespace src
             return GetBlock(localPos).isSolid;
         }
 
-        void AddVisibleFaces(Vector3Int pos, List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+        void AddVisibleFaces(Vector3Int pos, List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles,
+            List<Vector2> uvs, List<Color32> colors)
         {
             Vector3Int[] verts = new Vector3Int[]
             {
@@ -155,30 +159,58 @@ namespace src
                     vertices.Add(verts[face.verts[2]]);
                     vertices.Add(verts[face.verts[3]]);
 
-                    AddTexture(type.GetTextureID(face), uvs);
 
-                    triangles.Add(idx);
-                    triangles.Add(idx + 1);
-                    triangles.Add(idx + 2);
-                    triangles.Add(idx + 2);
-                    triangles.Add(idx + 1);
-                    triangles.Add(idx + 3);
+                    Color32 color;
+                    List<int> targetTriangles;
+                    if (false && type.IsWhite) // for test only
+                    {
+                        color = pos.x % 2 == 0 && pos.z % 2 == 0 ? Color.green : Color.magenta;
+                        targetTriangles = coloredTriangles;
+
+                        uvs.Add(Vector2.zero);
+                        uvs.Add(Vector2.zero);
+                        uvs.Add(Vector2.zero);
+                        uvs.Add(Vector2.zero);
+                    }
+                    else
+                    {
+                        color = Color.white;
+                        targetTriangles = triangles;
+                        AddTexture(type.GetTextureID(face), uvs);
+                    }
+
+                    colors.Add(color);
+                    colors.Add(color);
+                    colors.Add(color);
+                    colors.Add(color);
+
+                    targetTriangles.Add(idx);
+                    targetTriangles.Add(idx + 1);
+                    targetTriangles.Add(idx + 2);
+                    targetTriangles.Add(idx + 2);
+                    targetTriangles.Add(idx + 1);
+                    targetTriangles.Add(idx + 3);
                 }
             }
         }
 
-        private void CreateMesh(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+        private void CreateMesh(List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles,
+            List<Vector2> uvs, List<Color32> colors)
         {
             var mesh = new Mesh
             {
                 vertices = vertices.ToArray(),
-                triangles = triangles.ToArray(),
-                uv = uvs.ToArray()
+                uv = uvs.ToArray(),
+                subMeshCount = 2,
+                colors32 = colors.ToArray()
             };
+
+            mesh.SetTriangles(triangles, 0);
+            mesh.SetTriangles(coloredTriangles, 1);
 
             mesh.RecalculateNormals();
             mesh.Optimize();
-            
+
             Object.Destroy(meshFilter.sharedMesh);
             Object.Destroy(meshCollider.sharedMesh);
 

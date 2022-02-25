@@ -36,7 +36,7 @@ namespace src.Service.Ethereum
 
         public IEnumerator GetLastLandId(Action<BigInteger> consumer)
         {
-            // consumer(6); yield break; 
+            // consumer(6); yield break; // for test only 
             var request =
                 new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(network.provider,
                     network.contractAddress);

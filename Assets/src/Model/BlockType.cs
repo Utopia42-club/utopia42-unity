@@ -9,6 +9,7 @@ namespace src.Model
         public readonly string name;
         public readonly bool isSolid;
         public readonly int[] textures = new int[FACES.Length];
+        public bool IsWhite => id == 27 || id == 29; // for test only 
 
         public BlockType(byte id, string name, bool isSolid,
             int backTexture, int rightTexture,
