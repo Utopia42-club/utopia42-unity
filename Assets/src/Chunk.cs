@@ -237,11 +237,11 @@ namespace src
                 world.GetChunkIfInited(pos.chunk + Vector3Int.forward)?.DrawVoxels();
 
             if (pos.local.x == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.left).DrawVoxels();
+                world.GetChunkIfInited(pos.chunk + Vector3Int.left)?.DrawVoxels();
             if (pos.local.y == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.down).DrawVoxels();
+                world.GetChunkIfInited(pos.chunk + Vector3Int.down)?.DrawVoxels();
             if (pos.local.z == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.back).DrawVoxels();
+                world.GetChunkIfInited(pos.chunk + Vector3Int.back)?.DrawVoxels();
         }
 
         private Vector3Int ToGlobal(Vector3Int localPoint)
