@@ -171,6 +171,7 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetMovementInputs();
+            // GetTestInputs();
             blockSelectionController.DoUpdate();
 
             if (lastChunk == null)
