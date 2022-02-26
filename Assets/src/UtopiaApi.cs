@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using src;
 using src.Model;
@@ -12,6 +14,15 @@ public class UtopiaApi : MonoBehaviour
         var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
         var placed = Player.INSTANCE.ApiPutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
             WorldService.INSTANCE.GetBlockType(req.type));
+        return JsonConvert.SerializeObject(placed);
+    }
+
+    public string PlaceBlocks(String request)
+    {
+        var reqs = JsonConvert.DeserializeObject<List<PlaceBlockRequest>>(request);
+        var placed = Player.INSTANCE.ApiPutBlocks(reqs.ToDictionary(
+            req => new Vector3(req.position.x, req.position.y, req.position.z),
+            req => WorldService.INSTANCE.GetBlockType(req.type)));
         return JsonConvert.SerializeObject(placed);
     }
 
