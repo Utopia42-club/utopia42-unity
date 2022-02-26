@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
@@ -211,6 +212,44 @@ namespace src
             if (chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInited() && chunk.IsActive())
                 return chunk;
             return null;
+        }
+
+        public void PutBlocks(Dictionary<VoxelPosition, Tuple<BlockType, Land>> blocks)
+        {
+            var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Tuple<BlockType, Land>>>();
+            foreach (var vp in blocks.Keys)
+            {
+                var chunk = GetChunkIfInited(vp.chunk);
+                if (!chunks.TryGetValue(chunk, out var chunkData))
+                {
+                    chunkData = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+                    chunks.Add(chunk, chunkData);
+                }
+
+                chunkData.Add(vp, blocks[vp]);
+            }
+
+            foreach (var chunk in chunks.Keys)
+                chunk.PutVoxels(chunks[chunk]);
+        }
+
+        public void DeleteBlocks(Dictionary<VoxelPosition, Land> blocks)
+        {
+            var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Land>>();
+            foreach (var vp in blocks.Keys)
+            {
+                var chunk = GetChunkIfInited(vp.chunk);
+                if (!chunks.TryGetValue(chunk, out var chunkData))
+                {
+                    chunkData = new Dictionary<VoxelPosition, Land>();
+                    chunks.Add(chunk, chunkData);
+                }
+
+                chunkData.Add(vp, blocks[vp]);
+            }
+
+            foreach (var chunk in chunks.Keys)
+                chunk.DeleteVoxels(chunks[chunk]);
         }
 
         public bool IsSolidAt(Vector3Int pos)

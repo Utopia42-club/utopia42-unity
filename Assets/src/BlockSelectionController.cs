@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using src.Canvas;
@@ -239,7 +240,7 @@ namespace src
             }
             else if (Input.GetButtonDown("Delete"))
             {
-                DeleteSelection();
+                SelectableBlock.Remove(world, selectedBlocks);
                 ExitSelectionMode();
             }
             else if (player.PlaceBlock.gameObject.activeSelf && copiedBlocks.Count > 0 &&
@@ -276,15 +277,19 @@ namespace src
                 }
 
                 if (!conflictWithPlayer)
+                {
+                    var toBePut = new Dictionary<Vector3Int, Tuple<SelectableBlock, Land>>();
                     foreach (var srcBlock in copiedBlocks)
                     {
                         var newPosition = srcBlock.Position - minPoint + player.PlaceBlockPosInt;
                         if (player.CanEdit(newPosition, out var land))
-                        {
-                            srcBlock.PutInPosition(world, newPosition, land);
-                            AddNewSelectedBlock(newPosition);
-                        }
+                            toBePut.Add(newPosition, new Tuple<SelectableBlock, Land>(srcBlock, land));
                     }
+
+                    SelectableBlock.PutInPositions(world, toBePut);
+                    foreach (var pos in toBePut.Keys)
+                        AddNewSelectedBlock(pos);
+                }
             }
         }
 
@@ -332,20 +337,18 @@ namespace src
                     return;
             }
 
-            foreach (var block in movedBlocks)
-                block.Remove(world);
+            SelectableBlock.Remove(world, movedBlocks);
+
+
+            var toBePut = new Dictionary<Vector3Int, Tuple<SelectableBlock, Land>>();
             foreach (var block in movedBlocks)
             {
                 var pos = block.HighlightPosition;
                 if (player.CanEdit(pos, out var land))
-                    block.PutInPosition(world, pos, land);
+                    toBePut.Add(pos, new Tuple<SelectableBlock, Land>(block, land));
             }
-        }
 
-        private void DeleteSelection()
-        {
-            foreach (var block in selectedBlocks)
-                block.Remove(world);
+            SelectableBlock.PutInPositions(world, toBePut);
         }
 
         private void ClearSelection()

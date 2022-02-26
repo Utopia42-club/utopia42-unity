@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Org.BouncyCastle.Utilities.Collections;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -242,11 +243,72 @@ namespace src
             OnChanged(pos);
         }
 
+        public void DeleteVoxels(Dictionary<VoxelPosition, Land> blocks)
+        {
+            var neighbourChunks = new HashSet<Chunk>();
+            foreach (var pos in blocks.Keys)
+            {
+                var land = blocks[pos];
+                voxels[pos.local.x, pos.local.y, pos.local.z] = 0;
+                WorldService.INSTANCE.AddChange(pos, 0, land);
+                FillNeighborChunks(pos, neighbourChunks);
+            }
+
+            DrawVoxels();
+            foreach (var neighbor in neighbourChunks)
+                neighbor.DrawVoxels();
+        }
+
         public void PutVoxel(VoxelPosition pos, BlockType type, Land land)
         {
             voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
             WorldService.INSTANCE.AddChange(pos, type.id, land);
             OnChanged(pos);
+        }
+
+        public void PutVoxels(Dictionary<VoxelPosition, Tuple<BlockType, Land>> blocks)
+        {
+            var neighbourChunks = new HashSet<Chunk>();
+            foreach (var pos in blocks.Keys)
+            {
+                var type = blocks[pos].Item1;
+                var land = blocks[pos].Item2;
+                voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
+                WorldService.INSTANCE.AddChange(pos, type.id, land);
+                FillNeighborChunks(pos, neighbourChunks);
+            }
+
+            DrawVoxels();
+            foreach (var neighbor in neighbourChunks)
+                neighbor.DrawVoxels();
+        }
+
+        private void FillNeighborChunks(VoxelPosition pos, ISet<Chunk> neighborChunks)
+        {
+            if (pos.local.x == voxels.GetLength(0) - 1)
+                AddNeighborChunk(pos.chunk + Vector3Int.right, neighborChunks);
+
+            if (pos.local.y == voxels.GetLength(1) - 1)
+                AddNeighborChunk(pos.chunk + Vector3Int.up, neighborChunks);
+
+            if (pos.local.z == voxels.GetLength(2) - 1)
+                AddNeighborChunk(pos.chunk + Vector3Int.forward, neighborChunks);
+
+            if (pos.local.x == 0)
+                AddNeighborChunk(pos.chunk + Vector3Int.left, neighborChunks);
+
+            if (pos.local.y == 0)
+                AddNeighborChunk(pos.chunk + Vector3Int.down, neighborChunks);
+
+            if (pos.local.z == 0)
+                AddNeighborChunk(pos.chunk + Vector3Int.back, neighborChunks);
+        }
+
+        private void AddNeighborChunk(Vector3Int pos, ISet<Chunk> chunks)
+        {
+            var chunk = world.GetChunkIfInited(pos);
+            if (chunk != null)
+                chunks.Add(chunk);
         }
 
         public void PutMeta(VoxelPosition pos, BlockType type, Land land)

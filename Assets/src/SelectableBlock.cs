@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
@@ -82,31 +83,50 @@ namespace src
             return new SelectableBlock(position, blockTypeId, blockHighlight, land);
         }
 
-        public void PutInPosition(World world, Vector3Int pos, Land land)
+        public static void PutInPositions(World world,
+            Dictionary<Vector3Int, Tuple<SelectableBlock, Land>> selectableBlocks)
         {
-            var vp = new VoxelPosition(pos);
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            chunk.PutVoxel(vp, WorldService.INSTANCE.GetBlockType(blockTypeId), land);
-            if (metaAttached)
+            var blocks = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+            var metas = new Dictionary<VoxelPosition, Tuple<SelectableBlock, Land>>();
+            foreach (var pos in selectableBlocks.Keys)
             {
-                chunk.PutMeta(vp, WorldService.INSTANCE.GetBlockType(metaBlockTypeId), land);
-                chunk.GetMetaAt(vp).SetProps(metaProperties, land);
+                var selectableBlock = selectableBlocks[pos].Item1;
+                var land = selectableBlocks[pos].Item2;
+                var vp = new VoxelPosition(pos);
+                blocks.Add(vp,
+                    new Tuple<BlockType, Land>(WorldService.INSTANCE.GetBlockType(selectableBlock.blockTypeId), land));
+                if (selectableBlock.metaAttached)
+                    metas.Add(vp, new Tuple<SelectableBlock, Land>(selectableBlock, land));
+            }
+
+            world.PutBlocks(blocks);
+            foreach (var vp in metas.Keys)
+            {
+                var (selectableBlock, land) = metas[vp];
+                var chunk = world.GetChunkIfInited(vp.chunk);
+                chunk.PutMeta(vp, WorldService.INSTANCE.GetBlockType(selectableBlock.metaBlockTypeId), land);
+                chunk.GetMetaAt(vp).SetProps(selectableBlock.metaProperties, land);
             }
         }
 
-        public void Remove(World world)
+        public static void Remove(World world,
+            List<SelectableBlock> selectableBlocks)
         {
-            var vp = new VoxelPosition(Position);
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null)
+            var blocks = new Dictionary<VoxelPosition, Land>();
+            foreach (var selectableBlock in selectableBlocks)
             {
-                chunk.DeleteVoxel(vp, land);
+                var vp = new VoxelPosition(selectableBlock.Position);
+                blocks.Add(vp, selectableBlock.land);
+
+                var chunk = world.GetChunkIfInited(vp.chunk);
                 if (chunk.GetMetaAt(vp) != null)
                     chunk.DeleteMeta(vp);
             }
+
+            world.DeleteBlocks(blocks);
         }
 
-        public void RotateAround(Vector3 center, Vector3 axis) // TODO: Do the the truncate floor here if necessary
+        public void RotateAround(Vector3 center, Vector3 axis)
         {
             var vector3 = Quaternion.AngleAxis(90, axis) * (highlight.position + 0.5f * Vector3.one - center);
             var oldPos = HighlightPosition;
