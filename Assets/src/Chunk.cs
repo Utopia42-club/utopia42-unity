@@ -251,7 +251,9 @@ namespace src
                 var land = blocks[pos];
                 voxels[pos.local.x, pos.local.y, pos.local.z] = 0;
                 WorldService.INSTANCE.AddChange(pos, 0, land);
-                FillNeighborChunks(pos, neighbourChunks);
+
+                foreach (var neighborChunk in GetNeighborChunks(pos))
+                    neighbourChunks.Add(neighborChunk);
             }
 
             DrawVoxels();
@@ -275,7 +277,8 @@ namespace src
                 var land = blocks[pos].Item2;
                 voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
                 WorldService.INSTANCE.AddChange(pos, type.id, land);
-                FillNeighborChunks(pos, neighbourChunks);
+                foreach (var neighborChunk in GetNeighborChunks(pos))
+                    neighbourChunks.Add(neighborChunk);
             }
 
             DrawVoxels();
@@ -283,8 +286,9 @@ namespace src
                 neighbor.DrawVoxels();
         }
 
-        private void FillNeighborChunks(VoxelPosition pos, ISet<Chunk> neighborChunks)
+        private IEnumerable<Chunk> GetNeighborChunks(VoxelPosition pos)
         {
+            var neighborChunks = new HashSet<Chunk>();
             if (pos.local.x == voxels.GetLength(0) - 1)
                 AddNeighborChunk(pos.chunk + Vector3Int.right, neighborChunks);
 
@@ -302,6 +306,8 @@ namespace src
 
             if (pos.local.z == 0)
                 AddNeighborChunk(pos.chunk + Vector3Int.back, neighborChunks);
+
+            return neighborChunks;
         }
 
         private void AddNeighborChunk(Vector3Int pos, ISet<Chunk> chunks)
@@ -328,19 +334,8 @@ namespace src
         private void OnChanged(VoxelPosition pos)
         {
             DrawVoxels();
-            if (pos.local.x == voxels.GetLength(0) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.right)?.DrawVoxels();
-            if (pos.local.y == voxels.GetLength(1) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.up)?.DrawVoxels();
-            if (pos.local.z == voxels.GetLength(2) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.forward)?.DrawVoxels();
-
-            if (pos.local.x == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.left)?.DrawVoxels();
-            if (pos.local.y == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.down)?.DrawVoxels();
-            if (pos.local.z == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.back)?.DrawVoxels();
+            foreach (var neighborChunk in GetNeighborChunks(pos))
+                neighborChunk.DrawVoxels();
         }
 
         private Vector3Int ToGlobal(Vector3Int localPoint)

@@ -199,10 +199,13 @@ namespace src
             var type = WorldService.INSTANCE.GetBlockType("stone");
             var from = Vectors.TruncateFloor(transform.position) + (onGround ? 3 : 250) * Vector3.up;
             var to = @from + new Vector3(10, 20, 10);
+
+            var toBePut = new Dictionary<Vector3, BlockType>();
             for (var x = @from.x; x <= to.x; x++)
             for (var y = @from.y; y <= to.y; y++)
             for (var z = @from.z; z <= to.z; z++)
-                PutBlock(new Vector3(x, y, z), type, true);
+                toBePut.Add(new Vector3(x, y, z), type);
+            ApiPutBlocks(toBePut);
         }
 
         private void GetMovementInputs()
@@ -337,39 +340,52 @@ namespace src
             return null;
         }
 
-        public bool PutBlock(Vector3 pos, BlockType type, bool apiCall = false)
+        public void PutBlock(Vector3 pos, BlockType type)
         {
             var vp = new VoxelPosition(pos);
-            var playerPos = Vectors.TruncateFloor(transform.position);
-            var blockPos = vp.ToWorld();
-            if (apiCall && !(type is MetaBlockType) &&
-                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
-                 playerPos.Equals(blockPos - Vector3Int.up)))
-                return false;
-
             var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null)
+            if (chunk == null) return;
+            if (type is MetaBlockType)
+                chunk.PutMeta(vp, type, placeLand);
+            else
+                chunk.PutVoxel(vp, type, placeLand);
+        }
+
+        public bool ApiPutBlock(Vector3 vector3, BlockType getBlockType)
+        {
+            return ApiPutBlocks(new Dictionary<Vector3, BlockType> {{vector3, getBlockType}})[vector3];
+        }
+
+        public Dictionary<Vector3, bool> ApiPutBlocks(Dictionary<Vector3, BlockType> blocks)
+        {
+            var result = new Dictionary<Vector3, bool>();
+            var toBePut = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+            foreach (var pos in blocks.Keys)
             {
-                if (apiCall && !CanEdit(Vectors.FloorToInt(pos), out placeLand)) return false;
-                if (type is MetaBlockType)
-                    chunk.PutMeta(vp, type, placeLand);
-                else
-                    chunk.PutVoxel(vp, type, placeLand);
-                return true;
+                var vp = new VoxelPosition(pos);
+                var type = blocks[pos];
+                var playerPos = Vectors.TruncateFloor(transform.position);
+                var blockPos = vp.ToWorld();
+                if (type is MetaBlockType || playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
+                    playerPos.Equals(blockPos - Vector3Int.up))
+                {
+                    result.Add(pos, false);
+                    continue;
+                }
+
+                if (CanEdit(Vectors.FloorToInt(pos), out var ownerLand))
+                {
+                    toBePut.Add(vp, new Tuple<BlockType, Land>(type, ownerLand));
+                    result.Add(pos, true);
+                    continue;
+                }
+
+                result.Add(pos, false);
             }
 
-            if (apiCall && CanEdit(Vectors.FloorToInt(pos), out var ownerLand))
-            {
-                world.DestroyGarbageChunkIfExists(vp.chunk);
-                if (type is MetaBlockType)
-                    WorldService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand);
-                else
-                    WorldService.INSTANCE.AddChange(vp, type.id, ownerLand);
+            world.PutBlocks(toBePut);
 
-                return true;
-            }
-
-            return false;
+            return result;
         }
 
         private VoxelPosition ComputePosition()

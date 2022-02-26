@@ -220,6 +220,14 @@ namespace src
             foreach (var vp in blocks.Keys)
             {
                 var chunk = GetChunkIfInited(vp.chunk);
+                if (chunk == null)
+                {
+                    DestroyGarbageChunkIfExists(vp.chunk);
+                    WorldService.INSTANCE.AddChange(vp, blocks[vp].Item1.id,
+                        blocks[vp].Item2); // TODO: re-draw neighbors?
+                    continue;
+                }
+
                 if (!chunks.TryGetValue(chunk, out var chunkData))
                 {
                     chunkData = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
@@ -236,9 +244,16 @@ namespace src
         public void DeleteBlocks(Dictionary<VoxelPosition, Land> blocks)
         {
             var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Land>>();
+            var nullChunkNeighbors = new List<Chunk>();
             foreach (var vp in blocks.Keys)
             {
                 var chunk = GetChunkIfInited(vp.chunk);
+                if (chunk == null)
+                {
+                    WorldService.INSTANCE.AddChange(vp, 0, blocks[vp]); // TODO: re-draw neighbors?
+                    continue;
+                }
+
                 if (!chunks.TryGetValue(chunk, out var chunkData))
                 {
                     chunkData = new Dictionary<VoxelPosition, Land>();
