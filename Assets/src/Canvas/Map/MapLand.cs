@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace src.Canvas.Map
 {
-    public class MapLand : MonoBehaviour, IPointerClickHandler
+    public class MapLand : MonoBehaviour, IPointerClickHandler, IPointerUpHandler
     {
         public Land land;
 
@@ -45,10 +45,13 @@ namespace src.Canvas.Map
                 var realPosition = Vectors.FloorToInt(mouseLocalPos);
                 GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
             }
-            else if (eventData.button == PointerEventData.InputButton.Right)
-            {
+        }
+
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            if (land == null || LandProfileDialog.INSTANCE.gameObject.activeSelf) return;
+            if (eventData.button == PointerEventData.InputButton.Right)
                 OpenLandDialog();
-            }
         }
     }
 }
