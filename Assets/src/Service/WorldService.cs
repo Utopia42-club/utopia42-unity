@@ -242,7 +242,7 @@ namespace src.Service
             return landRegistry.GetLandsForOwner(walletId);
         }
 
-        public IEnumerator Initialize(Loading loading, Action onDone)
+        public IEnumerator Initialize(Loading loading, Action onDone, Action onFailed)
         {
             if (IsInitialized()) yield break;
             var migrationService = new MigrationService();
@@ -251,6 +251,7 @@ namespace src.Service
             var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, uint>>();
             var metaBlocks = new Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>>();
 
+            var failed = false;
             yield return LoadDetails(loading, (land, details) =>
             {
                 details = migrationService.Migrate(land, details);
@@ -259,12 +260,16 @@ namespace src.Service
                     ReadMetadata(land, details, metaBlocks);
                 if (details.changes != null)
                     ReadChanges(land, details, changes);
+            }, () =>
+            {
+                failed = true;
+                onFailed();
             });
-
+            if (failed) yield break;
+            
             this.changes = changes;
             this.metaBlocks = metaBlocks;
             onDone.Invoke();
-            yield break;
         }
 
         private void ReadChanges(Land land, LandDetails details,
@@ -318,10 +323,17 @@ namespace src.Service
             }
         }
 
-        private IEnumerator LoadDetails(Loading loading, Action<Land, LandDetails> consumer)
+        private IEnumerator LoadDetails(Loading loading, Action<Land, LandDetails> consumer, Action onFailed)
         {
             loading.UpdateText("Loading Lands\n0/0");
-            yield return landRegistry.ReloadLands();
+
+            var failed = false;
+            yield return landRegistry.ReloadLands(() =>
+            {
+                failed = true;
+                onFailed();
+            });
+            if (failed) yield break;
 
             var landsCount = landRegistry.GetLands().Count;
             var enums = new IEnumerator[landsCount];
@@ -522,9 +534,9 @@ namespace src.Service
             return lands?.FirstOrDefault(l => l.Contains(position));
         }
 
-        public IEnumerator ReloadLandsFor(string wallet)
+        public IEnumerator ReloadLandsFor(string wallet, Action onFailed)
         {
-            yield return landRegistry.ReloadLandsForOwner(wallet);
+            yield return landRegistry.ReloadLandsForOwner(wallet, onFailed);
         }
 
         public bool IsInitialized()
@@ -532,9 +544,9 @@ namespace src.Service
             return changes != null;
         }
 
-        public IEnumerator ReloadLands()
+        public IEnumerator ReloadLands(Action onFailed)
         {
-            yield return landRegistry.ReloadLands();
+            yield return landRegistry.ReloadLands(onFailed);
         }
     }
 }

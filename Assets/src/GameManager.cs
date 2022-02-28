@@ -193,7 +193,7 @@ namespace src
                 EthereumClientService.INSTANCE.SetNetwork(network);
                 SetState(State.LOADING);
                 StartCoroutine(WorldService.INSTANCE.Initialize(Loading.INSTANCE,
-                    () => InitPlayerForWallet(startingPosition)));
+                    () => InitPlayerForWallet(startingPosition), () => { Loading.INSTANCE.ShowConnectionError(); }));
             }
             else
             {
@@ -383,7 +383,15 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Reloading Lands...");
-            yield return WorldService.INSTANCE.ReloadLands();
+
+            var failed = false;
+            yield return WorldService.INSTANCE.ReloadLands(() =>
+            {
+                failed = true;
+                Loading.INSTANCE.ShowConnectionError();
+            });
+            if (failed) yield break;
+
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.transform.position, true);
@@ -393,7 +401,15 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Reloading Your Lands...");
-            yield return WorldService.INSTANCE.ReloadLandsFor(Settings.WalletId());
+
+            var failed = false;
+            yield return WorldService.INSTANCE.ReloadLandsFor(Settings.WalletId(), () =>
+            {
+                failed = true;
+                Loading.INSTANCE.ShowConnectionError();
+            });
+            if (failed) yield break;
+
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.transform.position, true);
@@ -455,6 +471,12 @@ namespace src
             PROFILE_DIALOG,
             MOVING_OBJECT,
             FREEZE
+        }
+
+        public void ShowConnectionError()
+        {
+            SetState(State.LOADING);
+            Loading.INSTANCE.ShowConnectionError();
         }
     }
 }

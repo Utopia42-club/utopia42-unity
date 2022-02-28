@@ -34,17 +34,19 @@ namespace src.Service.Ethereum
             this.network = network;
         }
 
-        public IEnumerator GetLastLandId(Action<BigInteger> consumer)
+        public IEnumerator GetLastLandId(Action<BigInteger> consumer, Action onFailed)
         {
             // consumer(6); yield break; // for test only 
             var request =
                 new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(network.provider,
                     network.contractAddress);
             yield return request.Query(new LastLandIdFunction() { }, network.contractAddress);
-            consumer(request.Result.ReturnValue1);
+            if (request.Result != null)
+                consumer(request.Result.ReturnValue1);
+            else onFailed();
         }
 
-        public IEnumerator GetLandPrice(long x1, long x2, long y1, long y2, Action<decimal> consumer)
+        public IEnumerator GetLandPrice(long x1, long x2, long y1, long y2, Action<decimal> consumer, Action onFailed)
         {
             var request =
                 new QueryUnityRequest<LandPriceFunction, LandPriceOutputDTO>(network.provider, network.contractAddress);
@@ -55,11 +57,13 @@ namespace src.Service.Ethereum
                 Y1 = y1,
                 Y2 = y2
             }, network.contractAddress);
-            consumer(Web3.Convert.FromWei(request.Result.ReturnValue1));
+            if (request.Result != null)
+                consumer(Web3.Convert.FromWei(request.Result.ReturnValue1));
+            else onFailed();
         }
 
 
-        public IEnumerator ABS(Action<BigInteger> consumer)
+        public IEnumerator ABS(Action<BigInteger> consumer, Action onFailed)
         {
             var request =
                 new QueryUnityRequest<AbsFunction, AbsOutputDTO>(network.provider, network.contractAddress);
@@ -67,26 +71,33 @@ namespace src.Service.Ethereum
             // Debug.Log(request.Exception);
             // Debug.Log(request.DefaultAccount);
             // Debug.Log(request.Result.ReturnValue1);
-            consumer(request.Result.ReturnValue1);
+
+            if (request.Result != null)
+                consumer(request.Result.ReturnValue1);
+            else onFailed();
             // consumer(MapLands(request.Result.Lands));
         }
 
-        public IEnumerator GetLandsForOwner(string owner, Action<List<Land>> consumer)
+        public IEnumerator GetLandsForOwner(string owner, Action<List<Land>> consumer, Action onFailed)
         {
             var request =
                 new QueryUnityRequest<GetLandsFunction, GetLandsOutputDTO>(network.provider, network.contractAddress);
             yield return request.Query(new GetLandsFunction() {Owner = owner}, network.contractAddress);
-            consumer(MapLands(request.Result.Lands));
+            if (request.Result != null)
+                consumer(MapLands(request.Result.Lands));
+            else onFailed();
         }
 
-        public IEnumerator GetLandsByIds(List<BigInteger> ids, Action<List<Land>> consumer)
+        public IEnumerator GetLandsByIds(List<BigInteger> ids, Action<List<Land>> consumer, Action onFailed)
         {
             var request =
                 new QueryUnityRequest<GetLandsByIdsFunction, GetLandsByIdsOutputDTO>(network.provider,
                     network.contractAddress);
             //TODO add exception handling
             yield return request.Query(new GetLandsByIdsFunction() {Ids = ids}, network.contractAddress);
-            consumer(MapLands(request.Result.Lands));
+            if (request.Result != null)
+                consumer(MapLands(request.Result.Lands));
+            else onFailed();
         }
 
         private static List<Land> MapLands(List<ContractDefinition.Land> contractLands)
@@ -110,10 +121,10 @@ namespace src.Service.Ethereum
             return resultLands;
         }
 
-        public IEnumerator GetLands(List<Land> resultLands)
+        public IEnumerator GetLands(List<Land> resultLands, Action onFailed)
         {
             BigInteger lastId = 0;
-            yield return GetLastLandId(result => lastId = result);
+            yield return GetLastLandId(result => lastId = result, onFailed);
 
             var pageSize = lastId < 50 ? (int) lastId : 50;
             var ids = new List<BigInteger>(pageSize);
@@ -122,6 +133,8 @@ namespace src.Service.Ethereum
             while (true)
             {
                 if (ids.Count == 0) yield break;
+
+                var failed = false;
                 yield return GetLandsByIds(ids, lands =>
                 {
                     foreach (var land in lands)
@@ -132,7 +145,13 @@ namespace src.Service.Ethereum
                             continue;
                         resultLands.Add(land);
                     }
+                }, () =>
+                {
+                    failed = true;
+                    onFailed();
                 });
+                if (failed) yield break;
+
                 var currentLast = ids[ids.Count - 1];
                 if (currentLast + pageSize > lastId)
                     ids = ids.GetRange(0, (int) (lastId - currentLast));
