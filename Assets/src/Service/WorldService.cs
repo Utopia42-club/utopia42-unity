@@ -21,8 +21,9 @@ namespace src.Service
     public class WorldService
     {
         public static WorldService INSTANCE = new WorldService();
-        private Dictionary<byte, BlockType> types = new Dictionary<byte, BlockType>();
-        private Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes = null;
+        private Dictionary<uint, BlockType> types = new Dictionary<uint, BlockType>();
+        private Dictionary<uint, BlockType> coloredTypes = new Dictionary<uint, BlockType>();
+        private Dictionary<Vector3Int, Dictionary<Vector3Int, uint>> changes = null;
         private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
         private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
         private HashSet<Land> changedLands = new HashSet<Land>();
@@ -88,11 +89,11 @@ namespace src.Service
             return blocks;
         }
 
-        public void FillChunk(Vector3Int coordinate, byte[,,] voxels)
+        public void FillChunk(Vector3Int coordinate, uint[,,] voxels)
         {
             InitiateChunk(coordinate, voxels);
 
-            Dictionary<Vector3Int, byte> chunkChanges;
+            Dictionary<Vector3Int, uint> chunkChanges;
             if (changes.TryGetValue(coordinate, out chunkChanges))
             {
                 foreach (var change in chunkChanges)
@@ -104,11 +105,11 @@ namespace src.Service
         }
 
 
-        private void InitiateChunk(Vector3Int position, byte[,,] voxels)
+        private void InitiateChunk(Vector3Int position, uint[,,] voxels)
         {
-            byte stone = GetBlockType("end_stone").id;
-            byte body;
-            byte top;
+            var stone = GetBlockType("end_stone").id;
+            uint body;
+            uint top;
 
             if (position.y == 0)
             {
@@ -132,12 +133,12 @@ namespace src.Service
             }
         }
 
-        private void InitGroundLevel(Vector3Int position, byte[,,] voxels, byte stone)
+        private void InitGroundLevel(Vector3Int position, uint[,,] voxels, uint stone)
         {
-            byte body, top;
-            byte grass = GetBlockType("grass").id;
-            byte darkGrass = GetBlockType("dark_grass").id;
-            byte dirt = GetBlockType("dirt").id;
+            uint body, top;
+            var grass = GetBlockType("grass").id;
+            var darkGrass = GetBlockType("dark_grass").id;
+            var dirt = GetBlockType("dirt").id;
 
             var lands = landRegistry.GetLandsForChunk(new Vector2Int(position.x, position.z));
             var wallet = Settings.WalletId();
@@ -164,7 +165,7 @@ namespace src.Service
             }
         }
 
-        private void FillAtXY(byte top, byte body, int x, int z, byte[,,] voxels)
+        private void FillAtXY(uint top, uint body, int x, int z, uint[,,] voxels)
         {
             int maxy = voxels.GetLength(1) - 1;
 
@@ -173,13 +174,29 @@ namespace src.Service
                 voxels[x, y, z] = body;
         }
 
-        public BlockType GetBlockType(byte id)
+        public BlockType GetBlockType(uint id)
         {
-            return types[id];
+            return BlockType.IsColorId(id) ? coloredTypes[id] : types[id]; // TODO: merge two types ?
         }
 
         public BlockType GetBlockType(string name)
         {
+            if (name.StartsWith("#"))
+            {
+                if (name.Length != 7 || !ColorUtility.TryParseHtmlString(name, out var color))
+                {
+                    Debug.LogError("Invalid block color: " + name);
+                    return null;
+                }
+
+                var id = BlockType.GetId(color);
+                if (coloredTypes.TryGetValue(id, out var blockType)) return blockType;
+
+                blockType = new BlockType(id, color, name);
+                coloredTypes.Add(id, blockType);
+                return blockType;
+            }
+
             foreach (var entry in types)
             {
                 if (entry.Value.name.Equals(name))
@@ -207,10 +224,10 @@ namespace src.Service
 
         public bool IsSolid(VoxelPosition vp)
         {
-            Dictionary<Vector3Int, byte> chunkChanges;
+            Dictionary<Vector3Int, uint> chunkChanges;
             if (changes.TryGetValue(vp.chunk, out chunkChanges))
             {
-                byte type;
+                uint type;
                 if (chunkChanges.TryGetValue(vp.local, out type))
                 {
                     return GetBlockType(type).isSolid;
@@ -231,7 +248,7 @@ namespace src.Service
             var migrationService = new MigrationService();
             if (!migrationService.GetLatestVersion().Equals("0.2.0"))
                 throw new Exception("Unsupported migration latest version.");
-            var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, byte>>();
+            var changes = new Dictionary<Vector3Int, Dictionary<Vector3Int, uint>>();
             var metaBlocks = new Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>>();
 
             yield return LoadDetails(loading, (land, details) =>
@@ -251,7 +268,7 @@ namespace src.Service
         }
 
         private void ReadChanges(Land land, LandDetails details,
-            Dictionary<Vector3Int, Dictionary<Vector3Int, byte>> changes)
+            Dictionary<Vector3Int, Dictionary<Vector3Int, uint>> changes)
         {
             var landStart = land.startCoordinate.ToVector3();
             foreach (var entry in details.changes)
@@ -264,9 +281,9 @@ namespace src.Service
                     if (type == null) continue;
 
                     var position = new VoxelPosition(pos);
-                    Dictionary<Vector3Int, byte> chunk;
+                    Dictionary<Vector3Int, uint> chunk;
                     if (!changes.TryGetValue(position.chunk, out chunk))
-                        changes[position.chunk] = chunk = new Dictionary<Vector3Int, byte>();
+                        changes[position.chunk] = chunk = new Dictionary<Vector3Int, uint>();
                     chunk[position.local] = type.id;
                 }
             }
@@ -417,7 +434,7 @@ namespace src.Service
                 changedLands.Add(block.land);
         }
 
-        public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, byte id, Land land)
+        public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, uint id, Land land)
         {
             Dictionary<Vector3Int, MetaBlock> metas;
             if (!metaBlocks.TryGetValue(pos.chunk, out metas))
@@ -437,12 +454,12 @@ namespace src.Service
             return metas;
         }
 
-        public void AddChange(VoxelPosition pos, byte id, Land land)
+        public void AddChange(VoxelPosition pos, uint id, Land land)
         {
-            Dictionary<Vector3Int, byte> vc;
+            Dictionary<Vector3Int, uint> vc;
             if (!changes.TryGetValue(pos.chunk, out vc))
             {
-                vc = new Dictionary<Vector3Int, byte>();
+                vc = new Dictionary<Vector3Int, uint>();
                 changes[pos.chunk] = vc;
             }
 

@@ -1,3 +1,5 @@
+using System;
+using UnityEngine;
 using static src.Utils.Voxels;
 using static src.Utils.Voxels.Face;
 
@@ -5,13 +7,13 @@ namespace src.Model
 {
     public class BlockType
     {
-        public readonly byte id;
+        public readonly uint id;
         public readonly string name;
         public readonly bool isSolid;
         public readonly int[] textures = new int[FACES.Length];
-        public bool IsWhite => id == 27 || id == 29; // for test only 
+        public readonly Color32? color;
 
-        public BlockType(byte id, string name, bool isSolid,
+        public BlockType(uint id, string name, bool isSolid,
             int backTexture, int rightTexture,
             int frontTexture, int leftTexture,
             int bottomTexture, int topTexture)
@@ -27,6 +29,14 @@ namespace src.Model
             textures[TOP.index] = topTexture;
         }
 
+        public BlockType(uint id, Color32 color, string name)
+        {
+            this.id = id;
+            this.color = color;
+            this.name = name;
+            isSolid = true;
+        }
+
         public int GetTextureID(Face face)
         {
             return textures[face.index];
@@ -37,6 +47,16 @@ namespace src.Model
             return failed ? 
                 UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/failed") :
                 UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/" + name);
+        }
+
+        public static bool IsColorId(uint id)
+        {
+            return BitConverter.GetBytes(id)[3] == 1;
+        }
+
+        public static uint GetId(Color32 color)
+        {
+            return (uint) (color.b + (color.g << 8) + (color.r << 16) + (1 << 24));
         }
     }
 }

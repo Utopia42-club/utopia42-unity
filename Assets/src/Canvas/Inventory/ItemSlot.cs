@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-
 namespace src.Canvas
 {
     public class ItemSlot
@@ -78,10 +73,10 @@ namespace src.Canvas
 
     public class ItemStack
     {
-        public byte id;
+        public uint id;
         public int amount;
 
-        public ItemStack(byte id, int amount)
+        public ItemStack(uint id, int amount)
         {
             this.id = id;
             this.amount = amount;

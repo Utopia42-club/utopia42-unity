@@ -16,7 +16,7 @@ namespace src
         public static readonly int CHUNK_HEIGHT = 32;
 
         private Dictionary<Vector3Int, MetaBlock> metaBlocks;
-        private readonly byte[,,] voxels = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
+        private readonly uint[,,] voxels = new uint[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
         private World world;
         public GameObject chunkObject;
 
@@ -133,7 +133,7 @@ namespace src
         void AddVisibleFaces(Vector3Int pos, List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles,
             List<Vector2> uvs, List<Color32> colors)
         {
-            Vector3Int[] verts = new Vector3Int[]
+            Vector3Int[] verts =
             {
                 Voxels.Vertices[0] + pos,
                 Voxels.Vertices[1] + pos,
@@ -145,40 +145,33 @@ namespace src
                 Voxels.Vertices[7] + pos
             };
 
-            byte blockId = voxels[pos.x, pos.y, pos.z];
+            var blockId = voxels[pos.x, pos.y, pos.z];
             var type = WorldService.INSTANCE.GetBlockType(blockId);
             if (!type.isSolid) return;
 
-            foreach (Voxels.Face face in Voxels.Face.FACES)
+            var targetTriangles = type.color != null ? coloredTriangles : triangles;
+            var color = type.color ?? Color.white;
+
+            foreach (var face in Voxels.Face.FACES)
             {
                 if (!IsPositionSolid(pos + face.direction))
                 {
-                    int idx = vertices.Count;
+                    var idx = vertices.Count;
 
                     vertices.Add(verts[face.verts[0]]);
                     vertices.Add(verts[face.verts[1]]);
                     vertices.Add(verts[face.verts[2]]);
                     vertices.Add(verts[face.verts[3]]);
 
-
-                    Color32 color;
-                    List<int> targetTriangles;
-                    if (false && type.IsWhite) // for test only
+                    if (type.color != null)
                     {
-                        color = pos.x % 2 == 0 && pos.z % 2 == 0 ? Color.green : Color.magenta;
-                        targetTriangles = coloredTriangles;
-
                         uvs.Add(Vector2.zero);
                         uvs.Add(Vector2.zero);
                         uvs.Add(Vector2.zero);
                         uvs.Add(Vector2.zero);
                     }
                     else
-                    {
-                        color = Color.white;
-                        targetTriangles = triangles;
                         AddTexture(type.GetTextureID(face), uvs);
-                    }
 
                     colors.Add(color);
                     colors.Add(color);
@@ -319,6 +312,7 @@ namespace src
 
         public void PutMeta(VoxelPosition pos, BlockType type, Land land)
         {
+            metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type.id, land);
             metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type.id, land);
             metaBlocks[pos.local].RenderAt(chunkObject.transform, pos.local, this);
         }

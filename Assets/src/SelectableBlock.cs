@@ -16,15 +16,15 @@ namespace src
         private readonly Transform highlight;
         private Transform tdHighlight;
 
-        private readonly byte blockTypeId;
-        private readonly byte metaBlockTypeId;
+        private readonly uint blockTypeId;
+        private readonly uint metaBlockTypeId;
         private readonly object metaProperties;
         private readonly bool metaAttached;
 
         private const float SelectedBlocksHighlightAlpha = 0.3f;
 
-        private SelectableBlock(Vector3Int pos, byte blockTypeId, Transform highlight, Transform tdHighlight,
-            byte metaBlockTypeId,
+        private SelectableBlock(Vector3Int pos, uint blockTypeId, Transform highlight, Transform tdHighlight,
+            uint metaBlockTypeId,
             object metaProperties, Land land)
         {
             metaAttached = true;
@@ -37,7 +37,7 @@ namespace src
             this.land = land;
         }
 
-        private SelectableBlock(Vector3Int pos, byte blockTypeId, Transform highlight, Land land)
+        private SelectableBlock(Vector3Int pos, uint blockTypeId, Transform highlight, Land land)
         {
             metaAttached = false;
             Position = pos;

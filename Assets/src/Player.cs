@@ -27,7 +27,7 @@ namespace src
         [SerializeField] private Transform placeBlock;
         [SerializeField] private Transform tdObjectHighlightBox;
 
-        [NonSerialized] public byte selectedBlockId = 1;
+        [NonSerialized] public uint selectedBlockId = 1;
 
         private bool sprinting;
         private Vector3 velocity = Vector3.zero;

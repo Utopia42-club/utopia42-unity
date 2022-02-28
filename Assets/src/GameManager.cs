@@ -106,7 +106,7 @@ namespace src
             float total = world.CountChunksToCreate();
             while (world.CountChunksToCreate() > 0)
             {
-                var perc = ((total - world.CountChunksToCreate()) / total) * 100;
+                var perc = (total - world.CountChunksToCreate()) / total * 100;
                 Loading.INSTANCE.UpdateText(string.Format("Creating the world\n{0}%", Mathf.FloorToInt(perc)));
                 yield return null;
             }
