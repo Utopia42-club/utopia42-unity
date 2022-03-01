@@ -42,21 +42,11 @@ namespace src.Model
             return textures[face.index];
         }
 
-        public UnityEngine.Sprite GetIcon(bool failed = false)
+        public Sprite GetIcon(bool failed = false)
         {
             return failed ? 
-                UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/failed") :
-                UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/" + name);
-        }
-
-        public static bool IsColorId(uint id)
-        {
-            return BitConverter.GetBytes(id)[3] == 1;
-        }
-
-        public static uint GetId(Color32 color)
-        {
-            return (uint) (color.b + (color.g << 8) + (color.r << 16) + (1 << 24));
+                Resources.Load<Sprite>("BlockIcons/failed") :
+                Resources.Load<Sprite>("BlockIcons/" + name);
         }
     }
 }

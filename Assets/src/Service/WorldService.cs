@@ -13,6 +13,7 @@ using src.MetaBlocks.TdObjectBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
 using src.Service.Migration;
+using src.Utils;
 using UnityEngine;
 
 namespace src.Service
@@ -22,7 +23,6 @@ namespace src.Service
     {
         public static WorldService INSTANCE = new WorldService();
         private Dictionary<uint, BlockType> types = new Dictionary<uint, BlockType>();
-        private Dictionary<uint, BlockType> coloredTypes = new Dictionary<uint, BlockType>();
         private Dictionary<Vector3Int, Dictionary<Vector3Int, uint>> changes = null;
         private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
         private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
@@ -176,26 +176,13 @@ namespace src.Service
 
         public BlockType GetBlockType(uint id)
         {
-            return BlockType.IsColorId(id) ? coloredTypes[id] : types[id]; // TODO: merge two types ?
+            return ColorBlocks.IsColorTypeId(id, out var blockType) ? blockType : types[id];
         }
 
         public BlockType GetBlockType(string name)
         {
-            if (name.StartsWith("#"))
-            {
-                if (name.Length != 7 || !ColorUtility.TryParseHtmlString(name, out var color))
-                {
-                    Debug.LogError("Invalid block color: " + name);
-                    return null;
-                }
-
-                var id = BlockType.GetId(color);
-                if (coloredTypes.TryGetValue(id, out var blockType)) return blockType;
-
-                blockType = new BlockType(id, color, name);
-                coloredTypes.Add(id, blockType);
+            if (ColorBlocks.IsColorBlockType(name, out var blockType))
                 return blockType;
-            }
 
             foreach (var entry in types)
             {
@@ -266,7 +253,7 @@ namespace src.Service
                 onFailed();
             });
             if (failed) yield break;
-            
+
             this.changes = changes;
             this.metaBlocks = metaBlocks;
             onDone.Invoke();
