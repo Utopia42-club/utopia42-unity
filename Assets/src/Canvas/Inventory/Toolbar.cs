@@ -21,7 +21,7 @@ namespace src.Canvas
             {
                 GameObject newSlot = Instantiate(slotPrefab, layout.transform);
 
-                ItemStack stack = new ItemStack((byte)i, Random.Range(2, 65));
+                ItemStack stack = new ItemStack((byte) i, Random.Range(2, 65));
                 ItemSlot slot = new ItemSlot();
                 slot.SetStack(stack);
                 var ui = newSlot.GetComponent<ItemSlotUI>();
@@ -44,6 +44,7 @@ namespace src.Canvas
                 if (inc) selectedSlot++;
                 selectedSlot = (selectedSlot + slots.Length) % slots.Length;
             }
+
             SelectedChanged();
         }
 
@@ -55,5 +56,11 @@ namespace src.Canvas
             else player.selectedBlockId = 0;
         }
 
+        public void SetActiveHighlight(bool active)
+        {
+            highlight.gameObject.SetActive(active);
+        }
+
+        public static Toolbar INSTANCE => GameObject.Find("Toolbar").GetComponent<Toolbar>();
     }
 }

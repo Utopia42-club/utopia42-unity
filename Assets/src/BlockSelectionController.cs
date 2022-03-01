@@ -7,6 +7,7 @@ using src.Service;
 using src.Utils;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace src
 {
@@ -172,21 +173,24 @@ namespace src
                         : player.FocusedMeta.GetBlockPosition());
                 SelectBlockAtPosition(selectedBlockPosition);
             }
-            else if (player.HighlightBlock.gameObject.activeSelf && Input.GetMouseButtonDown(0))
+            else if (Input.GetMouseButtonDown(0))
             {
-                var vp = new VoxelPosition(player.HighlightBlock.position);
-                var chunk = world.GetChunkIfInited(vp.chunk);
-                if (chunk != null)
+                if (player.hammerMode && player.HighlightBlock.gameObject.activeSelf)
                 {
-                    chunk.DeleteVoxel(vp, player.HighlightLand);
-                    if (chunk.GetMetaAt(vp) != null)
-                        chunk.DeleteMeta(vp);
+                    var vp = new VoxelPosition(player.HighlightBlock.position);
+                    var chunk = world.GetChunkIfInited(vp.chunk);
+                    if (chunk != null)
+                    {
+                        chunk.DeleteVoxel(vp, player.HighlightLand);
+                        if (chunk.GetMetaAt(vp) != null)
+                            chunk.DeleteMeta(vp);
+                    }
                 }
-            }
-
-            if (player.PlaceBlock.gameObject.activeSelf && Input.GetMouseButtonDown(1))
-            {
-                player.PutBlock(player.PlaceBlock.position, WorldService.INSTANCE.GetBlockType(player.selectedBlockId));
+                else if (player.PlaceBlock.gameObject.activeSelf)
+                {
+                    player.PutBlock(player.PlaceBlock.position,
+                        WorldService.INSTANCE.GetBlockType(player.selectedBlockId));
+                }
             }
         }
 

@@ -7,6 +7,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 using MetaBlock = src.MetaBlocks.MetaBlock;
 
 namespace src
@@ -15,6 +16,8 @@ namespace src
     {
         public const float CastStep = 0.01f;
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
+        private static readonly Color HammerActiveColor = new Color(0.16f, 0.5f, 0.72f, 0.7f);
+        private static readonly Color HammerNotActiveColor = new Color(0, 0, 0, 0.5f);
 
         [SerializeField] private Transform cam;
         [SerializeField] private World world;
@@ -26,6 +29,7 @@ namespace src
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
         [SerializeField] private Transform tdObjectHighlightBox;
+        [SerializeField] private Image hammerBackground;
 
         [NonSerialized] public uint selectedBlockId = 1;
 
@@ -44,6 +48,7 @@ namespace src
         private CharacterController controller;
         private BlockSelectionController blockSelectionController;
 
+        public bool hammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
         public Transform TdObjectHighlightBox => tdObjectHighlightBox;
@@ -225,6 +230,19 @@ namespace src
 
             if (Input.GetButtonDown("Toggle Floating"))
                 floating = !floating;
+
+            if (Input.GetButtonDown("Toggle Hammer"))
+                SetHammerActive(!hammerMode);
+
+            if (hammerMode && (Input.GetButtonDown("Select Left") || Input.GetButtonDown("Select Right")))
+                SetHammerActive(false);
+        }
+
+        private void SetHammerActive(bool active)
+        {
+            hammerMode = active;
+            Toolbar.INSTANCE.SetActiveHighlight(!active);
+            hammerBackground.color = active ? HammerActiveColor : HammerNotActiveColor;
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
