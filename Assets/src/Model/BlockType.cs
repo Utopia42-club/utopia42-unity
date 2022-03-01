@@ -1,4 +1,4 @@
-using System;
+using src.Utils;
 using UnityEngine;
 using static src.Utils.Voxels;
 using static src.Utils.Voxels.Face;
@@ -44,9 +44,16 @@ namespace src.Model
 
         public Sprite GetIcon(bool failed = false)
         {
-            return failed ? 
-                Resources.Load<Sprite>("BlockIcons/failed") :
-                Resources.Load<Sprite>("BlockIcons/" + name);
+            BlockType colorBlock;
+            var blockName = name;
+            if (ColorBlocks.IsColorTypeId(id, out colorBlock))
+            {
+                blockName = "color";
+            }
+
+            return failed
+                ? Resources.Load<Sprite>("BlockIcons/failed")
+                : Resources.Load<Sprite>("BlockIcons/" + blockName);
         }
     }
 }

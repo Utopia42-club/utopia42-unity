@@ -1,4 +1,6 @@
+using src.Model;
 using src.Service;
+using src.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,7 +18,14 @@ namespace src.Canvas
 
             if (itemSlot != null && itemSlot.GetStack() != null)
             {
-                slotIcon.sprite = WorldService.INSTANCE.GetBlockType(itemSlot.GetStack().id).GetIcon();
+                var blockId = itemSlot.GetStack().id;
+                slotIcon.sprite = WorldService.INSTANCE.GetBlockType(blockId).GetIcon();
+
+                if (ColorBlocks.IsColorTypeId(blockId, out var colorType))
+                {
+                    slotIcon.color = ColorBlocks.GetColorFromBlockType(colorType);
+                }
+
                 slotAmount.text = "";
                 slotAmount.enabled = true;
                 slotIcon.enabled = true;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using src.Utils;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -17,7 +18,11 @@ namespace src.Canvas
         [SerializeField]
         private EventSystem eventSystem = null;
 
+        public Inventory inventory;
+        
         World world;
+
+        public bool enabled = true;
 
         private void Start()
         {
@@ -27,18 +32,39 @@ namespace src.Canvas
 
         private void Update()
         {
-            if (GameManager.INSTANCE.GetState() != GameManager.State.INVENTORY) return;
+            if (GameManager.INSTANCE.GetState() != GameManager.State.INVENTORY || !enabled) return;
 
             cursorSlot.transform.position = Input.mousePosition;
-
+    
             if (Input.GetMouseButtonDown(1))
             {
                 ClearCursorSlot();
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
+                                                      || Input.GetKey(KeyCode.LeftCommand)
+                                                      || Input.GetKey(KeyCode.RightCommand))
+                {
+                    RequestTypeDelete(CheckForSlot());
+                }
             }
             
             if (Input.GetMouseButtonDown(0))
             {
                 HandleSlotClick(CheckForSlot());
+            }
+        }
+
+        private void RequestTypeDelete(ItemSlotUI clickedSlot)
+        {
+            if (!cursorSlot.HasItem() && !clickedSlot.HasItem())
+                return;
+
+            if (clickedSlot.itemSlot.GetFromInventory())
+            {
+                var id = clickedSlot.itemSlot.GetStack().id;
+                if (ColorBlocks.IsColorTypeId(id))
+                {
+                    StartCoroutine(inventory.RemoveColorBlock(clickedSlot));
+                }
             }
         }
 

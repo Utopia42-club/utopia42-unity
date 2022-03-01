@@ -33,11 +33,23 @@ namespace src.Utils
             return new BlockType(id, color, name);
         }
 
+        public static Color32 GetColorFromBlockType(BlockType blockType)
+        {
+            var b = ColorUtility.TryParseHtmlString(blockType.name, out var color);
+            return b ? color : Color.white;
+        }
+
+        public static bool IsColorTypeId(uint id)
+        {
+            var bytes = BitConverter.GetBytes(id);
+            return bytes[3] == 1;
+        }
+
         public static bool IsColorTypeId(uint id, out BlockType blockType)
         {
             var bytes = BitConverter.GetBytes(id);
-            
-            if (bytes[3] != 1)
+
+            if (!IsColorTypeId(id))
             {
                 blockType = null;
                 return false;

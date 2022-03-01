@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 452258355}
-  m_IndirectSpecularColor: {r: 0.4366753, g: 0.48427093, b: 0.5645238, a: 1}
+  m_IndirectSpecularColor: {r: 0.43668756, g: 0.48427904, b: 0.5645309, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2788,7 +2788,7 @@ MonoBehaviour:
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 2
+  m_ScrollSensitivity: 8
   m_Viewport: {fileID: 1237740287}
   m_HorizontalScrollbar: {fileID: 0}
   m_VerticalScrollbar: {fileID: 2085882154}
@@ -4438,7 +4438,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 236.65498, y: -77.63001}
+  m_AnchoredPosition: {x: 236.65498, y: -77.6298}
   m_SizeDelta: {x: 368.81, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442934151
@@ -4902,6 +4902,8 @@ MonoBehaviour:
   cursorSlot: {fileID: 1600894104}
   raycaster: {fileID: 485830353}
   eventSystem: {fileID: 281748170}
+  inventory: {fileID: 1645020568}
+  enabled: 1
 --- !u!1 &502280907
 GameObject:
   m_ObjectHideFlags: 0
@@ -13377,7 +13379,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.41918835, g: 0.49261308, b: 0.5660378, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -16955,7 +16957,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1925748159}
   m_HandleRect: {fileID: 1925748158}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -17944,6 +17946,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   slotPrefab: {fileID: 1563724908447827561, guid: 472354187f7896a4496e9536a954bccd, type: 3}
+  colorSlotPrefab: {fileID: 1563724908447827561, guid: b1e525c8c4ae0aeed9e25c96e6c4fd62, type: 3}
   cursorSlot: {fileID: 1600894104}
   closeButton: {fileID: 1720601371}
 --- !u!114 &1645020569
@@ -18075,8 +18078,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   textComponent: {fileID: 559384249}
-  logo: {fileID: 816178578}
-  errorImage: {fileID: 1228218036}
+  logo: {fileID: 0}
+  errorImage: {fileID: 0}
 --- !u!1 &1673843913
 GameObject:
   m_ObjectHideFlags: 0
@@ -22299,7 +22302,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.20392157, g: 0.28627452, b: 0.36862746, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
