@@ -4536,7 +4536,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 236.65498, y: -77.629974}
+  m_AnchoredPosition: {x: 236.65498, y: -77.62997}
   m_SizeDelta: {x: 368.81, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442934151
@@ -7612,6 +7612,7 @@ GameObject:
   - component: {fileID: 874649611}
   - component: {fileID: 874649610}
   - component: {fileID: 874649609}
+  - component: {fileID: 874649613}
   m_Layer: 5
   m_Name: Hammer
   m_TagString: Untagged
@@ -7718,6 +7719,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 874649607}
   m_CullTransparentMesh: 1
+--- !u!114 &874649613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874649607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4176f9fbfa26a574bb11925596675e4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  states: 02000000
 --- !u!1 &876987864
 GameObject:
   m_ObjectHideFlags: 0
@@ -17309,7 +17323,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1925748158}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99922526
+  m_Size: 0.9850037
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -20121,7 +20135,6 @@ GameObject:
   - component: {fileID: 1824530280}
   - component: {fileID: 1824530279}
   - component: {fileID: 1824530278}
-  - component: {fileID: 1824530281}
   m_Layer: 5
   m_Name: Count+Hammer
   m_TagString: Untagged
@@ -20198,19 +20211,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1824530276}
   m_CullTransparentMesh: 1
---- !u!114 &1824530281
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1824530276}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4176f9fbfa26a574bb11925596675e4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  states: 02000000
 --- !u!1 &1828913040
 GameObject:
   m_ObjectHideFlags: 0
