@@ -39,6 +39,7 @@ namespace src.Canvas.Map
 
             consumer.Invoke(screenshot.EncodeToPNG());
             mapInputManager.ScreenShotDone();
+            Destroy(screenshot);
         }
 
 

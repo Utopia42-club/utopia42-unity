@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Org.BouncyCastle.Utilities.Collections;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -51,7 +50,8 @@ namespace src
             meshRenderer = chunkObject.AddComponent<MeshRenderer>();
             meshCollider = chunkObject.AddComponent<MeshCollider>();
 
-            meshRenderer.materials = new[] {world.material, new Material(Shader.Find("Particles/Standard Surface"))};
+            meshRenderer.sharedMaterials = new[]
+                {world.material, new Material(Shader.Find("Particles/Standard Surface"))};
             chunkObject.transform.SetParent(world.transform);
             chunkObject.transform.position = position;
             chunkObject.name = "Chunck " + coordinate;
@@ -206,9 +206,7 @@ namespace src
             mesh.Optimize();
 
             Object.Destroy(meshFilter.sharedMesh);
-            Object.Destroy(meshCollider.sharedMesh);
-
-            meshFilter.mesh = mesh;
+            meshFilter.sharedMesh = mesh;
             meshCollider.sharedMesh = mesh;
         }
 
@@ -354,12 +352,25 @@ namespace src
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
 
-            return this.coordinate.Equals(((Chunk) obj).coordinate);
+            return coordinate.Equals(((Chunk) obj).coordinate);
         }
 
         public override int GetHashCode()
         {
-            return this.coordinate.GetHashCode();
+            return coordinate.GetHashCode();
+        }
+
+        public void Destroy()
+        {
+            if (metaBlocks != null)
+            {
+                foreach (var metaBlock in metaBlocks.Values)
+                    metaBlock.Destroy();
+            }
+
+            Object.Destroy(meshRenderer.sharedMaterials[1]);
+            Object.Destroy(meshFilter.sharedMesh);
+            Object.Destroy(chunkObject);
         }
     }
 }

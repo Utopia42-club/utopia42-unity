@@ -283,7 +283,7 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        private void DestroyObject()
+        private void DestroyObject(bool immediate = true)
         {
             if (tdObjectFocusable != null)
             {
@@ -293,15 +293,41 @@ namespace src.MetaBlocks.TdObjectBlock
 
             if (tdObject != null)
             {
-                DestroyImmediate(tdObject.gameObject);
-                DestroyImmediate(tdObject);
+                if (immediate)
+                    DestroyImmediate(tdObject.gameObject);
+                else
+                    Destroy(tdObject.gameObject);
+
+
+                foreach (var meshRenderer in tdObject.GetComponentsInChildren<MeshRenderer>())
+                foreach (var mat in meshRenderer.sharedMaterials)
+                {
+                    if (immediate)
+                    {
+                        DestroyImmediate(mat.mainTexture);
+                        DestroyImmediate(mat);
+                    }
+                    else
+                    {
+                        Destroy(mat.mainTexture);
+                        Destroy(mat);
+                    }
+                }
+
+                foreach (var meshFilter in tdObject.GetComponentsInChildren<MeshFilter>())
+                {
+                    if (immediate)
+                        DestroyImmediate(meshFilter.sharedMesh);
+                    else
+                        Destroy(meshFilter.sharedMesh);
+                }
+
                 tdObject = null;
             }
 
             if (tdObjectContainer != null)
             {
                 DestroyImmediate(tdObjectContainer.gameObject);
-                DestroyImmediate(tdObjectContainer);
                 tdObjectContainer = null;
             }
 
@@ -426,6 +452,12 @@ namespace src.MetaBlocks.TdObjectBlock
                     });
                     break;
             }
+        }
+
+        private void OnDestroy()
+        {
+            DestroyObject(false);
+            base.OnDestroy();
         }
     }
 }

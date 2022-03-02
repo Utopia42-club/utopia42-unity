@@ -12,12 +12,12 @@ namespace src
         public void Init(MeshRenderer renderer, string url, ImageBlockObject block, int faceIndex)
         {
             block.UpdateStateAndIcon(faceIndex, StateMsg.Loading);
-            StartCoroutine(LoadImage(renderer.material, url, block, faceIndex));
+            StartCoroutine(LoadImage(renderer.sharedMaterial, url, block, faceIndex));
         }
 
         private IEnumerator LoadImage(Material material, string url, ImageBlockObject block, int faceIndex)
         {
-            UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
+            using var request = UnityWebRequestTexture.GetTexture(url);
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.ConnectionError)
@@ -25,13 +25,15 @@ namespace src
                 block.UpdateStateAndIcon(faceIndex, StateMsg.ConnectionError);
                 yield break;
             }
-            
-            if (request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.DataProcessingError)
+
+            if (request.result == UnityWebRequest.Result.ProtocolError ||
+                request.result == UnityWebRequest.Result.DataProcessingError)
             {
                 block.UpdateStateAndIcon(faceIndex, StateMsg.InvalidUrlOrData);
                 yield break;
             }
-            material.mainTexture = ((DownloadHandlerTexture)request.downloadHandler).texture;
+
+            material.mainTexture = ((DownloadHandlerTexture) request.downloadHandler).texture;
             block.UpdateStateAndIcon(faceIndex, StateMsg.Ok);
         }
     }
