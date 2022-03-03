@@ -259,7 +259,7 @@ namespace src
                 highlightBlock.position = posInt;
                 highlightBlock.gameObject.SetActive((HammerMode || ctrlDown) && CanEdit(posInt, out highlightLand));
 
-                if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType)
+                if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType && !HammerMode)
                 {
                     if (chunk.GetMetaAt(vp) == null)
                     {
