@@ -175,13 +175,17 @@ namespace src
             }
             else if (Input.GetMouseButtonDown(0))
             {
-                if (player.hammerMode && player.HighlightBlock.gameObject.activeSelf)
+                if (player.hammerMode && (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null))
                 {
-                    var vp = new VoxelPosition(player.HighlightBlock.position);
+                    var position = Vectors.FloorToInt(player.FocusedMeta == null
+                        ? player.HighlightBlock.position
+                        : player.FocusedMeta.GetBlockPosition());
+                    var vp = new VoxelPosition(position);
                     var chunk = world.GetChunkIfInited(vp.chunk);
                     if (chunk != null)
                     {
-                        chunk.DeleteVoxel(vp, player.HighlightLand);
+                        if (player.FocusedMeta == null)
+                            chunk.DeleteVoxel(vp, player.HighlightLand);
                         if (chunk.GetMetaAt(vp) != null)
                             chunk.DeleteMeta(vp);
                     }
