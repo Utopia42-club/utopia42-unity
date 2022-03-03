@@ -30,6 +30,7 @@ namespace src
         [SerializeField] private Transform placeBlock;
         [SerializeField] private Transform tdObjectHighlightBox;
         [SerializeField] private Image hammerBackground;
+        [SerializeField] private GameObject hammer;
 
         [NonSerialized] public uint selectedBlockId = 1;
 
@@ -78,6 +79,7 @@ namespace src
 
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
+                hammer.gameObject.SetActive(state == GameManager.State.PLAYING);
                 if (state == GameManager.State.PLAYING)
                     hitCollider = null;
             });
