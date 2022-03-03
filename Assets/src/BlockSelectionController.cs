@@ -175,7 +175,7 @@ namespace src
             }
             else if (Input.GetMouseButtonDown(0))
             {
-                if (player.hammerMode && (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null))
+                if (player.HammerMode && (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null))
                 {
                     var position = Vectors.FloorToInt(player.FocusedMeta == null
                         ? player.HighlightBlock.position

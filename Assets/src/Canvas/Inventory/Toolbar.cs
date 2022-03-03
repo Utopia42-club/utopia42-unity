@@ -5,14 +5,14 @@ namespace src.Canvas
 {
     public class Toolbar : MonoBehaviour
     {
-        private int selectedSlot = 0;
-
         public Player player;
         public RectTransform highlight;
+        public RectTransform hammerHighlight;
 
         public GameObject slotPrefab;
 
         private ItemSlotUI[] slots = new ItemSlotUI[9];
+        private int selectedSlot;
 
         private void Start()
         {
@@ -30,35 +30,40 @@ namespace src.Canvas
                 slots[i - 1] = ui;
             }
 
+            selectedSlot = slots.Length;
             SelectedChanged();
+
+            GameManager.INSTANCE.stateChange.AddListener(state =>
+            {
+                if (state == GameManager.State.PLAYING) SelectedChanged();
+            });
         }
 
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            var dec = Input.GetButtonDown("Select Left");
-            var inc = Input.GetButtonDown("Select Right");
-            if (dec || inc)
-            {
-                if (dec) selectedSlot--;
-                if (inc) selectedSlot++;
-                selectedSlot = (selectedSlot + slots.Length) % slots.Length;
-            }
-
+            var dec = Input.GetButtonDown("Change Block") &&
+                      (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            var inc = !dec && Input.GetButtonDown("Change Block");
+            if (!dec && !inc) return;
+            if (dec) selectedSlot--;
+            if (inc) selectedSlot++;
+            selectedSlot = (selectedSlot + slots.Length + 1) % (slots.Length + 1);
             SelectedChanged();
         }
 
         private void SelectedChanged()
         {
+            var hammerSelected = selectedSlot == slots.Length;
+            highlight.gameObject.SetActive(!hammerSelected);
+            hammerHighlight.gameObject.SetActive(hammerSelected);
+            player.SetHammerActive(hammerSelected);
+            if (hammerSelected) return;
+
             highlight.position = slots[selectedSlot].transform.position;
             if (slots[selectedSlot].GetItemSlot().GetStack() != null)
                 player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
             else player.selectedBlockId = 0;
-        }
-
-        public void SetActiveHighlight(bool active)
-        {
-            highlight.gameObject.SetActive(active);
         }
 
         public static Toolbar INSTANCE => GameObject.Find("Toolbar").GetComponent<Toolbar>();

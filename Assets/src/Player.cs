@@ -29,8 +29,6 @@ namespace src
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
         [SerializeField] private Transform tdObjectHighlightBox;
-        [SerializeField] private Image hammerBackground;
-        [SerializeField] private GameObject hammer;
 
         [NonSerialized] public uint selectedBlockId = 1;
 
@@ -48,8 +46,9 @@ namespace src
         private Collider hitCollider;
         private CharacterController controller;
         private BlockSelectionController blockSelectionController;
+        private bool ctrlDown = false;
 
-        public bool hammerMode { get; private set; } = false;
+        public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
         public Transform TdObjectHighlightBox => tdObjectHighlightBox;
@@ -79,7 +78,6 @@ namespace src
 
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
-                hammer.gameObject.SetActive(state == GameManager.State.PLAYING);
                 if (state == GameManager.State.PLAYING)
                     hitCollider = null;
             });
@@ -177,7 +175,7 @@ namespace src
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            GetMovementInputs();
+            GetInputs();
             // GetTestInputs();
             blockSelectionController.DoUpdate();
 
@@ -215,8 +213,10 @@ namespace src
             ApiPutBlocks(toBePut);
         }
 
-        private void GetMovementInputs()
+        private void GetInputs()
         {
+            ctrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
 
@@ -232,19 +232,14 @@ namespace src
 
             if (Input.GetButtonDown("Toggle Floating"))
                 floating = !floating;
-
-            if (Input.GetButtonDown("Toggle Hammer"))
-                SetHammerActive(!hammerMode);
-
-            if (hammerMode && (Input.GetButtonDown("Select Left") || Input.GetButtonDown("Select Right")))
-                SetHammerActive(false);
         }
 
-        private void SetHammerActive(bool active)
+        public void SetHammerActive(bool active)
         {
-            hammerMode = active;
-            Toolbar.INSTANCE.SetActiveHighlight(!active);
-            hammerBackground.color = active ? HammerActiveColor : HammerNotActiveColor;
+            if (HammerMode == active) return;
+            HammerMode = active;
+            placeBlock.gameObject.SetActive(!active);
+            highlightBlock.gameObject.SetActive(active);
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
@@ -262,14 +257,14 @@ namespace src
             if (foundSolid)
             {
                 highlightBlock.position = posInt;
-                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
+                highlightBlock.gameObject.SetActive((HammerMode || ctrlDown) && CanEdit(posInt, out highlightLand));
 
                 if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType)
                 {
                     if (chunk.GetMetaAt(vp) == null)
                     {
                         placeBlock.position = posInt;
-                        placeBlock.gameObject.SetActive(CanEdit(posInt, out placeLand));
+                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) && CanEdit(posInt, out placeLand));
                     }
                     else
                         placeBlock.gameObject.SetActive(false);
@@ -280,7 +275,8 @@ namespace src
                     if (PlaceBlockPosInt != currVox && PlaceBlockPosInt != currVox + Vector3Int.up)
                     {
                         placeBlock.position = PlaceBlockPosInt;
-                        placeBlock.gameObject.SetActive(CanEdit(PlaceBlockPosInt, out placeLand));
+                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) &&
+                                                        CanEdit(PlaceBlockPosInt, out placeLand));
                     }
                     else
                         placeBlock.gameObject.SetActive(false);
