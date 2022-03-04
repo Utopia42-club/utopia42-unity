@@ -113,8 +113,8 @@ namespace src.Canvas
             ItemStack stack = new ItemStack(blockType.id, 64);
             ItemSlot slot = new ItemSlot();
             slot.SetStack(stack);
-            slot.SetUi(newSlot.GetComponent<ItemSlotUI>());
             slot.SetFromInventory(true);
+            slot.SetUi(newSlot.GetComponent<ItemSlotUI>());
         }
     }
 }

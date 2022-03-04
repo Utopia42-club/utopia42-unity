@@ -25,8 +25,8 @@ namespace src.Canvas
                 ItemSlot slot = new ItemSlot();
                 slot.SetStack(stack);
                 var ui = newSlot.GetComponent<ItemSlotUI>();
-                slot.SetUi(ui);
                 slot.SetFromInventory(false);
+                slot.SetUi(ui);
                 slots[i - 1] = ui;
             }
 

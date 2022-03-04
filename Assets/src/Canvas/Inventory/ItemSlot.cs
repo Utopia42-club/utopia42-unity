@@ -22,7 +22,7 @@ namespace src.Canvas
         public ItemStack HandOverStack()
         {
             var st = stack;
-            this.stack = null;
+            stack = null;
             if (ui)
                 ui.UpdateView();
             return st;
@@ -36,7 +36,7 @@ namespace src.Canvas
 
         public ItemSlotUI GetUI()
         {
-            return this.ui;
+            return ui;
         }
 
         public void SetFromInventory(bool b)
@@ -67,7 +67,7 @@ namespace src.Canvas
 
         private void Clear()
         {
-            this.ui.SetItemSlot(null);
+            ui.SetItemSlot(null);
         }
     }
 
