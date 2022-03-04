@@ -40,10 +40,13 @@ namespace src.Canvas
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
+
+            var mouseDelta = Input.mouseScrollDelta.y;
             var dec = (Input.GetButtonDown("Change Block") &&
                        (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))) ||
-                      Input.GetButtonDown("Select Left");
-            var inc = !dec && (Input.GetButtonDown("Change Block") || Input.GetButtonDown("Select Right"));
+                      Input.GetButtonDown("Select Left") || mouseDelta <= -0.1;
+            var inc = !dec && (Input.GetButtonDown("Change Block") || Input.GetButtonDown("Select Right") ||
+                               mouseDelta >= 0.1);
             if (!dec && !inc) return;
             if (dec) selectedSlot--;
             if (inc) selectedSlot++;
