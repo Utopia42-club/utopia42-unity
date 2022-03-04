@@ -19,12 +19,12 @@ namespace src.MetaBlocks.TdObjectBlock
             Action next = () =>
             {
                 buildTasks.Enqueue(task);
-                task.stream.Close();
+                task.stream.Dispose();
             };
             Action failed = () =>
             {
                 failedTasks.Enqueue(task);
-                task.stream.Close();
+                task.stream.Dispose();
             };
 
 
@@ -75,7 +75,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public TdObjectLoadTask(byte[] data, Action<GameObject> onSuccess, Action onFailure)
         {
-            this.stream = new MemoryStream(data);
+            stream = new MemoryStream(data);
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
             zipObjectLoader = new ZipObjectLoader();

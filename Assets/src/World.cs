@@ -74,7 +74,7 @@ namespace src
                 {
                     if (chunk.chunkObject != null)
                     {
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                         chunk.chunkObject = null;
                     }
                 }
@@ -83,12 +83,12 @@ namespace src
 
                 foreach (var chunk in garbageChunks.Values)
                     if (chunk.chunkObject != null)
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                 garbageChunks.Clear();
 
                 foreach (var chunk in chunks.Values)
                     if (chunk.chunkObject != null)
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                 chunks.Clear();
             }
 
@@ -194,7 +194,7 @@ namespace src
                     var iter = garbageChunks.Keys.GetEnumerator();
                     iter.MoveNext();
                     var key = iter.Current;
-                    Destroy(garbageChunks[key].chunkObject);
+                    garbageChunks[key].Destroy();
                     garbageChunks.Remove(key);
                 }
             }
@@ -203,7 +203,7 @@ namespace src
         public void DestroyGarbageChunkIfExists(Vector3Int chunkPos)
         {
             if (!garbageChunks.TryGetValue(chunkPos, out var chunk)) return;
-            Destroy(chunk.chunkObject);
+            chunk.Destroy();
             garbageChunks.Remove(chunkPos);
         }
 

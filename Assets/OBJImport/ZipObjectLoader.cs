@@ -83,7 +83,8 @@ namespace Dummiesman
             using var zipFile = new ZipArchive(zip);
             InitZipMap(zipFile);
             yield return null;
-            CreateBuilderDictionary(zipMap["obj"].Open(), out mtlLibPath, false);
+            using var objStream = zipMap["obj"].Open();
+            CreateBuilderDictionary(objStream, out mtlLibPath, false);
             yield return null;
             LoadMaterial();
             yield return null;
@@ -93,7 +94,8 @@ namespace Dummiesman
         {
             using var zipFile = new ZipArchive(zip);
             InitZipMap(zipFile);
-            CreateBuilderDictionary(zipMap["obj"].Open(), out mtlLibPath, false);
+            using var objStream = zipMap["obj"].Open();
+            CreateBuilderDictionary(objStream, out mtlLibPath, false);
             LoadMaterial();
         }
     }

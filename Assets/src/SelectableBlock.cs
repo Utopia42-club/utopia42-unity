@@ -59,7 +59,7 @@ namespace src
             var blockTypeId = blockType.id;
 
             var blockHighlight = Object.Instantiate(highlightModel, position, Quaternion.identity);
-            var material = blockHighlight.GetComponentInChildren<MeshRenderer>().material;
+            var material = blockHighlight.GetComponentInChildren<MeshRenderer>().sharedMaterial;
             Color color = material.color;
             color.a = Mathf.Clamp(SelectedBlocksHighlightAlpha, 0, 1);
             material.color = color;

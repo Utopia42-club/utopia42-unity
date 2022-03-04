@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
-using src.MetaBlocks.LightBlock;
 using src.MetaBlocks.LinkBlock;
 using src.MetaBlocks.MarkerBlock;
 using src.MetaBlocks.TdObjectBlock;

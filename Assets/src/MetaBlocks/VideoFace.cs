@@ -31,7 +31,7 @@ namespace src
             videoPlayer.Pause();
             videoPlayer.Prepare();
             videoPlayer.prepareCompleted += PrepareCompeleted;
-            meshRenderer.material.mainTexture = videoPlayer.texture;
+            meshRenderer.sharedMaterial.mainTexture = videoPlayer.texture;
         }
 
         private void Mute(bool m)
@@ -129,6 +129,13 @@ namespace src
         public bool IsPlaying()
         {
             return prepared && videoPlayer.isPlaying;
+        }
+
+        private void OnDestroy()
+        {
+            videoPlayer.Stop();
+            Destroy(videoPlayer.texture);
+            base.OnDestroy();
         }
     }
 }

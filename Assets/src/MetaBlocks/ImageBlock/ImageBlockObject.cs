@@ -80,16 +80,8 @@ namespace src.MetaBlocks.ImageBlock
 
         private void RenderFaces()
         {
-            foreach (var img in images)
-            {
-                var selectable = img.GetComponent<MetaFocusable>();
-                if (selectable != null)
-                    selectable.UnFocus();
-                DestroyImmediate(img);
-            }
-
+            DestroyImages();
             images.Clear();
-
             MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
             if (properties != null)
             {
@@ -99,6 +91,20 @@ namespace src.MetaBlocks.ImageBlock
                 AddFace(Voxels.Face.LEFT, properties.left);
                 AddFace(Voxels.Face.TOP, properties.top);
                 AddFace(Voxels.Face.BOTTOM, properties.bottom);
+            }
+        }
+
+        private void DestroyImages(bool immediate = true)
+        {
+            foreach (var img in images)
+            {
+                var selectable = img.GetComponent<MetaFocusable>();
+                if (selectable != null)
+                    selectable.UnFocus();
+                if (immediate)
+                    DestroyImmediate(img);
+                else
+                    Destroy(img);
             }
         }
 
@@ -113,8 +119,7 @@ namespace src.MetaBlocks.ImageBlock
             var meshRenderer = imgFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
             {
-                DestroyImmediate(imgFace.gameObject);
-                DestroyImmediate(imgFace);
+                DestroyImmediate(go);
                 UpdateStateAndIcon(face.index, StateMsg.OutOfBound);
                 return;
             }
@@ -181,6 +186,12 @@ namespace src.MetaBlocks.ImageBlock
                 GetBlock().SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
+        }
+
+        private void OnDestroy()
+        {
+            DestroyImages(false);
+            base.OnDestroy();
         }
     }
 }
