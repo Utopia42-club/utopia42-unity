@@ -176,25 +176,31 @@ namespace src
             else if (Input.GetMouseButtonDown(0))
             {
                 if (player.HammerMode && (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null))
-                {
-                    var position = Vectors.FloorToInt(player.FocusedMeta == null
-                        ? player.HighlightBlock.position
-                        : player.FocusedMeta.GetBlockPosition());
-                    var vp = new VoxelPosition(position);
-                    var chunk = world.GetChunkIfInited(vp.chunk);
-                    if (chunk != null)
-                    {
-                        if (player.FocusedMeta == null)
-                            chunk.DeleteVoxel(vp, player.HighlightLand);
-                        if (chunk.GetMetaAt(vp) != null)
-                            chunk.DeleteMeta(vp);
-                    }
-                }
+                    DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
                     player.PutBlock(player.PlaceBlock.position,
                         WorldService.INSTANCE.GetBlockType(player.selectedBlockId));
                 }
+            }
+            else if (Input.GetMouseButtonDown(1) &&
+                     (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null))
+                DeleteBlock();
+        }
+
+        private void DeleteBlock()
+        {
+            var position = Vectors.FloorToInt(player.FocusedMeta == null
+                ? player.HighlightBlock.position
+                : player.FocusedMeta.GetBlockPosition());
+            var vp = new VoxelPosition(position);
+            var chunk = world.GetChunkIfInited(vp.chunk);
+            if (chunk != null)
+            {
+                if (player.FocusedMeta == null)
+                    chunk.DeleteVoxel(vp, player.HighlightLand);
+                if (chunk.GetMetaAt(vp) != null)
+                    chunk.DeleteMeta(vp);
             }
         }
 

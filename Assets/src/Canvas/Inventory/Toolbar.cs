@@ -12,7 +12,7 @@ namespace src.Canvas
         public GameObject slotPrefab;
 
         private ItemSlotUI[] slots = new ItemSlotUI[9];
-        private int selectedSlot;
+        private int selectedSlot = 0;
 
         private void Start()
         {
@@ -30,9 +30,7 @@ namespace src.Canvas
                 slots[i - 1] = ui;
             }
 
-            selectedSlot = slots.Length;
             SelectedChanged();
-
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING) SelectedChanged();
@@ -42,9 +40,10 @@ namespace src.Canvas
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            var dec = Input.GetButtonDown("Change Block") &&
-                      (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-            var inc = !dec && Input.GetButtonDown("Change Block");
+            var dec = (Input.GetButtonDown("Change Block") &&
+                       (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))) ||
+                      Input.GetButtonDown("Select Left");
+            var inc = !dec && (Input.GetButtonDown("Change Block") || Input.GetButtonDown("Select Right"));
             if (!dec && !inc) return;
             if (dec) selectedSlot--;
             if (inc) selectedSlot++;

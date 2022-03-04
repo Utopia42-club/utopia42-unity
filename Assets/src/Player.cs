@@ -239,7 +239,6 @@ namespace src
             if (HammerMode == active) return;
             HammerMode = active;
             placeBlock.gameObject.SetActive(!active);
-            highlightBlock.gameObject.SetActive(active);
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
@@ -257,7 +256,7 @@ namespace src
             if (foundSolid)
             {
                 highlightBlock.position = posInt;
-                highlightBlock.gameObject.SetActive((HammerMode || ctrlDown) && CanEdit(posInt, out highlightLand));
+                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
 
                 if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType && !HammerMode)
                 {
