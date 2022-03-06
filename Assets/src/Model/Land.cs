@@ -38,8 +38,15 @@ namespace src.Model
 
         public Rect ToRect()
         {
-            return new Rect(startCoordinate.x, startCoordinate.z, 
+            return new Rect(startCoordinate.x, startCoordinate.z,
                 endCoordinate.x - startCoordinate.x, endCoordinate.z - startCoordinate.z);
+        }
+
+        public string GetName()
+        {
+            if (properties != null && properties.name != null)
+                return properties.name;
+            return null;
         }
     }
 }

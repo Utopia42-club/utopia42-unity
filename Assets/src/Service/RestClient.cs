@@ -31,11 +31,12 @@ namespace src.Service
             string url = Constants.ApiURL + "/profile";
             using (UnityWebRequest webRequest = UnityWebRequest.Post(url, walletId))
             {
+                webRequest.SetRequestHeader("Content-Type", "application/json");
+                webRequest.SetRequestHeader("Accept", "*/*");
                 yield return ExecuteRequest(webRequest, consumer, failed);
             }
         }
-
-
+        
         public IEnumerator GetWorldSlice(SerializableVector3Int start, SerializableVector3Int end,
             Action<WorldSlice> consumer, Action failed)
         {
@@ -45,6 +46,8 @@ namespace src.Service
             world.endCoordinate = end;
             using (UnityWebRequest webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
             {
+                webRequest.SetRequestHeader("Content-Type", "application/json");
+                webRequest.SetRequestHeader("Accept", "*/*");
                 yield return ExecuteRequest(webRequest, world, consumer, failed);
             }
         }
@@ -55,6 +58,8 @@ namespace src.Service
             string url = Constants.ApiURL + "/land-metadata/set";
             using (UnityWebRequest webRequest = new UnityWebRequest(url, "POST"))
             {
+                webRequest.SetRequestHeader("Content-Type", "application/json");
+                webRequest.SetRequestHeader("Accept", "*/*");
                 yield return ExecuteRequest(webRequest, landMetadata, success, failed);
             }
         }
@@ -86,9 +91,6 @@ namespace src.Service
 
         private static IEnumerator ExecuteRequest(UnityWebRequest webRequest, Action success, Action failed)
         {
-            webRequest.SetRequestHeader("Content-Type", "application/json");
-            webRequest.SetRequestHeader("Accept", "*/*");
-
             yield return webRequest.SendWebRequest();
 
             switch (webRequest.result)

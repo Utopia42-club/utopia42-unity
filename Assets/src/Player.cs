@@ -7,6 +7,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 using MetaBlock = src.MetaBlocks.MetaBlock;
 
 namespace src
@@ -15,19 +16,21 @@ namespace src
     {
         public const float CastStep = 0.01f;
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
+        private static readonly Color HammerActiveColor = new Color(0.16f, 0.5f, 0.72f, 0.7f);
+        private static readonly Color HammerNotActiveColor = new Color(0, 0, 0, 0.5f);
 
         [SerializeField] private Transform cam;
         [SerializeField] private World world;
         [SerializeField] private float walkSpeed = 6f;
         [SerializeField] private float sprintSpeed = 12f;
-        [SerializeField] private float jumpHeight = 1;
-        [SerializeField] private float sprintJumpHeight = 1.25f;
+        [SerializeField] private float jumpHeight = 2;
+        [SerializeField] private float sprintJumpHeight = 2.5f;
         [SerializeField] private float gravity = -9.8f;
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
         [SerializeField] private Transform tdObjectHighlightBox;
 
-        [NonSerialized] public byte selectedBlockId = 1;
+        [NonSerialized] public uint selectedBlockId = 1;
 
         private bool sprinting;
         private Vector3 velocity = Vector3.zero;
@@ -43,7 +46,9 @@ namespace src
         private Collider hitCollider;
         private CharacterController controller;
         private BlockSelectionController blockSelectionController;
+        private bool ctrlDown = false;
 
+        public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
         public Transform TdObjectHighlightBox => tdObjectHighlightBox;
@@ -74,10 +79,7 @@ namespace src
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING)
-                {
                     hitCollider = null;
-                    blockSelectionController.ExitBlockSelectionMovement();
-                }
             });
         }
 
@@ -173,7 +175,8 @@ namespace src
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            GetMovementInputs();
+            GetInputs();
+            // GetTestInputs();
             blockSelectionController.DoUpdate();
 
             if (lastChunk == null)
@@ -192,8 +195,28 @@ namespace src
             }
         }
 
-        private void GetMovementInputs()
+        private void GetTestInputs()
         {
+            var onGround = Input.GetKey(KeyCode.LeftShift);
+            if (!Input.GetKeyDown(KeyCode.T) ||
+                !onGround && !Input.GetKey(KeyCode.RightShift)) return;
+            Debug.Log("Putting 2000 blocks " + (onGround ? "on ground" : "out of reach"));
+            var type = WorldService.INSTANCE.GetBlockType("stone");
+            var from = Vectors.TruncateFloor(transform.position) + (onGround ? 3 : 250) * Vector3.up;
+            var to = @from + new Vector3(10, 20, 10);
+
+            var toBePut = new Dictionary<Vector3, BlockType>();
+            for (var x = @from.x; x <= to.x; x++)
+            for (var y = @from.y; y <= to.y; y++)
+            for (var z = @from.z; z <= to.z; z++)
+                toBePut.Add(new Vector3(x, y, z), type);
+            ApiPutBlocks(toBePut);
+        }
+
+        private void GetInputs()
+        {
+            ctrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
 
@@ -209,6 +232,13 @@ namespace src
 
             if (Input.GetButtonDown("Toggle Floating"))
                 floating = !floating;
+        }
+
+        public void SetHammerActive(bool active)
+        {
+            if (HammerMode == active) return;
+            HammerMode = active;
+            placeBlock.gameObject.SetActive(!active);
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
@@ -228,12 +258,12 @@ namespace src
                 highlightBlock.position = posInt;
                 highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
 
-                if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType)
+                if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType && !HammerMode)
                 {
                     if (chunk.GetMetaAt(vp) == null)
                     {
                         placeBlock.position = posInt;
-                        placeBlock.gameObject.SetActive(CanEdit(posInt, out placeLand));
+                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) && CanEdit(posInt, out placeLand));
                     }
                     else
                         placeBlock.gameObject.SetActive(false);
@@ -244,7 +274,8 @@ namespace src
                     if (PlaceBlockPosInt != currVox && PlaceBlockPosInt != currVox + Vector3Int.up)
                     {
                         placeBlock.position = PlaceBlockPosInt;
-                        placeBlock.gameObject.SetActive(CanEdit(PlaceBlockPosInt, out placeLand));
+                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) &&
+                                                        CanEdit(PlaceBlockPosInt, out placeLand));
                     }
                     else
                         placeBlock.gameObject.SetActive(false);
@@ -324,38 +355,52 @@ namespace src
             return null;
         }
 
-        public bool PutBlock(Vector3 pos, BlockType type, bool apiCall = false)
+        public void PutBlock(Vector3 pos, BlockType type)
         {
             var vp = new VoxelPosition(pos);
-            var playerPos = Vectors.TruncateFloor(transform.position);
-            var blockPos = vp.ToWorld();
-            if (apiCall && !(type is MetaBlockType) &&
-                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
-                 playerPos.Equals(blockPos - Vector3Int.up)))
-                return false;
-
             var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null)
+            if (chunk == null) return;
+            if (type is MetaBlockType)
+                chunk.PutMeta(vp, type, placeLand);
+            else
+                chunk.PutVoxel(vp, type, placeLand);
+        }
+
+        public bool ApiPutBlock(Vector3 vector3, BlockType getBlockType)
+        {
+            return ApiPutBlocks(new Dictionary<Vector3, BlockType> {{vector3, getBlockType}})[vector3];
+        }
+
+        public Dictionary<Vector3, bool> ApiPutBlocks(Dictionary<Vector3, BlockType> blocks)
+        {
+            var result = new Dictionary<Vector3, bool>();
+            var toBePut = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+            foreach (var pos in blocks.Keys)
             {
-                if (type is MetaBlockType)
-                    chunk.PutMeta(vp, type, placeLand);
-                else
-                    chunk.PutVoxel(vp, type, placeLand);
-                return true;
+                var vp = new VoxelPosition(pos);
+                var type = blocks[pos];
+                var playerPos = Vectors.TruncateFloor(transform.position);
+                var blockPos = vp.ToWorld();
+                if (type is MetaBlockType || playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
+                    playerPos.Equals(blockPos - Vector3Int.up))
+                {
+                    result.Add(pos, false);
+                    continue;
+                }
+
+                if (CanEdit(Vectors.FloorToInt(pos), out var ownerLand))
+                {
+                    toBePut.Add(vp, new Tuple<BlockType, Land>(type, ownerLand));
+                    result.Add(pos, true);
+                    continue;
+                }
+
+                result.Add(pos, false);
             }
 
-            if (apiCall && CanEdit(Vectors.FloorToInt(pos), out var ownerLand))
-            {
-                world.DestroyGarbageChunkIfExists(vp.chunk);
-                if (type is MetaBlockType)
-                    WorldService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand);
-                else
-                    WorldService.INSTANCE.AddChange(vp, type.id, ownerLand);
+            world.PutBlocks(toBePut);
 
-                return true;
-            }
-
-            return false;
+            return result;
         }
 
         private VoxelPosition ComputePosition()

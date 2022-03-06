@@ -51,7 +51,10 @@ namespace src.Canvas.Map
             landPriceLabel.SetText("Calculating...");
             StartCoroutine(EthereumClientService.INSTANCE.GetLandPrice(land.startCoordinate.x, land.endCoordinate.x,
                 land.startCoordinate.z, land.endCoordinate.z,
-                price => { landPriceLabel.SetText(price.ToString()); }));
+                price => { landPriceLabel.SetText(price.ToString()); }, () =>
+                {
+                    GameManager.INSTANCE.ShowConnectionError();
+                }));
         }
     }
 }

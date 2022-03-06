@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
@@ -73,7 +74,7 @@ namespace src
                 {
                     if (chunk.chunkObject != null)
                     {
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                         chunk.chunkObject = null;
                     }
                 }
@@ -82,12 +83,12 @@ namespace src
 
                 foreach (var chunk in garbageChunks.Values)
                     if (chunk.chunkObject != null)
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                 garbageChunks.Clear();
 
                 foreach (var chunk in chunks.Values)
                     if (chunk.chunkObject != null)
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                 chunks.Clear();
             }
 
@@ -193,7 +194,7 @@ namespace src
                     var iter = garbageChunks.Keys.GetEnumerator();
                     iter.MoveNext();
                     var key = iter.Current;
-                    Destroy(garbageChunks[key].chunkObject);
+                    garbageChunks[key].Destroy();
                     garbageChunks.Remove(key);
                 }
             }
@@ -202,7 +203,7 @@ namespace src
         public void DestroyGarbageChunkIfExists(Vector3Int chunkPos)
         {
             if (!garbageChunks.TryGetValue(chunkPos, out var chunk)) return;
-            Destroy(chunk.chunkObject);
+            chunk.Destroy();
             garbageChunks.Remove(chunkPos);
         }
 
@@ -211,6 +212,59 @@ namespace src
             if (chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInited() && chunk.IsActive())
                 return chunk;
             return null;
+        }
+
+        public void PutBlocks(Dictionary<VoxelPosition, Tuple<BlockType, Land>> blocks)
+        {
+            var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Tuple<BlockType, Land>>>();
+            foreach (var vp in blocks.Keys)
+            {
+                var chunk = GetChunkIfInited(vp.chunk);
+                if (chunk == null)
+                {
+                    DestroyGarbageChunkIfExists(vp.chunk);
+                    WorldService.INSTANCE.AddChange(vp, blocks[vp].Item1.id,
+                        blocks[vp].Item2); // TODO: re-draw neighbors?
+                    continue;
+                }
+
+                if (!chunks.TryGetValue(chunk, out var chunkData))
+                {
+                    chunkData = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+                    chunks.Add(chunk, chunkData);
+                }
+
+                chunkData.Add(vp, blocks[vp]);
+            }
+
+            foreach (var chunk in chunks.Keys)
+                chunk.PutVoxels(chunks[chunk]);
+        }
+
+        public void DeleteBlocks(Dictionary<VoxelPosition, Land> blocks)
+        {
+            var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Land>>();
+            var nullChunkNeighbors = new List<Chunk>();
+            foreach (var vp in blocks.Keys)
+            {
+                var chunk = GetChunkIfInited(vp.chunk);
+                if (chunk == null)
+                {
+                    WorldService.INSTANCE.AddChange(vp, 0, blocks[vp]); // TODO: re-draw neighbors?
+                    continue;
+                }
+
+                if (!chunks.TryGetValue(chunk, out var chunkData))
+                {
+                    chunkData = new Dictionary<VoxelPosition, Land>();
+                    chunks.Add(chunk, chunkData);
+                }
+
+                chunkData.Add(vp, blocks[vp]);
+            }
+
+            foreach (var chunk in chunks.Keys)
+                chunk.DeleteVoxels(chunks[chunk]);
         }
 
         public bool IsSolidAt(Vector3Int pos)

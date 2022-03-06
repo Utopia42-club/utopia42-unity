@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using src.Canvas;
 using src.Canvas.Map;
 using src.MetaBlocks.TdObjectBlock;
@@ -26,6 +25,8 @@ namespace src
         private List<Dialog> dialogs = new List<Dialog>();
         private bool captureAllKeyboardInputOrig;
 
+        public Map map;
+
         void Start()
         {
             SetState(State.SETTINGS);
@@ -38,7 +39,12 @@ namespace src
         void Update()
         {
             if (Input.GetButtonDown("Cancel"))
-                ReturnToGame();
+            {
+                if (state == State.PLAYING)
+                    SetState(State.SETTINGS);
+                else
+                    ReturnToGame();
+            }
             else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
                 SetState(State.SETTINGS);
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
@@ -100,7 +106,7 @@ namespace src
             float total = world.CountChunksToCreate();
             while (world.CountChunksToCreate() > 0)
             {
-                var perc = ((total - world.CountChunksToCreate()) / total) * 100;
+                var perc = (total - world.CountChunksToCreate()) / total * 100;
                 Loading.INSTANCE.UpdateText(string.Format("Creating the world\n{0}%", Mathf.FloorToInt(perc)));
                 yield return null;
             }
@@ -162,10 +168,15 @@ namespace src
         public void ReturnToGame()
         {
             if (worldInited &&
-                (state == State.MAP || state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
+                (state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
                  || state == State.PROFILE_DIALOG || state == State.FREEZE))
                 SetState(State.PLAYING);
-            if (state == State.DIALOG && dialogs.Count > 0)
+            else if (state == State.MAP)
+            {
+                if (map.RequestClose())
+                    SetState(State.PLAYING);
+            }
+            else if (state == State.DIALOG && dialogs.Count > 0)
                 CloseDialog(dialogs[dialogs.Count - 1]);
         }
 
@@ -182,7 +193,7 @@ namespace src
                 EthereumClientService.INSTANCE.SetNetwork(network);
                 SetState(State.LOADING);
                 StartCoroutine(WorldService.INSTANCE.Initialize(Loading.INSTANCE,
-                    () => InitPlayerForWallet(startingPosition)));
+                    () => InitPlayerForWallet(startingPosition), () => { Loading.INSTANCE.ShowConnectionError(); }));
             }
             else
             {
@@ -273,6 +284,11 @@ namespace src
             {
                 StartCoroutine(GameObject.Find("Map").GetComponent<Map>().TakeNftScreenShot(land, screenshot =>
                 {
+                    // using(var ms = new MemoryStream(screenshot)) {
+                    //     using(var fs = new FileStream("nftImg", FileMode.Create)) {
+                    //         ms.WriteTo(fs);
+                    //     }
+                    // }
                     StartCoroutine(IpfsClient.INSATANCE.UploadScreenShot(screenshot,
                         ipfsKey => SetLandMetadata(ipfsKey, land.id), () =>
                         {
@@ -367,7 +383,15 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Reloading Lands...");
-            yield return WorldService.INSTANCE.ReloadLands();
+
+            var failed = false;
+            yield return WorldService.INSTANCE.ReloadLands(() =>
+            {
+                failed = true;
+                Loading.INSTANCE.ShowConnectionError();
+            });
+            if (failed) yield break;
+
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.transform.position, true);
@@ -377,7 +401,15 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Reloading Your Lands...");
-            yield return WorldService.INSTANCE.ReloadLandsFor(Settings.WalletId());
+
+            var failed = false;
+            yield return WorldService.INSTANCE.ReloadLandsFor(Settings.WalletId(), () =>
+            {
+                failed = true;
+                Loading.INSTANCE.ShowConnectionError();
+            });
+            if (failed) yield break;
+
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.transform.position, true);
@@ -439,6 +471,12 @@ namespace src
             PROFILE_DIALOG,
             MOVING_OBJECT,
             FREEZE
+        }
+
+        public void ShowConnectionError()
+        {
+            SetState(State.LOADING);
+            Loading.INSTANCE.ShowConnectionError();
         }
     }
 }

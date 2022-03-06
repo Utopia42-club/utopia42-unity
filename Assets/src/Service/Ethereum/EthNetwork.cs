@@ -81,6 +81,10 @@ namespace src.Service.Ethereum
 
             if (NETWORKS != null)
             {
+                // foreach (var net in NETWORKS) // for test only
+                // {
+                //     net.provider = "https://rpc-mainnet.matic.quiknode.pro/";
+                // }
                 consumer(NETWORKS);
             }
         }

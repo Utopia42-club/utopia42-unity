@@ -43,8 +43,7 @@ namespace src.Canvas
                 errorPanel.SetActive(true);
                 return;
             }
-            else
-                panel.SetActive(true);
+            panel.SetActive(true);
 
             foreach (var net in nets)
                 networkInput.options.Add(new Dropdown.OptionData(net.name));

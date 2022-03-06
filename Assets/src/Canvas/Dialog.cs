@@ -55,12 +55,11 @@ namespace src.Canvas
 
         private void Close()
         {
+            GameManager.INSTANCE.CloseDialog(this);
             foreach (var action in onCloseActions)
             {
                 action.Invoke();
             }
-
-            GameManager.INSTANCE.CloseDialog(this);
         }
     }
 }

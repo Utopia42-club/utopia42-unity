@@ -6,6 +6,8 @@ namespace src.Canvas
     public class Loading : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI textComponent;
+        [SerializeField] private GameObject logo;
+        [SerializeField] private GameObject errorImage;
 
         private void Start()
         {
@@ -19,6 +21,13 @@ namespace src.Canvas
         public void UpdateText(string text)
         {
             this.textComponent.text = text;
+        }
+
+        public void ShowConnectionError()
+        {
+            logo.gameObject.SetActive(false);
+            errorImage.gameObject.SetActive(true);
+            UpdateText("An Error Occured While Querying Blockchain\nTry Again Later");
         }
 
         public static Loading INSTANCE

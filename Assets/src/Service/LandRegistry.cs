@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
 using src.Model;
@@ -147,22 +148,36 @@ namespace src.Service
             return ownersLands;
         }
 
-        public IEnumerator ReloadLands()
+        public IEnumerator ReloadLands(Action onFailed)
         {
             var lands = new List<Land>();
-            yield return EthereumClientService.INSTANCE.GetLands(lands);
+
+            var failed = false;
+            yield return EthereumClientService.INSTANCE.GetLands(lands, (() =>
+            {
+                failed = true;
+                onFailed();
+            }));
+            if (failed) yield break;
             yield return SetLands(lands);
         }
 
-        public IEnumerator ReloadLandsForOwner(string wallet)
+        public IEnumerator ReloadLandsForOwner(string wallet, Action onFailed)
         {
             List<Land> loaded = new List<Land>();
+
+            var failed = false;
             yield return EthereumClientService.INSTANCE.GetLandsForOwner(wallet,
-                lands => loaded.AddRange(lands));
-            yield return ReSetOwnerLands(wallet, loaded);
+                lands => loaded.AddRange(lands), () =>
+                {
+                    failed = true;
+                    onFailed();
+                });
+            if (failed) yield break;
+            yield return ReSetOwnerLands(wallet, loaded, onFailed);
         }
 
-        private IEnumerator ReSetOwnerLands(string wallet, List<Land> lands)
+        private IEnumerator ReSetOwnerLands(string wallet, List<Land> lands, Action onFailed)
         {
             var iterations = 50;
             var currentLands = new List<Land>();
@@ -196,8 +211,15 @@ namespace src.Service
 
 
             var toInsert = new List<Land>();
+
+            var failed = false;
             yield return EthereumClientService.INSTANCE.GetLandsByIds(transferredLandIds,
-                loaded => toInsert.AddRange(loaded));
+                loaded => toInsert.AddRange(loaded), () =>
+                {
+                    failed = true;
+                    onFailed();
+                });
+            if (failed) yield break;
 
             foreach (var land in toInsert)
             {

@@ -2,6 +2,7 @@
 {
     public class LandProperties
     {
-        private string color;
+        public string color;
+        public string name;
     }
 }

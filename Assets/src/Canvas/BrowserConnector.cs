@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Nethereum.RPC.Eth;
 using src.Model;
 using src.Service.Ethereum;
 using src.Utils;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace src.Canvas
 {
@@ -99,7 +97,7 @@ namespace src.Canvas
             {
                 List<string> parameters = new List<string>();
                 foreach (var l in lands)
-                    parameters.Add(string.Join("_", new long[] {l.startCoordinate.x, l.startCoordinate.z, l.startCoordinate.z, l.endCoordinate.z}));
+                    parameters.Add(string.Join("_", new long[] {l.startCoordinate.x, l.startCoordinate.z, l.endCoordinate.x, l.endCoordinate.z}));
                 CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
             }
         }
@@ -149,13 +147,13 @@ namespace src.Canvas
             dialog.withOnClose(onCancel.Invoke);
             dialog.WithAction("CANCEL", () =>
             {
-                onCancel.Invoke();
                 manager.CloseDialog(dialog);
+                onCancel.Invoke();
             });
             dialog.WithAction("RELOAD", () =>
             {
-                onDone.Invoke();
                 manager.CloseDialog(dialog);
+                onDone.Invoke();
             });
         }
 

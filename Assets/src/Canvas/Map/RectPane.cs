@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using src.Model;
 using src.Service;
 using UnityEngine;
@@ -11,12 +12,11 @@ namespace src.Canvas.Map
     {
         [SerializeField] internal Transform landContainer;
         [SerializeField] private RectTransform playerPosIndicator;
-        private readonly HashSet<GameObject> landIndicators = new HashSet<GameObject>();
+        private readonly Dictionary<long, GameObject> landIndicators = new Dictionary<long, GameObject>();
         private readonly HashSet<GameObject> drawnLandIndicators = new HashSet<GameObject>();
 
         [SerializeField] public GameObject landPrefab;
 
-        public SelectionHandler selectedLand;
         private Land targetLand;
 
         void Start()
@@ -38,53 +38,52 @@ namespace src.Canvas.Map
 
         private void Init()
         {
-            WorldService service = WorldService.INSTANCE;
-            if (!service.IsInitialized()) return;
+            var worldService = WorldService.INSTANCE;
+            if (!worldService.IsInitialized()) return;
             landContainer.localScale = Vector3.one;
 
             if (targetLand == null)
             {
                 var playerPos = Player.INSTANCE.transform.position;
                 playerPosIndicator.localPosition = new Vector3(playerPos.x, playerPos.z, 0);
-                var transform = GetComponent<RectTransform>();
-                transform.anchoredPosition = new Vector3(-playerPos.x, -playerPos.z, 0);
+                var rectTransform = GetComponent<RectTransform>();
+                rectTransform.anchoredPosition = new Vector3(-playerPos.x, -playerPos.z, 0);
             }
             else
                 targetLand = null;
 
-            foreach (var entry in service.GetOwnersLands())
+            foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
             {
-                var owner = entry.Key.Equals(Settings.WalletId());
-                foreach (var land in entry.Value)
-                    Add(land.startCoordinate.x, land.endCoordinate.x, land.startCoordinate.z, land.endCoordinate.z,
-                        owner ? land.isNft ? Colors.MAP_OWNED_LAND_NFT : Colors.MAP_OWNED_LAND :
-                        land.isNft ? Colors.MAP_OTHERS_LAND_NFT : Colors.MAP_OTHERS_LAND, land, entry.Key);
+                Add(land, Colors.GetLandOutlineColor(land));
             }
         }
 
         private void DestroyRects()
         {
-            foreach (var lo in landIndicators)
+            foreach (var lo in landIndicators.Values)
+                DestroyImmediate(lo);
+            foreach (var lo in drawnLandIndicators)
                 DestroyImmediate(lo);
             landIndicators.Clear();
             drawnLandIndicators.Clear();
         }
 
-        private GameObject Add(int x1, int x2, int y1, int y2, Color color, Land land, string walletId)
+        private GameObject Add(Land land, Color outlineColor)
         {
             var landObject = Instantiate(landPrefab);
 
-            var selectionHandler = landObject.GetComponent<SelectionHandler>();
-            selectionHandler.land = land;
-            selectionHandler.walletId = walletId;
-            selectionHandler.rectPane = this;
-            landIndicators.Add(landObject);
+            var mapLand = landObject.GetComponent<MapLand>();
+            mapLand.land = land;
+            if (land.id != -1)
+                landIndicators[land.id] = landObject;
+            else
+                drawnLandIndicators.Add(landObject);
 
-            const int outlineWidth = 4;
-            var newX1 = x1 + outlineWidth;
-            var newX2 = x2 - outlineWidth;
-            var newY1 = y1 + outlineWidth;
-            var newY2 = y2 - outlineWidth;
+            const int outlineWidth = 7;
+            var newX1 = land.startCoordinate.x + outlineWidth;
+            var newX2 = land.endCoordinate.x - outlineWidth;
+            var newY1 = land.startCoordinate.z + outlineWidth;
+            var newY2 = land.endCoordinate.z - outlineWidth;
 
             var landTransform = landObject.GetComponent<RectTransform>();
             landTransform.SetParent(landContainer);
@@ -95,31 +94,39 @@ namespace src.Canvas.Map
             landTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newX2 - newX1);
 
             var outline = landObject.GetComponent<Outline>();
-            outline.effectColor = color;
+            outline.effectColor = outlineColor;
             outline.effectDistance = new Vector2(outlineWidth, outlineWidth);
+
+            landObject.GetComponent<Image>().color = Colors.GetLandColor(land);
 
             const int nftLogoDefaultSize = 30;
             var nftLogo = landObject.transform.Find("NftLogo").gameObject.GetComponent<Image>();
-            nftLogo.gameObject.SetActive(land.isNft);
+            nftLogo.gameObject.SetActive(land != null && land.isNft);
             var nftLogoTransform = nftLogo.GetComponent<RectTransform>();
-            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Math.Min(newY2 - newY1, nftLogoDefaultSize));
-            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Math.Min(newX2 - newX1, nftLogoDefaultSize));
-            
+            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
+                Math.Min(newY2 - newY1, nftLogoDefaultSize));
+            nftLogoTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
+                Math.Min(newX2 - newX1, nftLogoDefaultSize));
+
             return landObject;
         }
 
-        internal void Delete(GameObject drawingObject)
+        internal void DeleteDrawingObject(GameObject drawingObject)
         {
             DestroyImmediate(drawingObject);
             drawnLandIndicators.Remove(drawingObject);
-            landIndicators.Remove(drawingObject);
         }
 
-        internal GameObject DrawAt(int x, int y)
+        internal GameObject DrawAt(int x, int z)
         {
-            GameObject obj = Add(x, x, y, y, Colors.PRIMARY_COLOR, null, Settings.WalletId());
-            drawnLandIndicators.Add(obj);
-            return obj;
+            var drawnLand = new Land
+            {
+                startCoordinate = new SerializableVector3Int(x, 0, z),
+                endCoordinate = new SerializableVector3Int(x, 0, z),
+                owner = Settings.WalletId(),
+                id = -1
+            };
+            return Add(drawnLand, Colors.PRIMARY_COLOR);
         }
 
         internal Rect ResolveCollisions(GameObject landIndicator, int x1, int x2, int y1, int y2, int dx1, int dx2,
@@ -197,17 +204,17 @@ namespace src.Canvas.Map
         private int ForEachIndicator(int seed, Func<int, int, int, int, int, int> function, GameObject ignore)
         {
             var current = seed;
-            foreach (var li in landIndicators)
+            foreach (var li in landIndicators.Values)
             {
                 if (li != ignore)
                 {
                     var transform = li.GetComponent<RectTransform>();
                     var or = transform.rect;
                     var olp = transform.localPosition;
-                    int x1 = MapInputManager.RoundDown((int) olp.x);
-                    int x2 = MapInputManager.RoundUp(olp.x + (int) or.width);
-                    int y1 = MapInputManager.RoundDown((int) olp.y);
-                    int y2 = MapInputManager.RoundUp(olp.y + (int) or.height);
+                    var x1 = MapInputManager.RoundDown((int) olp.x);
+                    var x2 = MapInputManager.RoundUp(olp.x + (int) or.width);
+                    var y1 = MapInputManager.RoundDown((int) olp.y);
+                    var y2 = MapInputManager.RoundUp(olp.y + (int) or.height);
 
                     current = function.Invoke(x1, x2, y1, y2, current);
                 }
@@ -227,7 +234,8 @@ namespace src.Canvas.Map
 
                 var localPosition = transform.localPosition;
                 land.startCoordinate = new SerializableVector3Int((int) localPosition.x, 0, (int) localPosition.y);
-                land.endCoordinate = new SerializableVector3Int(land.startCoordinate.x+(int)r.width, 0,land.startCoordinate.z+(int)r.height);
+                land.endCoordinate = new SerializableVector3Int(land.startCoordinate.x + (int) r.width, 0,
+                    land.startCoordinate.z + (int) r.height);
                 drawn.Add(land);
             }
 
@@ -249,21 +257,14 @@ namespace src.Canvas.Map
             playerPosIndicator.gameObject.SetActive(true);
         }
 
-        internal void OpenDialogForLand(SelectionHandler selectionHandler)
-        {
-            if (selectedLand != null && selectionHandler != selectedLand)
-                selectedLand.SetSelected(false, true);
-            selectedLand = selectionHandler;
-            if (!selectedLand) return;
-            var landProfileDialog = LandProfileDialog.INSTANCE;
-            landProfileDialog.Open(selectedLand.land, Profile.LOADING_PROFILE);
-            ProfileLoader.INSTANCE.load(selectedLand.walletId, landProfileDialog.SetProfile,
-                () => landProfileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
-        }
-
         public void SetTargetLand(Land land)
         {
             targetLand = land;
+        }
+
+        public void MoveLandGameObjectToFront(Land land)
+        {
+            landIndicators[land.id].transform.SetAsLastSibling();
         }
     }
 }

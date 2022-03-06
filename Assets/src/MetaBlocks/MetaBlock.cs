@@ -74,10 +74,13 @@ namespace src.MetaBlocks
             return properties;
         }
 
-        public void Destroy()
+        public void Destroy(bool immediate = true)
         {
-            if (blockObject != null)
+            if (blockObject == null) return;
+            if(immediate)
                 Object.DestroyImmediate(blockObject.gameObject);
+            else
+                Object.Destroy(blockObject.gameObject);
         }
     }
 }

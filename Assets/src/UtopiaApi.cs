@@ -1,19 +1,28 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using src;
 using src.Model;
 using src.Service;
 using UnityEngine;
 
-public partial class UtopiaApi : MonoBehaviour
+public class UtopiaApi : MonoBehaviour
 {
-    public Player player;
-
     public string PlaceBlock(String request)
     {
         var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
-        var placed = player.PutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
-            WorldService.INSTANCE.GetBlockType(req.type), true);
+        var placed = Player.INSTANCE.ApiPutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
+            WorldService.INSTANCE.GetBlockType(req.type));
+        return JsonConvert.SerializeObject(placed);
+    }
+
+    public string PlaceBlocks(String request)
+    {
+        var reqs = JsonConvert.DeserializeObject<List<PlaceBlockRequest>>(request);
+        var placed = Player.INSTANCE.ApiPutBlocks(reqs.ToDictionary(
+            req => new Vector3(req.position.x, req.position.y, req.position.z),
+            req => WorldService.INSTANCE.GetBlockType(req.type)));
         return JsonConvert.SerializeObject(placed);
     }
 
@@ -33,6 +42,11 @@ public partial class UtopiaApi : MonoBehaviour
         return JsonConvert.SerializeObject(WorldService.INSTANCE.GetLandsFor(walletId));
     }
 
+    public string GetCurrentLand()
+    {
+        return JsonConvert.SerializeObject(WorldService.INSTANCE.GetLandByPosition(Player.INSTANCE.transform.position));
+    }
+
     public string GetBlockTypes()
     {
         return JsonConvert.SerializeObject(WorldService.INSTANCE.GetNonMetaBlockTypes());
@@ -41,6 +55,6 @@ public partial class UtopiaApi : MonoBehaviour
     private class PlaceBlockRequest
     {
         public string type;
-        public SerializableVector3Int position;
+        public SerializableVector3 position;
     }
 }

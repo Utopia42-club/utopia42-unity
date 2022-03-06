@@ -6,7 +6,7 @@ namespace src.Canvas
 {
     public class Blocks : MonoBehaviour
     {
-        public static Dictionary<byte, Sprite> blockIcons = new Dictionary<byte, Sprite>();
+        public static Dictionary<uint, Sprite> blockIcons = new Dictionary<uint, Sprite>();
         public Sprite[] sprites;
 
         void Start()

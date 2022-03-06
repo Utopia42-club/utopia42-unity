@@ -4,7 +4,6 @@ using src.Model;
 using src.Utils;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -26,6 +25,7 @@ namespace src.Canvas.Map
 
         [Header("Land")] public TextMeshProUGUI landIdLabel;
         public TextMeshProUGUI landSizeLabel;
+        public TMP_InputField landNameField;
         public Button landColorButton;
         public GameObject colorPickerPrefab;
         public GameObject landNftIcon;
@@ -40,6 +40,8 @@ namespace src.Canvas.Map
         private GameManager manager;
         private Image landColorButtonImage;
         private FlexibleColorPicker picker;
+
+        private List<Action> onCloseActions = new List<Action>();
 
         void Start()
         {
@@ -65,7 +67,18 @@ namespace src.Canvas.Map
             if (picker != null)
             {
                 landColorButtonImage.color = picker.color;
+                var newColor = "#" + ColorUtility.ToHtmlStringRGB(picker.color);
+                land.properties ??= new LandProperties();
+                land.properties.color = newColor;
             }
+
+            land.properties ??= new LandProperties();
+            land.properties.name = landNameField.text;
+        }
+
+        public void WithOneClose(Action action)
+        {
+            onCloseActions.Add(action);
         }
 
         private void ToggleColorPicker()
@@ -83,7 +96,7 @@ namespace src.Canvas.Map
             {
                 pickerInstance = Instantiate(colorPickerPrefab, colorPickerPlaceHolder.transform);
                 picker = pickerInstance.GetComponent<FlexibleColorPicker>();
-                // picker.SetNewColor(land.color); //FIXME
+                picker.SetColor(Colors.GetLandColor(land));
                 isColorPickerOpen = true;
             }
         }
@@ -114,6 +127,8 @@ namespace src.Canvas.Map
 
             gameObject.SetActive(false);
             manager.SetProfileDialogState(false);
+            onCloseActions.ForEach(action => action());
+            onCloseActions.Clear();
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -121,7 +136,7 @@ namespace src.Canvas.Map
             if (isColorPickerOpen)
                 ToggleColorPicker();
         }
-        
+
         public void Open(Land land, Profile profile)
         {
             gameObject.SetActive(true);
@@ -169,13 +184,17 @@ namespace src.Canvas.Map
             landNftIcon.SetActive(land.isNft);
             transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Settings.WalletId()));
             toggleNftButton.gameObject.SetActive(land.owner.Equals(Settings.WalletId()));
-            // landColorButtonImage.color = land.color; //FIXME
+
+            landColorButtonImage.color = Colors.GetLandColor(land);
 
             if (toggleNftButton.gameObject.activeSelf)
             {
                 toggleNftButton.GetComponentInChildren<TextMeshProUGUI>().text =
                     land.isNft ? "Remove NFT" : "Make NFT";
             }
+
+            landNameField.SetTextWithoutNotify(land.GetName());
+            landNameField.interactable = land.owner.Equals(Settings.WalletId());
         }
 
         public static LandProfileDialog INSTANCE => instance;

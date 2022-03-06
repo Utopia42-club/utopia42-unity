@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using src.MetaBlocks;
 using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
 using MetaBlock = src.MetaBlocks.MetaBlock;
+using Object = UnityEngine.Object;
 
 namespace src
 {
@@ -15,7 +15,7 @@ namespace src
         public static readonly int CHUNK_HEIGHT = 32;
 
         private Dictionary<Vector3Int, MetaBlock> metaBlocks;
-        private readonly byte[,,] voxels = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
+        private readonly uint[,,] voxels = new uint[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
         private World world;
         public GameObject chunkObject;
 
@@ -50,7 +50,8 @@ namespace src
             meshRenderer = chunkObject.AddComponent<MeshRenderer>();
             meshCollider = chunkObject.AddComponent<MeshCollider>();
 
-            meshRenderer.material = world.material;
+            meshRenderer.sharedMaterials = new[]
+                {world.material, new Material(Shader.Find("Particles/Standard Surface"))};
             chunkObject.transform.SetParent(world.transform);
             chunkObject.transform.position = position;
             chunkObject.name = "Chunck " + coordinate;
@@ -74,21 +75,24 @@ namespace src
 
         private void DrawVoxels()
         {
-            List<Vector3> vertices = new List<Vector3>();
-            List<int> triangles = new List<int>();
-            List<Vector2> uvs = new List<Vector2>();
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            var coloredTriangles = new List<int>();
+            var uvs = new List<Vector2>();
+            var colors = new List<Color32>();
 
-            CreateMeshData(vertices, triangles, uvs);
-            CreateMesh(vertices, triangles, uvs);
+            CreateMeshData(vertices, triangles, coloredTriangles, uvs, colors);
+            CreateMesh(vertices, triangles, coloredTriangles, uvs, colors);
         }
 
-        void CreateMeshData(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+        void CreateMeshData(List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles, List<Vector2> uvs,
+            List<Color32> colors)
         {
             for (int y = 0; y < voxels.GetLength(1); y++)
             for (int x = 0; x < voxels.GetLength(0); x++)
             for (int z = 0; z < voxels.GetLength(2); z++)
                 if (WorldService.INSTANCE.GetBlockType(voxels[x, y, z]).isSolid)
-                    AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, uvs);
+                    AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, coloredTriangles, uvs, colors);
         }
 
         // Inputs: x,y,z local to this chunk
@@ -126,9 +130,10 @@ namespace src
             return GetBlock(localPos).isSolid;
         }
 
-        void AddVisibleFaces(Vector3Int pos, List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+        void AddVisibleFaces(Vector3Int pos, List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles,
+            List<Vector2> uvs, List<Color32> colors)
         {
-            Vector3Int[] verts = new Vector3Int[]
+            Vector3Int[] verts =
             {
                 Voxels.Vertices[0] + pos,
                 Voxels.Vertices[1] + pos,
@@ -140,44 +145,68 @@ namespace src
                 Voxels.Vertices[7] + pos
             };
 
-            byte blockId = voxels[pos.x, pos.y, pos.z];
+            var blockId = voxels[pos.x, pos.y, pos.z];
             var type = WorldService.INSTANCE.GetBlockType(blockId);
             if (!type.isSolid) return;
 
-            foreach (Voxels.Face face in Voxels.Face.FACES)
+            var targetTriangles = type.color != null ? coloredTriangles : triangles;
+            var color = type.color ?? Color.white;
+
+            foreach (var face in Voxels.Face.FACES)
             {
                 if (!IsPositionSolid(pos + face.direction))
                 {
-                    int idx = vertices.Count;
+                    var idx = vertices.Count;
 
                     vertices.Add(verts[face.verts[0]]);
                     vertices.Add(verts[face.verts[1]]);
                     vertices.Add(verts[face.verts[2]]);
                     vertices.Add(verts[face.verts[3]]);
 
-                    AddTexture(type.GetTextureID(face), uvs);
+                    if (type.color != null)
+                    {
+                        uvs.Add(Vector2.zero);
+                        uvs.Add(Vector2.zero);
+                        uvs.Add(Vector2.zero);
+                        uvs.Add(Vector2.zero);
+                    }
+                    else
+                        AddTexture(type.GetTextureID(face), uvs);
 
-                    triangles.Add(idx);
-                    triangles.Add(idx + 1);
-                    triangles.Add(idx + 2);
-                    triangles.Add(idx + 2);
-                    triangles.Add(idx + 1);
-                    triangles.Add(idx + 3);
+                    colors.Add(color);
+                    colors.Add(color);
+                    colors.Add(color);
+                    colors.Add(color);
+
+                    targetTriangles.Add(idx);
+                    targetTriangles.Add(idx + 1);
+                    targetTriangles.Add(idx + 2);
+                    targetTriangles.Add(idx + 2);
+                    targetTriangles.Add(idx + 1);
+                    targetTriangles.Add(idx + 3);
                 }
             }
         }
 
-        void CreateMesh(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
+        private void CreateMesh(List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles,
+            List<Vector2> uvs, List<Color32> colors)
         {
-            Mesh mesh = new Mesh();
-            mesh.vertices = vertices.ToArray();
-            mesh.triangles = triangles.ToArray();
-            mesh.uv = uvs.ToArray();
+            var mesh = new Mesh
+            {
+                vertices = vertices.ToArray(),
+                uv = uvs.ToArray(),
+                subMeshCount = 2,
+                colors32 = colors.ToArray()
+            };
+
+            mesh.SetTriangles(triangles, 0);
+            mesh.SetTriangles(coloredTriangles, 1);
 
             mesh.RecalculateNormals();
+            mesh.Optimize();
 
-            meshFilter.mesh = mesh;
-            meshCollider.sharedMesh = null;
+            Object.Destroy(meshFilter.sharedMesh);
+            meshFilter.sharedMesh = mesh;
             meshCollider.sharedMesh = mesh;
         }
 
@@ -205,18 +234,83 @@ namespace src
             OnChanged(pos);
         }
 
+        public void DeleteVoxels(Dictionary<VoxelPosition, Land> blocks)
+        {
+            var neighbourChunks = new HashSet<Chunk>();
+            foreach (var pos in blocks.Keys)
+            {
+                var land = blocks[pos];
+                voxels[pos.local.x, pos.local.y, pos.local.z] = 0;
+                WorldService.INSTANCE.AddChange(pos, 0, land);
+
+                foreach (var neighborChunk in GetNeighborChunks(pos))
+                    neighbourChunks.Add(neighborChunk);
+            }
+
+            DrawVoxels();
+            foreach (var neighbor in neighbourChunks)
+                neighbor.DrawVoxels();
+        }
+
         public void PutVoxel(VoxelPosition pos, BlockType type, Land land)
         {
-            if (type.isSolid)
+            voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
+            WorldService.INSTANCE.AddChange(pos, type.id, land);
+            OnChanged(pos);
+        }
+
+        public void PutVoxels(Dictionary<VoxelPosition, Tuple<BlockType, Land>> blocks)
+        {
+            var neighbourChunks = new HashSet<Chunk>();
+            foreach (var pos in blocks.Keys)
             {
+                var type = blocks[pos].Item1;
+                var land = blocks[pos].Item2;
                 voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
                 WorldService.INSTANCE.AddChange(pos, type.id, land);
-                OnChanged(pos);
+                foreach (var neighborChunk in GetNeighborChunks(pos))
+                    neighbourChunks.Add(neighborChunk);
             }
+
+            DrawVoxels();
+            foreach (var neighbor in neighbourChunks)
+                neighbor.DrawVoxels();
+        }
+
+        private IEnumerable<Chunk> GetNeighborChunks(VoxelPosition pos)
+        {
+            var neighborChunks = new HashSet<Chunk>();
+            if (pos.local.x == voxels.GetLength(0) - 1)
+                AddNeighborChunk(pos.chunk + Vector3Int.right, neighborChunks);
+
+            if (pos.local.y == voxels.GetLength(1) - 1)
+                AddNeighborChunk(pos.chunk + Vector3Int.up, neighborChunks);
+
+            if (pos.local.z == voxels.GetLength(2) - 1)
+                AddNeighborChunk(pos.chunk + Vector3Int.forward, neighborChunks);
+
+            if (pos.local.x == 0)
+                AddNeighborChunk(pos.chunk + Vector3Int.left, neighborChunks);
+
+            if (pos.local.y == 0)
+                AddNeighborChunk(pos.chunk + Vector3Int.down, neighborChunks);
+
+            if (pos.local.z == 0)
+                AddNeighborChunk(pos.chunk + Vector3Int.back, neighborChunks);
+
+            return neighborChunks;
+        }
+
+        private void AddNeighborChunk(Vector3Int pos, ISet<Chunk> chunks)
+        {
+            var chunk = world.GetChunkIfInited(pos);
+            if (chunk != null)
+                chunks.Add(chunk);
         }
 
         public void PutMeta(VoxelPosition pos, BlockType type, Land land)
         {
+            metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type.id, land);
             metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type.id, land);
             metaBlocks[pos.local].RenderAt(chunkObject.transform, pos.local, this);
         }
@@ -225,26 +319,15 @@ namespace src
         {
             var block = metaBlocks[pos.local];
             metaBlocks.Remove(pos.local);
-            WorldService.INSTANCE.OnMetaRemoved(block);
+            WorldService.INSTANCE.OnMetaRemoved(block, new VoxelPosition(coordinate, pos.local).ToWorld()); // TODO ?
             block.Destroy();
         }
 
         private void OnChanged(VoxelPosition pos)
         {
             DrawVoxels();
-            if (pos.local.x == voxels.GetLength(0) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.right).DrawVoxels();
-            if (pos.local.y == voxels.GetLength(1) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.up).DrawVoxels();
-            if (pos.local.z == voxels.GetLength(2) - 1)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.forward).DrawVoxels();
-
-            if (pos.local.x == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.left).DrawVoxels();
-            if (pos.local.y == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.down).DrawVoxels();
-            if (pos.local.z == 0)
-                world.GetChunkIfInited(pos.chunk + Vector3Int.back).DrawVoxels();
+            foreach (var neighborChunk in GetNeighborChunks(pos))
+                neighborChunk.DrawVoxels();
         }
 
         private Vector3Int ToGlobal(Vector3Int localPoint)
@@ -269,12 +352,25 @@ namespace src
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
 
-            return this.coordinate.Equals(((Chunk) obj).coordinate);
+            return coordinate.Equals(((Chunk) obj).coordinate);
         }
 
         public override int GetHashCode()
         {
-            return this.coordinate.GetHashCode();
+            return coordinate.GetHashCode();
+        }
+
+        public void Destroy()
+        {
+            if (metaBlocks != null)
+            {
+                foreach (var metaBlock in metaBlocks.Values)
+                    metaBlock.Destroy();
+            }
+
+            Object.Destroy(meshRenderer.sharedMaterials[1]);
+            Object.Destroy(meshFilter.sharedMesh);
+            Object.Destroy(chunkObject);
         }
     }
 }
