@@ -311,7 +311,6 @@ namespace src
         public void PutMeta(VoxelPosition pos, BlockType type, Land land)
         {
             metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type.id, land);
-            metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type.id, land);
             metaBlocks[pos.local].RenderAt(chunkObject.transform, pos.local, this);
         }
 
