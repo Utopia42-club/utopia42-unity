@@ -58,7 +58,7 @@ namespace src.Service.Ethereum
                 Y2 = y2
             }, network.contractAddress);
             if (request.Result != null)
-                consumer(Web3.Convert.FromWei(request.Result.ReturnValue1));
+                consumer(Nethereum.Util.UnitConversion.Convert.FromWei(request.Result.ReturnValue1));
             else onFailed();
         }
 
