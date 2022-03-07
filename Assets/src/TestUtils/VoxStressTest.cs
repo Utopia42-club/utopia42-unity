@@ -17,14 +17,12 @@ namespace src
         {
             if (voxSampleName == null || !Input.GetKeyDown(KeyCode.T) ||
                 (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))) return;
-
-            var textAsset = Resources.Load<TextAsset>(voxSampleName);
+            var textAsset = Resources.Load<TextAsset>("Test/" + voxSampleName);
             if (textAsset == null)
             {
                 Debug.Log("Could not load vox sample");
                 return;
             }
-
             StartCoroutine(PlaceBlocksTest(textAsset.text, Input.GetKey(KeyCode.RightShift)));
         }
 
@@ -36,7 +34,7 @@ namespace src
             {
                 var subReqs = reqs.GetRange(0, Mathf.Min(reqs.Count, 500));
                 Player.INSTANCE.ApiPutBlocks(subReqs.ToDictionary(
-                    req => new Vector3(req.position.x, req.position.y, req.position.z),
+                    req => new VoxelPosition(req.position),
                     req => WorldService.INSTANCE.GetBlockType(stone ? "stone" : req.type)));
 
                 reqs.RemoveRange(0, Mathf.Min(reqs.Count, 500));

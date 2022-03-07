@@ -178,16 +178,16 @@ namespace src.Service
             return ColorBlocks.IsColorTypeId(id, out var blockType) ? blockType : types[id];
         }
 
-        public BlockType GetBlockType(string name)
+        public BlockType GetBlockType(string name, bool excludeMetaBlocks = false, bool excludeBaseBlocks = false)
         {
             if (ColorBlocks.IsColorBlockType(name, out var blockType))
                 return blockType;
 
-            foreach (var entry in types)
-            {
-                if (entry.Value.name.Equals(name))
-                    return entry.Value;
-            }
+            foreach (var entry in from entry in types 
+                     where !excludeMetaBlocks || !(entry.Value is MetaBlockType) 
+                     where !excludeBaseBlocks || entry.Value is MetaBlockType 
+                     where entry.Value.name.Equals(name) select entry)
+                return entry.Value;
 
             Debug.LogError("Invalid block type: " + name);
             return null;

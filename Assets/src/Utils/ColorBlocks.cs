@@ -7,7 +7,7 @@ namespace src.Utils
 {
     public static class ColorBlocks
     {
-        private static readonly ColorCache Cache = new ColorCache(500);
+        private static readonly ColorCache Cache = new ColorCache(1024);
 
         public static bool IsColorBlockType(string colorBlockTypeName, out BlockType blockType)
         {

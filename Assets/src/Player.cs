@@ -347,19 +347,19 @@ namespace src
                 chunk.PutVoxel(vp, type, placeLand);
         }
 
-        public bool ApiPutBlock(Vector3 vector3, BlockType getBlockType)
+        public bool ApiPutBlock(VoxelPosition vp, BlockType getBlockType)
         {
-            return ApiPutBlocks(new Dictionary<Vector3, BlockType> {{vector3, getBlockType}})[vector3];
+            return ApiPutBlocks(new Dictionary<VoxelPosition, BlockType> {{vp, getBlockType}})[vp.ToWorld()];
         }
 
-        public Dictionary<Vector3, bool> ApiPutBlocks(Dictionary<Vector3, BlockType> blocks)
+        public Dictionary<Vector3Int, bool> ApiPutBlocks(Dictionary<VoxelPosition, BlockType> blocks)
         {
-            var result = new Dictionary<Vector3, bool>();
+            var result = new Dictionary<Vector3Int, bool>();
             var toBePut = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
-            foreach (var pos in blocks.Keys)
+            foreach (var vp in blocks.Keys)
             {
-                var vp = new VoxelPosition(pos);
-                var type = blocks[pos];
+                var pos = vp.ToWorld();
+                var type = blocks[vp];
                 var playerPos = Vectors.TruncateFloor(transform.position);
                 var blockPos = vp.ToWorld();
                 if (type is MetaBlockType || playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
@@ -369,7 +369,7 @@ namespace src
                     continue;
                 }
 
-                if (CanEdit(Vectors.FloorToInt(pos), out var ownerLand))
+                if (CanEdit(pos, out var ownerLand))
                 {
                     toBePut.Add(vp, new Tuple<BlockType, Land>(type, ownerLand));
                     result.Add(pos, true);
@@ -380,6 +380,37 @@ namespace src
             }
 
             world.PutBlocks(toBePut);
+            return result;
+        }
+
+        public Dictionary<Vector3Int, bool> ApiPutMetaBlocks(
+            Dictionary<VoxelPosition, Tuple<MetaBlockType, object>> metaBlocks)
+        {
+            var result = new Dictionary<Vector3Int, bool>();
+            foreach (var vp in metaBlocks.Keys)
+            {
+                var pos = vp.ToWorld();
+                if (!CanEdit(pos, out var ownerLand) || !WorldService.INSTANCE.IsSolid(vp))
+                {
+                    result.Add(pos, false);
+                    continue;
+                }
+
+                var (type, props) = metaBlocks[vp];
+                var chunk = world.GetChunkIfInited(vp.chunk);
+                if (chunk != null)
+                {
+                    chunk.PutMeta(vp, type, ownerLand);
+                    chunk.GetMetaAt(vp).SetProps(props, ownerLand);
+                }
+                else
+                {
+                    world.DestroyGarbageChunkIfExists(vp.chunk);
+                    WorldService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand)[vp.local].SetProps(props, ownerLand);
+                }
+
+                result.Add(pos, true);
+            }
 
             return result;
         }
