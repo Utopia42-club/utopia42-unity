@@ -3,53 +3,61 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using src;
+using src.Canvas;
+using src.MetaBlocks.MarkerBlock;
 using src.Model;
 using src.Service;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class UtopiaApi : MonoBehaviour
 {
-    public string PlaceBlock(String request)
+    public UnityEvent<object> CurrentLand()
+    {
+        return FindObjectOfType<Owner>().currentLandChanged;
+    }
+
+    public bool PlaceBlock(String request)
     {
         var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
         var placed = Player.INSTANCE.ApiPutBlock(new Vector3(req.position.x, req.position.y, req.position.z),
             WorldService.INSTANCE.GetBlockType(req.type));
-        return JsonConvert.SerializeObject(placed);
+        return placed;
     }
 
-    public string PlaceBlocks(String request)
+    public Dictionary<Vector3, bool> PlaceBlocks(String request)
     {
         var reqs = JsonConvert.DeserializeObject<List<PlaceBlockRequest>>(request);
         var placed = Player.INSTANCE.ApiPutBlocks(reqs.ToDictionary(
             req => new Vector3(req.position.x, req.position.y, req.position.z),
             req => WorldService.INSTANCE.GetBlockType(req.type)));
-        return JsonConvert.SerializeObject(placed);
+        return placed;
     }
 
-    public string GetPlayerPosition()
+    public SerializableVector3 GetPlayerPosition()
     {
         var pos = Player.INSTANCE.transform.position;
-        return JsonConvert.SerializeObject(new SerializableVector3(pos));
+        return new SerializableVector3(pos);
     }
 
-    public string GetMarkers()
+    public List<Marker> GetMarkers()
     {
-        return JsonConvert.SerializeObject(WorldService.INSTANCE.GetMarkers());
+        return WorldService.INSTANCE.GetMarkers();
     }
 
-    public string GetPlayerLands(string walletId)
+    public List<Land> GetPlayerLands(string walletId)
     {
-        return JsonConvert.SerializeObject(WorldService.INSTANCE.GetLandsFor(walletId));
+        return WorldService.INSTANCE.GetLandsFor(walletId);
     }
 
-    public string GetCurrentLand()
+    public Land GetCurrentLand()
     {
-        return JsonConvert.SerializeObject(WorldService.INSTANCE.GetLandByPosition(Player.INSTANCE.transform.position));
+        return WorldService.INSTANCE.GetLandByPosition(Player.INSTANCE.transform.position);
     }
 
-    public string GetBlockTypes()
+    public List<string> GetBlockTypes()
     {
-        return JsonConvert.SerializeObject(WorldService.INSTANCE.GetNonMetaBlockTypes());
+        return WorldService.INSTANCE.GetNonMetaBlockTypes();
     }
 
     private class PlaceBlockRequest
