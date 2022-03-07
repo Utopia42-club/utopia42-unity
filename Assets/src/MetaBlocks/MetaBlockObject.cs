@@ -50,7 +50,7 @@ namespace src.MetaBlocks
                 Destroy(iconObject);
             iconObject = Instantiate(Resources.Load("MetaBlocks/MetaBlock") as GameObject, transform);
             foreach (var r in iconObject.GetComponentsInChildren<Renderer>())
-                r.sharedMaterial.mainTexture = block.type.GetIcon(failed).texture;
+                r.material.mainTexture = block.type.GetIcon(failed).texture;
         }
 
         protected GameObject GetIconObject()

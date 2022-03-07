@@ -176,7 +176,6 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetInputs();
-            // GetTestInputs();
             blockSelectionController.DoUpdate();
 
             if (lastChunk == null)
@@ -193,24 +192,6 @@ namespace src
                     world.OnPlayerChunkChanged(currChunk);
                 }
             }
-        }
-
-        private void GetTestInputs()
-        {
-            var onGround = Input.GetKey(KeyCode.LeftShift);
-            if (!Input.GetKeyDown(KeyCode.T) ||
-                !onGround && !Input.GetKey(KeyCode.RightShift)) return;
-            Debug.Log("Putting 2000 blocks " + (onGround ? "on ground" : "out of reach"));
-            var type = WorldService.INSTANCE.GetBlockType("stone");
-            var from = Vectors.TruncateFloor(transform.position) + (onGround ? 3 : 250) * Vector3.up;
-            var to = @from + new Vector3(10, 20, 10);
-
-            var toBePut = new Dictionary<Vector3, BlockType>();
-            for (var x = @from.x; x <= to.x; x++)
-            for (var y = @from.y; y <= to.y; y++)
-            for (var z = @from.z; z <= to.z; z++)
-                toBePut.Add(new Vector3(x, y, z), type);
-            ApiPutBlocks(toBePut);
         }
 
         private void GetInputs()
@@ -239,7 +220,6 @@ namespace src
             if (HammerMode == active) return;
             HammerMode = active;
             placeBlock.gameObject.SetActive(!active);
-            highlightBlock.gameObject.SetActive(active);
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
@@ -257,7 +237,7 @@ namespace src
             if (foundSolid)
             {
                 highlightBlock.position = posInt;
-                highlightBlock.gameObject.SetActive((HammerMode || ctrlDown) && CanEdit(posInt, out highlightLand));
+                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
 
                 if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType && !HammerMode)
                 {
