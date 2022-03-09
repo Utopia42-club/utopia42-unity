@@ -8,17 +8,17 @@ namespace src.MetaBlocks.ImageBlock
 {
     public class ImageBlockObject : MetaBlockObject
     {
-        private readonly List<GameObject> images = new List<GameObject>();
-        private SnackItem snackItem;
-        private int lastFocusedFaceIndex = -1;
-        private Land land;
-        private bool canEdit;
+        protected readonly List<GameObject> images = new List<GameObject>();
+        protected SnackItem snackItem;
+        protected int lastFocusedFaceIndex = -1;
+        protected Land land;
+        protected bool canEdit;
         private bool ready = false;
 
-        private readonly StateMsg[] stateMsg =
+        protected readonly StateMsg[] stateMsg =
             {StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok};
 
-        private void Start()
+        protected void Start()
         {
             if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
                 CreateIcon();
@@ -45,7 +45,7 @@ namespace src.MetaBlocks.ImageBlock
             if (!canEdit) return;
             if (snackItem != null) snackItem.Remove();
 
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face.index), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps(face);
@@ -56,17 +56,6 @@ namespace src.MetaBlocks.ImageBlock
             });
 
             lastFocusedFaceIndex = face.index;
-        }
-
-        private List<string> GetFaceSnackLines(int faceIndex)
-        {
-            var lines = new List<string>();
-            lines.Add("Press Z for details");
-            lines.Add("Press T to toggle preview");
-            lines.Add("Press Del to delete");
-            if (stateMsg[faceIndex] != StateMsg.Ok)
-                lines.Add($"\n{MetaBlockState.ToString(stateMsg[faceIndex], "image")}");
-            return lines;
         }
 
         public override void UnFocus()
@@ -94,7 +83,7 @@ namespace src.MetaBlocks.ImageBlock
             }
         }
 
-        private void DestroyImages(bool immediate = true)
+        protected void DestroyImages(bool immediate = true)
         {
             foreach (var img in images)
             {
@@ -108,7 +97,7 @@ namespace src.MetaBlocks.ImageBlock
             }
         }
 
-        private void AddFace(Voxels.Face face, MediaBlockProperties.FaceProps props)
+        protected void AddFace(Voxels.Face face, MediaBlockProperties.FaceProps props)
         {
             if (props == null) return;
 
@@ -120,11 +109,11 @@ namespace src.MetaBlocks.ImageBlock
             if (!InLand(meshRenderer))
             {
                 DestroyImmediate(go);
-                UpdateStateAndIcon(face.index, StateMsg.OutOfBound);
+                UpdateStateAndIcon(StateMsg.OutOfBound, face);
                 return;
             }
 
-            imgFace.Init(meshRenderer, props.url, this, face.index);
+            imgFace.Init(meshRenderer, props.url, this, face);
             go.layer = props.detectCollision
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
@@ -133,15 +122,27 @@ namespace src.MetaBlocks.ImageBlock
             faceSelectable.Initialize(this, face);
         }
 
-        public void UpdateStateAndIcon(int faceIndex, StateMsg msg)
+        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face)
         {
-            stateMsg[faceIndex] = msg;
-            if (snackItem != null && lastFocusedFaceIndex == faceIndex)
+            stateMsg[face.index] = msg;
+            if (snackItem != null && lastFocusedFaceIndex == face.index)
             {
-                ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines(faceIndex));
+                ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines(face));
             }
-
             UpdateIcon(msg);
+        }
+
+        protected override List<string> GetFaceSnackLines(Voxels.Face face)
+        {
+            var lines = new List<string>
+            {
+                "Press Z for details",
+                "Press T to toggle preview",
+                "Press Del to delete"
+            };
+            if (stateMsg[face.index] != StateMsg.Ok)
+                lines.Add($"\n{MetaBlockState.ToString(stateMsg[face.index], "image")}");
+            return lines;
         }
 
         private void UpdateIcon(StateMsg message) // TODO
