@@ -65,8 +65,7 @@ namespace src.MetaBlocks.NftBlock
             var properties = (NftBlockProperties) GetBlock().GetProps();
             if (properties == null) return;
 
-            AddFace(Voxels.Face.BACK,
-                properties.back); // TODO: add face needs to do sth else as well here? or maybe not?
+            AddFace(Voxels.Face.BACK, properties.back);
             AddFace(Voxels.Face.FRONT, properties.front);
             AddFace(Voxels.Face.RIGHT, properties.right);
             AddFace(Voxels.Face.LEFT, properties.left);

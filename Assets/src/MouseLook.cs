@@ -10,6 +10,7 @@ namespace src
         private float xRotation = 0f;
         private Action onUpdate = () => { };
         private Action<Vector3> rotationTarget = null;
+        public bool inGameMouseClickActive = true;
 
         void Start()
         {
@@ -23,7 +24,8 @@ namespace src
                 if (state == GameManager.State.PLAYING || state == GameManager.State.MOVING_OBJECT)
                 {
                     Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
+                    if (inGameMouseClickActive)
+                        Cursor.visible = false;
                     this.onUpdate = DoUpdate;
                 }
                 else
@@ -35,13 +37,28 @@ namespace src
             });
         }
 
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus) return;
+            inGameMouseClickActive = false;
+        }
+
         void Update()
         {
             onUpdate.Invoke();
+
+            if (Input.GetButtonDown("Cancel"))
+            {
+                inGameMouseClickActive = false;
+                Cursor.visible = true;
+            }
+            else if (!inGameMouseClickActive && (Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(0)) && MouseInScreen())
+                inGameMouseClickActive = true;
         }
 
         private void DoUpdate()
         {
+            if (!inGameMouseClickActive) return;
             float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
             float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
@@ -70,9 +87,24 @@ namespace src
             rotationTarget = null;
         }
 
-        public static MouseLook INSTANCE
+        private static bool MouseCenterFixed()
         {
-            get { return GameObject.Find("Main Camera").GetComponent<MouseLook>(); }
+            var mousePosition = Input.mousePosition;
+            if (Mathf.Abs(mousePosition.x - Screen.width / 2) > 2 ||
+                Mathf.Abs(mousePosition.y - Screen.height / 2) > 2)
+                return false;
+            return true;
         }
+
+        private static bool MouseInScreen()
+        {
+            var mousePosition = Input.mousePosition;
+            if (mousePosition.x <= 0 || mousePosition.x >= Screen.width - 1 ||
+                mousePosition.y <= 0 || mousePosition.y >= Screen.height - 1)
+                return false;
+            return true;
+        }
+
+        public static MouseLook INSTANCE => GameObject.Find("Main Camera").GetComponent<MouseLook>();
     }
 }
