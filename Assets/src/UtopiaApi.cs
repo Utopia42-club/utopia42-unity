@@ -19,14 +19,6 @@ public class UtopiaApi : MonoBehaviour
         return FindObjectOfType<Owner>().currentLandChanged;
     }
 
-    public bool PlaceBlock(String request)
-    {
-        var req = JsonConvert.DeserializeObject<PlaceBlockRequest>(request);
-        var placed = Player.INSTANCE.ApiPutBlock(new VoxelPosition(req.position),
-            WorldService.INSTANCE.GetBlockType(req.type));
-        return placed;
-    }
-
     public Dictionary<Vector3Int, bool> PlaceMetaBlocks(String request)
     {
         var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);
