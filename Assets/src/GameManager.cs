@@ -26,6 +26,8 @@ namespace src
         private bool captureAllKeyboardInputOrig;
 
         public Map map;
+        private bool doubleCtrlTap = false;
+        private double doubleCtrlTapTime;
 
         void Start()
         {
@@ -38,6 +40,30 @@ namespace src
 
         void Update()
         {
+            if (IsControlKeyDown() && doubleCtrlTap)
+            {
+                if (Time.time - doubleCtrlTapTime < 0.4f)
+                {
+                    if (WebBridge.IsPresent())
+                    {
+                        WebBridge.Call<object>("openPluginsDialog",
+                            Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt)
+                                ? "running"
+                                : "menu");
+                    }
+
+                    doubleCtrlTapTime = 0f;
+                }
+
+                doubleCtrlTap = false;
+            }
+
+            if (IsControlKeyDown() && !doubleCtrlTap)
+            {
+                doubleCtrlTap = true;
+                doubleCtrlTapTime = Time.time;
+            }
+
             if (Input.GetButtonDown("Cancel"))
             {
                 if (state == State.PLAYING)
@@ -63,6 +89,13 @@ namespace src
                 else if (state == State.PLAYING)
                     SetState(State.INVENTORY);
             }
+        }
+
+        private bool IsControlKeyDown()
+        {
+            return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl)
+                                                         || Input.GetKeyDown(KeyCode.LeftCommand) ||
+                                                         Input.GetKeyDown(KeyCode.RightCommand);
         }
 
         private void InitPlayerForWallet(Vector3? startingPosition)

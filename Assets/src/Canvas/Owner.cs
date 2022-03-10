@@ -24,7 +24,7 @@ namespace src.Canvas
         private string currentWallet;
         private ProfileLoader profileLoader;
 
-        public UnityEvent<object> currentLandChanged;
+        public readonly UnityEvent<object> currentLandChanged = new UnityEvent<object>();
 
         void Start()
         {
