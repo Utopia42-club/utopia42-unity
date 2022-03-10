@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using src.Utils;
 using UnityEngine;
 
@@ -26,6 +27,10 @@ namespace src.MetaBlocks
 
         public abstract void UnFocus();
 
+        public abstract void UpdateStateAndIcon(StateMsg msg, Voxels.Face face);
+
+        protected abstract List<string> GetFaceSnackLines(Voxels.Face face);
+        
         protected void OnDestroy()
         {
             UnFocus();

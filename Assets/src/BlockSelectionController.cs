@@ -129,7 +129,7 @@ namespace src
 
         private void HandleBlockSelection()
         {
-            if (rotationMode) return;
+            if (rotationMode || !mouseLook.inGameMouseClickActive) return;
             var selectVoxel = (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null) &&
                               Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftControl) ||
                                                               Input.GetKey(KeyCode.RightControl) ||
@@ -139,7 +139,7 @@ namespace src
             var multipleSelect = selectVoxel && selectedBlocks.Count > 0 &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
 
-            if (multipleSelect) // TODO: add limit
+            if (multipleSelect)
             {
                 var lastSelectedPosition = selectedBlocks.Last().Position;
                 var currentSelectedPosition =

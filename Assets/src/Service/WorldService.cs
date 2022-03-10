@@ -8,6 +8,7 @@ using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
 using src.MetaBlocks.LinkBlock;
 using src.MetaBlocks.MarkerBlock;
+using src.MetaBlocks.NftBlock;
 using src.MetaBlocks.TdObjectBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
@@ -67,6 +68,7 @@ namespace src.Service
             types[34] = new TdObjectBlockType(34);
             types[35] = new MarkerBlockType(35);
             // types[36] = new LightBlockType(36);
+            types[37] = new NftBlockType(37);
         }
 
         public List<string> GetNonMetaBlockTypes()
@@ -183,10 +185,11 @@ namespace src.Service
             if (ColorBlocks.IsColorBlockType(name, out var blockType))
                 return blockType;
 
-            foreach (var entry in from entry in types 
-                     where !excludeMetaBlocks || !(entry.Value is MetaBlockType) 
-                     where !excludeBaseBlocks || entry.Value is MetaBlockType 
-                     where entry.Value.name.Equals(name) select entry)
+            foreach (var entry in from entry in types
+                     where !excludeMetaBlocks || !(entry.Value is MetaBlockType)
+                     where !excludeBaseBlocks || entry.Value is MetaBlockType
+                     where entry.Value.name.Equals(name)
+                     select entry)
                 return entry.Value;
 
             Debug.LogError("Invalid block type: " + name);
