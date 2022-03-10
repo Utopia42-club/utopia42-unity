@@ -18,6 +18,11 @@ public class UtopiaApi : MonoBehaviour
         return FindObjectOfType<Owner>().currentLandChanged;
     }
     
+    public UnityEvent<object> BlockPlaced()
+    {
+        return WorldService.INSTANCE.blockPlaced;
+    }
+    
     public Dictionary<Vector3Int, bool> PlaceMetaBlocks(string request)
     {
         var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);

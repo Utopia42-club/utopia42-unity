@@ -29,7 +29,7 @@ namespace src.Service
         private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
         private HashSet<Land> changedLands = new HashSet<Land>();
         private readonly LandRegistry landRegistry = new LandRegistry();
-        public readonly UnityEvent<Tuple<Vector3Int, BlockType>> placedBlock = new UnityEvent<Tuple<Vector3Int, BlockType>>();
+        public readonly UnityEvent<object> blockPlaced = new UnityEvent<object>();
 
         public WorldService()
         {
@@ -452,7 +452,7 @@ namespace src.Service
                 markerBlocks.Add(pos.ToWorld(), metas[pos.local]);
 
             changedLands.Add(land);
-            placedBlock.Invoke(new Tuple<Vector3Int, BlockType>(pos.ToWorld(), type));
+            blockPlaced.Invoke(new Tuple<Vector3Int, string>(pos.ToWorld(), type.name));
 
             return metas;
         }
@@ -468,7 +468,7 @@ namespace src.Service
 
             vc[pos.local] = type.id;
             changedLands.Add(land);
-            placedBlock.Invoke(new Tuple<Vector3Int, BlockType>(pos.ToWorld(), type));
+            blockPlaced.Invoke(new Tuple<Vector3Int, string>(pos.ToWorld(), type.name));
         }
         
         public void AddChange(VoxelPosition pos, Land land)

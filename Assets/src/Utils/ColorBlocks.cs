@@ -48,8 +48,6 @@ namespace src.Utils
 
         public static Color32 GetColorFromBlockType(BlockType blockType)
         {
-            // var b = ColorUtility.TryParseHtmlString(blockType.name, out var color);
-            // return b ? color : Color.white;
             return blockType.color ?? Color.white;
         }
 
