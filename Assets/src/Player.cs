@@ -47,6 +47,7 @@ namespace src
         private CharacterController controller;
         private BlockSelectionController blockSelectionController;
         private bool ctrlDown = false;
+        private Vector3Int playerPos;
 
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
@@ -81,6 +82,8 @@ namespace src
                 if (state == GameManager.State.PLAYING)
                     hitCollider = null;
             });
+            
+            playerPos = Vectors.TruncateFloor(transform.position);
         }
 
         public List<Land> GetOwnedLands()
@@ -127,6 +130,8 @@ namespace src
             controller.Move(velocity * Time.fixedDeltaTime);
             if ((controller.collisionFlags & CollisionFlags.Above) != 0)
                 velocity.y = 0;
+            
+            playerPos = Vectors.TruncateFloor(transform.position);
         }
 
         private void DetectFocus()
@@ -312,15 +317,22 @@ namespace src
             return null;
         }
 
-        public bool CanEdit(Vector3Int position, out Land land)
+        public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
+            if (!isMeta && (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
+                           playerPos.Equals(blockPos - Vector3Int.up)))
+            {
+                land = null;
+                return false;
+            }
+            
             if (Settings.IsGuest())
             {
                 land = null;
                 return true;
             }
 
-            land = FindOwnedLand(position);
+            land = FindOwnedLand(blockPos);
             return land != null && !land.isNft;
         }
 
@@ -336,88 +348,9 @@ namespace src
             return null;
         }
 
-        public void PutBlock(Vector3 pos, BlockType type)
-        {
-            var vp = new VoxelPosition(pos);
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk == null) return;
-            if (type is MetaBlockType)
-                chunk.PutMeta(vp, type, placeLand);
-            else
-                chunk.PutVoxel(vp, type, placeLand);
-        }
-
-        public bool ApiPutBlock(VoxelPosition vp, BlockType getBlockType)
-        {
-            return ApiPutBlocks(new Dictionary<VoxelPosition, BlockType> {{vp, getBlockType}})[vp.ToWorld()];
-        }
-
-        public Dictionary<Vector3Int, bool> ApiPutBlocks(Dictionary<VoxelPosition, BlockType> blocks)
-        {
-            var result = new Dictionary<Vector3Int, bool>();
-            var toBePut = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
-            foreach (var vp in blocks.Keys)
-            {
-                var pos = vp.ToWorld();
-                var type = blocks[vp];
-                var playerPos = Vectors.TruncateFloor(transform.position);
-                var blockPos = vp.ToWorld();
-                if (type is MetaBlockType || playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
-                    playerPos.Equals(blockPos - Vector3Int.up))
-                {
-                    result.Add(pos, false);
-                    continue;
-                }
-
-                if (CanEdit(pos, out var ownerLand))
-                {
-                    toBePut.Add(vp, new Tuple<BlockType, Land>(type, ownerLand));
-                    result.Add(pos, true);
-                    continue;
-                }
-
-                result.Add(pos, false);
-            }
-
-            world.PutBlocks(toBePut);
-            return result;
-        }
-
-        public Dictionary<Vector3Int, bool> ApiPutMetaBlocks(
-            Dictionary<VoxelPosition, Tuple<MetaBlockType, object>> metaBlocks)
-        {
-            var result = new Dictionary<Vector3Int, bool>();
-            foreach (var vp in metaBlocks.Keys)
-            {
-                var pos = vp.ToWorld();
-                if (!CanEdit(pos, out var ownerLand) || !WorldService.INSTANCE.IsSolid(vp))
-                {
-                    result.Add(pos, false);
-                    continue;
-                }
-
-                var (type, props) = metaBlocks[vp];
-                var chunk = world.GetChunkIfInited(vp.chunk);
-                if (chunk != null)
-                {
-                    chunk.PutMeta(vp, type, ownerLand);
-                    chunk.GetMetaAt(vp).SetProps(props, ownerLand);
-                }
-                else
-                {
-                    world.DestroyGarbageChunkIfExists(vp.chunk);
-                    WorldService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand)[vp.local].SetProps(props, ownerLand);
-                }
-
-                result.Add(pos, true);
-            }
-
-            return result;
-        }
-
         private VoxelPosition ComputePosition()
         {
-            return new VoxelPosition(transform.position);
+            return new VoxelPosition(playerPos);
         }
 
         public void ShowTdObjectHighlightBox(BoxCollider boxCollider)

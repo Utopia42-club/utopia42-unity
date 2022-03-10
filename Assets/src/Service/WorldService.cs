@@ -15,6 +15,7 @@ using src.Model;
 using src.Service.Migration;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace src.Service
 {
@@ -28,6 +29,7 @@ namespace src.Service
         private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
         private HashSet<Land> changedLands = new HashSet<Land>();
         private readonly LandRegistry landRegistry = new LandRegistry();
+        public readonly UnityEvent<Tuple<Vector3Int, BlockType>> placedBlock = new UnityEvent<Tuple<Vector3Int, BlockType>>();
 
         public WorldService()
         {
@@ -435,7 +437,7 @@ namespace src.Service
                 changedLands.Add(block.land);
         }
 
-        public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, uint id, Land land)
+        public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, MetaBlockType type, Land land)
         {
             Dictionary<Vector3Int, MetaBlock> metas;
             if (!metaBlocks.TryGetValue(pos.chunk, out metas))
@@ -444,18 +446,18 @@ namespace src.Service
                 metaBlocks[pos.chunk] = metas;
             }
 
-            var type = (MetaBlockType) GetBlockType(id);
             metas[pos.local] = type.New(land, "");
 
             if (type is MarkerBlockType)
                 markerBlocks.Add(pos.ToWorld(), metas[pos.local]);
 
             changedLands.Add(land);
+            placedBlock.Invoke(new Tuple<Vector3Int, BlockType>(pos.ToWorld(), type));
 
             return metas;
         }
 
-        public void AddChange(VoxelPosition pos, uint id, Land land)
+        public void AddChange(VoxelPosition pos, BlockType type, Land land)
         {
             Dictionary<Vector3Int, uint> vc;
             if (!changes.TryGetValue(pos.chunk, out vc))
@@ -464,8 +466,14 @@ namespace src.Service
                 changes[pos.chunk] = vc;
             }
 
-            vc[pos.local] = id;
+            vc[pos.local] = type.id;
             changedLands.Add(land);
+            placedBlock.Invoke(new Tuple<Vector3Int, BlockType>(pos.ToWorld(), type));
+        }
+        
+        public void AddChange(VoxelPosition pos, Land land)
+        {
+            AddChange(pos, types[0], land);
         }
 
         public LandProperties GetLandProperties(int landId)

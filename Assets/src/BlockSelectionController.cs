@@ -7,7 +7,6 @@ using src.Service;
 using src.Utils;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace src
 {
@@ -179,7 +178,7 @@ namespace src
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
-                    player.PutBlock(player.PlaceBlock.position,
+                    world.PutBlock(new VoxelPosition(player.PlaceBlock.position),
                         WorldService.INSTANCE.GetBlockType(player.selectedBlockId));
                 }
             }

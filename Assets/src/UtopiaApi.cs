@@ -10,7 +10,6 @@ using src.Model;
 using src.Service;
 using UnityEngine;
 using UnityEngine.Events;
-using Object = System.Object;
 
 public class UtopiaApi : MonoBehaviour
 {
@@ -18,8 +17,8 @@ public class UtopiaApi : MonoBehaviour
     {
         return FindObjectOfType<Owner>().currentLandChanged;
     }
-
-    public Dictionary<Vector3Int, bool> PlaceMetaBlocks(String request)
+    
+    public Dictionary<Vector3Int, bool> PlaceMetaBlocks(string request)
     {
         var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);
 
@@ -55,8 +54,8 @@ public class UtopiaApi : MonoBehaviour
             metaBlocks.Add(pos, new Tuple<MetaBlockType, object>(metaType, props));
         }
 
-        var baseBlocksResult = Player.INSTANCE.ApiPutBlocks(blocks);
-        var metaBlocksResult = Player.INSTANCE.ApiPutMetaBlocks(metaBlocks);
+        var baseBlocksResult = PutBlocks(blocks);
+        var metaBlocksResult = PutMetaBlocks(metaBlocks);
 
         foreach (var pos in placed.Keys.ToArray())
         {
@@ -94,6 +93,45 @@ public class UtopiaApi : MonoBehaviour
         return WorldService.INSTANCE.GetNonMetaBlockTypes();
     }
 
+    private static bool PutBlock(VoxelPosition vp, BlockType getBlockType)
+    {
+        return PutBlocks(new Dictionary<VoxelPosition, BlockType> {{vp, getBlockType}})[vp.ToWorld()];
+    }
+
+    public static Dictionary<Vector3Int, bool> PutBlocks(Dictionary<VoxelPosition, BlockType> blocks)
+    {
+        var result = new Dictionary<Vector3Int, bool>();
+        var toBePut = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+        foreach (var vp in blocks.Keys)
+        {
+            var type = blocks[vp];
+            var blockPos = vp.ToWorld();
+            if (!(type is MetaBlockType) && Player.INSTANCE.CanEdit(blockPos, out var ownerLand))
+            {
+                toBePut.Add(vp, new Tuple<BlockType, Land>(type, ownerLand));
+                result.Add(blockPos, true);
+                continue;
+            }
+            result.Add(blockPos, false);
+        }
+
+        World.INSTANCE.PutBlocks(toBePut);
+        return result;
+    }
+
+    public static Dictionary<Vector3Int, bool> PutMetaBlocks(
+        Dictionary<VoxelPosition, Tuple<MetaBlockType, object>> metaBlocks)
+    {
+        var result = new Dictionary<Vector3Int, bool>();
+        foreach (var vp in metaBlocks.Keys)
+        {
+            var (type, props) = metaBlocks[vp];
+            result.Add(vp.ToWorld(), World.INSTANCE.PutMetaWithProps(vp, type, props));
+        }
+
+        return result;
+    }
+    
     public static UtopiaApi INSTANCE => GameObject.Find("UtopiaApi").GetComponent<UtopiaApi>();
 
     private class PlaceBlockRequest

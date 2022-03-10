@@ -33,7 +33,7 @@ namespace src
             while (reqs.Count > 0)
             {
                 var subReqs = reqs.GetRange(0, Mathf.Min(reqs.Count, 500));
-                Player.INSTANCE.ApiPutBlocks(subReqs.ToDictionary(
+                UtopiaApi.PutBlocks(subReqs.ToDictionary(
                     req => new VoxelPosition(req.position),
                     req => WorldService.INSTANCE.GetBlockType(stone ? "stone" : req.type)));
 

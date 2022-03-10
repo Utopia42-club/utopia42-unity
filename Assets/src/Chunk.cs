@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using src.MetaBlocks;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -230,7 +231,7 @@ namespace src
         public void DeleteVoxel(VoxelPosition pos, Land land)
         {
             voxels[pos.local.x, pos.local.y, pos.local.z] = 0; //FIXME
-            WorldService.INSTANCE.AddChange(pos, 0, land);
+            WorldService.INSTANCE.AddChange(pos, land);
             OnChanged(pos);
         }
 
@@ -241,7 +242,7 @@ namespace src
             {
                 var land = blocks[pos];
                 voxels[pos.local.x, pos.local.y, pos.local.z] = 0;
-                WorldService.INSTANCE.AddChange(pos, 0, land);
+                WorldService.INSTANCE.AddChange(pos, land);
 
                 foreach (var neighborChunk in GetNeighborChunks(pos))
                     neighbourChunks.Add(neighborChunk);
@@ -255,7 +256,7 @@ namespace src
         public void PutVoxel(VoxelPosition pos, BlockType type, Land land)
         {
             voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
-            WorldService.INSTANCE.AddChange(pos, type.id, land);
+            WorldService.INSTANCE.AddChange(pos, type, land);
             OnChanged(pos);
         }
 
@@ -267,7 +268,7 @@ namespace src
                 var type = blocks[pos].Item1;
                 var land = blocks[pos].Item2;
                 voxels[pos.local.x, pos.local.y, pos.local.z] = type.id;
-                WorldService.INSTANCE.AddChange(pos, type.id, land);
+                WorldService.INSTANCE.AddChange(pos, type, land);
                 foreach (var neighborChunk in GetNeighborChunks(pos))
                     neighbourChunks.Add(neighborChunk);
             }
@@ -308,9 +309,9 @@ namespace src
                 chunks.Add(chunk);
         }
 
-        public void PutMeta(VoxelPosition pos, BlockType type, Land land)
+        public void PutMeta(VoxelPosition pos, MetaBlockType type, Land land)
         {
-            metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type.id, land);
+            metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type, land);
             metaBlocks[pos.local].RenderAt(chunkObject.transform, pos.local, this);
         }
 
