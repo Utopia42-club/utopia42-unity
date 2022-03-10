@@ -21,7 +21,12 @@ namespace src.MetaBlocks
         public MetaBlock New(Land land, string props)
         {
             return new MetaBlock(this, land,
-                (props == null || props.Length == 0) ? null : JsonConvert.DeserializeObject(props, propertiesType));
+                (props == null || props.Length == 0) ? null : DeserializeProps(props));
+        }
+
+        public object DeserializeProps(string props)
+        {
+            return JsonConvert.DeserializeObject(props, propertiesType);
         }
     }
 }

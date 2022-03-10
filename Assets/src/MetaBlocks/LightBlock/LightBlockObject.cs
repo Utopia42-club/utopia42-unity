@@ -110,12 +110,7 @@ namespace src.MetaBlocks.LightBlock
                 snackItem = null;
             }
 
-            var lines = new List<string>();
-            lines.Add("Press Z for details");
-            lines.Add("Press T to toggle preview");
-            lines.Add("Press DEL to delete object");
-
-            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
@@ -138,6 +133,21 @@ namespace src.MetaBlocks.LightBlock
                 snackItem.Remove();
                 snackItem = null;
             }
+        }
+
+        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
+        {
+            return new List<string>
+            {
+                "Press Z for details",
+                "Press T to toggle preview",
+                "Press DEL to delete object"
+            };
         }
 
         private void EditProps()

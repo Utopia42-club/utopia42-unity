@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
+using src.MetaBlocks;
 using src.Model;
 using src.Service;
 using UnityEngine;
-using Vector3 = UnityEngine.Vector3;
 
 namespace src
 {
@@ -28,7 +27,7 @@ namespace src
         public GameObject help;
         public Player player;
 
-        void Start()
+        private void Start()
         {
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
@@ -38,8 +37,7 @@ namespace src
             });
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Update()
         {
             if (Input.GetKeyDown(KeyCode.F3))
                 debugScreen.SetActive(!debugScreen.activeSelf);
@@ -129,7 +127,6 @@ namespace src
             }
 
             creatingChunks = false;
-            yield break;
         }
 
         public int CountChunksToCreate()
@@ -200,7 +197,7 @@ namespace src
             }
         }
 
-        public void DestroyGarbageChunkIfExists(Vector3Int chunkPos)
+        private void DestroyGarbageChunkIfExists(Vector3Int chunkPos)
         {
             if (!garbageChunks.TryGetValue(chunkPos, out var chunk)) return;
             chunk.Destroy();
@@ -213,6 +210,37 @@ namespace src
                 return chunk;
             return null;
         }
+        
+        public void PutBlock(VoxelPosition vp, BlockType type)
+        {
+            var chunk = GetChunkIfInited(vp.chunk);
+            if (chunk == null) return;
+            if (type is MetaBlockType blockType)
+                chunk.PutMeta(vp, blockType, player.placeLand);
+            else
+                chunk.PutVoxel(vp, type, player.placeLand);
+        }
+        
+        public bool PutMetaWithProps(VoxelPosition vp, MetaBlockType type, object props)
+        {
+            var pos = vp.ToWorld();
+            if (!player.CanEdit(pos, out var ownerLand, true) || !WorldService.INSTANCE.IsSolid(vp))
+                return false;
+
+            var chunk = GetChunkIfInited(vp.chunk);
+            if (chunk != null)
+            {
+                chunk.PutMeta(vp, type, ownerLand);
+                chunk.GetMetaAt(vp).SetProps(props, ownerLand);
+            }
+            else
+            {
+                DestroyGarbageChunkIfExists(vp.chunk);
+                WorldService.INSTANCE.AddMetaBlock(vp, type, ownerLand)[vp.local].SetProps(props, ownerLand);
+            }
+
+            return true;
+        }
 
         public void PutBlocks(Dictionary<VoxelPosition, Tuple<BlockType, Land>> blocks)
         {
@@ -223,7 +251,7 @@ namespace src
                 if (chunk == null)
                 {
                     DestroyGarbageChunkIfExists(vp.chunk);
-                    WorldService.INSTANCE.AddChange(vp, blocks[vp].Item1.id,
+                    WorldService.INSTANCE.AddChange(vp, blocks[vp].Item1,
                         blocks[vp].Item2); // TODO: re-draw neighbors?
                     continue;
                 }
@@ -244,13 +272,14 @@ namespace src
         public void DeleteBlocks(Dictionary<VoxelPosition, Land> blocks)
         {
             var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Land>>();
-            var nullChunkNeighbors = new List<Chunk>();
+            // var nullChunkNeighbors = new List<Chunk>();
+
             foreach (var vp in blocks.Keys)
             {
                 var chunk = GetChunkIfInited(vp.chunk);
                 if (chunk == null)
                 {
-                    WorldService.INSTANCE.AddChange(vp, 0, blocks[vp]); // TODO: re-draw neighbors?
+                    WorldService.INSTANCE.AddChange(vp, blocks[vp]); // TODO: re-draw neighbors?
                     continue;
                 }
 

@@ -7,7 +7,6 @@ using src.Service;
 using src.Utils;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace src
 {
@@ -129,7 +128,7 @@ namespace src
 
         private void HandleBlockSelection()
         {
-            if (rotationMode) return;
+            if (rotationMode || !mouseLook.inGameMouseClickActive) return;
             var selectVoxel = (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null) &&
                               Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftControl) ||
                                                               Input.GetKey(KeyCode.RightControl) ||
@@ -139,7 +138,7 @@ namespace src
             var multipleSelect = selectVoxel && selectedBlocks.Count > 0 &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
 
-            if (multipleSelect) // TODO: add limit
+            if (multipleSelect)
             {
                 var lastSelectedPosition = selectedBlocks.Last().Position;
                 var currentSelectedPosition =
@@ -179,7 +178,7 @@ namespace src
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
-                    player.PutBlock(player.PlaceBlock.position,
+                    world.PutBlock(new VoxelPosition(player.PlaceBlock.position),
                         WorldService.INSTANCE.GetBlockType(player.selectedBlockId));
                 }
             }

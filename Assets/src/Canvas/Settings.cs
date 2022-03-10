@@ -43,6 +43,7 @@ namespace src.Canvas
                 errorPanel.SetActive(true);
                 return;
             }
+
             panel.SetActive(true);
 
             foreach (var net in nets)
@@ -134,6 +135,7 @@ namespace src.Canvas
             DoSubmit(walletInput.text);
         }
 
+
         private void DoSubmit(string walletId)
         {
             if (networkInput.interactable)
@@ -172,6 +174,18 @@ namespace src.Canvas
             var net = Network();
             detail.network = net == null ? -1 : net.id;
             return detail;
+        }
+
+        public void Exit()
+        {
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("moveToHome", null);
+            }
+            else
+            {
+                Application.Quit();
+            }
         }
     }
 

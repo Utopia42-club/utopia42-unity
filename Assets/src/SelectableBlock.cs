@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using src.MetaBlocks;
 using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
@@ -104,7 +105,7 @@ namespace src
             {
                 var (selectableBlock, land) = metas[vp];
                 var chunk = world.GetChunkIfInited(vp.chunk);
-                chunk.PutMeta(vp, WorldService.INSTANCE.GetBlockType(selectableBlock.metaBlockTypeId), land);
+                chunk.PutMeta(vp, (MetaBlockType) WorldService.INSTANCE.GetBlockType(selectableBlock.metaBlockTypeId), land);
                 chunk.GetMetaAt(vp).SetProps(selectableBlock.metaProperties, land);
             }
         }

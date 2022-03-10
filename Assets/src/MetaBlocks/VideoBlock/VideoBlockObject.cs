@@ -119,6 +119,16 @@ namespace src.MetaBlocks.VideoBlock
             }
         }
 
+        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face) // TODO
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override List<string> GetFaceSnackLines(Voxels.Face face) // TODO
+        {
+            throw new System.NotImplementedException();
+        }
+
         private void RenderFaces()
         {
             DestroyVideos();

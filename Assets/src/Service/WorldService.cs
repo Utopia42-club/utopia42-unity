@@ -8,12 +8,14 @@ using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
 using src.MetaBlocks.LinkBlock;
 using src.MetaBlocks.MarkerBlock;
+using src.MetaBlocks.NftBlock;
 using src.MetaBlocks.TdObjectBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
 using src.Service.Migration;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace src.Service
 {
@@ -27,6 +29,7 @@ namespace src.Service
         private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
         private HashSet<Land> changedLands = new HashSet<Land>();
         private readonly LandRegistry landRegistry = new LandRegistry();
+        public readonly UnityEvent<object> blockPlaced = new UnityEvent<object>();
 
         public WorldService()
         {
@@ -67,6 +70,7 @@ namespace src.Service
             types[34] = new TdObjectBlockType(34);
             types[35] = new MarkerBlockType(35);
             // types[36] = new LightBlockType(36);
+            types[37] = new NftBlockType(37);
         }
 
         public List<string> GetNonMetaBlockTypes()
@@ -178,16 +182,17 @@ namespace src.Service
             return ColorBlocks.IsColorTypeId(id, out var blockType) ? blockType : types[id];
         }
 
-        public BlockType GetBlockType(string name)
+        public BlockType GetBlockType(string name, bool excludeMetaBlocks = false, bool excludeBaseBlocks = false)
         {
             if (ColorBlocks.IsColorBlockType(name, out var blockType))
                 return blockType;
 
-            foreach (var entry in types)
-            {
-                if (entry.Value.name.Equals(name))
-                    return entry.Value;
-            }
+            foreach (var entry in from entry in types
+                     where !excludeMetaBlocks || !(entry.Value is MetaBlockType)
+                     where !excludeBaseBlocks || entry.Value is MetaBlockType
+                     where entry.Value.name.Equals(name)
+                     select entry)
+                return entry.Value;
 
             Debug.LogError("Invalid block type: " + name);
             return null;
@@ -432,7 +437,7 @@ namespace src.Service
                 changedLands.Add(block.land);
         }
 
-        public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, uint id, Land land)
+        public Dictionary<Vector3Int, MetaBlock> AddMetaBlock(VoxelPosition pos, MetaBlockType type, Land land)
         {
             Dictionary<Vector3Int, MetaBlock> metas;
             if (!metaBlocks.TryGetValue(pos.chunk, out metas))
@@ -441,18 +446,18 @@ namespace src.Service
                 metaBlocks[pos.chunk] = metas;
             }
 
-            var type = (MetaBlockType) GetBlockType(id);
             metas[pos.local] = type.New(land, "");
 
             if (type is MarkerBlockType)
                 markerBlocks.Add(pos.ToWorld(), metas[pos.local]);
 
             changedLands.Add(land);
+            blockPlaced.Invoke(new Tuple<Vector3Int, string>(pos.ToWorld(), type.name));
 
             return metas;
         }
 
-        public void AddChange(VoxelPosition pos, uint id, Land land)
+        public void AddChange(VoxelPosition pos, BlockType type, Land land)
         {
             Dictionary<Vector3Int, uint> vc;
             if (!changes.TryGetValue(pos.chunk, out vc))
@@ -461,8 +466,14 @@ namespace src.Service
                 changes[pos.chunk] = vc;
             }
 
-            vc[pos.local] = id;
+            vc[pos.local] = type.id;
             changedLands.Add(land);
+            blockPlaced.Invoke(new Tuple<Vector3Int, string>(pos.ToWorld(), type.name));
+        }
+        
+        public void AddChange(VoxelPosition pos, Land land)
+        {
+            AddChange(pos, types[0], land);
         }
 
         public LandProperties GetLandProperties(int landId)
