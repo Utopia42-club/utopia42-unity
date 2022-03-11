@@ -66,7 +66,7 @@ namespace src
 
             if (Input.GetButtonDown("Cancel"))
             {
-                if (state == State.PLAYING)
+                if (state == State.PLAYING && !MouseLook.INSTANCE.cursorLocked)
                     SetState(State.SETTINGS);
                 else
                     ReturnToGame();
@@ -481,6 +481,20 @@ namespace src
             ReturnToGame();
 #if UNITY_WEBGL
             WebGLInput.captureAllKeyboardInput = captureAllKeyboardInputOrig == null || captureAllKeyboardInputOrig;
+#endif
+        }
+        
+        public void LockCursor()
+        {
+#if UNITY_WEBGL
+            MouseLook.INSTANCE.LockCursor();
+#endif
+        }
+        
+        public void UnlockCursor()
+        {
+#if UNITY_WEBGL
+            MouseLook.INSTANCE.UnlockCursor();
 #endif
         }
 

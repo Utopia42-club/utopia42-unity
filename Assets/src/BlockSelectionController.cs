@@ -128,7 +128,7 @@ namespace src
 
         private void HandleBlockSelection()
         {
-            if (rotationMode || !mouseLook.inGameMouseClickActive) return;
+            if (rotationMode || !mouseLook.cursorLocked) return;
             var selectVoxel = (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null) &&
                               Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftControl) ||
                                                               Input.GetKey(KeyCode.RightControl) ||
