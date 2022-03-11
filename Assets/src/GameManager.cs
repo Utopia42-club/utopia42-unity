@@ -44,13 +44,7 @@ namespace src
             {
                 if (Time.time - doubleCtrlTapTime < 0.4f)
                 {
-                    if (WebBridge.IsPresent())
-                    {
-                        WebBridge.Call<object>("openPluginsDialog",
-                            Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt)
-                                ? "running"
-                                : "menu");
-                    }
+                    OpenPluginsDialog();
 
                     doubleCtrlTapTime = 0f;
                 }
@@ -88,6 +82,19 @@ namespace src
                     SetState(State.PLAYING);
                 else if (state == State.PLAYING)
                     SetState(State.INVENTORY);
+            }
+        }
+
+        public void OpenPluginsDialog()
+        {
+            if (state != State.PLAYING)
+                SetState(State.PLAYING);
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("openPluginsDialog",
+                    Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt)
+                        ? "running"
+                        : "menu");
             }
         }
 
@@ -483,14 +490,14 @@ namespace src
             WebGLInput.captureAllKeyboardInput = captureAllKeyboardInputOrig == null || captureAllKeyboardInputOrig;
 #endif
         }
-        
+
         public void LockCursor()
         {
 #if UNITY_WEBGL
             MouseLook.INSTANCE.LockCursor();
 #endif
         }
-        
+
         public void UnlockCursor()
         {
 #if UNITY_WEBGL
