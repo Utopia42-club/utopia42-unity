@@ -425,10 +425,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 7041480814036249665}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a25f364d7e424b26b14d934a2b7177ed, type: 3}
+  m_Script: {fileID: 11500000, guid: 3d0bc546f0d070d4ab5032daeb6a6e11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  landsList: {fileID: 8094559735225359449}
+  landsList: {fileID: 0}
 --- !u!114 &5272744511674629224
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -341,11 +341,13 @@ namespace src.Service
             });
             if (failed) yield break;
 
-            var landsCount = landRegistry.GetLands().Count;
+
+            var playerLands = landRegistry.GetLandsForOwner(Settings.WalletId()); 
+            var landsCount = playerLands.Count;
             var enums = new IEnumerator[landsCount];
 
             var index = 0;
-            foreach (var land in landRegistry.GetLands().Values)
+            foreach (var land in playerLands)
             {
                 if (!string.IsNullOrWhiteSpace(land.ipfsKey))
                     enums[index] = IpfsClient.INSATANCE.GetLandDetails(land, details => consumer(land, details));
