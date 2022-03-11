@@ -94,11 +94,10 @@ namespace src
         public void ResetLands()
         {
             List<Land> lands = null;
-            string wallet = Settings.WalletId();
-            if (wallet != null)
+            if (Settings.WalletId() != null)
             {
                 var service = WorldService.INSTANCE;
-                lands = service.GetLandsFor(wallet);
+                lands = service.GetPlayerLands();
                 service.RefreshChangedLands(lands);
             }
 

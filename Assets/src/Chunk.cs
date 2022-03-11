@@ -1,11 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using src.MetaBlocks;
 using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
-using MetaBlock = src.MetaBlocks.MetaBlock;
 using Object = UnityEngine.Object;
 
 namespace src
@@ -41,9 +41,9 @@ namespace src
             return inited;
         }
 
-        public void Init()
+        public IEnumerator Init()
         {
-            if (inited) return;
+            if (inited) yield break;
             inited = true;
             chunkObject = new GameObject();
             chunkObject.SetActive(active);
@@ -57,8 +57,9 @@ namespace src
             chunkObject.transform.position = position;
             chunkObject.name = "Chunck " + coordinate;
 
-            WorldService.INSTANCE.FillChunk(coordinate, voxels);
-            metaBlocks = WorldService.INSTANCE.GetMetaBlocksForChunk(coordinate);
+            yield return WorldService.INSTANCE.FillChunk(coordinate, voxels);
+            yield return WorldService.INSTANCE.GetMetaBlocksForChunk(coordinate, mb => metaBlocks = mb);
+            
             DrawVoxels();
             DrawMetaBlocks();
             //var block = new ImageBlockTpe(50).New("{front:{height:5, width:5, url:\"https://www.wpbeginner.com/wp-content/uploads/2020/03/ultimate-small-business-resource-180x180.png\"}}");
@@ -123,10 +124,10 @@ namespace src
             return null;
         }
 
-        private bool IsPositionSolid(Vector3Int localPos)
+        private bool IsPositionSolidIfLoaded(Vector3Int localPos)
         {
             if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
-                return world.IsSolidAt(ToGlobal(localPos));
+                return world.IsSolidIfLoaded(ToGlobal(localPos));
 
             return GetBlock(localPos).isSolid;
         }
@@ -155,7 +156,7 @@ namespace src
 
             foreach (var face in Voxels.Face.FACES)
             {
-                if (!IsPositionSolid(pos + face.direction))
+                if (!IsPositionSolidIfLoaded(pos + face.direction))
                 {
                     var idx = vertices.Count;
 

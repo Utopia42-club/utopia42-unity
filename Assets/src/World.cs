@@ -116,7 +116,7 @@ namespace src
                 var chunk = PopRequest();
                 if (chunk.IsActive() && !chunk.IsInited())
                 {
-                    chunk.Init();
+                    yield return chunk.Init();
                     todo--;
                     if (todo <= 0)
                     {
@@ -224,7 +224,7 @@ namespace src
         public bool PutMetaWithProps(VoxelPosition vp, MetaBlockType type, object props)
         {
             var pos = vp.ToWorld();
-            if (!player.CanEdit(pos, out var ownerLand, true) || !WorldService.INSTANCE.IsSolid(vp))
+            if (!player.CanEdit(pos, out var ownerLand, true) || !WorldService.INSTANCE.IsSolidIfLoaded(vp))
                 return false;
 
             var chunk = GetChunkIfInited(vp.chunk);
@@ -296,13 +296,13 @@ namespace src
                 chunk.DeleteVoxels(chunks[chunk]);
         }
 
-        public bool IsSolidAt(Vector3Int pos)
+        public bool IsSolidIfLoaded(Vector3Int pos)
         {
             var vp = new VoxelPosition(pos);
             Chunk chunk;
             if (chunks.TryGetValue(vp.chunk, out chunk) && chunk.IsInited())
                 return chunk.GetBlock(vp.local).isSolid;
-            return WorldService.INSTANCE.IsSolid(vp);
+            return WorldService.INSTANCE.IsSolidIfLoaded(vp);
         }
 
         public static World INSTANCE

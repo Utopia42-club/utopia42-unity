@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
 using src.Canvas;
@@ -16,6 +17,7 @@ using src.Service.Migration;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
+using Debug = UnityEngine.Debug;
 
 namespace src.Service
 {
@@ -85,14 +87,15 @@ namespace src.Service
             return types.Values.ToList();
         }
 
-        public Dictionary<Vector3Int, MetaBlock> GetMetaBlocksForChunk(Vector3Int coordinate)
+        public IEnumerator GetMetaBlocksForChunk(Vector3Int coordinate, Action<Dictionary<Vector3Int, MetaBlock>> done)
         {
             Dictionary<Vector3Int, MetaBlock> blocks;
             metaBlocks.TryGetValue(coordinate, out blocks);
-            return blocks;
+            done.Invoke(blocks);
+            yield break;
         }
 
-        public void FillChunk(Vector3Int coordinate, uint[,,] voxels)
+        public IEnumerator FillChunk(Vector3Int coordinate, uint[,,] voxels)
         {
             InitiateChunk(coordinate, voxels);
 
@@ -105,6 +108,8 @@ namespace src.Service
                     voxels[voxel.x, voxel.y, voxel.z] = change.Value;
                 }
             }
+
+            yield break;
         }
 
 
@@ -212,8 +217,15 @@ namespace src.Service
 
             return null;
         }
-
-        public bool IsSolid(VoxelPosition vp)
+        
+        
+        public IEnumerator IsSolid(VoxelPosition voxelPosition, Action<bool> consumer)
+        {
+            consumer.Invoke(IsSolidIfLoaded(voxelPosition));
+            yield break;
+        }
+        
+        public bool IsSolidIfLoaded(VoxelPosition vp)
         {
             Dictionary<Vector3Int, uint> chunkChanges;
             if (changes.TryGetValue(vp.chunk, out chunkChanges))
@@ -227,10 +239,11 @@ namespace src.Service
 
             return vp.chunk.y <= 0;
         }
+        
 
-        public List<Land> GetLandsFor(string walletId)
+        public List<Land> GetPlayerLands()
         {
-            return landRegistry.GetLandsForOwner(walletId);
+            return landRegistry.GetLandsForOwner(Settings.WalletId());
         }
 
         public IEnumerator Initialize(Loading loading, Action onDone, Action onFailed)
@@ -243,6 +256,7 @@ namespace src.Service
             var metaBlocks = new Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>>();
 
             var failed = false;
+            
             yield return LoadDetails(loading, (land, details) =>
             {
                 details = migrationService.Migrate(land, details);
@@ -256,6 +270,7 @@ namespace src.Service
                 failed = true;
                 onFailed();
             });
+            
             if (failed) yield break;
 
             this.changes = changes;
@@ -470,7 +485,7 @@ namespace src.Service
             changedLands.Add(land);
             blockPlaced.Invoke(new Tuple<Vector3Int, string>(pos.ToWorld(), type.name));
         }
-        
+
         public void AddChange(VoxelPosition pos, Land land)
         {
             AddChange(pos, types[0], land);
@@ -531,9 +546,9 @@ namespace src.Service
             return lands?.FirstOrDefault(l => l.Contains(position));
         }
 
-        public IEnumerator ReloadLandsFor(string wallet, Action onFailed)
+        public IEnumerator ReloadPlayerLands(Action onFailed)
         {
-            yield return landRegistry.ReloadLandsForOwner(wallet, onFailed);
+            yield return landRegistry.ReloadLandsForOwner(Settings.WalletId(), onFailed);
         }
 
         public bool IsInitialized()

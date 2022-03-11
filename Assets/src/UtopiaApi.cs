@@ -47,7 +47,8 @@ public class UtopiaApi : MonoBehaviour
                 : WorldService.INSTANCE.GetBlockType(req.type.metaBlock.type, false, true));
 
             var type = req.type.blockType == null ? null : WorldService.INSTANCE.GetBlockType(req.type.blockType, true);
-            if ((type == null || type.name.Equals("air")) && metaType != null && !WorldService.INSTANCE.IsSolid(pos))
+            //FIXME what if data was not loaded?
+            if ((type == null || type.name.Equals("air")) && metaType != null && !WorldService.INSTANCE.IsSolidIfLoaded(pos))
                 type = WorldService.INSTANCE.GetBlockType("grass");
             if (type != null) blocks.Add(pos, type);
 
@@ -85,7 +86,7 @@ public class UtopiaApi : MonoBehaviour
 
     public List<Land> GetPlayerLands(string walletId)
     {
-        return WorldService.INSTANCE.GetLandsFor(walletId);
+        return WorldService.INSTANCE.GetPlayerLands();
     }
 
     public Land GetCurrentLand()

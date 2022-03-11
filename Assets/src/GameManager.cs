@@ -125,7 +125,6 @@ namespace src
             }
             else pos = startingPosition.Value;
 
-            pos = FindStartingY(pos);
             StartCoroutine(DoMovePlayerTo(pos, true));
         }
 
@@ -166,20 +165,17 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Positioning the player...");
-            yield return null;
-            pos = FindStartingY(pos);
+            yield return FindStartingY(pos, result => pos = result);
+            
             Player.INSTANCE.transform.position = pos;
             yield return InitWorld(pos, clean);
         }
 
-        public Vector3 FindStartingY(Vector3 pos, Func<VoxelPosition, bool> willBeSolid = null)
+        private IEnumerator FindStartingY(Vector3 pos, Action<Vector3> consumer)
         {
             var service = WorldService.INSTANCE;
-            Func<VoxelPosition, bool> isSolid;
-            if (willBeSolid == null)
-                isSolid = voxelPosition => service.IsSolid(voxelPosition);
-            else
-                isSolid = voxelPosition => service.IsSolid(voxelPosition) || willBeSolid(voxelPosition);
+            var checksPerFrame = 100;
+            var todo = checksPerFrame;
 
             var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, 0f, .5f);
             while (true)
@@ -187,14 +183,26 @@ namespace src
                 bool coll = false;
                 for (int i = -1; i < 3; i++)
                 {
-                    if (coll = isSolid(new VoxelPosition(feet + Vector3Int.up * i)))
+                    // yield return service.IsSolid(new VoxelPosition(feet + Vector3Int.up * i), result => coll = result);
+                    coll =  service.IsSolidIfLoaded(new VoxelPosition(feet + Vector3Int.up * i));
+                    if (coll)
                     {
                         feet += Vector3Int.up * Math.Max(1, i + 2);
                         break;
                     }
                 }
 
-                if (!coll) return feet;
+                if (!coll)
+                {
+                    consumer.Invoke(feet);
+                    yield break;
+                }
+                todo--;
+                if (todo == 0)
+                {
+                    yield return null;
+                    todo = checksPerFrame;
+                }
             }
         }
 
@@ -436,7 +444,7 @@ namespace src
             Loading.INSTANCE.UpdateText("Reloading Your Lands...");
 
             var failed = false;
-            yield return WorldService.INSTANCE.ReloadLandsFor(Settings.WalletId(), () =>
+            yield return WorldService.INSTANCE.ReloadPlayerLands(() =>
             {
                 failed = true;
                 Loading.INSTANCE.ShowConnectionError();

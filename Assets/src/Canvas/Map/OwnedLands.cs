@@ -22,7 +22,7 @@ namespace src.Canvas.Map
 
         private void OnEnable()
         {
-            SetLands(WorldService.INSTANCE.GetLandsFor(Settings.WalletId()));
+            SetLands(WorldService.INSTANCE.GetPlayerLands());
         }
 
         private void SetLands(List<Land> lands)
