@@ -20,6 +20,7 @@ namespace src.Canvas
         [SerializeField] private Button editProfileButton;
         [SerializeField] private Button helpButton;
         [SerializeField] private Button positionLinkButton;
+        [SerializeField] private Button pluginsButton;
 
         private Vector3? startingPosition = null;
 
@@ -32,6 +33,7 @@ namespace src.Canvas
                 errorPanel.SetActive(true);
                 loadingPanel.SetActive(false);
             }));
+            pluginsButton.interactable = WebBridge.IsPresent();
         }
 
         private void DoStart()
@@ -56,6 +58,7 @@ namespace src.Canvas
             helpButton.onClick.AddListener(() => manager.Help());
             walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
             positionLinkButton.onClick.AddListener(() => manager.CopyPositionLink());
+            pluginsButton.onClick.AddListener(() => manager.OpenPluginsDialog());
 
             manager.stateChange.AddListener(state =>
             {
@@ -111,6 +114,7 @@ namespace src.Canvas
             saveGameButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
             editProfileButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
             helpButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
+            pluginsButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
             positionLinkButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
         }
 

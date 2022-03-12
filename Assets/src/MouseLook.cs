@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace src
@@ -10,7 +11,7 @@ namespace src
         private float xRotation = 0f;
         private Action onUpdate = () => { };
         private Action<Vector3> rotationTarget = null;
-        public bool inGameMouseClickActive = true;
+        public bool cursorLocked = true;
 
         void Start()
         {
@@ -24,7 +25,10 @@ namespace src
                 if (state == GameManager.State.PLAYING || state == GameManager.State.MOVING_OBJECT)
                 {
                     Cursor.lockState = CursorLockMode.Locked;
-                    if (inGameMouseClickActive)
+                    // if (!cursorLocked)
+                    //     LockCursor();
+                    // else
+                    if (cursorLocked)
                         Cursor.visible = false;
                     this.onUpdate = DoUpdate;
                 }
@@ -37,28 +41,43 @@ namespace src
             });
         }
 
-        private void OnApplicationFocus(bool hasFocus)
-        {
-            if (hasFocus) return;
-            inGameMouseClickActive = false;
-        }
-
-        void Update()
+        private void Update()
         {
             onUpdate.Invoke();
 
-            if (Input.GetButtonDown("Cancel"))
-            {
-                inGameMouseClickActive = false;
-                Cursor.visible = true;
-            }
-            else if (!inGameMouseClickActive && (Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(0)) && MouseInScreen())
-                inGameMouseClickActive = true;
+            if (cursorLocked && (Input.GetButtonUp("Cancel")))
+                UnlockCursor();
+            else if (!cursorLocked && (Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(0)) &&
+                     GameManager.INSTANCE.GetState() == GameManager.State.PLAYING && MouseInScreen())
+                LockCursor();
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus) return;
+            UnlockCursor();
+        }
+
+        public void UnlockCursor()
+        {
+            StartCoroutine(ChangeCursorState(false));
+        }
+
+        public void LockCursor()
+        {
+            StartCoroutine(ChangeCursorState(true));
+        }
+
+        private IEnumerator ChangeCursorState(bool locked)
+        {
+            yield return null;
+            cursorLocked = locked;
+            Cursor.visible = !locked;
         }
 
         private void DoUpdate()
         {
-            if (!inGameMouseClickActive) return;
+            if (!cursorLocked) return;
             float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
             float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
@@ -85,15 +104,6 @@ namespace src
         public void RemoveRotationTarget()
         {
             rotationTarget = null;
-        }
-
-        private static bool MouseCenterFixed()
-        {
-            var mousePosition = Input.mousePosition;
-            if (Mathf.Abs(mousePosition.x - Screen.width / 2) > 2 ||
-                Mathf.Abs(mousePosition.y - Screen.height / 2) > 2)
-                return false;
-            return true;
         }
 
         private static bool MouseInScreen()
