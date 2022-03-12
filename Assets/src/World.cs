@@ -221,10 +221,10 @@ namespace src
                 chunk.PutVoxel(vp, type, player.placeLand);
         }
         
-        public bool PutMetaWithProps(VoxelPosition vp, MetaBlockType type, object props)
+        public bool PutMetaWithProps(VoxelPosition vp, MetaBlockType type, object props, Land ownerLand = null)
         {
             var pos = vp.ToWorld();
-            if (!player.CanEdit(pos, out var ownerLand, true) || !WorldService.INSTANCE.IsSolid(vp))
+            if (ownerLand == null && !player.CanEdit(pos, out ownerLand, true) || !WorldService.INSTANCE.IsSolid(vp))
                 return false;
 
             var chunk = GetChunkIfInited(vp.chunk);
