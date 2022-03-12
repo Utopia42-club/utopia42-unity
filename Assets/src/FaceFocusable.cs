@@ -24,7 +24,7 @@ namespace src
 
         public override Vector3 GetBlockPosition()
         {
-            return transform.parent.position;
+            return Vectors.TruncateFloor(transform.parent.position);
         }
     }
 }

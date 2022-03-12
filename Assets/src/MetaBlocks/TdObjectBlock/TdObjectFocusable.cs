@@ -20,7 +20,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public override Vector3 GetBlockPosition()
         {
-            return transform.parent.parent.position;
+            return Vectors.TruncateFloor(transform.parent.parent.position);
         }
     }
 }

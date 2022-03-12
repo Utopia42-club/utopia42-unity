@@ -139,12 +139,6 @@ public class UtopiaApi : MonoBehaviour
     
     public static UtopiaApi INSTANCE => GameObject.Find("UtopiaApi").GetComponent<UtopiaApi>();
 
-    private class PlaceBlockRequest
-    {
-        public string type;
-        public SerializableVector3 position;
-    }
-
     private class PlaceMetaBlockRequest
     {
         public MetaBlockTypeData type;
