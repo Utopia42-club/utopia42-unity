@@ -17,12 +17,12 @@ public class UtopiaApi : MonoBehaviour
     {
         return FindObjectOfType<Owner>().currentLandChanged;
     }
-    
+
     public UnityEvent<object> BlockPlaced()
     {
         return WorldService.INSTANCE.blockPlaced;
     }
-    
+
     public Dictionary<Vector3Int, bool> PlaceMetaBlocks(string request)
     {
         var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);
@@ -40,6 +40,7 @@ public class UtopiaApi : MonoBehaviour
                 Debug.Log("Duplicate position detected");
                 continue;
             }
+
             placed.Add(globalPos, false);
 
             var metaType = (MetaBlockType) (req.type.metaBlock?.type == null
@@ -70,6 +71,14 @@ public class UtopiaApi : MonoBehaviour
         }
 
         return placed;
+    }
+
+    public Dictionary<Vector3Int, bool> SelectBlocks(string request)
+    {
+        var positions = JsonConvert.DeserializeObject<List<SerializableVector3>>(request);
+        var selectionController = BlockSelectionController.INSTANCE;
+        return positions.Select(pos => pos.ToVector3Int()).ToDictionary(position => position, 
+            position => selectionController.SelectBlockAtPosition(position));
     }
 
     public SerializableVector3 GetPlayerPosition()
@@ -117,6 +126,7 @@ public class UtopiaApi : MonoBehaviour
                 result.Add(blockPos, true);
                 continue;
             }
+
             result.Add(blockPos, false);
         }
 
@@ -136,7 +146,7 @@ public class UtopiaApi : MonoBehaviour
 
         return result;
     }
-    
+
     public static UtopiaApi INSTANCE => GameObject.Find("UtopiaApi").GetComponent<UtopiaApi>();
 
     private class PlaceMetaBlockRequest

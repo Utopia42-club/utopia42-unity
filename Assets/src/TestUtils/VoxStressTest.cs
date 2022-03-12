@@ -12,6 +12,7 @@ namespace src
     public class VoxStressTest : MonoBehaviour
     {
         [SerializeField] private string voxSampleName;
+        [SerializeField] private bool selectAfter = true;
 
         private void Update()
         {
@@ -23,21 +24,34 @@ namespace src
                 Debug.Log("Could not load vox sample");
                 return;
             }
-            StartCoroutine(PlaceBlocksTest(textAsset.text, Input.GetKey(KeyCode.RightShift)));
+            StartCoroutine(PlaceBlocksTest(textAsset.text, Input.GetKey(KeyCode.RightShift), selectAfter));
         }
 
-        private static IEnumerator PlaceBlocksTest(string request, bool stone = false)
+        private static IEnumerator PlaceBlocksTest(string request, bool stone = false, bool select = false)
         {
             var reqs = JsonConvert.DeserializeObject<List<PlaceBlockRequest>>(request);
+            var toSelect = select ? new List<Vector3Int>() : null;
 
             while (reqs.Count > 0)
             {
                 var subReqs = reqs.GetRange(0, Mathf.Min(reqs.Count, 500));
                 UtopiaApi.PutBlocks(subReqs.ToDictionary(
-                    req => new VoxelPosition(req.position),
+                    req =>
+                    {
+                        toSelect?.Add(req.position.ToVector3Int());
+                        return new VoxelPosition(req.position);
+                    },
                     req => WorldService.INSTANCE.GetBlockType(stone ? "stone" : req.type)));
 
                 reqs.RemoveRange(0, Mathf.Min(reqs.Count, 500));
+                yield return null;
+            }
+            
+            while (toSelect != null && toSelect.Count > 0)
+            {
+                var subSelect = toSelect.GetRange(0, Mathf.Min(toSelect.Count, 500));
+                UtopiaApi.INSTANCE.SelectBlocks(JsonConvert.SerializeObject(subSelect));
+                toSelect.RemoveRange(0, Mathf.Min(toSelect.Count, 500));
                 yield return null;
             }
         }
