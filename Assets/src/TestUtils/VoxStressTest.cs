@@ -5,6 +5,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using src.Model;
 using src.Service;
+using src.Utils;
 using UnityEngine;
 
 namespace src
@@ -41,7 +42,7 @@ namespace src
                         toSelect?.Add(req.position.ToVector3Int());
                         return new VoxelPosition(req.position);
                     },
-                    req => WorldService.INSTANCE.GetBlockType(stone ? "stone" : req.type)));
+                    req => Blocks.GetBlockType(stone ? "stone" : req.type)));
 
                 reqs.RemoveRange(0, Mathf.Min(reqs.Count, 500));
                 yield return null;

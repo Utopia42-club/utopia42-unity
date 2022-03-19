@@ -88,7 +88,7 @@ namespace src.MetaBlocks
 
         public static MetaBlock Parse(Land land, MetaBlockData meta)
         {
-            var type = (MetaBlockType) WorldService.INSTANCE.GetBlockType(meta.type);
+            var type = (MetaBlockType) Blocks.GetBlockType(meta.type);
             if (type == null) return null;
             try
             {

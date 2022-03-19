@@ -90,7 +90,7 @@ namespace src.Service
                 var chunkBlocks = new Dictionary<Vector3Int, uint>();
                 foreach (var blockEntry in chunkEntry.Value)
                     chunkBlocks[LandDetails.ParseKey(blockEntry.Key)] =
-                        worldService.GetBlockType(blockEntry.Value.name).id;
+                        Blocks.GetBlockType(blockEntry.Value.name).id;
 
                 chunks[chunkPos] = new ChunkData(chunkPos, chunkBlocks, null);
             }

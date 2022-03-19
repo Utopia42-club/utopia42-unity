@@ -111,7 +111,7 @@ namespace src
             for (int y = 0; y < voxels.GetLength(1); y++)
             for (int x = 0; x < voxels.GetLength(0); x++)
             for (int z = 0; z < voxels.GetLength(2); z++)
-                if (WorldService.INSTANCE.GetBlockType(voxels[x, y, z]).isSolid)
+                if (Blocks.GetBlockType(voxels[x, y, z]).isSolid)
                     AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, coloredTriangles, uvs, colors);
         }
 
@@ -128,7 +128,7 @@ namespace src
             if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
                 throw new ArgumentException("Invalid local position: " + localPos);
 
-            return WorldService.INSTANCE.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
+            return Blocks.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
         }
 
         public MetaBlock GetMetaAt(VoxelPosition vp)
@@ -166,7 +166,7 @@ namespace src
             };
 
             var blockId = voxels[pos.x, pos.y, pos.z];
-            var type = WorldService.INSTANCE.GetBlockType(blockId);
+            var type = Blocks.GetBlockType(blockId);
             if (!type.isSolid) return;
 
             var targetTriangles = type.color != null ? coloredTriangles : triangles;

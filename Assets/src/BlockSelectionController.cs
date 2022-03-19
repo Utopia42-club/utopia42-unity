@@ -179,7 +179,7 @@ namespace src
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
                     world.PutBlock(new VoxelPosition(player.PlaceBlock.position),
-                        WorldService.INSTANCE.GetBlockType(player.selectedBlockId));
+                        Blocks.GetBlockType(player.selectedBlockId));
                 }
             }
             else if (Input.GetMouseButtonDown(1) &&

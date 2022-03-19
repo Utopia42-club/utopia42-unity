@@ -1,10 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
@@ -19,7 +16,6 @@ using src.Service.Migration;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
-using Debug = UnityEngine.Debug;
 
 namespace src.Service
 {
@@ -27,67 +23,12 @@ namespace src.Service
     public class WorldService
     {
         public static WorldService INSTANCE = new WorldService();
-        private Dictionary<uint, BlockType> types = new Dictionary<uint, BlockType>();
         private Dictionary<Vector3Int, Dictionary<Vector3Int, uint>> changes = null;
         private Dictionary<Vector3Int, Dictionary<Vector3Int, MetaBlock>> metaBlocks = null;
         private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
         private HashSet<Land> changedLands = new HashSet<Land>();
         private readonly LandRegistry landRegistry = new LandRegistry();
         public readonly UnityEvent<object> blockPlaced = new UnityEvent<object>();
-
-        public WorldService()
-        {
-            types[0] = new BlockType(0, "air", false, 0, 0, 0, 0, 0, 0);
-            types[1] = new BlockType(1, "grass", true, 10, 10, 10, 10, 7, 11);
-            types[2] = new BlockType(2, "dark_grass", true, 35, 35, 35, 35, 7, 13);
-            types[3] = new BlockType(3, "bedrock", true, 0, 0, 0, 0, 0, 0);
-            types[4] = new BlockType(4, "dirt", true, 7, 7, 7, 7, 7, 7);
-            types[5] = new BlockType(5, "stone", true, 29, 29, 29, 29, 29, 29);
-            types[6] = new BlockType(6, "sand", true, 27, 27, 27, 27, 27, 27);
-            types[7] = new BlockType(7, "bricks", true, 3, 3, 3, 3, 3, 3);
-            types[8] = new BlockType(8, "wood", true, 19, 19, 19, 19, 20, 20);
-            types[9] = new BlockType(9, "planks", true, 21, 21, 21, 21, 21, 21);
-            types[10] = new BlockType(10, "cobblestone", true, 4, 4, 4, 4, 4, 4);
-            types[11] = new BlockType(11, "black_terracotta", true, 1, 1, 1, 1, 1, 1);
-            types[12] = new BlockType(12, "blue_wool", true, 2, 2, 2, 2, 2, 2);
-            types[13] = new BlockType(13, "cyan_wool", true, 5, 5, 5, 5, 5, 5);
-            types[14] = new BlockType(14, "diamond", true, 6, 6, 6, 6, 6, 6);
-            types[15] = new BlockType(15, "end_stone", true, 8, 8, 8, 8, 8, 8);
-            types[16] = new BlockType(16, "gold", true, 9, 9, 9, 9, 9, 9);
-            types[17] = new BlockType(17, "gravel", true, 12, 12, 12, 12, 12, 12);
-            types[18] = new BlockType(18, "green_wool", true, 13, 13, 13, 13, 13, 13);
-            types[19] = new BlockType(19, "ice", true, 14, 14, 14, 14, 14, 14);
-            types[20] = new BlockType(20, "lime_wool", true, 15, 15, 15, 15, 15, 15);
-            types[21] = new BlockType(21, "magma", true, 16, 16, 16, 16, 16, 16);
-            types[22] = new BlockType(22, "mossy_stone_bricks", true, 17, 17, 17, 17, 17, 17);
-            types[23] = new BlockType(23, "nether_bricks", true, 18, 18, 18, 18, 18, 18);
-            types[24] = new BlockType(24, "polished_andesite", true, 22, 22, 22, 22, 22, 22);
-            types[25] = new BlockType(25, "purple_wool", true, 23, 23, 23, 23, 23, 23);
-            types[26] = new BlockType(26, "purpur", true, 24, 24, 24, 24, 24, 24);
-            types[27] = new BlockType(27, "quartz", true, 25, 25, 25, 25, 25, 25);
-            types[28] = new BlockType(28, "red_wool", true, 26, 26, 26, 26, 26, 26);
-            types[29] = new BlockType(29, "snow", true, 28, 28, 28, 28, 28, 28);
-            types[30] = new BlockType(30, "stone_bricks", true, 30, 30, 30, 30, 30, 30);
-            types[31] = new ImageBlockType(31);
-            types[32] = new VideoBlockType(32);
-            types[33] = new LinkBlockType(33);
-            types[34] = new TdObjectBlockType(34);
-            types[35] = new MarkerBlockType(35);
-            // types[36] = new LightBlockType(36);
-            types[37] = new NftBlockType(37);
-        }
-
-        public List<string> GetNonMetaBlockTypes()
-        {
-            return types.Values
-                .Where(blockType => !(blockType is MetaBlockType))
-                .Select(x => x.name).ToList();
-        }
-
-        public List<BlockType> GetBlockTypes()
-        {
-            return types.Values.ToList();
-        }
 
         public void GetMetaBlocksForChunk(Vector3Int coordinate, Action<Dictionary<Vector3Int, MetaBlock>> consumer)
         {
@@ -97,7 +38,7 @@ namespace src.Service
 
         public void FillChunk(Vector3Int coordinate, uint[,,] voxels, Action done)
         {
-            InitiateChunk(coordinate, voxels);
+            ChunkInitializer.InitializeChunk(coordinate, voxels);
             WorldSliceService.INSTANCE.GetChunk(coordinate, data =>
             {
                 if (data?.blocks == null)
@@ -125,105 +66,13 @@ namespace src.Service
             // }
         }
 
-
-        private void InitiateChunk(Vector3Int position, uint[,,] voxels)
-        {
-            var stone = GetBlockType("end_stone").id;
-            uint body;
-            uint top;
-
-            if (position.y == 0)
-            {
-                InitGroundLevel(position, voxels, stone);
-                return;
-            }
-
-            if (position.y < 0)
-            {
-                top = body = stone;
-            }
-            else
-                body = top = GetBlockType("air").id;
-
-            for (int x = 0; x < voxels.GetLength(0); x++)
-            {
-                for (int z = 0; z < voxels.GetLength(2); z++)
-                {
-                    FillAtXY(top, body, x, z, voxels);
-                }
-            }
-        }
-
-        private void InitGroundLevel(Vector3Int position, uint[,,] voxels, uint stone)
-        {
-            uint body, top;
-            var grass = GetBlockType("grass").id;
-            var darkGrass = GetBlockType("dark_grass").id;
-            var dirt = GetBlockType("dirt").id;
-
-            var lands = landRegistry.GetLandsForChunk(new Vector2Int(position.x, position.z));
-            var wallet = Settings.WalletId();
-
-            var chunkSize = Chunk.CHUNK_SIZE;
-            for (var x = 0; x < chunkSize.x; ++x)
-            {
-                for (var z = 0; z < chunkSize.z; ++z)
-                {
-                    top = body = stone;
-                    if (lands != null)
-                    {
-                        var pos = new Vector3Int(x + position.x * chunkSize.x, 0,
-                            z + position.z * chunkSize.z);
-                        var land = lands.FirstOrDefault(land => land.Contains(pos));
-                        if (land != null)
-                        {
-                            body = dirt;
-                            top = land.owner.Equals(wallet) ? darkGrass : grass;
-                        }
-                    }
-
-                    FillAtXY(top, body, x, z, voxels);
-                }
-            }
-        }
-
-        private void FillAtXY(uint top, uint body, int x, int z, uint[,,] voxels)
-        {
-            int maxy = voxels.GetLength(1) - 1;
-
-            voxels[x, maxy, z] = top;
-            for (int y = 0; y < maxy; y++)
-                voxels[x, y, z] = body;
-        }
-
-        public BlockType GetBlockType(uint id)
-        {
-            return ColorBlocks.IsColorTypeId(id, out var blockType) ? blockType : types[id];
-        }
-
-        public BlockType GetBlockType(string name, bool excludeMetaBlocks = false, bool excludeBaseBlocks = false)
-        {
-            if (ColorBlocks.IsColorBlockType(name, out var blockType))
-                return blockType;
-
-            foreach (var entry in from entry in types
-                     where !excludeMetaBlocks || !(entry.Value is MetaBlockType)
-                     where !excludeBaseBlocks || entry.Value is MetaBlockType
-                     where entry.Value.name.Equals(name)
-                     select entry)
-                return entry.Value;
-
-            Debug.LogError("Invalid block type: " + name);
-            return null;
-        }
-
         public void IsSolid(VoxelPosition voxelPosition, Action<bool> consumer)
         {
             WorldSliceService.INSTANCE.GetChunk(voxelPosition.chunk, chunk =>
             {
                 consumer.Invoke(chunk != null && chunk.blocks != null &&
                                 chunk.blocks.TryGetValue(voxelPosition.local, out var typeId) &&
-                                GetBlockType(typeId).isSolid);
+                                Blocks.GetBlockType(typeId).isSolid);
             });
         }
 
@@ -232,7 +81,7 @@ namespace src.Service
             var chunkData = WorldSliceService.INSTANCE.GetChunkIfLoaded(vp.chunk);
 
             return (chunkData?.blocks != null && chunkData.blocks.TryGetValue(vp.local, out var typeId))
-                ? GetBlockType(typeId).isSolid
+                ? Blocks.GetBlockType(typeId).isSolid
                 : vp.chunk.y <= 0;
             // Dictionary<Vector3Int, uint> chunkChanges;
             // if (changes.TryGetValue(vp.chunk, out chunkChanges))
@@ -295,7 +144,7 @@ namespace src.Service
                 var pos = LandDetails.ParseKey(entry.Key) + landStart;
                 if (land.Contains(pos))
                 {
-                    var type = GetBlockType(change.name);
+                    var type = Blocks.GetBlockType(change.name);
                     if (type == null) continue;
 
                     var position = new VoxelPosition(pos);
@@ -330,7 +179,7 @@ namespace src.Service
 
         private IEnumerator LoadDetails(Loading loading, Action<Land, LandDetails> consumer, Action onFailed)
         {
-            loading.UpdateText("Loading Lands\n0/0");
+            loading.UpdateText("Loading Lands...");
 
             var failed = false;
             yield return landRegistry.ReloadLands(() =>
@@ -338,7 +187,7 @@ namespace src.Service
                 failed = true;
                 onFailed();
             });
-            if (failed) yield break;
+            // if (failed) yield break;
 
             //
             // var playerLands = landRegistry.GetLandsForOwner(Settings.WalletId());
@@ -384,7 +233,7 @@ namespace src.Service
             Stream(filteredLands, changes, (key, type, land) =>
             {
                 var change = new Block();
-                change.name = GetBlockType(type).name;
+                change.name = Blocks.GetBlockType(type).name;
                 landDetailsMap[land.id].changes[key] = change;
             }, m => true); //Filter can check if the block is default
             Stream(filteredLands, metaBlocks, (key, metaBlock, land) =>
@@ -489,7 +338,7 @@ namespace src.Service
 
         public void AddChange(VoxelPosition pos, Land land)
         {
-            AddChange(pos, types[0], land);
+            AddChange(pos, Blocks.AIR, land);
         }
 
         public LandProperties GetLandProperties(int landId)
@@ -561,6 +410,12 @@ namespace src.Service
         {
             yield return landRegistry.ReloadLands(onFailed);
         }
+
+        public HashSet<Land> GetLandsForChunk(Vector2Int coordinate)
+        {
+            return landRegistry.GetLandsForChunk(coordinate);
+        }
+
 
         [Serializable]
         private class BlockPlaceEvent

@@ -8,6 +8,7 @@ using src.MetaBlocks;
 using src.MetaBlocks.MarkerBlock;
 using src.Model;
 using src.Service;
+using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -45,12 +46,12 @@ public class UtopiaApi : MonoBehaviour
 
             var metaType = (MetaBlockType) (req.type.metaBlock?.type == null
                 ? null
-                : WorldService.INSTANCE.GetBlockType(req.type.metaBlock.type, false, true));
+                : Blocks.GetBlockType(req.type.metaBlock.type, false, true));
 
-            var type = req.type.blockType == null ? null : WorldService.INSTANCE.GetBlockType(req.type.blockType, true);
+            var type = req.type.blockType == null ? null : Blocks.GetBlockType(req.type.blockType, true);
             //FIXME what if data was not loaded?
-            if ((type == null || type.name.Equals("air")) && metaType != null && !WorldService.INSTANCE.IsSolidIfLoaded(pos))
-                type = WorldService.INSTANCE.GetBlockType("grass");
+            if ((type == null || type.id.Equals(Blocks.AIR.id)) && metaType != null && !WorldService.INSTANCE.IsSolidIfLoaded(pos))
+                type = Blocks.GetBlockType("grass");
             if (type != null) blocks.Add(pos, type);
 
             if (metaType == null) continue;
@@ -105,7 +106,7 @@ public class UtopiaApi : MonoBehaviour
 
     public List<string> GetBlockTypes()
     {
-        return WorldService.INSTANCE.GetNonMetaBlockTypes();
+        return Blocks.GetNonMetaBlockTypes();
     }
 
     private static bool PutBlock(VoxelPosition vp, BlockType getBlockType)
