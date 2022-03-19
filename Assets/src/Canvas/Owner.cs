@@ -116,7 +116,7 @@ namespace src.Canvas
                 return true;
             }
 
-            var land = WorldService.INSTANCE.GetLandByPosition(position);
+            var land = WorldService.INSTANCE.GetLandForPosition(position);
             if (land == null && currentLand == null) return false;
 
             prevLand = currentLand;

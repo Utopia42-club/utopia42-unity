@@ -7,8 +7,6 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
-using UnityEngine.UI;
-using MetaBlock = src.MetaBlocks.MetaBlock;
 
 namespace src
 {
@@ -38,7 +36,7 @@ namespace src
         public Land placeLand;
         private bool jumpRequest;
         private bool floating = false;
-        private Vector3Int lastChunk;
+        private Vector3Int? lastChunk;
         private List<Land> ownedLands = new List<Land>();
         private MetaBlock focusedMetaBlock;
         private Voxels.Face focusedMetaFace;
@@ -82,7 +80,7 @@ namespace src
                 if (state == GameManager.State.PLAYING)
                     hitCollider = null;
             });
-            
+
             playerPos = Vectors.TruncateFloor(transform.position);
         }
 
@@ -129,7 +127,7 @@ namespace src
             controller.Move(velocity * Time.fixedDeltaTime);
             if ((controller.collisionFlags & CollisionFlags.Above) != 0)
                 velocity.y = 0;
-            
+
             playerPos = Vectors.TruncateFloor(transform.position);
         }
 
@@ -185,7 +183,7 @@ namespace src
             if (lastChunk == null)
             {
                 lastChunk = ComputePosition().chunk;
-                world.OnPlayerChunkChanged(lastChunk);
+                world.OnPlayerChunkChanged(lastChunk.Value);
             }
             else
             {
@@ -319,16 +317,16 @@ namespace src
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
             if (!isMeta && (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
-                           playerPos.Equals(blockPos - Vector3Int.up)))
+                            playerPos.Equals(blockPos - Vector3Int.up)))
             {
                 land = null;
                 return false;
             }
-            
+
             if (Settings.IsGuest())
             {
                 land = null;
-                return true;
+                return false;
             }
 
             land = FindOwnedLand(blockPos);

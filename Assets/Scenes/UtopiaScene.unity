@@ -974,7 +974,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1050669706}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4480,7 +4480,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 236.65498, y: -77.62998}
+  m_AnchoredPosition: {x: 236.65498, y: -77.630005}
   m_SizeDelta: {x: 368.81, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442934151
@@ -14957,7 +14957,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1452519553}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de163a639ef04cc6fbdeb2f99c2ffdc8, type: 3}
+  m_Script: {fileID: 11500000, guid: 6916fb8f5c3bc2143885e10e557b279d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &1452519555
@@ -17799,7 +17799,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1925748159}
   m_HandleRect: {fileID: 1925748158}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -20235,7 +20235,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1787637085}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 310bf78257a366256913ac6f4b4ddd62, type: 3}
+  m_Script: {fileID: 11500000, guid: c9f7a60dbc032e44391175cf9c31bb16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   spotLight: {fileID: 1787637088}

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using src.MetaBlocks;
 using src.Model;
@@ -12,11 +11,13 @@ namespace src
 {
     public class Chunk
     {
-        public static readonly int CHUNK_WIDTH = 16;
-        public static readonly int CHUNK_HEIGHT = 32;
+        /**
+         * Written using expression so no one can change the properties
+         */
+        public static Vector3Int CHUNK_SIZE => new Vector3Int(16, 32, 16);
 
         private Dictionary<Vector3Int, MetaBlock> metaBlocks;
-        private readonly uint[,,] voxels = new uint[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
+        private readonly uint[,,] voxels = new uint[CHUNK_SIZE.x, CHUNK_SIZE.y, CHUNK_SIZE.z];
         private World world;
         public GameObject chunkObject;
 
@@ -25,6 +26,7 @@ namespace src
         public MeshRenderer meshRenderer;
         public MeshFilter meshFilter;
         public MeshCollider meshCollider;
+        private bool initStarted = false;
         private bool inited = false;
         private bool active = true;
 
@@ -32,19 +34,30 @@ namespace src
         {
             this.coordinate = coordinate;
             this.world = world;
-            this.position = new Vector3Int(coordinate.x * CHUNK_WIDTH, coordinate.y * CHUNK_HEIGHT,
-                coordinate.z * CHUNK_WIDTH);
+            position = coordinate;
+            position.Scale(CHUNK_SIZE);
         }
 
-        public bool IsInited()
+        public bool IsInitialized()
         {
-            return inited;
+            return initStarted;
         }
 
-        public IEnumerator Init()
+        public bool IsInitStarted()
         {
-            if (inited) yield break;
-            inited = true;
+            return initStarted;
+        }
+
+        /**
+         * returns false if initialization is already started.
+         * If returned true, will call done when initialization ends.
+         */
+        public bool Init(Action done)
+        {
+            if (initStarted)
+                return false;
+
+            initStarted = true;
             chunkObject = new GameObject();
             chunkObject.SetActive(active);
             meshFilter = chunkObject.AddComponent<MeshFilter>();
@@ -57,13 +70,18 @@ namespace src
             chunkObject.transform.position = position;
             chunkObject.name = "Chunck " + coordinate;
 
-            yield return WorldService.INSTANCE.FillChunk(coordinate, voxels);
-            yield return WorldService.INSTANCE.GetMetaBlocksForChunk(coordinate, mb => metaBlocks = mb);
-            
-            DrawVoxels();
-            DrawMetaBlocks();
-            //var block = new ImageBlockTpe(50).New("{front:{height:5, width:5, url:\"https://www.wpbeginner.com/wp-content/uploads/2020/03/ultimate-small-business-resource-180x180.png\"}}");
-            //block.RenderAt(chunkObject.transform, position+new Vector3Int(0, 32, 0));
+            WorldService.INSTANCE.FillChunk(coordinate, voxels, () =>
+            {
+                WorldService.INSTANCE.GetMetaBlocksForChunk(coordinate, mb =>
+                {
+                    metaBlocks = mb;
+                    DrawVoxels();
+                    DrawMetaBlocks();
+                    inited = true;
+                    done.Invoke();
+                });
+            });
+            return true;
         }
 
         private void DrawMetaBlocks()
@@ -350,7 +368,7 @@ namespace src
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            if ((obj == null) || this.GetType() != obj.GetType())
                 return false;
 
             return coordinate.Equals(((Chunk) obj).coordinate);

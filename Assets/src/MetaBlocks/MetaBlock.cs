@@ -1,7 +1,9 @@
+using System;
 using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace src.MetaBlocks
 {
@@ -81,6 +83,22 @@ namespace src.MetaBlocks
                 Object.DestroyImmediate(blockObject.gameObject);
             else
                 Object.Destroy(blockObject.gameObject);
+        }
+
+
+        public static MetaBlock Parse(Land land, MetaBlockData meta)
+        {
+            var type = (MetaBlockType) WorldService.INSTANCE.GetBlockType(meta.type);
+            if (type == null) return null;
+            try
+            {
+                return type.Instantiate(land, meta.properties);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("Exception occured while parsing meta props. " + ex);
+                return null;
+            }
         }
     }
 }

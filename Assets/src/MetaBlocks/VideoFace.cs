@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using src.Utils;
 using UnityEngine;
@@ -26,12 +27,29 @@ namespace src
             loading.Invoke(true);
             this.prevTime = prevTime;
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
-            videoPlayer.url = url;
-            videoPlayer.playOnAwake = false;
-            videoPlayer.Pause();
-            videoPlayer.Prepare();
-            videoPlayer.prepareCompleted += PrepareCompeleted;
-            meshRenderer.sharedMaterial.mainTexture = videoPlayer.texture;
+            try
+            {
+                videoPlayer.errorReceived += VideoPlayer_errorReceived;
+                videoPlayer.url = url;
+                videoPlayer.playOnAwake = false;
+                videoPlayer.Pause();
+                videoPlayer.Prepare();
+                videoPlayer.prepareCompleted += PrepareCompeleted;
+                meshRenderer.sharedMaterial.mainTexture = videoPlayer.texture;
+            }
+            catch (Exception e)
+            {
+                videoPlayer.url = null;
+                videoPlayer.prepareCompleted -= PrepareCompeleted;
+                
+                Debug.Log(e.GetType());
+            }
+        }
+        
+        private void VideoPlayer_errorReceived (VideoPlayer source, string message) {
+            videoPlayer.url = null;
+            videoPlayer.prepareCompleted -= PrepareCompeleted;
+            Debug.Log("error rec "+message);
         }
 
         private void Mute(bool m)

@@ -12,12 +12,12 @@ namespace src.Model
             : this(position.x, position.y, position.z)
         {
         }
-        
+
         public VoxelPosition(SerializableVector3 position)
             : this(position.x, position.y, position.z)
         {
         }
-        
+
         public VoxelPosition(Vector3 position)
             : this(position.x, position.y, position.z)
         {
@@ -31,11 +31,13 @@ namespace src.Model
 
         public VoxelPosition(float x, float y, float z)
         {
-            chunk = Vectors.TruncateFloor(x / Chunk.CHUNK_WIDTH, y / Chunk.CHUNK_HEIGHT, z / Chunk.CHUNK_WIDTH);
+            var chunkSize = Chunk.CHUNK_SIZE;
+            chunk = Vectors.TruncateFloor(x / chunkSize.x, y / chunkSize.y, z / chunkSize.z);
             local = Vectors.TruncateFloor(x, y, z);
-            local.x -= chunk.x * Chunk.CHUNK_WIDTH;
-            local.y -= chunk.y * Chunk.CHUNK_HEIGHT;
-            local.z -= chunk.z * Chunk.CHUNK_WIDTH;
+
+            local.x -= chunk.x * chunkSize.x;
+            local.y -= chunk.y * chunkSize.y;
+            local.z -= chunk.z * chunkSize.z;
         }
 
         public Vector3Int ToWorld()
@@ -45,9 +47,8 @@ namespace src.Model
 
         public static Vector3Int ToWorld(Vector3Int chunk, Vector3Int local)
         {
-            return new Vector3Int(chunk.x * Chunk.CHUNK_WIDTH + local.x,
-                chunk.y * Chunk.CHUNK_HEIGHT + local.y,
-                chunk.z * Chunk.CHUNK_WIDTH + local.z);
+            chunk.Scale(Chunk.CHUNK_SIZE);
+            return chunk + local;
         }
     }
 }

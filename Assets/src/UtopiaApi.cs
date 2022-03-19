@@ -91,7 +91,7 @@ public class UtopiaApi : MonoBehaviour
 
     public Land GetCurrentLand()
     {
-        return WorldService.INSTANCE.GetLandByPosition(Player.INSTANCE.transform.position);
+        return WorldService.INSTANCE.GetLandForPosition(Player.INSTANCE.transform.position);
     }
 
     public List<string> GetBlockTypes()

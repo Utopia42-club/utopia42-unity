@@ -120,14 +120,15 @@ namespace src
 
             if (startingPosition == null)
             {
-                pos = new Vector3(0, Chunk.CHUNK_HEIGHT + 10, 0);
+                var chunkSize = Chunk.CHUNK_SIZE;
+                pos = new Vector3(0, chunkSize.y + 10, 0);
                 var lands = player.GetOwnedLands();
                 if (lands.Count > 0)
                 {
                     var land = lands[0];
                     pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
                     pos /= 2;
-                    pos.y = Chunk.CHUNK_HEIGHT + 10;
+                    pos.y = chunkSize.y + 10;
                 }
             }
             else pos = startingPosition.Value;
