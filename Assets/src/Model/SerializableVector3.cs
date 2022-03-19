@@ -39,6 +39,11 @@ namespace src.Model
         {
             return new Vector3(x, y, z);
         }
+        
+        public Vector3Int ToVector3Int()
+        {
+            return Vector3Int.FloorToInt(new Vector3(x, y, z));
+        }
 
         protected bool Equals(SerializableVector3 other)
         {

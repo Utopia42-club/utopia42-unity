@@ -203,31 +203,29 @@ namespace src
             }
         }
 
-        private void SelectBlockAtPosition(Vector3Int position)
+        public bool SelectBlockAtPosition(Vector3Int position)
         {
             // Remove any existing selections
             var indicesToRemove = new List<int>();
-            for (int i = 0; i < selectedBlocks.Count; i++)
+            for (var i = 0; i < selectedBlocks.Count; i++)
             {
                 if (selectedBlocks[i].Position.Equals(position))
                     indicesToRemove.Add(i);
             }
 
-            if (indicesToRemove.Count > 0)
+            if (indicesToRemove.Count <= 0) return AddNewSelectedBlock(position);
+            foreach (var index in indicesToRemove.OrderByDescending(i => i))
             {
-                foreach (var index in indicesToRemove.OrderByDescending(i => i))
+                selectedBlocks[index].DestroyHighlights();
+                selectedBlocks.RemoveAt(index);
+                UpdateCountMsg();
+                if (selectedBlocks.Count == 0)
                 {
-                    selectedBlocks[index].DestroyHighlights();
-                    selectedBlocks.RemoveAt(index);
-                    UpdateCountMsg();
-                    if (selectedBlocks.Count == 0)
-                    {
-                        ExitSelectionMode();
-                        break;
-                    }
+                    ExitSelectionMode();
+                    break;
                 }
             }
-            else AddNewSelectedBlock(position);
+            return false;
         }
 
         private void HandleBlockClipboard()
@@ -306,24 +304,23 @@ namespace src
             }
         }
 
-        private void AddNewSelectedBlock(Vector3Int position)
+        private bool AddNewSelectedBlock(Vector3Int position)
         {
-            if (player.CanEdit(position, out var land))
+            if (!player.CanEdit(position, out var land)) return false;
+            var selectedBlock = SelectableBlock.Create(position, world, player.HighlightBlock,
+                player.TdObjectHighlightBox, land);
+            if (selectedBlock == null) return false;
+            selectedBlocks.Add(selectedBlock);
+            if (selectedBlocks.Count == 1 && !SelectionActive)
             {
-                var selectedBlock = SelectableBlock.Create(position, world, player.HighlightBlock,
-                    player.TdObjectHighlightBox, land);
-                if (selectedBlock == null) return;
-                selectedBlocks.Add(selectedBlock);
-                if (selectedBlocks.Count == 1 && !SelectionActive)
-                {
-                    SelectionActive = true;
-                    movingSelectionAllowed = false;
-                    SetBlockSelectionSnack();
-                    selectedBlocksCountTextContainer.gameObject.SetActive(true);
-                }
-
-                UpdateCountMsg();
+                SelectionActive = true;
+                movingSelectionAllowed = false;
+                SetBlockSelectionSnack();
+                selectedBlocksCountTextContainer.gameObject.SetActive(true);
             }
+
+            UpdateCountMsg();
+            return true;
         }
 
         private void AddNewCopiedBlock(Vector3Int position)

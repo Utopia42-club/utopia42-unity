@@ -91,10 +91,7 @@ namespace src
                 SetState(State.PLAYING);
             if (WebBridge.IsPresent())
             {
-                WebBridge.Call<object>("openPluginsDialog",
-                    Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt)
-                        ? "running"
-                        : "menu");
+                WebBridge.Call<object>("openPluginsDialog", "menu");
             }
         }
 

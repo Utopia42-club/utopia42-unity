@@ -468,7 +468,7 @@ namespace src.Service
                 markerBlocks.Add(pos.ToWorld(), metas[pos.local]);
 
             changedLands.Add(land);
-            blockPlaced.Invoke(new Tuple<Vector3Int, string>(pos.ToWorld(), type.name));
+            blockPlaced.Invoke(new BlockPlaceEvent(pos.ToWorld(), type.name));
 
             return metas;
         }
@@ -484,7 +484,7 @@ namespace src.Service
 
             vc[pos.local] = type.id;
             changedLands.Add(land);
-            blockPlaced.Invoke(new Tuple<Vector3Int, string>(pos.ToWorld(), type.name));
+            blockPlaced.Invoke(new BlockPlaceEvent(pos.ToWorld(), type.name));
         }
 
         public void AddChange(VoxelPosition pos, Land land)
@@ -560,6 +560,19 @@ namespace src.Service
         public IEnumerator ReloadLands(Action onFailed)
         {
             yield return landRegistry.ReloadLands(onFailed);
+        }
+
+        [Serializable]
+        private class BlockPlaceEvent
+        {
+            public SerializableVector3 position;
+            public string type;
+
+            public BlockPlaceEvent(Vector3Int position, string type)
+            {
+                this.position = new SerializableVector3(position);
+                this.type = type;
+            }
         }
     }
 }

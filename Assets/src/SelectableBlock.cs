@@ -73,12 +73,12 @@ namespace src
                 {
                     return new SelectableBlock(position, blockTypeId, blockHighlight,
                         CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
-                            tdHighlightModel, showHighlight), meta.type.id, ((ICloneable) meta.GetProps()).Clone(),
+                            tdHighlightModel, showHighlight), meta.type.id, ((ICloneable) meta.GetProps())?.Clone(),
                         land);
                 }
 
                 return new SelectableBlock(position, blockTypeId, blockHighlight, null, meta.type.id,
-                    ((ICloneable) meta.GetProps()).Clone(), land);
+                    ((ICloneable) meta.GetProps())?.Clone(), land);
             }
 
             return new SelectableBlock(position, blockTypeId, blockHighlight, land);
@@ -104,9 +104,9 @@ namespace src
             foreach (var vp in metas.Keys)
             {
                 var (selectableBlock, land) = metas[vp];
-                var chunk = world.GetChunkIfInited(vp.chunk);
-                chunk.PutMeta(vp, (MetaBlockType) WorldService.INSTANCE.GetBlockType(selectableBlock.metaBlockTypeId), land);
-                chunk.GetMetaAt(vp).SetProps(selectableBlock.metaProperties, land);
+                world.PutMetaWithProps(vp,
+                    (MetaBlockType) WorldService.INSTANCE.GetBlockType(selectableBlock.metaBlockTypeId),
+                    selectableBlock.metaProperties, land);
             }
         }
 
