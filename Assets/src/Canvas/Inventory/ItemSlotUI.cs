@@ -1,23 +1,39 @@
 using src.Service;
+using src.Utils;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace src.Canvas
 {
-    public class ItemSlotUI : MonoBehaviour
+    public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public ItemSlot itemSlot;
-        public Image slotImage;
         public Image slotIcon;
         public Text slotAmount;
+        public Button deleteButton;
+        private bool deleteEnabled;
 
         public void SetItemSlot(ItemSlot itemSlot)
         {
             this.itemSlot = itemSlot;
 
-            if (itemSlot != null && itemSlot.GetStack() != null)
+            if (itemSlot?.GetStack() != null)
             {
-                slotIcon.sprite = WorldService.INSTANCE.GetBlockType(itemSlot.GetStack().id).GetIcon();
+                var blockId = itemSlot.GetStack().id;
+                slotIcon.sprite = WorldService.INSTANCE.GetBlockType(blockId).GetIcon();
+
+                if (ColorBlocks.IsColorTypeId(blockId, out var colorType))
+                {
+                    slotIcon.color = ColorBlocks.GetColorFromBlockType(colorType);
+                    deleteEnabled = itemSlot.GetFromInventory();
+                }
+                else
+                {
+                    deleteEnabled = false;
+                    slotIcon.color = Color.white;
+                }
+
                 slotAmount.text = "";
                 slotAmount.enabled = true;
                 slotIcon.enabled = true;
@@ -43,9 +59,17 @@ namespace src.Canvas
 
         public void UpdateView()
         {
-            SetItemSlot(this.itemSlot);
+            SetItemSlot(itemSlot);
         }
 
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            deleteButton.gameObject.SetActive(deleteEnabled);
+        }
 
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            deleteButton.gameObject.SetActive(false);
+        }
     }
 }

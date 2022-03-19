@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
 using src.Model;
+using src.Utils;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace src.Canvas.Map
 {
-    public class Map : MonoBehaviour
+    public class Map : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private LandBuyDialog landBuyDialog;
         private Action landBuyDialogDismissCallback;
@@ -19,6 +21,22 @@ namespace src.Canvas.Map
                     CloseLandBuyDialogState();
                 }
             );
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (LandProfileDialog.INSTANCE.gameObject.activeSelf
+                || !((eventData.pressPosition - eventData.position).magnitude < 0.1f))
+                return;
+
+            if (eventData.clickCount == 2)
+            {
+                var mousePos = Input.mousePosition;
+                var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
+                var mouseLocalPos = mapInputManager.ScreenToLandContainerLocal(mousePos);
+                var realPosition = Vectors.FloorToInt(mouseLocalPos);
+                GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
+            }
         }
 
         public IEnumerator TakeNftScreenShot(Land land, Action<byte[]> consumer)
@@ -39,6 +57,7 @@ namespace src.Canvas.Map
 
             consumer.Invoke(screenshot.EncodeToPNG());
             mapInputManager.ScreenShotDone();
+            Destroy(screenshot);
         }
 
 
@@ -63,6 +82,17 @@ namespace src.Canvas.Map
         {
             landBuyDialog.gameObject.SetActive(false);
             landBuyDialogDismissCallback?.Invoke();
+        }
+
+        public bool RequestClose()
+        {
+            if (IsLandProfileDialogOpen())
+            {
+                LandProfileDialog.INSTANCE.Close();
+                return false;
+            }
+
+            return true;
         }
     }
 }

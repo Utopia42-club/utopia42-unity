@@ -119,16 +119,19 @@ namespace src.MetaBlocks.VideoBlock
             }
         }
 
+        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face) // TODO
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override List<string> GetFaceSnackLines(Voxels.Face face) // TODO
+        {
+            throw new System.NotImplementedException();
+        }
+
         private void RenderFaces()
         {
-            foreach (var vid in videos.Values)
-            {
-                var selectable = vid.GetComponent<MetaFocusable>();
-                if (selectable != null)
-                    selectable.UnFocus();
-                DestroyImmediate(vid.gameObject);
-            }
-
+            DestroyVideos();
             videos.Clear();
 
             VideoBlockProperties properties = (VideoBlockProperties) GetBlock().GetProps();
@@ -143,6 +146,20 @@ namespace src.MetaBlocks.VideoBlock
             }
         }
 
+        private void DestroyVideos(bool immediate = true)
+        {
+            foreach (var vid in videos.Values)
+            {
+                var selectable = vid.GetComponent<MetaFocusable>();
+                if (selectable != null)
+                    selectable.UnFocus();
+                if(immediate)
+                    DestroyImmediate(vid.gameObject);
+                else
+                    Destroy(vid.gameObject);
+            }
+        }
+
         private void AddFace(Voxels.Face face, VideoBlockProperties.FaceProps props)
         {
             if (props == null) return;
@@ -154,8 +171,7 @@ namespace src.MetaBlocks.VideoBlock
             var meshRenderer = vidFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
             {
-                DestroyImmediate(vidFace.gameObject);
-                DestroyImmediate(vidFace);
+                DestroyImmediate(go);
                 CreateIcon(true);
                 return;
             }
@@ -196,6 +212,12 @@ namespace src.MetaBlocks.VideoBlock
                 GetBlock().SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
+        }
+        
+        private void OnDestroy()
+        {
+            DestroyVideos(false);
+            base.OnDestroy();
         }
     }
 }

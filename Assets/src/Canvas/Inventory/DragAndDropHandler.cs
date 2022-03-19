@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using src.Utils;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -11,13 +12,15 @@ namespace src.Canvas
         [SerializeField] public ItemSlotUI cursorSlot = null;
         private ItemSlot cursorItemSlot;
 
-        [SerializeField]
-        private GraphicRaycaster raycaster = null;
+        [SerializeField] private GraphicRaycaster raycaster = null;
         private PointerEventData pointerEventData;
-        [SerializeField]
-        private EventSystem eventSystem = null;
+        [SerializeField] private EventSystem eventSystem = null;
+
+        public Inventory inventory;
 
         World world;
+
+        public bool enabled = true;
 
         private void Start()
         {
@@ -27,7 +30,7 @@ namespace src.Canvas
 
         private void Update()
         {
-            if (GameManager.INSTANCE.GetState() != GameManager.State.INVENTORY) return;
+            if (GameManager.INSTANCE.GetState() != GameManager.State.INVENTORY || !enabled) return;
 
             cursorSlot.transform.position = Input.mousePosition;
 
@@ -35,10 +38,25 @@ namespace src.Canvas
             {
                 ClearCursorSlot();
             }
-            
+
             if (Input.GetMouseButtonDown(0))
             {
                 HandleSlotClick(CheckForSlot());
+            }
+        }
+
+        public void RequestTypeDelete(ItemSlotUI clickedSlot)
+        {
+            if (!cursorSlot.HasItem() && !clickedSlot.HasItem())
+                return;
+
+            if (clickedSlot.itemSlot.GetFromInventory())
+            {
+                var id = clickedSlot.itemSlot.GetStack().id;
+                if (ColorBlocks.IsColorTypeId(id))
+                {
+                    StartCoroutine(inventory.RemoveColorBlock(clickedSlot));
+                }
             }
         }
 
@@ -47,7 +65,7 @@ namespace src.Canvas
             cursorItemSlot.SetStack(null);
         }
 
-        private void HandleSlotClick(ItemSlotUI clickedSlot)
+        public void HandleSlotClick(ItemSlotUI clickedSlot)
         {
             if (clickedSlot == null)
             {
@@ -99,7 +117,17 @@ namespace src.Canvas
             var results = new List<RaycastResult>();
             raycaster.Raycast(pointerEventData, results);
 
-            return (from result in results where result.gameObject.CompareTag("ItemSlotUI") select result.gameObject.GetComponent<ItemSlotUI>()).FirstOrDefault();
+            var deletingSlot = results.Where(result => result.gameObject.CompareTag("ItemSlotUIDelete"))
+                .Select(result => result.gameObject.GetComponentInParent<ItemSlotUI>()).FirstOrDefault();
+
+            if (deletingSlot != null)
+            {
+                RequestTypeDelete(deletingSlot);
+                return null;
+            }
+            
+            return (results.Where(result => result.gameObject.CompareTag("ItemSlotUI"))
+                .Select(result => result.gameObject.GetComponent<ItemSlotUI>())).FirstOrDefault();
         }
     }
 }

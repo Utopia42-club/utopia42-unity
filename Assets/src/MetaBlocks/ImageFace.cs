@@ -9,30 +9,32 @@ namespace src
 {
     public class ImageFace : MetaFace
     {
-        public void Init(MeshRenderer renderer, string url, ImageBlockObject block, int faceIndex)
+        public void Init(MeshRenderer renderer, string url, ImageBlockObject block, Voxels.Face face)
         {
-            block.UpdateStateAndIcon(faceIndex, StateMsg.Loading);
-            StartCoroutine(LoadImage(renderer.material, url, block, faceIndex));
+            block.UpdateStateAndIcon(StateMsg.Loading, face);
+            StartCoroutine(LoadImage(renderer.sharedMaterial, url, block, face));
         }
 
-        private IEnumerator LoadImage(Material material, string url, ImageBlockObject block, int faceIndex)
+        private IEnumerator LoadImage(Material material, string url, ImageBlockObject block, Voxels.Face face)
         {
-            UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
+            using var request = UnityWebRequestTexture.GetTexture(url);
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.ConnectionError)
             {
-                block.UpdateStateAndIcon(faceIndex, StateMsg.ConnectionError);
+                block.UpdateStateAndIcon(StateMsg.ConnectionError, face);
                 yield break;
             }
-            
-            if (request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.DataProcessingError)
+
+            if (request.result == UnityWebRequest.Result.ProtocolError ||
+                request.result == UnityWebRequest.Result.DataProcessingError)
             {
-                block.UpdateStateAndIcon(faceIndex, StateMsg.InvalidUrlOrData);
+                block.UpdateStateAndIcon(StateMsg.InvalidUrlOrData, face);
                 yield break;
             }
-            material.mainTexture = ((DownloadHandlerTexture)request.downloadHandler).texture;
-            block.UpdateStateAndIcon(faceIndex, StateMsg.Ok);
+
+            material.mainTexture = ((DownloadHandlerTexture) request.downloadHandler).texture;
+            block.UpdateStateAndIcon(StateMsg.Ok, face);
         }
     }
 }

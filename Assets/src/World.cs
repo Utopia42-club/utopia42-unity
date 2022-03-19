@@ -1,10 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
+using src.MetaBlocks;
 using src.Model;
 using src.Service;
 using UnityEngine;
-using Vector3 = UnityEngine.Vector3;
 
 namespace src
 {
@@ -27,7 +27,7 @@ namespace src
         public GameObject help;
         public Player player;
 
-        void Start()
+        private void Start()
         {
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
@@ -37,8 +37,7 @@ namespace src
             });
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Update()
         {
             if (Input.GetKeyDown(KeyCode.F3))
                 debugScreen.SetActive(!debugScreen.activeSelf);
@@ -73,7 +72,7 @@ namespace src
                 {
                     if (chunk.chunkObject != null)
                     {
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                         chunk.chunkObject = null;
                     }
                 }
@@ -82,12 +81,12 @@ namespace src
 
                 foreach (var chunk in garbageChunks.Values)
                     if (chunk.chunkObject != null)
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                 garbageChunks.Clear();
 
                 foreach (var chunk in chunks.Values)
                     if (chunk.chunkObject != null)
-                        Destroy(chunk.chunkObject);
+                        chunk.Destroy();
                 chunks.Clear();
             }
 
@@ -128,7 +127,6 @@ namespace src
             }
 
             creatingChunks = false;
-            yield break;
         }
 
         public int CountChunksToCreate()
@@ -193,16 +191,16 @@ namespace src
                     var iter = garbageChunks.Keys.GetEnumerator();
                     iter.MoveNext();
                     var key = iter.Current;
-                    Destroy(garbageChunks[key].chunkObject);
+                    garbageChunks[key].Destroy();
                     garbageChunks.Remove(key);
                 }
             }
         }
 
-        public void DestroyGarbageChunkIfExists(Vector3Int chunkPos)
+        private void DestroyGarbageChunkIfExists(Vector3Int chunkPos)
         {
             if (!garbageChunks.TryGetValue(chunkPos, out var chunk)) return;
-            Destroy(chunk.chunkObject);
+            chunk.Destroy();
             garbageChunks.Remove(chunkPos);
         }
 
@@ -211,6 +209,91 @@ namespace src
             if (chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInited() && chunk.IsActive())
                 return chunk;
             return null;
+        }
+        
+        public void PutBlock(VoxelPosition vp, BlockType type)
+        {
+            var chunk = GetChunkIfInited(vp.chunk);
+            if (chunk == null) return;
+            if (type is MetaBlockType blockType)
+                chunk.PutMeta(vp, blockType, player.placeLand);
+            else
+                chunk.PutVoxel(vp, type, player.placeLand);
+        }
+        
+        public bool PutMetaWithProps(VoxelPosition vp, MetaBlockType type, object props, Land ownerLand = null)
+        {
+            var pos = vp.ToWorld();
+            if (ownerLand == null && !player.CanEdit(pos, out ownerLand, true) || !WorldService.INSTANCE.IsSolid(vp))
+                return false;
+
+            var chunk = GetChunkIfInited(vp.chunk);
+            if (chunk != null)
+            {
+                chunk.PutMeta(vp, type, ownerLand);
+                chunk.GetMetaAt(vp).SetProps(props, ownerLand);
+            }
+            else
+            {
+                DestroyGarbageChunkIfExists(vp.chunk);
+                WorldService.INSTANCE.AddMetaBlock(vp, type, ownerLand)[vp.local].SetProps(props, ownerLand);
+            }
+
+            return true;
+        }
+
+        public void PutBlocks(Dictionary<VoxelPosition, Tuple<BlockType, Land>> blocks)
+        {
+            var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Tuple<BlockType, Land>>>();
+            foreach (var vp in blocks.Keys)
+            {
+                var chunk = GetChunkIfInited(vp.chunk);
+                if (chunk == null)
+                {
+                    DestroyGarbageChunkIfExists(vp.chunk);
+                    WorldService.INSTANCE.AddChange(vp, blocks[vp].Item1,
+                        blocks[vp].Item2); // TODO: re-draw neighbors?
+                    continue;
+                }
+
+                if (!chunks.TryGetValue(chunk, out var chunkData))
+                {
+                    chunkData = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+                    chunks.Add(chunk, chunkData);
+                }
+
+                chunkData.Add(vp, blocks[vp]);
+            }
+
+            foreach (var chunk in chunks.Keys)
+                chunk.PutVoxels(chunks[chunk]);
+        }
+
+        public void DeleteBlocks(Dictionary<VoxelPosition, Land> blocks)
+        {
+            var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Land>>();
+            // var nullChunkNeighbors = new List<Chunk>();
+
+            foreach (var vp in blocks.Keys)
+            {
+                var chunk = GetChunkIfInited(vp.chunk);
+                if (chunk == null)
+                {
+                    WorldService.INSTANCE.AddChange(vp, blocks[vp]); // TODO: re-draw neighbors?
+                    continue;
+                }
+
+                if (!chunks.TryGetValue(chunk, out var chunkData))
+                {
+                    chunkData = new Dictionary<VoxelPosition, Land>();
+                    chunks.Add(chunk, chunkData);
+                }
+
+                chunkData.Add(vp, blocks[vp]);
+            }
+
+            foreach (var chunk in chunks.Keys)
+                chunk.DeleteVoxels(chunks[chunk]);
         }
 
         public bool IsSolidAt(Vector3Int pos)

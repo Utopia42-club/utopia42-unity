@@ -1,3 +1,5 @@
+using src.Utils;
+using UnityEngine;
 using static src.Utils.Voxels;
 using static src.Utils.Voxels.Face;
 
@@ -5,12 +7,13 @@ namespace src.Model
 {
     public class BlockType
     {
-        public readonly byte id;
+        public readonly uint id;
         public readonly string name;
         public readonly bool isSolid;
         public readonly int[] textures = new int[FACES.Length];
+        public readonly Color32? color;
 
-        public BlockType(byte id, string name, bool isSolid,
+        public BlockType(uint id, string name, bool isSolid,
             int backTexture, int rightTexture,
             int frontTexture, int leftTexture,
             int bottomTexture, int topTexture)
@@ -26,16 +29,31 @@ namespace src.Model
             textures[TOP.index] = topTexture;
         }
 
+        public BlockType(uint id, Color32 color, string name)
+        {
+            this.id = id;
+            this.color = color;
+            this.name = name;
+            isSolid = true;
+        }
+
         public int GetTextureID(Face face)
         {
             return textures[face.index];
         }
 
-        public UnityEngine.Sprite GetIcon(bool failed = false)
+        public Sprite GetIcon(bool failed = false)
         {
-            return failed ? 
-                UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/failed") :
-                UnityEngine.Resources.Load<UnityEngine.Sprite>("BlockIcons/" + name);
+            BlockType colorBlock;
+            var blockName = name;
+            if (ColorBlocks.IsColorTypeId(id, out colorBlock))
+            {
+                blockName = "color";
+            }
+
+            return failed
+                ? Resources.Load<Sprite>("BlockIcons/failed")
+                : Resources.Load<Sprite>("BlockIcons/" + blockName);
         }
     }
 }

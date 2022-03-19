@@ -82,7 +82,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem = null;
             }
 
-            snackItem = Snack.INSTANCE.ShowLines(GetDefaultSnackLines(), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
@@ -159,19 +159,6 @@ namespace src.MetaBlocks.TdObjectBlock
             return lines;
         }
 
-        private List<string> GetDefaultSnackLines()
-        {
-            var lines = new List<string>();
-            lines.Add("Press Z for details");
-            lines.Add("Press T to toggle preview");
-            if (tdObjectContainer != null)
-                lines.Add("Press V to move object");
-            lines.Add("Press DEL to delete object");
-            if (stateMsg != StateMsg.Ok)
-                lines.Add("\n" + MetaBlockState.ToString(stateMsg, "3D object"));
-            return lines;
-        }
-
         public override void UnFocus()
         {
             if (snackItem != null)
@@ -183,15 +170,28 @@ namespace src.MetaBlocks.TdObjectBlock
             Player.INSTANCE.HideTdObjectHighlightBox();
         }
 
-        private void UpdateStateAndIcon(StateMsg msg)
+        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face = null)
         {
             stateMsg = msg;
             if (snackItem != null)
-                ((SnackItem.Text) snackItem).UpdateLines(GetDefaultSnackLines());
+                ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines());
             if (stateMsg != StateMsg.Ok && stateMsg != StateMsg.Loading)
                 CreateIcon(true);
             else
                 CreateIcon();
+        }
+
+        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
+        {
+            var lines = new List<string>();
+            lines.Add("Press Z for details");
+            lines.Add("Press T to toggle preview");
+            if (tdObjectContainer != null)
+                lines.Add("Press V to move object");
+            lines.Add("Press DEL to delete object");
+            if (stateMsg != StateMsg.Ok)
+                lines.Add("\n" + MetaBlockState.ToString(stateMsg, "3D object"));
+            return lines;
         }
 
         private void LoadTdObject()
@@ -283,7 +283,7 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        private void DestroyObject()
+        private void DestroyObject(bool immediate = true)
         {
             if (tdObjectFocusable != null)
             {
@@ -293,15 +293,41 @@ namespace src.MetaBlocks.TdObjectBlock
 
             if (tdObject != null)
             {
-                DestroyImmediate(tdObject.gameObject);
-                DestroyImmediate(tdObject);
+                if (immediate)
+                    DestroyImmediate(tdObject.gameObject);
+                else
+                    Destroy(tdObject.gameObject);
+
+
+                foreach (var meshRenderer in tdObject.GetComponentsInChildren<MeshRenderer>())
+                foreach (var mat in meshRenderer.sharedMaterials)
+                {
+                    if (immediate)
+                    {
+                        DestroyImmediate(mat.mainTexture);
+                        DestroyImmediate(mat);
+                    }
+                    else
+                    {
+                        Destroy(mat.mainTexture);
+                        Destroy(mat);
+                    }
+                }
+
+                foreach (var meshFilter in tdObject.GetComponentsInChildren<MeshFilter>())
+                {
+                    if (immediate)
+                        DestroyImmediate(meshFilter.sharedMesh);
+                    else
+                        Destroy(meshFilter.sharedMesh);
+                }
+
                 tdObject = null;
             }
 
             if (tdObjectContainer != null)
             {
                 DestroyImmediate(tdObjectContainer.gameObject);
-                DestroyImmediate(tdObjectContainer);
                 tdObjectContainer = null;
             }
 
@@ -426,6 +452,12 @@ namespace src.MetaBlocks.TdObjectBlock
                     });
                     break;
             }
+        }
+
+        private void OnDestroy()
+        {
+            DestroyObject(false);
+            base.OnDestroy();
         }
     }
 }

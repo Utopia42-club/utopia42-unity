@@ -6,12 +6,16 @@ using Newtonsoft.Json;
 using src.Canvas;
 using src.Model;
 using UnityEngine;
+using UnityEngine.Events;
+using Object = System.Object;
 
 namespace src
 {
     public class WebBridge : MonoBehaviour
     {
         private static Dictionary<string, Action<string>> responseListeners = new Dictionary<string, Action<string>>();
+
+        private static Dictionary<string, Action> unityToWebResponseTeardownLogics = new Dictionary<string, Action>();
 
         [DllImport("__Internal")]
         private static extern string callOnBridge(string functionName, string parameter);
@@ -48,7 +52,7 @@ namespace src
         public static void CallAsync<T>(string function, object parameter, Action<T> onDone)
         {
             string paramStr = JsonConvert.SerializeObject(parameter);
-            var id = System.Guid.NewGuid().ToString();
+            var id = Guid.NewGuid().ToString();
             responseListeners[id] = (string result) =>
             {
                 if (result != null)
@@ -76,35 +80,76 @@ namespace src
         public void Request(string req)
         {
             var request = JsonConvert.DeserializeObject<WebToUnityRequest>(req);
-            var components = GameObject.Find(request.objectName).GetComponents<Component>();
-            var component = components.FirstOrDefault(t => t.GetType().Name == request.objectName);
-            if (component == null)
-            {
-                Debug.LogError("No component found with name: " + request.objectName);
-                return;
-            }
 
-            var method = component.GetType().GetMethod(request.methodName);
-            Response response;
-            try
+            if (request.command == "cancel")
             {
-                var result = request.parameter != null
-                    ? (string) method!.Invoke(component, new object[] {request.parameter})
-                    : (string) method!.Invoke(component, new object[] { });
-                response = new Response
-                {
-                    id = request.id,
-                    body = result
-                };
+                if (unityToWebResponseTeardownLogics.ContainsKey(request.id))
+                    unityToWebResponseTeardownLogics[request.id].Invoke();
             }
-            catch (Exception e)
+            else
             {
-                response = new Response
+                var components = GameObject.Find(request.objectName).GetComponents<Component>();
+                var component = components.FirstOrDefault(t => t.GetType().Name == request.objectName);
+                if (component == null)
                 {
-                    id = request.id,
-                    error = e.GetBaseException().Message
-                };
+                    Debug.LogError("No component found with name: " + request.objectName);
+                    return;
+                }
+
+                var method = component.GetType().GetMethod(request.methodName);
+                if (method == null)
+                {
+                    Debug.LogError("No method found with name: " + request.methodName);
+                    return;
+                }
+
+                try
+                {
+                    var result = request.parameter != null
+                        ? method!.Invoke(component, new object[] {request.parameter})
+                        : method!.Invoke(component, new object[] { });
+
+                    if (result is UnityEvent<object> unityEvent)
+                    {
+                        UnityAction<object> listener = res =>
+                        {
+                            var response = new Response {id = request.id, body = JsonConvert.SerializeObject(res)};
+                            SendResponse(response);
+                        };
+                        unityEvent.AddListener(listener);
+                        unityToWebResponseTeardownLogics[request.id] = () => unityEvent.RemoveListener(listener);
+                    }
+                    else
+                    {
+                        var response = new Response
+                        {
+                            id = request.id,
+                            body = JsonConvert.SerializeObject(result)
+                        };
+                        Call<string>("respond", JsonConvert.SerializeObject(response));
+
+                        var completeResponse = new Response
+                        {
+                            id = request.id,
+                            command = "complete"
+                        };
+                        Call<string>("respond", JsonConvert.SerializeObject(completeResponse));
+                    }
+                }
+                catch (Exception e)
+                {
+                    var response = new Response
+                    {
+                        id = request.id,
+                        error = e.GetBaseException().Message
+                    };
+                    Call<string>("respond", JsonConvert.SerializeObject(response));
+                }
             }
+        }
+
+        private static void SendResponse(Response response)
+        {
             Call<string>("respond", JsonConvert.SerializeObject(response));
         }
     }
@@ -122,6 +167,7 @@ namespace src
         public string id;
         public string body;
         public string error;
+        public string command;
     }
 
     [Serializable]
@@ -131,5 +177,6 @@ namespace src
         public string objectName;
         public string methodName;
         public string parameter;
+        public string command;
     }
 }

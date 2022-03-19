@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using src.MetaBlocks;
 using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
@@ -15,15 +17,15 @@ namespace src
         private readonly Transform highlight;
         private Transform tdHighlight;
 
-        private readonly byte blockTypeId;
-        private readonly byte metaBlockTypeId;
+        private readonly uint blockTypeId;
+        private readonly uint metaBlockTypeId;
         private readonly object metaProperties;
         private readonly bool metaAttached;
 
         private const float SelectedBlocksHighlightAlpha = 0.3f;
 
-        private SelectableBlock(Vector3Int pos, byte blockTypeId, Transform highlight, Transform tdHighlight,
-            byte metaBlockTypeId,
+        private SelectableBlock(Vector3Int pos, uint blockTypeId, Transform highlight, Transform tdHighlight,
+            uint metaBlockTypeId,
             object metaProperties, Land land)
         {
             metaAttached = true;
@@ -36,7 +38,7 @@ namespace src
             this.land = land;
         }
 
-        private SelectableBlock(Vector3Int pos, byte blockTypeId, Transform highlight, Land land)
+        private SelectableBlock(Vector3Int pos, uint blockTypeId, Transform highlight, Land land)
         {
             metaAttached = false;
             Position = pos;
@@ -58,7 +60,7 @@ namespace src
             var blockTypeId = blockType.id;
 
             var blockHighlight = Object.Instantiate(highlightModel, position, Quaternion.identity);
-            var material = blockHighlight.GetComponentInChildren<MeshRenderer>().material;
+            var material = blockHighlight.GetComponentInChildren<MeshRenderer>().sharedMaterial;
             Color color = material.color;
             color.a = Mathf.Clamp(SelectedBlocksHighlightAlpha, 0, 1);
             material.color = color;
@@ -71,42 +73,61 @@ namespace src
                 {
                     return new SelectableBlock(position, blockTypeId, blockHighlight,
                         CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
-                            tdHighlightModel, showHighlight), meta.type.id, ((ICloneable) meta.GetProps()).Clone(),
+                            tdHighlightModel, showHighlight), meta.type.id, ((ICloneable) meta.GetProps())?.Clone(),
                         land);
                 }
 
                 return new SelectableBlock(position, blockTypeId, blockHighlight, null, meta.type.id,
-                    ((ICloneable) meta.GetProps()).Clone(), land);
+                    ((ICloneable) meta.GetProps())?.Clone(), land);
             }
 
             return new SelectableBlock(position, blockTypeId, blockHighlight, land);
         }
 
-        public void PutInPosition(World world, Vector3Int pos, Land land)
+        public static void PutInPositions(World world,
+            Dictionary<Vector3Int, Tuple<SelectableBlock, Land>> selectableBlocks)
         {
-            var vp = new VoxelPosition(pos);
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            chunk.PutVoxel(vp, WorldService.INSTANCE.GetBlockType(blockTypeId), land);
-            if (metaAttached)
+            var blocks = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+            var metas = new Dictionary<VoxelPosition, Tuple<SelectableBlock, Land>>();
+            foreach (var pos in selectableBlocks.Keys)
             {
-                chunk.PutMeta(vp, WorldService.INSTANCE.GetBlockType(metaBlockTypeId), land);
-                chunk.GetMetaAt(vp).SetProps(metaProperties, land);
+                var selectableBlock = selectableBlocks[pos].Item1;
+                var land = selectableBlocks[pos].Item2;
+                var vp = new VoxelPosition(pos);
+                blocks.Add(vp,
+                    new Tuple<BlockType, Land>(WorldService.INSTANCE.GetBlockType(selectableBlock.blockTypeId), land));
+                if (selectableBlock.metaAttached)
+                    metas.Add(vp, new Tuple<SelectableBlock, Land>(selectableBlock, land));
+            }
+
+            world.PutBlocks(blocks);
+            foreach (var vp in metas.Keys)
+            {
+                var (selectableBlock, land) = metas[vp];
+                world.PutMetaWithProps(vp,
+                    (MetaBlockType) WorldService.INSTANCE.GetBlockType(selectableBlock.metaBlockTypeId),
+                    selectableBlock.metaProperties, land);
             }
         }
 
-        public void Remove(World world)
+        public static void Remove(World world,
+            List<SelectableBlock> selectableBlocks)
         {
-            var vp = new VoxelPosition(Position);
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null)
+            var blocks = new Dictionary<VoxelPosition, Land>();
+            foreach (var selectableBlock in selectableBlocks)
             {
-                chunk.DeleteVoxel(vp, land);
+                var vp = new VoxelPosition(selectableBlock.Position);
+                blocks.Add(vp, selectableBlock.land);
+
+                var chunk = world.GetChunkIfInited(vp.chunk);
                 if (chunk.GetMetaAt(vp) != null)
                     chunk.DeleteMeta(vp);
             }
+
+            world.DeleteBlocks(blocks);
         }
 
-        public void RotateAround(Vector3 center, Vector3 axis) // TODO: Do the the truncate floor here if necessary
+        public void RotateAround(Vector3 center, Vector3 axis)
         {
             var vector3 = Quaternion.AngleAxis(90, axis) * (highlight.position + 0.5f * Vector3.one - center);
             var oldPos = HighlightPosition;

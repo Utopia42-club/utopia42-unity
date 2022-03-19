@@ -3,6 +3,7 @@ using src.Service;
 using src.Utils;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace src.Canvas
@@ -23,7 +24,8 @@ namespace src.Canvas
         private string currentWallet;
         private ProfileLoader profileLoader;
 
-        // Start is called before the first frame update
+        public readonly UnityEvent<object> currentLandChanged = new UnityEvent<object>();
+
         void Start()
         {
             instance = this;
@@ -32,13 +34,14 @@ namespace src.Canvas
             openProfileButton.AddListener(() => manager.ShowProfile(currentProfile, null));
         }
 
-        // Update is called once per frame
         void Update()
         {
             if (manager.GetState() == GameManager.State.PLAYING)
             {
                 var player = Player.INSTANCE;
                 var changed = IsLandChanged(player.transform.position);
+                if (changed)
+                    currentLandChanged.Invoke(currentLand);
                 if (changed || !view.activeSelf && currentWallet != null)
                     OnOwnerChanged();
 
@@ -97,10 +100,7 @@ namespace src.Canvas
                     HorizontalLayoutGroup layout = view.GetComponentInChildren<HorizontalLayoutGroup>();
                     LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform) layout.transform);
                 }
-            }, () =>
-            {
-                SetCurrentProfile(Profile.FAILED_TO_LOAD_PROFILE);
-            });
+            }, () => { SetCurrentProfile(Profile.FAILED_TO_LOAD_PROFILE); });
         }
 
         private bool IsLandChanged(Vector3 position)

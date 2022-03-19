@@ -7,6 +7,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 using MetaBlock = src.MetaBlocks.MetaBlock;
 
 namespace src
@@ -15,19 +16,21 @@ namespace src
     {
         public const float CastStep = 0.01f;
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
+        private static readonly Color HammerActiveColor = new Color(0.16f, 0.5f, 0.72f, 0.7f);
+        private static readonly Color HammerNotActiveColor = new Color(0, 0, 0, 0.5f);
 
         [SerializeField] private Transform cam;
         [SerializeField] private World world;
         [SerializeField] private float walkSpeed = 6f;
         [SerializeField] private float sprintSpeed = 12f;
-        [SerializeField] private float jumpHeight = 1;
-        [SerializeField] private float sprintJumpHeight = 1.25f;
+        [SerializeField] private float jumpHeight = 2;
+        [SerializeField] private float sprintJumpHeight = 2.5f;
         [SerializeField] private float gravity = -9.8f;
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
         [SerializeField] private Transform tdObjectHighlightBox;
 
-        [NonSerialized] public byte selectedBlockId = 1;
+        [NonSerialized] public uint selectedBlockId = 1;
 
         private bool sprinting;
         private Vector3 velocity = Vector3.zero;
@@ -43,7 +46,10 @@ namespace src
         private Collider hitCollider;
         private CharacterController controller;
         private BlockSelectionController blockSelectionController;
+        private bool ctrlDown = false;
+        private Vector3Int playerPos;
 
+        public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
         public Transform TdObjectHighlightBox => tdObjectHighlightBox;
@@ -74,11 +80,10 @@ namespace src
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING)
-                {
                     hitCollider = null;
-                    blockSelectionController.ExitBlockSelectionMovement();
-                }
             });
+            
+            playerPos = Vectors.TruncateFloor(transform.position);
         }
 
         public List<Land> GetOwnedLands()
@@ -125,6 +130,8 @@ namespace src
             controller.Move(velocity * Time.fixedDeltaTime);
             if ((controller.collisionFlags & CollisionFlags.Above) != 0)
                 velocity.y = 0;
+            
+            playerPos = Vectors.TruncateFloor(transform.position);
         }
 
         private void DetectFocus()
@@ -173,7 +180,7 @@ namespace src
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            GetMovementInputs();
+            GetInputs();
             blockSelectionController.DoUpdate();
 
             if (lastChunk == null)
@@ -192,8 +199,10 @@ namespace src
             }
         }
 
-        private void GetMovementInputs()
+        private void GetInputs()
         {
+            ctrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
 
@@ -209,6 +218,13 @@ namespace src
 
             if (Input.GetButtonDown("Toggle Floating"))
                 floating = !floating;
+        }
+
+        public void SetHammerActive(bool active)
+        {
+            if (HammerMode == active) return;
+            HammerMode = active;
+            placeBlock.gameObject.SetActive(!active);
         }
 
         private void PlaceCursorBlocks(Vector3 blockHitPoint)
@@ -228,12 +244,12 @@ namespace src
                 highlightBlock.position = posInt;
                 highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
 
-                if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType)
+                if (WorldService.INSTANCE.GetBlockType(selectedBlockId) is MetaBlockType && !HammerMode)
                 {
                     if (chunk.GetMetaAt(vp) == null)
                     {
                         placeBlock.position = posInt;
-                        placeBlock.gameObject.SetActive(CanEdit(posInt, out placeLand));
+                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) && CanEdit(posInt, out placeLand));
                     }
                     else
                         placeBlock.gameObject.SetActive(false);
@@ -244,7 +260,8 @@ namespace src
                     if (PlaceBlockPosInt != currVox && PlaceBlockPosInt != currVox + Vector3Int.up)
                     {
                         placeBlock.position = PlaceBlockPosInt;
-                        placeBlock.gameObject.SetActive(CanEdit(PlaceBlockPosInt, out placeLand));
+                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) &&
+                                                        CanEdit(PlaceBlockPosInt, out placeLand));
                     }
                     else
                         placeBlock.gameObject.SetActive(false);
@@ -300,15 +317,22 @@ namespace src
             return null;
         }
 
-        public bool CanEdit(Vector3Int position, out Land land)
+        public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
+            if (!isMeta && (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
+                           playerPos.Equals(blockPos - Vector3Int.up)))
+            {
+                land = null;
+                return false;
+            }
+            
             if (Settings.IsGuest())
             {
                 land = null;
                 return true;
             }
 
-            land = FindOwnedLand(position);
+            land = FindOwnedLand(blockPos);
             return land != null && !land.isNft;
         }
 
@@ -324,44 +348,9 @@ namespace src
             return null;
         }
 
-        public bool PutBlock(Vector3 pos, BlockType type, bool apiCall = false)
-        {
-            var vp = new VoxelPosition(pos);
-            var playerPos = Vectors.TruncateFloor(transform.position);
-            var blockPos = vp.ToWorld();
-            if (apiCall && !(type is MetaBlockType) &&
-                (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
-                 playerPos.Equals(blockPos - Vector3Int.up)))
-                return false;
-
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk != null)
-            {
-                if (apiCall && !CanEdit(Vectors.FloorToInt(pos), out placeLand)) return false;
-                if (type is MetaBlockType)
-                    chunk.PutMeta(vp, type, placeLand);
-                else
-                    chunk.PutVoxel(vp, type, placeLand);
-                return true;
-            }
-
-            if (apiCall && CanEdit(Vectors.FloorToInt(pos), out var ownerLand))
-            {
-                world.DestroyGarbageChunkIfExists(vp.chunk);
-                if (type is MetaBlockType)
-                    WorldService.INSTANCE.AddMetaBlock(vp, type.id, ownerLand);
-                else
-                    WorldService.INSTANCE.AddChange(vp, type.id, ownerLand);
-
-                return true;
-            }
-
-            return false;
-        }
-
         private VoxelPosition ComputePosition()
         {
-            return new VoxelPosition(transform.position);
+            return new VoxelPosition(playerPos);
         }
 
         public void ShowTdObjectHighlightBox(BoxCollider boxCollider)

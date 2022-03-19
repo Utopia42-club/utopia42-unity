@@ -20,6 +20,7 @@ namespace src.Canvas
         [SerializeField] private Button editProfileButton;
         [SerializeField] private Button helpButton;
         [SerializeField] private Button positionLinkButton;
+        [SerializeField] private Button pluginsButton;
 
         private Vector3? startingPosition = null;
 
@@ -32,6 +33,7 @@ namespace src.Canvas
                 errorPanel.SetActive(true);
                 loadingPanel.SetActive(false);
             }));
+            pluginsButton.interactable = WebBridge.IsPresent();
         }
 
         private void DoStart()
@@ -43,8 +45,8 @@ namespace src.Canvas
                 errorPanel.SetActive(true);
                 return;
             }
-            else
-                panel.SetActive(true);
+
+            panel.SetActive(true);
 
             foreach (var net in nets)
                 networkInput.options.Add(new Dropdown.OptionData(net.name));
@@ -56,6 +58,7 @@ namespace src.Canvas
             helpButton.onClick.AddListener(() => manager.Help());
             walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
             positionLinkButton.onClick.AddListener(() => manager.CopyPositionLink());
+            pluginsButton.onClick.AddListener(() => manager.OpenPluginsDialog());
 
             manager.stateChange.AddListener(state =>
             {
@@ -111,6 +114,7 @@ namespace src.Canvas
             saveGameButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
             editProfileButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
             helpButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
+            pluginsButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
             positionLinkButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
         }
 
@@ -134,6 +138,7 @@ namespace src.Canvas
             if (string.IsNullOrWhiteSpace(walletInput.text)) return;
             DoSubmit(walletInput.text);
         }
+
 
         private void DoSubmit(string walletId)
         {
@@ -173,6 +178,18 @@ namespace src.Canvas
             var net = Network();
             detail.network = net == null ? -1 : net.id;
             return detail;
+        }
+
+        public void Exit()
+        {
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("moveToHome", null);
+            }
+            else
+            {
+                Application.Quit();
+            }
         }
     }
 

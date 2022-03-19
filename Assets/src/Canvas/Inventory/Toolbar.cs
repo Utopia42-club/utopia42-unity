@@ -5,14 +5,14 @@ namespace src.Canvas
 {
     public class Toolbar : MonoBehaviour
     {
-        private int selectedSlot = 0;
-
         public Player player;
         public RectTransform highlight;
+        public RectTransform hammerHighlight;
 
         public GameObject slotPrefab;
 
         private ItemSlotUI[] slots = new ItemSlotUI[9];
+        private int selectedSlot = 0;
 
         private void Start()
         {
@@ -21,39 +21,51 @@ namespace src.Canvas
             {
                 GameObject newSlot = Instantiate(slotPrefab, layout.transform);
 
-                ItemStack stack = new ItemStack((byte)i, Random.Range(2, 65));
+                ItemStack stack = new ItemStack((byte) i, Random.Range(2, 65));
                 ItemSlot slot = new ItemSlot();
                 slot.SetStack(stack);
                 var ui = newSlot.GetComponent<ItemSlotUI>();
-                slot.SetUi(ui);
                 slot.SetFromInventory(false);
+                slot.SetUi(ui);
                 slots[i - 1] = ui;
             }
 
             SelectedChanged();
+            GameManager.INSTANCE.stateChange.AddListener(state =>
+            {
+                if (state == GameManager.State.PLAYING) SelectedChanged();
+            });
         }
 
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            bool dec = Input.GetButtonDown("Select Left");
-            bool inc = Input.GetButtonDown("Select Right");
-            if (dec || inc)
-            {
-                if (dec) selectedSlot--;
-                if (inc) selectedSlot++;
-                selectedSlot = (selectedSlot + slots.Length) % slots.Length;
-            }
+
+            var mouseDelta = Input.mouseScrollDelta.y;
+            var dec = (Input.GetButtonDown("Change Block") &&
+                       (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))) || mouseDelta <= -0.1;
+            var inc = !dec && (Input.GetButtonDown("Change Block") || mouseDelta >= 0.1);
+            if (!dec && !inc) return;
+            if (dec) selectedSlot--;
+            if (inc) selectedSlot++;
+            selectedSlot = (selectedSlot + slots.Length + 1) % (slots.Length + 1);
             SelectedChanged();
         }
 
         private void SelectedChanged()
         {
+            var hammerSelected = selectedSlot == slots.Length;
+            highlight.gameObject.SetActive(!hammerSelected);
+            hammerHighlight.gameObject.SetActive(hammerSelected);
+            player.SetHammerActive(hammerSelected);
+            if (hammerSelected) return;
+
             highlight.position = slots[selectedSlot].transform.position;
             if (slots[selectedSlot].GetItemSlot().GetStack() != null)
                 player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
             else player.selectedBlockId = 0;
         }
 
+        public static Toolbar INSTANCE => GameObject.Find("Toolbar").GetComponent<Toolbar>();
     }
 }

@@ -6,6 +6,7 @@ namespace src.Canvas
     public class HelpMessage : MonoBehaviour
     {
         public TextMeshProUGUI textMesh;
+        public Shortcut shortcut;
 
         void Start()
         {
@@ -20,14 +21,19 @@ namespace src.Canvas
             {
                 case (GameManager.State.PLAYING):
                     gameObject.SetActive(true);
-                    textMesh.SetText("F2: Open Settings");
+                    shortcut.gameObject.SetActive(true);
+                    shortcut.SetShortcut("F2");
+                    textMesh.SetText("Settings");
                     break;
                 case (GameManager.State.MAP):
                     gameObject.SetActive(true);
-                    textMesh.SetText("F2: Toggle Side Panel");
+                    shortcut.gameObject.SetActive(true);
+                    shortcut.SetShortcut("F2");
+                    textMesh.SetText("Toggle Side Panel");
                     break;
                 default:
                     gameObject.SetActive(false);
+                    shortcut.gameObject.SetActive(false);
                     break;
             }
         }

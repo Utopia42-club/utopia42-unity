@@ -3,16 +3,32 @@ using src.Canvas;
 using src.Model;
 using src.Utils;
 using UnityEngine;
+using LightType = UnityEngine.LightType;
 
 namespace src.MetaBlocks.LightBlock
 {
     public class LightBlockObject : MetaBlockObject
     {
+        private const float LightDistance = 0.2f;
+
+        private static readonly Vector3[] LightLocalPositions =
+        {
+            LightDistance * Vector3.back + 0.5f * (Vector3.right + Vector3.up),
+            (LightDistance + 1) * Vector3.forward + 0.5f * (Vector3.right + Vector3.up),
+
+            LightDistance * Vector3.left + 0.5f * (Vector3.forward + Vector3.up),
+            (LightDistance + 1) * Vector3.right + 0.5f * (Vector3.forward + Vector3.up),
+
+            LightDistance * Vector3.down + 0.5f * (Vector3.right + Vector3.forward),
+            (LightDistance + 1) * Vector3.up + 0.5f * (Vector3.right + Vector3.forward)
+        };
+
         private SnackItem snackItem;
         private Land land;
         private bool canEdit;
         private bool ready = false;
-        private Light light;
+        
+        private List<Light> sideLights = new List<Light>();
 
         private void Start()
         {
@@ -29,31 +45,61 @@ namespace src.MetaBlocks.LightBlock
 
         public override void OnDataUpdate()
         {
-            ResetLight();
+            ResetLights();
         }
 
         protected override void DoInitialize()
         {
-            ResetLight();
+            ResetLights();
         }
 
-        private void ResetLight()
+        private void ResetLights()
         {
-            if (light == null)
-            {
-                light = gameObject.AddComponent<Light>();
-                light.type = LightType.Point;
-            }
+            return;
+            if (sideLights.Count == 0)
+                foreach (var position in LightLocalPositions)
+                    sideLights.Add(CreateSideLight(position));
 
             var props = GetProps();
             if (props == null) return;
-            light.color = ColorUtility.TryParseHtmlString(props.hexColor, out var color)
-                ? color
-                : LightBlockEditor.DefaultColor;
-            light.range = props.range;
-            light.intensity = props.intensity;
+
+            ModifySideLights(
+                ColorUtility.TryParseHtmlString(props.hexColor, out var col) ? col : LightBlockEditor.DefaultColor,
+                props.intensity, props.range, true); // TODO: add active
         }
 
+        private Light CreateSideLight(Vector3 localPosition)
+        {
+            var go = new GameObject();
+            go.transform.SetParent(transform);
+            go.transform.localPosition = localPosition;
+            var l = go.AddComponent<Light>();
+            l.type = LightType.Point; // TODO ?
+            go.SetActive(false);
+            return l;
+        }
+
+        private void ModifySideLights(Color color, float intensity, float range, bool active)
+        {
+            foreach (var l in sideLights)
+            {
+                l.intensity = intensity;
+                l.range = range;
+                l.color = color;
+                l.gameObject.SetActive(active);
+            }
+        }
+
+        private void DestroyLights()
+        {
+            if (sideLights.Count == 0) return;
+            foreach (var side in sideLights)
+            {
+                DestroyImmediate(side.gameObject);
+            }
+
+            sideLights.Clear();
+        }
 
         public override void Focus(Voxels.Face face)
         {
@@ -64,12 +110,7 @@ namespace src.MetaBlocks.LightBlock
                 snackItem = null;
             }
 
-            var lines = new List<string>();
-            lines.Add("Press Z for details");
-            lines.Add("Press T to toggle preview");
-            lines.Add("Press DEL to delete object");
-
-            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
@@ -92,6 +133,21 @@ namespace src.MetaBlocks.LightBlock
                 snackItem.Remove();
                 snackItem = null;
             }
+        }
+
+        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
+        {
+            return new List<string>
+            {
+                "Press Z for details",
+                "Press T to toggle preview",
+                "Press DEL to delete object"
+            };
         }
 
         private void EditProps()

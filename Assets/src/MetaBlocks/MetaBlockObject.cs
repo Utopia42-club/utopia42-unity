@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using src.Utils;
 using UnityEngine;
 
@@ -26,9 +27,15 @@ namespace src.MetaBlocks
 
         public abstract void UnFocus();
 
-        private void OnDestroy()
+        public abstract void UpdateStateAndIcon(StateMsg msg, Voxels.Face face);
+
+        protected abstract List<string> GetFaceSnackLines(Voxels.Face face);
+        
+        protected void OnDestroy()
         {
             UnFocus();
+            if (iconObject != null)
+                Destroy(iconObject);
             block.OnObjectDestroyed();
         }
 
@@ -44,10 +51,10 @@ namespace src.MetaBlocks
 
         protected void CreateIcon(bool failed = false)
         {
-            if (iconObject != null) DestroyImmediate(iconObject);
+            if (iconObject != null)
+                Destroy(iconObject);
             iconObject = Instantiate(Resources.Load("MetaBlocks/MetaBlock") as GameObject, transform);
-            var renderers = iconObject.GetComponentsInChildren<Renderer>();
-            foreach (var r in renderers)
+            foreach (var r in iconObject.GetComponentsInChildren<Renderer>())
                 r.material.mainTexture = block.type.GetIcon(failed).texture;
         }
 

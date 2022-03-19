@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace src
@@ -10,6 +11,7 @@ namespace src
         private float xRotation = 0f;
         private Action onUpdate = () => { };
         private Action<Vector3> rotationTarget = null;
+        public bool cursorLocked = true;
 
         void Start()
         {
@@ -23,7 +25,11 @@ namespace src
                 if (state == GameManager.State.PLAYING || state == GameManager.State.MOVING_OBJECT)
                 {
                     Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
+                    // if (!cursorLocked)
+                    //     LockCursor();
+                    // else
+                    if (cursorLocked)
+                        Cursor.visible = false;
                     this.onUpdate = DoUpdate;
                 }
                 else
@@ -35,13 +41,43 @@ namespace src
             });
         }
 
-        void Update()
+        private void Update()
         {
             onUpdate.Invoke();
+
+            if (cursorLocked && (Input.GetButtonUp("Cancel")))
+                UnlockCursor();
+            else if (!cursorLocked && (Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(0)) &&
+                     GameManager.INSTANCE.GetState() == GameManager.State.PLAYING && MouseInScreen())
+                LockCursor();
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus) return;
+            UnlockCursor();
+        }
+
+        public void UnlockCursor()
+        {
+            StartCoroutine(ChangeCursorState(false));
+        }
+
+        public void LockCursor()
+        {
+            StartCoroutine(ChangeCursorState(true));
+        }
+
+        private IEnumerator ChangeCursorState(bool locked)
+        {
+            yield return null;
+            cursorLocked = locked;
+            Cursor.visible = !locked;
         }
 
         private void DoUpdate()
         {
+            if (!cursorLocked) return;
             float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
             float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
@@ -70,9 +106,15 @@ namespace src
             rotationTarget = null;
         }
 
-        public static MouseLook INSTANCE
+        private static bool MouseInScreen()
         {
-            get { return GameObject.Find("Main Camera").GetComponent<MouseLook>(); }
+            var mousePosition = Input.mousePosition;
+            if (mousePosition.x <= 0 || mousePosition.x >= Screen.width - 1 ||
+                mousePosition.y <= 0 || mousePosition.y >= Screen.height - 1)
+                return false;
+            return true;
         }
+
+        public static MouseLook INSTANCE => GameObject.Find("Main Camera").GetComponent<MouseLook>();
     }
 }

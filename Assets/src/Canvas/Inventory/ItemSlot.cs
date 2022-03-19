@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-
 namespace src.Canvas
 {
     public class ItemSlot
@@ -27,7 +22,7 @@ namespace src.Canvas
         public ItemStack HandOverStack()
         {
             var st = stack;
-            this.stack = null;
+            stack = null;
             if (ui)
                 ui.UpdateView();
             return st;
@@ -41,7 +36,7 @@ namespace src.Canvas
 
         public ItemSlotUI GetUI()
         {
-            return this.ui;
+            return ui;
         }
 
         public void SetFromInventory(bool b)
@@ -72,16 +67,16 @@ namespace src.Canvas
 
         private void Clear()
         {
-            this.ui.SetItemSlot(null);
+            ui.SetItemSlot(null);
         }
     }
 
     public class ItemStack
     {
-        public byte id;
+        public uint id;
         public int amount;
 
-        public ItemStack(byte id, int amount)
+        public ItemStack(uint id, int amount)
         {
             this.id = id;
             this.amount = amount;
