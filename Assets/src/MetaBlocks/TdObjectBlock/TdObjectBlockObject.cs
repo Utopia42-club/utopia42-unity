@@ -293,15 +293,10 @@ namespace src.MetaBlocks.TdObjectBlock
 
             if (tdObject != null)
             {
-                if (immediate)
-                    DestroyImmediate(tdObject.gameObject);
-                else
-                    Destroy(tdObject.gameObject);
-
-
                 foreach (var meshRenderer in tdObject.GetComponentsInChildren<MeshRenderer>())
                 foreach (var mat in meshRenderer.sharedMaterials)
                 {
+                    if (mat == null) continue;
                     if (immediate)
                     {
                         DestroyImmediate(mat.mainTexture);
@@ -321,6 +316,12 @@ namespace src.MetaBlocks.TdObjectBlock
                     else
                         Destroy(meshFilter.sharedMesh);
                 }
+
+
+                if (immediate)
+                    DestroyImmediate(tdObject.gameObject);
+                else
+                    Destroy(tdObject.gameObject);
 
                 tdObject = null;
             }
