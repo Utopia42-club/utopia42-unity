@@ -57,7 +57,7 @@ namespace src.Service
 
         internal static IEnumerator Get<TR>(string url, Action<TR> success, Action failure)
         {
-            using (var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbGET))
+            using (var webRequest = UnityWebRequest.Get(url))
             {
                 webRequest.SetRequestHeader("Accept", "*/*");
                 yield return ExecuteRequest(webRequest, success, failure);
@@ -120,7 +120,7 @@ namespace src.Service
             }
         }
 
-        internal static T ReadResponse<T>(UnityWebRequest webRequest)
+        private static T ReadResponse<T>(UnityWebRequest webRequest)
         {
             return webRequest.responseCode == 404
                 ? default

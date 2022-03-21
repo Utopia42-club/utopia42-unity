@@ -35,14 +35,16 @@ namespace src.Service
             yield return Upload(form, onSuccess, onFailure);
         }
 
-        private static object Upload(List<IMultipartFormSection> form, Action<string> onSuccess,
+        private static IEnumerator Upload(List<IMultipartFormSection> form, Action<string> onSuccess,
             Action onFailure)
         {
             var url = SERVER_URL + "/add?stream-channels=true&progress=false";
-            using var webRequest = UnityWebRequest.Post(url, form);
-            return RestClient.ExecuteRequest<IpfsResponse>(webRequest,
-                ipfsResponse => onSuccess.Invoke(ipfsResponse.hash),
-                onFailure);
+            using (var webRequest = UnityWebRequest.Post(url, form))
+            {
+                yield return  RestClient.ExecuteRequest<IpfsResponse>(webRequest,
+                    ipfsResponse => onSuccess.Invoke(ipfsResponse.hash),
+                    onFailure);
+            }
         }
 
         [Serializable]

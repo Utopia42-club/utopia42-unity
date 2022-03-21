@@ -7,7 +7,6 @@ using src.Canvas;
 using src.MetaBlocks;
 using src.MetaBlocks.MarkerBlock;
 using src.Model;
-using src.Service.Migration;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -31,9 +30,25 @@ namespace src.Service
             {
                 var cloned = data?.Clone() ?? new ChunkData(coordinate, null, null);
                 if (changes.TryGetValue(coordinate, out var c))
-                    cloned.AddAll(c);
+                    cloned.ApplyChanges(c);
                 consumer.Invoke(cloned);
             });
+        }
+
+        public IEnumerator Initialize(Loading loading, Action onDone, Action onFailed)
+        {
+            if (IsInitialized()) yield break;
+            var failed = false;
+
+            yield return landRegistry.ReloadLands(() =>
+            {
+                failed = true;
+                onFailed();
+            });
+
+            if (failed) yield break;
+            initialized = true;
+            onDone.Invoke();
         }
 
         public void IsSolid(VoxelPosition voxelPosition, Action<bool> consumer)
@@ -62,47 +77,20 @@ namespace src.Service
             return type?.isSolid ?? ChunkInitializer.IsDefaultSolidAt(vp);
         }
 
-
         public List<Land> GetPlayerLands()
         {
             return landRegistry.GetLandsForOwner(Settings.WalletId());
         }
 
-        public IEnumerator Initialize(Loading loading, Action onDone, Action onFailed)
+        public IEnumerator GetLandsChanges(string wallet, List<Land> lands,
+            Action<Dictionary<long, LandDetails>> consumer, Action failure)
         {
-            if (IsInitialized()) yield break;
-            var failed = false;
+            var filteredLands = lands.FindAll(l => changedLands.Contains(l));
 
-            yield return landRegistry.ReloadLands(() =>
-            {
-                failed = true;
-                onFailed();
-            });
+            yield return LandDetailsService.INSTANCE.GetOrCreate(filteredLands,
+                details => consumer(ApplyChanges(details)),
+                failure);
 
-            if (failed) yield break;
-            initialized = true;
-            onDone.Invoke();
-        }
-
-        public Dictionary<long, LandDetails> GetLandsChanges(string wallet, List<Land> lands)
-        {
-            var filteredLands = new List<Land>();
-            var landDetailsMap = new Dictionary<long, LandDetails>();
-            for (int i = 0; i < lands.Count; i++)
-            {
-                var land = lands[i];
-                if (changedLands.Contains(land))
-                {
-                    var details = new LandDetails();
-                    details.changes = new Dictionary<string, Block>();
-                    details.metadata = new Dictionary<string, MetaBlockData>();
-                    details.v = "0.2.0";
-                    details.wallet = wallet;
-                    details.properties = land.properties;
-                    landDetailsMap[land.id] = details;
-                    filteredLands.Add(land);
-                }
-            }
 
             // Stream(filteredLands, changes, (key, type, land) =>
             // {
@@ -119,8 +107,71 @@ namespace src.Service
             // metadata.type = metaBlock.type.name;
             // landDetailsMap[land.id].metadata[key] = metadata;
             // }, m => m.GetProps() != null && !m.type.inMemory);
+        }
 
-            return landDetailsMap;
+        private Dictionary<long, LandDetails> ApplyChanges(Dictionary<long, LandDetails> detailsMap)
+        {
+            foreach (var changeEntry in changes)
+            {
+                var chunkPosition = new Vector2Int(changeEntry.Key.x, changeEntry.Key.z);
+                var candidateLands = new List<Land>(landRegistry.GetLandsForChunk(chunkPosition));
+                candidateLands = candidateLands.FindAll(l => detailsMap.ContainsKey(l.id));
+                if (candidateLands.Count == 0) continue;
+
+                var findDetails = new Func<Vector3Int, Tuple<LandDetails, long>>(changePos =>
+                {
+                    var pos = VoxelPosition.ToWorld(changeEntry.Key, changePos);
+                    var land = candidateLands.Find(l => l.Contains(pos));
+                    if (land != null && detailsMap.TryGetValue(land.id, out var details))
+                        return new Tuple<LandDetails, long>(details, land.id);
+                    return null;
+                });
+
+                if (changeEntry.Value.blocks != null)
+                    foreach (var blockEntry in changeEntry.Value.blocks)
+                    {
+                        var dt = findDetails(blockEntry.Key);
+                        if (dt != null)
+                        {
+                            dt.Item1.changes[LandDetails.FormatKey(blockEntry.Key)] =
+                                new Block {name = Blocks.GetBlockType(blockEntry.Value).name};
+                        }
+                    }
+
+
+                if (changeEntry.Value.metaBlocks != null)
+                    foreach (var blockEntry in changeEntry.Value.metaBlocks)
+                    {
+                        var metaBlock = blockEntry.Value;
+                        var metaBlockType = metaBlock.type;
+                        if (metaBlockType != null && metaBlockType.inMemory)
+                            continue;
+
+
+                        var props = metaBlock.GetProps();
+                        var dt = findDetails(blockEntry.Key);
+                        if (dt != null)
+                        {
+                            if (metaBlockType == null || metaBlock == MetaBlock.DELETED_METABLOCK || props == null)
+                            {
+                                dt.Item1.metadata.Remove(LandDetails.FormatKey(blockEntry.Key));
+                            }
+                            else
+                            {
+                                dt.Item1.metadata[LandDetails.FormatKey(blockEntry.Key)] = new MetaBlockData
+                                {
+                                    properties = JsonConvert.SerializeObject(props),
+                                    type = metaBlockType.name
+                                };
+                            }
+                        }
+                    }
+            }
+
+            foreach (var entry in detailsMap)
+                entry.Value.properties = landRegistry.GetLands()[entry.Key].properties;
+
+            return detailsMap;
         }
 
         public List<Marker> GetMarkers()
@@ -172,8 +223,7 @@ namespace src.Service
         {
             if (block.type is MarkerBlockType)
                 markerBlocks.Remove(position);
-            if (block.land != null)
-                changedLands.Add(block.land);
+            AddMetaBlock(new VoxelPosition(position), null, block.land);
         }
 
         public MetaBlock AddMetaBlock(VoxelPosition pos, MetaBlockType type, Land land)
@@ -186,15 +236,18 @@ namespace src.Service
 
             if (chunkChanges.metaBlocks == null)
                 chunkChanges.metaBlocks = new Dictionary<Vector3Int, MetaBlock>();
-            var block = chunkChanges.metaBlocks[pos.local] = type.Instantiate(land, "");
+            var block = chunkChanges.metaBlocks[pos.local] =
+                type == null ? MetaBlock.DELETED_METABLOCK : type.Instantiate(land, "");
 
             if (type is MarkerBlockType)
                 markerBlocks.Add(pos.ToWorld(), block);
 
-            changedLands.Add(land);
-            blockPlaced.Invoke(new BlockPlaceEvent(pos.ToWorld(), type.name));
+            if (land != null)
+                changedLands.Add(land);
+            if (type != null)
+                blockPlaced.Invoke(new BlockPlaceEvent(pos.ToWorld(), type.name));
 
-            return block;
+            return type == null ? null : block;
         }
 
         public void AddChange(VoxelPosition pos, BlockType type, Land land)

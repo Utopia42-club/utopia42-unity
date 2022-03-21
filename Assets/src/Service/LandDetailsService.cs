@@ -1,25 +1,35 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
 using src.Model;
-using src.Service.Ethereum;
 using src.Service.Migration;
 
 namespace src.Service
 {
-    internal class LandDetailsService
+    public class LandDetailsService
     {
-        internal static readonly LandDetailsService INSTANCE = new LandDetailsService();
+        public static readonly LandDetailsService INSTANCE = new LandDetailsService();
         private readonly MigrationService migrationService;
+
         LandDetailsService()
         {
             migrationService = new MigrationService();
             if (!migrationService.GetLatestVersion().Equals("0.2.0"))
                 throw new Exception("Unsupported migration latest version.");
         }
-        
-        public IEnumerator Get(List<Land> lands, Action<Dictionary<long, LandDetails>> consumer, Action failure)
+
+        private LandDetails Create(Land land)
+        {
+            var details = new LandDetails();
+            details.changes = new Dictionary<string, Block>();
+            details.metadata = new Dictionary<string, MetaBlockData>();
+            details.v = migrationService.GetLatestVersion();
+            details.wallet = land.owner;
+            details.properties = land.properties;
+            return details;
+        }
+
+        public IEnumerator GetOrCreate(List<Land> lands, Action<Dictionary<long, LandDetails>> consumer, Action failure)
         {
             if (lands == null) yield break;
 
@@ -28,7 +38,7 @@ namespace src.Service
             {
                 if (land.ipfsKey == null)
                 {
-                    result[land.id] = null;
+                    result[land.id] = Create(land);
                     return null;
                 }
 
@@ -38,12 +48,6 @@ namespace src.Service
             foreach (var enumerator in enums)
                 yield return enumerator;
 
-            // land.properties = details.properties;
-            // if (details.metadata != null)
-            //     ReadMetadata(land, details, metaBlocks);
-            // if (details.changes != null)
-            //     ReadChanges(land, details, changes);
-            
             consumer.Invoke(result);
         }
 

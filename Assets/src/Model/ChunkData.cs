@@ -34,20 +34,25 @@ namespace src.Model
                 : null;
         }
 
-        public void AddAll(ChunkData data)
+        public void ApplyChanges(ChunkData changes)
         {
-            if (data.blocks != null)
+            if (changes.blocks != null)
             {
                 blocks ??= new Dictionary<Vector3Int, uint>();
-                foreach (var entry in data.blocks)
+                foreach (var entry in changes.blocks)
                     blocks.Add(entry.Key, entry.Value);
             }
 
-            if (data.metaBlocks != null)
+            if (changes.metaBlocks != null)
             {
                 metaBlocks ??= new Dictionary<Vector3Int, MetaBlock>();
-                foreach (var entry in data.metaBlocks)
-                    metaBlocks.Add(entry.Key, entry.Value);
+                foreach (var entry in changes.metaBlocks)
+                {
+                    if (entry.Value == MetaBlock.DELETED_METABLOCK)
+                        metaBlocks.Remove(entry.Key);
+                    else
+                        metaBlocks.Add(entry.Key, entry.Value);
+                }
             }
         }
 
@@ -55,7 +60,7 @@ namespace src.Model
         public ChunkData Clone()
         {
             var clone = new ChunkData(position, null, null);
-            clone.AddAll(this);
+            clone.ApplyChanges(this);
             return clone;
         }
     }

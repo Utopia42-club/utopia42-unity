@@ -9,6 +9,8 @@ namespace src.MetaBlocks
 {
     public class MetaBlock
     {
+        public static readonly MetaBlock DELETED_METABLOCK = new MetaBlock(null, null, null);
+
         public MetaBlockObject blockObject { private set; get; }
         public readonly Land land;
         public readonly MetaBlockType type;
@@ -23,7 +25,7 @@ namespace src.MetaBlocks
 
         public void RenderAt(Transform parent, Vector3Int position, Chunk chunk)
         {
-            if (blockObject != null) throw new System.Exception("Already rendered.");
+            if (blockObject != null) throw new Exception("Already rendered.");
             GameObject go = new GameObject("MetaBlock");
             blockObject = (MetaBlockObject) go.AddComponent(type.componentType);
             go.transform.parent = parent;
@@ -79,7 +81,7 @@ namespace src.MetaBlocks
         public void Destroy(bool immediate = true)
         {
             if (blockObject == null) return;
-            if(immediate)
+            if (immediate)
                 Object.DestroyImmediate(blockObject.gameObject);
             else
                 Object.Destroy(blockObject.gameObject);

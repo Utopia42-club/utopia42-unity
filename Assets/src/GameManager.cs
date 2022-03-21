@@ -300,21 +300,60 @@ namespace src
 
         public void Save()
         {
+            StartCoroutine(DoSave());
+        }
+        private IEnumerator DoSave()
+        {
+            var openFailureDialog = new Action(() =>
+            {
+                var dialog = OpenDialog();
+                dialog
+                    .WithTitle("Failed to save your lands!")
+                    .WithAction("Retry", () => Save())
+                    .WithAction("OK", () => CloseDialog(dialog));
+            });
+
+
             var lands = Player.INSTANCE.GetOwnedLands();
-            if (lands == null || lands.Count == 0) return;
+            if (lands == null || lands.Count == 0) yield break;
             var wallet = Settings.WalletId();
             var service = WorldService.INSTANCE;
-            if (!service.HasChange()) return;
-            //
-            // var worldChanges = service.GetLandsChanges(wallet, lands);
-            // SetState(State.LOADING);
-            // Loading.INSTANCE.UpdateText("Saving Changes To Files...");
-            // StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, result =>
-            // {
-            //     //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
-            //     BrowserConnector.INSTANCE.Save(result, () => StartCoroutine(ReloadOwnerLands()),
-            //         () => SetState(State.PLAYING));
-            // }));
+            if (!service.HasChange()) yield break;
+            SetState(State.LOADING);
+            Loading.INSTANCE.UpdateText("Preparing your changes...");
+
+            Dictionary<long, LandDetails> worldChanges = null;
+            yield return service.GetLandsChanges(wallet, lands, changes => worldChanges = changes,
+                () => worldChanges = null);
+
+            if (worldChanges == null)
+            {
+                openFailureDialog();
+                yield break;
+            }
+
+            Loading.INSTANCE.UpdateText("Saving data on IPFS...");
+
+            var done = 0;
+            var hashes = new Dictionary<long, string>();
+            var failed = false;
+            foreach (var changeEntry in worldChanges)
+            {
+                yield return LandDetailsService.INSTANCE.Save(changeEntry.Value, h => hashes[changeEntry.Key] = h,
+                    () => failed = true);
+                if (failed)
+                {
+                    openFailureDialog();
+                    yield break;
+                }
+
+                done++;
+                Loading.INSTANCE.UpdateText($"Saving data on IPFS...\n {done}/{worldChanges.Count}");
+            }
+
+            //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
+            BrowserConnector.INSTANCE.Save(hashes, () => StartCoroutine(ReloadOwnerLands()),
+                () => SetState(State.PLAYING));
         }
 
         public void Buy(List<Land> lands)
