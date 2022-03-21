@@ -70,16 +70,21 @@ namespace src
             chunkObject.transform.position = position;
             chunkObject.name = "Chunck " + coordinate;
 
-            WorldService.INSTANCE.FillChunk(coordinate, voxels, () =>
+            ChunkInitializer.InitializeChunk(coordinate, voxels);
+            WorldService.INSTANCE.GetChunkData(coordinate, (data) =>
             {
-                WorldService.INSTANCE.GetMetaBlocksForChunk(coordinate, mb =>
-                {
-                    metaBlocks = mb;
-                    DrawVoxels();
-                    DrawMetaBlocks();
-                    inited = true;
-                    done.Invoke();
-                });
+                if (data?.blocks != null)
+                    foreach (var change in data.blocks)
+                    {
+                        var voxel = change.Key;
+                        voxels[voxel.x, voxel.y, voxel.z] = change.Value;
+                    }
+
+                metaBlocks = data?.metaBlocks ?? new Dictionary<Vector3Int, MetaBlock>();
+                DrawVoxels();
+                DrawMetaBlocks();
+                inited = true;
+                done.Invoke();
             });
             return true;
         }
@@ -330,8 +335,8 @@ namespace src
 
         public void PutMeta(VoxelPosition pos, MetaBlockType type, Land land)
         {
-            metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type, land);
-            metaBlocks[pos.local].RenderAt(chunkObject.transform, pos.local, this);
+            var block = metaBlocks[pos.local] = WorldService.INSTANCE.AddMetaBlock(pos, type, land);
+            block.RenderAt(chunkObject.transform, pos.local, this);
         }
 
         public void DeleteMeta(VoxelPosition pos)

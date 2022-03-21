@@ -45,7 +45,7 @@ namespace src.Service
         }
 
 
-        internal static IEnumerator Post<B, R>(string url, B body, Action<R> success, Action failure)
+        internal static IEnumerator Post<TB, TR>(string url, TB body, Action<TR> success, Action failure)
         {
             using (var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
             {
@@ -55,14 +55,22 @@ namespace src.Service
             }
         }
 
-
-        internal static IEnumerator ExecuteRequest<B, T>(UnityWebRequest webRequest, B body, Action<T> success,
+        internal static IEnumerator Get<TR>(string url, Action<TR> success, Action failure)
+        {
+            using (var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbGET))
+            {
+                webRequest.SetRequestHeader("Accept", "*/*");
+                yield return ExecuteRequest(webRequest, success, failure);
+            }
+        }
+        
+        internal static IEnumerator ExecuteRequest<TB, TR>(UnityWebRequest webRequest, TB body, Action<TR> success,
             Action failure)
         {
-            yield return ExecuteRequest(webRequest, body, () => success(ReadResponse<T>(webRequest)), failure);
+            yield return ExecuteRequest(webRequest, body, () => success(ReadResponse<TR>(webRequest)), failure);
         }
 
-        internal static IEnumerator ExecuteRequest<B>(UnityWebRequest webRequest, B body, Action success,
+        internal static IEnumerator ExecuteRequest<TB>(UnityWebRequest webRequest, TB body, Action success,
             Action failure)
         {
             var settings = new JsonSerializerSettings();
@@ -74,9 +82,9 @@ namespace src.Service
             yield return ExecuteRequest(webRequest, success, failure);
         }
 
-        internal static IEnumerator ExecuteRequest<T>(UnityWebRequest webRequest, Action<T> consumer, Action failed)
+        internal static IEnumerator ExecuteRequest<TR>(UnityWebRequest webRequest, Action<TR> consumer, Action failed)
         {
-            yield return ExecuteRequest(webRequest, () => consumer(ReadResponse<T>(webRequest)), failed);
+            yield return ExecuteRequest(webRequest, () => consumer(ReadResponse<TR>(webRequest)), failed);
         }
 
 

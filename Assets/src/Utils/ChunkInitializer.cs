@@ -13,6 +13,12 @@ namespace src.Utils
         private static readonly uint DARK_GRASS = Blocks.GetBlockType("dark_grass").id;
         private static readonly uint DIRT = Blocks.GetBlockType("dirt").id;
 
+
+        public static bool IsDefaultSolidAt(VoxelPosition vp)
+        {
+            return vp.chunk.y <= 0;
+        }
+        
         public static void InitializeChunk(Vector3Int position, uint[,,] voxels)
         {
             if (position.y == 0)

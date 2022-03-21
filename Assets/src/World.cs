@@ -236,7 +236,7 @@ namespace src
             else
             {
                 DestroyGarbageChunkIfExists(vp.chunk);
-                WorldService.INSTANCE.AddMetaBlock(vp, type, ownerLand)[vp.local].SetProps(props, ownerLand);
+                WorldService.INSTANCE.AddMetaBlock(vp, type, ownerLand).SetProps(props, ownerLand);
             }
 
             return true;

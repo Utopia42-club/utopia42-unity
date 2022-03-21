@@ -171,7 +171,7 @@ namespace src
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Positioning the player...");
             yield return FindStartingY(pos, result => pos = result);
-            
+
             Player.INSTANCE.transform.position = pos;
             yield return InitWorld(pos, clean);
         }
@@ -188,8 +188,14 @@ namespace src
                 bool coll = false;
                 for (int i = -1; i < 3; i++)
                 {
-                    // yield return service.IsSolid(new VoxelPosition(feet + Vector3Int.up * i), result => coll = result);
-                    coll =  service.IsSolidIfLoaded(new VoxelPosition(feet + Vector3Int.up * i));
+                    var loaded = false;
+                    service.IsSolid(new VoxelPosition(feet + Vector3Int.up * i), s =>
+                    {
+                        coll = s;
+                        loaded = true;
+                    });
+                    if (!loaded)
+                        yield return new WaitUntil(() => loaded);
                     if (coll)
                     {
                         feet += Vector3Int.up * Math.Max(1, i + 2);
@@ -202,6 +208,7 @@ namespace src
                     consumer.Invoke(feet);
                     yield break;
                 }
+
                 todo--;
                 if (todo == 0)
                 {
@@ -298,16 +305,16 @@ namespace src
             var wallet = Settings.WalletId();
             var service = WorldService.INSTANCE;
             if (!service.HasChange()) return;
-
-            var worldChanges = service.GetLandsChanges(wallet, lands);
-            SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Saving Changes To Files...");
-            StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, result =>
-            {
-                //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
-                BrowserConnector.INSTANCE.Save(result, () => StartCoroutine(ReloadOwnerLands()),
-                    () => SetState(State.PLAYING));
-            }));
+            //
+            // var worldChanges = service.GetLandsChanges(wallet, lands);
+            // SetState(State.LOADING);
+            // Loading.INSTANCE.UpdateText("Saving Changes To Files...");
+            // StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, result =>
+            // {
+            //     //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
+            //     BrowserConnector.INSTANCE.Save(result, () => StartCoroutine(ReloadOwnerLands()),
+            //         () => SetState(State.PLAYING));
+            // }));
         }
 
         public void Buy(List<Land> lands)
@@ -335,7 +342,7 @@ namespace src
                     //         ms.WriteTo(fs);
                     //     }
                     // }
-                    StartCoroutine(IpfsClient.INSATANCE.UploadScreenShot(screenshot,
+                    StartCoroutine(IpfsClient.INSATANCE.UploadImage(screenshot,
                         ipfsKey => SetLandMetadata(ipfsKey, land.id), () =>
                         {
                             var dialog = INSTANCE.OpenDialog();
