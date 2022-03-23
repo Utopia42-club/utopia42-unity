@@ -44,18 +44,37 @@ namespace src.Service
 
         private void Load(Vector3Int start, Action<SliceData> consumer)
         {
-            Debug.Log("Loading at: " + start);
-            var e = loadingSlices[start] = new UnityEvent<SliceData>();
+            if (!loadingSlices.TryGetValue(start, out var e))
+                e = loadingSlices[start] = new UnityEvent<SliceData>();
             e.AddListener(consumer.Invoke);
 
+            World.INSTANCE.StartCoroutine(DoLoad(new SerializableVector3Int(start)));
+        }
+
+        private IEnumerator DoLoad(SerializableVector3Int start)
+        {
             string url = Constants.ApiURL + "/world/slice";
-            var slice = new WorldSlice
+            bool success = false;
+            var timeout = 0.2f;
+            while (!success)
             {
-                startCoordinate = new SerializableVector3Int(start),
-                endCoordinate = new SerializableVector3Int(start + SLICE_SIZE)
-            };
-            World.INSTANCE.StartCoroutine(RestClient.Post<WorldSlice, WorldSlice>(url, slice, OnLoad,
-                () => { Debug.LogError("Failed!"); }));
+                yield return RestClient.Post<SerializableVector3Int, WorldSlice>
+                (url, start, slice =>
+                {
+                    success = true;
+                    OnLoad(slice);
+                }, () =>
+                {
+                    Debug.LogError("Failed to load slice at: " + start);
+                    success = false;
+                });
+                if (!success)
+                {
+                    Debug.Log($"Scheduling reload until {timeout} seconds, for slice at ({start})");
+                    yield return new WaitForSeconds(timeout);
+                    timeout *= 2;
+                }
+            }
         }
 
         private void OnLoad(WorldSlice slice)

@@ -40,7 +40,7 @@ namespace src.Model
             {
                 blocks ??= new Dictionary<Vector3Int, uint>();
                 foreach (var entry in changes.blocks)
-                    blocks.Add(entry.Key, entry.Value);
+                    blocks[entry.Key] = entry.Value;
             }
 
             if (changes.metaBlocks != null)
@@ -51,7 +51,7 @@ namespace src.Model
                     if (entry.Value == MetaBlock.DELETED_METABLOCK)
                         metaBlocks.Remove(entry.Key);
                     else
-                        metaBlocks.Add(entry.Key, entry.Value);
+                        metaBlocks[entry.Key] = entry.Value;
                 }
             }
         }

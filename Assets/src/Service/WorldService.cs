@@ -118,12 +118,17 @@ namespace src.Service
                 candidateLands = candidateLands.FindAll(l => detailsMap.ContainsKey(l.id));
                 if (candidateLands.Count == 0) continue;
 
-                var findDetails = new Func<Vector3Int, Tuple<LandDetails, long>>(changePos =>
+                var findDetails = new Func<Vector3Int, Tuple<LandDetails, string>>(changePos =>
                 {
                     var pos = VoxelPosition.ToWorld(changeEntry.Key, changePos);
                     var land = candidateLands.Find(l => l.Contains(pos));
                     if (land != null && detailsMap.TryGetValue(land.id, out var details))
-                        return new Tuple<LandDetails, long>(details, land.id);
+                    {
+                        pos -= land.startCoordinate.ToVector3();
+                        var key = LandDetails.FormatKey(pos);
+                        return new Tuple<LandDetails, string>(details, key);
+                    }
+
                     return null;
                 });
 
@@ -133,7 +138,7 @@ namespace src.Service
                         var dt = findDetails(blockEntry.Key);
                         if (dt != null)
                         {
-                            dt.Item1.changes[LandDetails.FormatKey(blockEntry.Key)] =
+                            dt.Item1.changes[dt.Item2] =
                                 new Block {name = Blocks.GetBlockType(blockEntry.Value).name};
                         }
                     }
@@ -147,18 +152,15 @@ namespace src.Service
                         if (metaBlockType != null && metaBlockType.inMemory)
                             continue;
 
-
-                        var props = metaBlock.GetProps();
                         var dt = findDetails(blockEntry.Key);
+                        var props = metaBlock.GetProps();
                         if (dt != null)
                         {
                             if (metaBlockType == null || metaBlock == MetaBlock.DELETED_METABLOCK || props == null)
-                            {
-                                dt.Item1.metadata.Remove(LandDetails.FormatKey(blockEntry.Key));
-                            }
+                                dt.Item1.metadata.Remove(dt.Item2);
                             else
                             {
-                                dt.Item1.metadata[LandDetails.FormatKey(blockEntry.Key)] = new MetaBlockData
+                                dt.Item1.metadata[dt.Item2] = new MetaBlockData
                                 {
                                     properties = JsonConvert.SerializeObject(props),
                                     type = metaBlockType.name
@@ -219,11 +221,11 @@ namespace src.Service
             changedLands.Add(land);
         }
 
-        public void OnMetaRemoved(MetaBlock block, Vector3Int position)
+        public void OnMetaRemoved(MetaBlock block, VoxelPosition position)
         {
             if (block.type is MarkerBlockType)
-                markerBlocks.Remove(position);
-            AddMetaBlock(new VoxelPosition(position), null, block.land);
+                markerBlocks.Remove(position.ToWorld());
+            AddMetaBlock(position, null, block.land);
         }
 
         public MetaBlock AddMetaBlock(VoxelPosition pos, MetaBlockType type, Land land)
@@ -239,6 +241,7 @@ namespace src.Service
             var block = chunkChanges.metaBlocks[pos.local] =
                 type == null ? MetaBlock.DELETED_METABLOCK : type.Instantiate(land, "");
 
+            Debug.Log(block.type);
             if (type is MarkerBlockType)
                 markerBlocks.Add(pos.ToWorld(), block);
 
