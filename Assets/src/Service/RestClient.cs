@@ -20,15 +20,16 @@ namespace src.Service
 
         public IEnumerator LoadNetworks(Action<EthNetwork[]> consumer, Action failed)
         {
-            using (UnityWebRequest webRequest = UnityWebRequest.Get(Constants.NetsURL))
+            using (var webRequest = UnityWebRequest.Get(Constants.NetsURL))
             {
                 yield return ExecuteRequest(webRequest, consumer, failed);
             }
         }
-
+        
         public IEnumerator GetProfile(string walletId, Action<Profile> consumer, Action failed)
         {
             string url = Constants.ApiURL + "/profile";
+            yield return (url, walletId, consumer, failed);
             using (UnityWebRequest webRequest = UnityWebRequest.Post(url, walletId))
             {
                 webRequest.SetRequestHeader("Content-Type", "application/json");
@@ -37,42 +38,40 @@ namespace src.Service
             }
         }
         
-        public IEnumerator GetWorldSlice(SerializableVector3Int start, SerializableVector3Int end,
-            Action<WorldSlice> consumer, Action failed)
-        {
-            string url = Constants.ApiURL + "/world/slice";
-            var world = new WorldSlice();
-            world.startCoordinate = start;
-            world.endCoordinate = end;
-            using (UnityWebRequest webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
-            {
-                webRequest.SetRequestHeader("Content-Type", "application/json");
-                webRequest.SetRequestHeader("Accept", "*/*");
-                yield return ExecuteRequest(webRequest, world, consumer, failed);
-            }
-        }
-
-
         public IEnumerator SetLandMetadata(LandMetadata landMetadata, Action success, Action failed)
         {
             string url = Constants.ApiURL + "/land-metadata/set";
-            using (UnityWebRequest webRequest = new UnityWebRequest(url, "POST"))
+            yield return (url, landMetadata, success, failed);
+        }
+
+
+        internal static IEnumerator Post<TB, TR>(string url, TB body, Action<TR> success, Action failure)
+        {
+            using (var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
             {
                 webRequest.SetRequestHeader("Content-Type", "application/json");
                 webRequest.SetRequestHeader("Accept", "*/*");
-                yield return ExecuteRequest(webRequest, landMetadata, success, failed);
+                yield return ExecuteRequest(webRequest, body, success, failure);
             }
         }
 
-
-        private static IEnumerator ExecuteRequest<B, T>(UnityWebRequest webRequest, B body, Action<T> consumer,
-            Action failed)
+        internal static IEnumerator Get<TR>(string url, Action<TR> success, Action failure)
         {
-            yield return ExecuteRequest(webRequest, body, () => consumer(ReadResponse<T>(webRequest)), failed);
+            using (var webRequest = UnityWebRequest.Get(url))
+            {
+                webRequest.SetRequestHeader("Accept", "*/*");
+                yield return ExecuteRequest(webRequest, success, failure);
+            }
+        }
+        
+        internal static IEnumerator ExecuteRequest<TB, TR>(UnityWebRequest webRequest, TB body, Action<TR> success,
+            Action failure)
+        {
+            yield return ExecuteRequest(webRequest, body, () => success(ReadResponse<TR>(webRequest)), failure);
         }
 
-        private static IEnumerator ExecuteRequest<B>(UnityWebRequest webRequest, B body, Action success,
-            Action failed)
+        internal static IEnumerator ExecuteRequest<TB>(UnityWebRequest webRequest, TB body, Action success,
+            Action failure)
         {
             var settings = new JsonSerializerSettings();
             settings.NullValueHandling = NullValueHandling.Ignore;
@@ -80,16 +79,16 @@ namespace src.Service
             var bodyRaw = Encoding.UTF8.GetBytes(data);
             webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
             webRequest.downloadHandler = new DownloadHandlerBuffer();
-            yield return ExecuteRequest(webRequest, success, failed);
+            yield return ExecuteRequest(webRequest, success, failure);
         }
 
-        private static IEnumerator ExecuteRequest<T>(UnityWebRequest webRequest, Action<T> consumer, Action failed)
+        internal static IEnumerator ExecuteRequest<TR>(UnityWebRequest webRequest, Action<TR> consumer, Action failed)
         {
-            yield return ExecuteRequest(webRequest, () => consumer(ReadResponse<T>(webRequest)), failed);
+            yield return ExecuteRequest(webRequest, () => consumer(ReadResponse<TR>(webRequest)), failed);
         }
 
 
-        private static IEnumerator ExecuteRequest(UnityWebRequest webRequest, Action success, Action failed)
+        internal static IEnumerator ExecuteRequest(UnityWebRequest webRequest, Action success, Action failed)
         {
             yield return webRequest.SendWebRequest();
 

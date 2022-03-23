@@ -22,6 +22,6 @@ namespace src.Model
         /**
          * chunk position string value ['x_y_z'] -> local [to chunk] position -> MetaBlock
          */
-        public Dictionary<String, Dictionary<String, MetaBlocks.MetaBlock>> metaBlocks;
+        public Dictionary<String, Dictionary<String, MetaBlockData>> metaBlocks;
     }
 }

@@ -117,19 +117,19 @@ namespace src
 
             if (startingPosition == null)
             {
-                pos = new Vector3(0, Chunk.CHUNK_HEIGHT + 10, 0);
+                var chunkSize = Chunk.CHUNK_SIZE;
+                pos = new Vector3(0, chunkSize.y + 10, 0);
                 var lands = player.GetOwnedLands();
                 if (lands.Count > 0)
                 {
                     var land = lands[0];
                     pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
                     pos /= 2;
-                    pos.y = Chunk.CHUNK_HEIGHT + 10;
+                    pos.y = chunkSize.y + 10;
                 }
             }
             else pos = startingPosition.Value;
 
-            pos = FindStartingY(pos);
             StartCoroutine(DoMovePlayerTo(pos, true));
         }
 
@@ -170,20 +170,17 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Positioning the player...");
-            yield return null;
-            pos = FindStartingY(pos);
+            yield return FindStartingY(pos, result => pos = result);
+
             Player.INSTANCE.transform.position = pos;
             yield return InitWorld(pos, clean);
         }
 
-        public Vector3 FindStartingY(Vector3 pos, Func<VoxelPosition, bool> willBeSolid = null)
+        private IEnumerator FindStartingY(Vector3 pos, Action<Vector3> consumer)
         {
             var service = WorldService.INSTANCE;
-            Func<VoxelPosition, bool> isSolid;
-            if (willBeSolid == null)
-                isSolid = voxelPosition => service.IsSolid(voxelPosition);
-            else
-                isSolid = voxelPosition => service.IsSolid(voxelPosition) || willBeSolid(voxelPosition);
+            var checksPerFrame = 100;
+            var todo = checksPerFrame;
 
             var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, 0f, .5f);
             while (true)
@@ -191,14 +188,33 @@ namespace src
                 bool coll = false;
                 for (int i = -1; i < 3; i++)
                 {
-                    if (coll = isSolid(new VoxelPosition(feet + Vector3Int.up * i)))
+                    var loaded = false;
+                    service.IsSolid(new VoxelPosition(feet + Vector3Int.up * i), s =>
+                    {
+                        coll = s;
+                        loaded = true;
+                    });
+                    if (!loaded)
+                        yield return new WaitUntil(() => loaded);
+                    if (coll)
                     {
                         feet += Vector3Int.up * Math.Max(1, i + 2);
                         break;
                     }
                 }
 
-                if (!coll) return feet;
+                if (!coll)
+                {
+                    consumer.Invoke(feet);
+                    yield break;
+                }
+
+                todo--;
+                if (todo == 0)
+                {
+                    yield return null;
+                    todo = checksPerFrame;
+                }
             }
         }
 
@@ -284,21 +300,60 @@ namespace src
 
         public void Save()
         {
+            StartCoroutine(DoSave());
+        }
+        private IEnumerator DoSave()
+        {
+            var openFailureDialog = new Action(() =>
+            {
+                var dialog = OpenDialog();
+                dialog
+                    .WithTitle("Failed to save your lands!")
+                    .WithAction("Retry", () => Save())
+                    .WithAction("OK", () => CloseDialog(dialog));
+            });
+
+
             var lands = Player.INSTANCE.GetOwnedLands();
-            if (lands == null || lands.Count == 0) return;
+            if (lands == null || lands.Count == 0) yield break;
             var wallet = Settings.WalletId();
             var service = WorldService.INSTANCE;
-            if (!service.HasChange()) return;
-
-            var worldChanges = service.GetLandsChanges(wallet, lands);
+            if (!service.HasChange()) yield break;
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Saving Changes To Files...");
-            StartCoroutine(IpfsClient.INSATANCE.Upload(worldChanges, result =>
+            Loading.INSTANCE.UpdateText("Preparing your changes...");
+
+            Dictionary<long, LandDetails> worldChanges = null;
+            yield return service.GetLandsChanges(wallet, lands, changes => worldChanges = changes,
+                () => worldChanges = null);
+
+            if (worldChanges == null)
             {
-                //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
-                BrowserConnector.INSTANCE.Save(result, () => StartCoroutine(ReloadOwnerLands()),
-                    () => SetState(State.PLAYING));
-            }));
+                openFailureDialog();
+                yield break;
+            }
+
+            Loading.INSTANCE.UpdateText("Saving data on IPFS...");
+
+            var done = 0;
+            var hashes = new Dictionary<long, string>();
+            var failed = false;
+            foreach (var changeEntry in worldChanges)
+            {
+                yield return LandDetailsService.INSTANCE.Save(changeEntry.Value, h => hashes[changeEntry.Key] = h,
+                    () => failed = true);
+                if (failed)
+                {
+                    openFailureDialog();
+                    yield break;
+                }
+
+                done++;
+                Loading.INSTANCE.UpdateText($"Saving data on IPFS...\n {done}/{worldChanges.Count}");
+            }
+
+            //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
+            BrowserConnector.INSTANCE.Save(hashes, () => StartCoroutine(ReloadOwnerLands()),
+                () => SetState(State.PLAYING));
         }
 
         public void Buy(List<Land> lands)
@@ -326,7 +381,7 @@ namespace src
                     //         ms.WriteTo(fs);
                     //     }
                     // }
-                    StartCoroutine(IpfsClient.INSATANCE.UploadScreenShot(screenshot,
+                    StartCoroutine(IpfsClient.INSATANCE.UploadImage(screenshot,
                         ipfsKey => SetLandMetadata(ipfsKey, land.id), () =>
                         {
                             var dialog = INSTANCE.OpenDialog();
@@ -440,7 +495,7 @@ namespace src
             Loading.INSTANCE.UpdateText("Reloading Your Lands...");
 
             var failed = false;
-            yield return WorldService.INSTANCE.ReloadLandsFor(Settings.WalletId(), () =>
+            yield return WorldService.INSTANCE.ReloadPlayerLands(() =>
             {
                 failed = true;
                 Loading.INSTANCE.ShowConnectionError();

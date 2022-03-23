@@ -2,120 +2,57 @@
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using src.Model;
-using UnityEngine;
 using UnityEngine.Networking;
 
 namespace src.Service
 {
-    public class IpfsClient
+    internal class IpfsClient
     {
         private static readonly string SERVER_URL = "https://utopia42.club/api/v0";
 
-        public static IpfsClient INSATANCE = new IpfsClient();
+        internal static IpfsClient INSATANCE = new IpfsClient();
 
         private IpfsClient()
         {
         }
 
-        public IEnumerator GetLandDetails(Land land, Action<LandDetails> consumer)
+        public IEnumerator DownloadJson<TR>(string key, Action<TR> onSuccess, Action onFailure)
         {
-            string url = SERVER_URL + "/cat?arg=/ipfs/" + land.ipfsKey;
-            using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
-            {
-                yield return webRequest.SendWebRequest();
+            string url = SERVER_URL + "/cat?arg=/ipfs/" + key;
+            yield return RestClient.Get(url, onSuccess, onFailure);
+        }
 
-                switch (webRequest.result)
-                {
-                    case UnityWebRequest.Result.ConnectionError:
-                    case UnityWebRequest.Result.DataProcessingError:
-                        Debug.LogError(string.Format("Get for {0} caused Error: {1}", url, webRequest.error));
-                        break;
-                    case UnityWebRequest.Result.ProtocolError:
-                        Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
-                        break;
-                    case UnityWebRequest.Result.Success:
-                        var details = JsonConvert.DeserializeObject<LandDetails>(webRequest.downloadHandler.text);
-                        consumer.Invoke(details);
-                        break;
-                }
+        public IEnumerator UploadJson<TB>(TB body, Action<string> onSuccess, Action onFailure)
+        {
+            var form = new List<IMultipartFormSection>
+                {new MultipartFormDataSection("file", JsonConvert.SerializeObject(body))};
+            yield return Upload(form, onSuccess, onFailure);
+        }
+
+        public IEnumerator UploadImage(byte[] image, Action<string> onSuccess, Action onFailure)
+        {
+            var form = new List<IMultipartFormSection> {new MultipartFormDataSection("image", image, "image/png")};
+            yield return Upload(form, onSuccess, onFailure);
+        }
+
+        private static IEnumerator Upload(List<IMultipartFormSection> form, Action<string> onSuccess,
+            Action onFailure)
+        {
+            var url = SERVER_URL + "/add?stream-channels=true&progress=false";
+            using (var webRequest = UnityWebRequest.Post(url, form))
+            {
+                yield return  RestClient.ExecuteRequest<IpfsResponse>(webRequest,
+                    ipfsResponse => onSuccess.Invoke(ipfsResponse.hash),
+                    onFailure);
             }
         }
 
-        public IEnumerator Upload(Dictionary<long, LandDetails> details, Action<Dictionary<long, string>> success)
+        [Serializable]
+        class IpfsResponse
         {
-            var newIpfsKeys = new Dictionary<long, string>();
-            string url = SERVER_URL + "/add?stream-channels=true&progress=false";
-            foreach (var entry in details)
-            {
-                string data = JsonConvert.SerializeObject(entry.Value);
-                var form = new List<IMultipartFormSection>();
-                form.Add(new MultipartFormDataSection("file", data));
-                using (UnityWebRequest webRequest = UnityWebRequest.Post(url, form))
-                {
-                    yield return webRequest.SendWebRequest();
-
-                    switch (webRequest.result) //FIXME add proper error handling
-                    {
-                        case UnityWebRequest.Result.ConnectionError:
-                        case UnityWebRequest.Result.DataProcessingError:
-                            Debug.LogError(
-                                string.Format("Posing data for {0} caused Error: {1}", url, webRequest.error));
-                            //result.Add(detail.region.ipfsKey);
-                            break;
-                        case UnityWebRequest.Result.ProtocolError:
-                            Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
-                            //result.Add(detail.region.ipfsKey);
-                            break;
-                        case UnityWebRequest.Result.Success:
-                            var response = JsonConvert.DeserializeObject<IpfsResponse>(webRequest.downloadHandler.text);
-                            newIpfsKeys[entry.Key] = response.hash;
-                            break;
-                    }
-                }
-            }
-
-            success.Invoke(newIpfsKeys);
-            yield break;
+            public string name;
+            public string hash;
+            public string size;
         }
-
-        public IEnumerator UploadScreenShot(byte[] screenshot, Action<string> consumer, Action failed)
-        {
-            var result = new Dictionary<long, string>();
-            string url = SERVER_URL + "/add?stream-channels=true&progress=false";
-
-            var form = new List<IMultipartFormSection>();
-            form.Add(new MultipartFormDataSection("image", screenshot, "image/png"));
-
-            using (UnityWebRequest webRequest = UnityWebRequest.Post(url, form))
-            {
-                yield return webRequest.SendWebRequest();
-
-                switch (webRequest.result) //FIXME add proper error handling
-                {
-                    case UnityWebRequest.Result.ConnectionError:
-                    case UnityWebRequest.Result.DataProcessingError:
-                        Debug.LogError(string.Format("Posing data for {0} caused Error: {1}", url, webRequest.error));
-                        failed.Invoke();
-                        break;
-                    case UnityWebRequest.Result.ProtocolError:
-                        Debug.LogError(string.Format("Get for {0} caused HTTP Error: {1}", url, webRequest.error));
-                        failed.Invoke();
-                        break;
-                    case UnityWebRequest.Result.Success:
-                        var response = JsonConvert.DeserializeObject<IpfsResponse>(webRequest.downloadHandler.text);
-                        consumer.Invoke(response.hash);
-                        break;
-                }
-            }
-        }
-    }
-
-    [Serializable]
-    class IpfsResponse
-    {
-        public string name;
-        public string hash;
-        public string size;
     }
 }

@@ -13,13 +13,12 @@ namespace src
         public Material material;
 
         //TODO take care of size/time limit
-        //Diactivated chunks are added to this collection for possible future reuse
+        //Deactivated chunks are added to this collection for possible future reuse
         private Dictionary<Vector3Int, Chunk> garbageChunks = new Dictionary<Vector3Int, Chunk>();
         private readonly Dictionary<Vector3Int, Chunk> chunks = new Dictionary<Vector3Int, Chunk>();
 
-        //TODO check volatile documentation use sth like lock or semaphore
-        private volatile bool creatingChunks = false;
-        private HashSet<Chunk> chunkRequests = new HashSet<Chunk>();
+        private bool creatingChunks = false;
+        private List<Chunk> chunkRequests = new List<Chunk>();
 
         public GameObject debugScreen;
         public GameObject inventory;
@@ -45,10 +44,8 @@ namespace src
 
         private Chunk PopRequest()
         {
-            var iter = chunkRequests.GetEnumerator();
-            iter.MoveNext();
-            var chunk = iter.Current;
-            chunkRequests.Remove(chunk);
+            var chunk = chunkRequests[0];
+            chunkRequests.RemoveAt(0);
             return chunk;
         }
 
@@ -110,18 +107,21 @@ namespace src
         IEnumerator CreateChunks(int chunksPerFrame)
         {
             // creatingChunks = true;
-            int todo = chunksPerFrame;
+            int start = chunksPerFrame;
+            var initing = new List<Chunk>();
             while (chunkRequests.Count != 0)
             {
                 var chunk = PopRequest();
-                if (chunk.IsActive() && !chunk.IsInited())
+                if (chunk.IsActive() && !chunk.IsInitStarted())
                 {
-                    chunk.Init();
-                    todo--;
-                    if (todo <= 0)
+                    initing.Add(chunk);
+                    if (!chunk.Init(() => initing.Remove(chunk)))
+                        initing.Remove(chunk);
+                    start--;
+                    if (start <= 0)
                     {
-                        todo = chunksPerFrame;
-                        yield return null;
+                        start = chunksPerFrame;
+                        yield return new WaitUntil(() => initing.Count == 0);
                     }
                 }
             }
@@ -163,7 +163,7 @@ namespace src
                             }
                         }
 
-                        if (!chunk.IsInited()) chunkRequests.Add(chunk);
+                        if (!chunk.IsInitStarted()) chunkRequests.Add(chunk);
                         unseens.Remove(key);
                     }
                 }
@@ -180,7 +180,7 @@ namespace src
                 }
 
                 ch.SetActive(false);
-                if (ch.IsInited())
+                if (ch.IsInitStarted())
                     garbageChunks[key] = ch;
             }
 
@@ -206,11 +206,11 @@ namespace src
 
         public Chunk GetChunkIfInited(Vector3Int chunkPos)
         {
-            if (chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInited() && chunk.IsActive())
+            if (chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInitialized() && chunk.IsActive())
                 return chunk;
             return null;
         }
-        
+
         public void PutBlock(VoxelPosition vp, BlockType type)
         {
             var chunk = GetChunkIfInited(vp.chunk);
@@ -224,7 +224,7 @@ namespace src
         public bool PutMetaWithProps(VoxelPosition vp, MetaBlockType type, object props, Land ownerLand = null)
         {
             var pos = vp.ToWorld();
-            if (ownerLand == null && !player.CanEdit(pos, out ownerLand, true) || !WorldService.INSTANCE.IsSolid(vp))
+            if (ownerLand == null && !player.CanEdit(pos, out ownerLand, true) || !WorldService.INSTANCE.IsSolidIfLoaded(vp))
                 return false;
 
             var chunk = GetChunkIfInited(vp.chunk);
@@ -236,7 +236,7 @@ namespace src
             else
             {
                 DestroyGarbageChunkIfExists(vp.chunk);
-                WorldService.INSTANCE.AddMetaBlock(vp, type, ownerLand)[vp.local].SetProps(props, ownerLand);
+                WorldService.INSTANCE.AddMetaBlock(vp, type, ownerLand).SetProps(props, ownerLand);
             }
 
             return true;
@@ -296,13 +296,13 @@ namespace src
                 chunk.DeleteVoxels(chunks[chunk]);
         }
 
-        public bool IsSolidAt(Vector3Int pos)
+        public bool IsSolidIfLoaded(Vector3Int pos)
         {
             var vp = new VoxelPosition(pos);
             Chunk chunk;
-            if (chunks.TryGetValue(vp.chunk, out chunk) && chunk.IsInited())
+            if (chunks.TryGetValue(vp.chunk, out chunk) && chunk.IsInitialized())
                 return chunk.GetBlock(vp.local).isSolid;
-            return WorldService.INSTANCE.IsSolid(vp);
+            return WorldService.INSTANCE.IsSolidIfLoaded(vp);
         }
 
         public static World INSTANCE

@@ -18,7 +18,7 @@ namespace src.MetaBlocks
             this.propertiesType = propertiesType;
         }
 
-        public MetaBlock New(Land land, string props)
+        public MetaBlock Instantiate(Land land, string props)
         {
             return new MetaBlock(this, land,
                 (props == null || props.Length == 0) ? null : DeserializeProps(props));

@@ -13,7 +13,7 @@ namespace src.Model
         public Dictionary<string, Block> changes;
         public LandProperties properties;
 
-        public static Vector3Int PraseKey(string key)
+        public static Vector3Int ParseKey(string key)
         {
             var coords = key.Split('_');
             return new Vector3Int(int.Parse(coords[0]), int.Parse(coords[1]), int.Parse(coords[2]));

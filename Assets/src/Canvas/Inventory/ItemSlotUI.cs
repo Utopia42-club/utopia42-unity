@@ -1,4 +1,3 @@
-using src.Service;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -21,7 +20,7 @@ namespace src.Canvas
             if (itemSlot?.GetStack() != null)
             {
                 var blockId = itemSlot.GetStack().id;
-                slotIcon.sprite = WorldService.INSTANCE.GetBlockType(blockId).GetIcon();
+                slotIcon.sprite = Blocks.GetBlockType(blockId).GetIcon();
 
                 if (ColorBlocks.IsColorTypeId(blockId, out var colorType))
                 {

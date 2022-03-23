@@ -24,7 +24,7 @@ namespace src.Canvas
         {
             var manager = GameManager.INSTANCE;
 
-            foreach (var blockType in WorldService.INSTANCE.GetBlockTypes())
+            foreach (var blockType in Blocks.GetBlockTypes())
             {
                 if (blockType.name == "air")
                     continue;

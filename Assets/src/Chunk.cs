@@ -5,18 +5,19 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
-using MetaBlock = src.MetaBlocks.MetaBlock;
 using Object = UnityEngine.Object;
 
 namespace src
 {
     public class Chunk
     {
-        public static readonly int CHUNK_WIDTH = 16;
-        public static readonly int CHUNK_HEIGHT = 32;
+        /**
+         * Written using expression so no one can change the properties
+         */
+        public static Vector3Int CHUNK_SIZE => new Vector3Int(16, 32, 16);
 
         private Dictionary<Vector3Int, MetaBlock> metaBlocks;
-        private readonly uint[,,] voxels = new uint[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
+        private readonly uint[,,] voxels = new uint[CHUNK_SIZE.x, CHUNK_SIZE.y, CHUNK_SIZE.z];
         private World world;
         public GameObject chunkObject;
 
@@ -25,6 +26,7 @@ namespace src
         public MeshRenderer meshRenderer;
         public MeshFilter meshFilter;
         public MeshCollider meshCollider;
+        private bool initStarted = false;
         private bool inited = false;
         private bool active = true;
 
@@ -32,19 +34,30 @@ namespace src
         {
             this.coordinate = coordinate;
             this.world = world;
-            this.position = new Vector3Int(coordinate.x * CHUNK_WIDTH, coordinate.y * CHUNK_HEIGHT,
-                coordinate.z * CHUNK_WIDTH);
+            position = coordinate;
+            position.Scale(CHUNK_SIZE);
         }
 
-        public bool IsInited()
+        public bool IsInitialized()
         {
-            return inited;
+            return initStarted;
         }
 
-        public void Init()
+        public bool IsInitStarted()
         {
-            if (inited) return;
-            inited = true;
+            return initStarted;
+        }
+
+        /**
+         * returns false if initialization is already started.
+         * If returned true, will call done when initialization ends.
+         */
+        public bool Init(Action done)
+        {
+            if (initStarted)
+                return false;
+
+            initStarted = true;
             chunkObject = new GameObject();
             chunkObject.SetActive(active);
             meshFilter = chunkObject.AddComponent<MeshFilter>();
@@ -57,12 +70,23 @@ namespace src
             chunkObject.transform.position = position;
             chunkObject.name = "Chunck " + coordinate;
 
-            WorldService.INSTANCE.FillChunk(coordinate, voxels);
-            metaBlocks = WorldService.INSTANCE.GetMetaBlocksForChunk(coordinate);
-            DrawVoxels();
-            DrawMetaBlocks();
-            //var block = new ImageBlockTpe(50).New("{front:{height:5, width:5, url:\"https://www.wpbeginner.com/wp-content/uploads/2020/03/ultimate-small-business-resource-180x180.png\"}}");
-            //block.RenderAt(chunkObject.transform, position+new Vector3Int(0, 32, 0));
+            ChunkInitializer.InitializeChunk(coordinate, voxels);
+            WorldService.INSTANCE.GetChunkData(coordinate, (data) =>
+            {
+                if (data?.blocks != null)
+                    foreach (var change in data.blocks)
+                    {
+                        var voxel = change.Key;
+                        voxels[voxel.x, voxel.y, voxel.z] = change.Value;
+                    }
+
+                metaBlocks = data?.metaBlocks ?? new Dictionary<Vector3Int, MetaBlock>();
+                DrawVoxels();
+                DrawMetaBlocks();
+                inited = true;
+                done.Invoke();
+            });
+            return true;
         }
 
         private void DrawMetaBlocks()
@@ -92,7 +116,7 @@ namespace src
             for (int y = 0; y < voxels.GetLength(1); y++)
             for (int x = 0; x < voxels.GetLength(0); x++)
             for (int z = 0; z < voxels.GetLength(2); z++)
-                if (WorldService.INSTANCE.GetBlockType(voxels[x, y, z]).isSolid)
+                if (Blocks.GetBlockType(voxels[x, y, z]).isSolid)
                     AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, coloredTriangles, uvs, colors);
         }
 
@@ -109,7 +133,7 @@ namespace src
             if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
                 throw new ArgumentException("Invalid local position: " + localPos);
 
-            return WorldService.INSTANCE.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
+            return Blocks.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
         }
 
         public MetaBlock GetMetaAt(VoxelPosition vp)
@@ -123,10 +147,10 @@ namespace src
             return null;
         }
 
-        private bool IsPositionSolid(Vector3Int localPos)
+        private bool IsPositionSolidIfLoaded(Vector3Int localPos)
         {
             if (!IsVoxelInChunk(localPos.x, localPos.y, localPos.z))
-                return world.IsSolidAt(ToGlobal(localPos));
+                return world.IsSolidIfLoaded(ToGlobal(localPos));
 
             return GetBlock(localPos).isSolid;
         }
@@ -147,7 +171,7 @@ namespace src
             };
 
             var blockId = voxels[pos.x, pos.y, pos.z];
-            var type = WorldService.INSTANCE.GetBlockType(blockId);
+            var type = Blocks.GetBlockType(blockId);
             if (!type.isSolid) return;
 
             var targetTriangles = type.color != null ? coloredTriangles : triangles;
@@ -155,7 +179,7 @@ namespace src
 
             foreach (var face in Voxels.Face.FACES)
             {
-                if (!IsPositionSolid(pos + face.direction))
+                if (!IsPositionSolidIfLoaded(pos + face.direction))
                 {
                     var idx = vertices.Count;
 
@@ -311,15 +335,15 @@ namespace src
 
         public void PutMeta(VoxelPosition pos, MetaBlockType type, Land land)
         {
-            metaBlocks = WorldService.INSTANCE.AddMetaBlock(pos, type, land);
-            metaBlocks[pos.local].RenderAt(chunkObject.transform, pos.local, this);
+            var block = metaBlocks[pos.local] = WorldService.INSTANCE.AddMetaBlock(pos, type, land);
+            block.RenderAt(chunkObject.transform, pos.local, this);
         }
 
         public void DeleteMeta(VoxelPosition pos)
         {
             var block = metaBlocks[pos.local];
             metaBlocks.Remove(pos.local);
-            WorldService.INSTANCE.OnMetaRemoved(block, new VoxelPosition(coordinate, pos.local).ToWorld()); // TODO ?
+            WorldService.INSTANCE.OnMetaRemoved(block, new VoxelPosition(coordinate, pos.local)); // TODO ?
             block.Destroy();
         }
 
@@ -349,7 +373,7 @@ namespace src
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            if ((obj == null) || this.GetType() != obj.GetType())
                 return false;
 
             return coordinate.Equals(((Chunk) obj).coordinate);

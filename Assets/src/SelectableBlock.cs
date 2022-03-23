@@ -95,7 +95,7 @@ namespace src
                 var land = selectableBlocks[pos].Item2;
                 var vp = new VoxelPosition(pos);
                 blocks.Add(vp,
-                    new Tuple<BlockType, Land>(WorldService.INSTANCE.GetBlockType(selectableBlock.blockTypeId), land));
+                    new Tuple<BlockType, Land>(Blocks.GetBlockType(selectableBlock.blockTypeId), land));
                 if (selectableBlock.metaAttached)
                     metas.Add(vp, new Tuple<SelectableBlock, Land>(selectableBlock, land));
             }
@@ -105,7 +105,7 @@ namespace src
             {
                 var (selectableBlock, land) = metas[vp];
                 world.PutMetaWithProps(vp,
-                    (MetaBlockType) WorldService.INSTANCE.GetBlockType(selectableBlock.metaBlockTypeId),
+                    (MetaBlockType) Blocks.GetBlockType(selectableBlock.metaBlockTypeId),
                     selectableBlock.metaProperties, land);
             }
         }

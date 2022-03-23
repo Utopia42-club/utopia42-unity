@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using src.Model;
 using src.Service.Ethereum;
+using src.Utils;
 using UnityEngine;
 
 namespace src.Service
@@ -152,29 +154,52 @@ namespace src.Service
         {
             var lands = new List<Land>();
 
-            var failed = false;
-            yield return EthereumClientService.INSTANCE.GetLands(lands, (() =>
+            bool failed = false;
+            yield return LoadLandsPaginated(Constants.ApiURL + "/world/lands", lands, () =>
             {
-                failed = true;
                 onFailed();
-            }));
+                failed = true;
+            });
             if (failed) yield break;
+
             yield return SetLands(lands);
         }
 
         public IEnumerator ReloadLandsForOwner(string wallet, Action onFailed)
         {
-            List<Land> loaded = new List<Land>();
+            var lands = new List<Land>();
 
-            var failed = false;
-            yield return EthereumClientService.INSTANCE.GetLandsForOwner(wallet,
-                lands => loaded.AddRange(lands), () =>
-                {
-                    failed = true;
-                    onFailed();
-                });
+            bool failed = false;
+            yield return LoadLandsPaginated($"{Constants.ApiURL}/world/owner/{wallet}/lands", lands, () =>
+            {
+                onFailed();
+                failed = true;
+            });
             if (failed) yield break;
-            yield return ReSetOwnerLands(wallet, loaded, onFailed);
+
+            yield return ReSetOwnerLands(wallet, lands, onFailed);
+        }
+
+        private static IEnumerator LoadLandsPaginated(string url, List<Land> lands, Action onFailed)
+        {
+            const int pageSize = 200;
+            url = url + "?pageSize=" + pageSize;
+            var hasNext = true;
+            while (hasNext)
+            {
+                var failed = false;
+                yield return RestClient.Post<Land, List<Land>>(url, lands.Count == 0 ? new Land() : lands.Last(),
+                    response =>
+                    {
+                        lands.AddRange(response);
+                        hasNext = response.Count == pageSize;
+                    }, () =>
+                    {
+                        failed = true;
+                        onFailed();
+                    });
+                if (failed) yield break;
+            }
         }
 
         private IEnumerator ReSetOwnerLands(string wallet, List<Land> lands, Action onFailed)

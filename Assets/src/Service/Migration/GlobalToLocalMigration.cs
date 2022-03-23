@@ -20,7 +20,7 @@ namespace src.Service.Migration
 
             foreach (var change in details.changes)
             {
-                var globalPos = LandDetails.PraseKey(change.Key);
+                var globalPos = LandDetails.ParseKey(change.Key);
                 var local = globalPos - pivot;
                 newChanges[LandDetails.FormatKey(local)] = change.Value;
             }
