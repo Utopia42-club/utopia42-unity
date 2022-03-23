@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Video;
@@ -15,11 +13,6 @@ namespace src
         private bool previewing = true;
         private bool prepared = false;
 
-        private void Start()
-        {
-            //Init(Voxels.Face.FRONT, "https://www.rmp-streaming.com/media/big-buck-bunny-360p.mp4", 2, 2, 10);
-        }
-
         public void Init(MeshRenderer meshRenderer, string url, float prevTime)
         {
             previewing = true;
@@ -27,41 +20,22 @@ namespace src
             loading.Invoke(true);
             this.prevTime = prevTime;
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
-            try
-            {
-                videoPlayer.errorReceived += VideoPlayer_errorReceived;
-                videoPlayer.url = url;
-                videoPlayer.playOnAwake = false;
-                videoPlayer.Pause();
-                videoPlayer.Prepare();
-                videoPlayer.prepareCompleted += PrepareCompeleted;
-                meshRenderer.sharedMaterial.mainTexture = videoPlayer.texture;
-            }
-            catch (Exception e)
-            {
-                videoPlayer.url = null;
-                videoPlayer.prepareCompleted -= PrepareCompeleted;
-                
-                Debug.Log(e.GetType());
-            }
-        }
-        
-        private void VideoPlayer_errorReceived (VideoPlayer source, string message) {
-            videoPlayer.url = null;
-            videoPlayer.prepareCompleted -= PrepareCompeleted;
-            Debug.Log("error rec "+message);
+            videoPlayer.url = url;
+            videoPlayer.playOnAwake = false;
+            videoPlayer.Pause();
+            videoPlayer.Prepare();
+            videoPlayer.prepareCompleted += PrepareCompeleted;
+            meshRenderer.sharedMaterial.mainTexture = videoPlayer.texture;
         }
 
         private void Mute(bool m)
         {
             for (int i = 0; i < videoPlayer.length; i++)
-                videoPlayer.SetDirectAudioMute((ushort)i, m);
+                videoPlayer.SetDirectAudioMute((ushort) i, m);
         }
 
         private void PrepareCompeleted(VideoPlayer vp)
         {
-
-
             //videoPlayer.Pause();
 
             //if (previewing)
@@ -135,6 +109,7 @@ namespace src
                     videoPlayer.time = 0;
                     previewing = false;
                 }
+
                 videoPlayer.Play();
             }
         }
