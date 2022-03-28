@@ -898,7 +898,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Image URL
+  m_Text: Collection Address
 --- !u!1 &3719784475657425363
 GameObject:
   m_ObjectHideFlags: 0
@@ -1040,7 +1040,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Market Url:'
+  m_text: 'Token ID:'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1331,7 +1331,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Image Url:'
+  m_text: 'Collection:'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1533,8 +1533,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23f7f07332a774163a07ef375521fcc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  url: {fileID: 7657837759649625565}
-  marketUrl: {fileID: 2359107057176016713}
+  collection: {fileID: 7657837759649625565}
+  tokenId: {fileID: 2359107057176016713}
   width: {fileID: 6152157871869215317}
   height: {fileID: 3159364123813610586}
   detectCollision: {fileID: 1165017763357538645}
@@ -1630,8 +1630,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23f7f07332a774163a07ef375521fcc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  url: {fileID: 0}
-  marketUrl: {fileID: 0}
+  collection: {fileID: 0}
+  tokenId: {fileID: 0}
   width: {fileID: 0}
   height: {fileID: 0}
   detectCollision: {fileID: 0}
@@ -1713,7 +1713,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Market URL
+  m_Text: Token ID
 --- !u!1 &5087906206490788980
 GameObject:
   m_ObjectHideFlags: 0
@@ -1806,8 +1806,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23f7f07332a774163a07ef375521fcc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  url: {fileID: 0}
-  marketUrl: {fileID: 0}
+  collection: {fileID: 0}
+  tokenId: {fileID: 0}
   width: {fileID: 0}
   height: {fileID: 0}
   detectCollision: {fileID: 0}
@@ -1825,7 +1825,7 @@ GameObject:
   - component: {fileID: 7657837759649625565}
   - component: {fileID: 1852752858053452909}
   m_Layer: 5
-  m_Name: Url
+  m_Name: Collection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1982,7 +1982,7 @@ GameObject:
   - component: {fileID: 2359107057176016713}
   - component: {fileID: 666706188714540770}
   m_Layer: 5
-  m_Name: Url
+  m_Name: Token ID
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

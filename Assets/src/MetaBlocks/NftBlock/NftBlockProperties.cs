@@ -4,7 +4,7 @@ using src.Utils;
 
 namespace src.MetaBlocks.NftBlock
 {
-    [System.Serializable]
+    [Serializable]
     public class NftBlockProperties : ICloneable
     {
         public FaceProps front;
@@ -98,9 +98,13 @@ namespace src.MetaBlocks.NftBlock
         }
 
         [Serializable]
-        public class FaceProps: MediaBlockProperties.FaceProps
+        public class FaceProps
         {
-            public string marketUrl;
+            public string collection;
+            public string tokenId;
+            public int width;
+            public int height;
+            public bool detectCollision = true;
 
             public override bool Equals(object obj)
             {
@@ -108,21 +112,34 @@ namespace src.MetaBlocks.NftBlock
                 if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                     return false;
                 var prop = obj as FaceProps;
-                return Equals(url, prop.url) && Equals(width, prop.width) && Equals(height, prop.height) &&
-                       Equals(detectCollision, prop.detectCollision) && Equals(marketUrl, prop.marketUrl);
+                return Equals(collection, prop.collection) && Equals(tokenId, prop.tokenId) && Equals(width, prop.width) && Equals(height, prop.height) &&
+                       Equals(detectCollision, prop.detectCollision);
             }
 
             public FaceProps Clone()
             {
                 return new FaceProps()
                 {
-                    url = url,
-                    marketUrl = marketUrl,
+                    collection = collection,
+                    tokenId = tokenId,
                     width = width,
                     height = height,
                     detectCollision = detectCollision
                 };
             }
+
+            public MediaBlockProperties.FaceProps ToImageFaceProp(string imageUrl)
+            {
+                return new MediaBlockProperties.FaceProps()
+                {
+                    url = imageUrl,
+                    width = width,
+                    height = height,
+                    detectCollision = detectCollision,
+                };
+            }
+            
+            public string OpenseaUrl => $"https://opensea.io/assets/matic/{collection}/{tokenId}";
         }
     }
 }

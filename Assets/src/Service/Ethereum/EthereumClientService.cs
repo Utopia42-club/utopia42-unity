@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
 using Nethereum.JsonRpc.UnityClient;
-using Nethereum.Web3;
 using src.Model;
 using src.Service.Ethereum.ContractDefinition;
 using Land = src.Model.Land;
@@ -157,6 +156,20 @@ namespace src.Service.Ethereum
                     ids = ids.GetRange(0, (int) (lastId - currentLast));
                 for (var i = 0; i < ids.Count; i++) ids[i] = i + currentLast + 1;
             }
+        }
+
+
+        public IEnumerator GetTokenUri(string collection, string tokenId, Action<string> consumer, Action onFailed)
+        {
+            var request =
+                new QueryUnityRequest<TokenUriFunction, TokenUriOutputDto>(network.provider, collection);
+            yield return request.Query(new TokenUriFunction()
+            {
+                TokenId = BigInteger.Parse(tokenId)
+            }, collection);
+            if (request.Result != null)
+                consumer(request.Result.ReturnValue1);
+            else onFailed();
         }
     }
 }
