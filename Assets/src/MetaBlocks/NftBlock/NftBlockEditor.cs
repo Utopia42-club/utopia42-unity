@@ -15,11 +15,11 @@ namespace src.MetaBlocks.NftBlock
 
         public NftBlockProperties.FaceProps GetValue()
         {
-            if (HasValue(tokenId)) // TODO ?
+            if (HasValue(collection) && HasValue(tokenId))
             {
                 var props = new NftBlockProperties.FaceProps();
                 props.collection = collection.text;
-                props.tokenId = tokenId.text;
+                props.tokenId = long.Parse(tokenId.text);
                 props.width = HasValue(width) ? int.Parse(width.text) : DEFAULT_DIMENSION;
                 props.height = HasValue(height) ? int.Parse(height.text) : DEFAULT_DIMENSION;
                 props.detectCollision = detectCollision.isOn;
@@ -32,7 +32,7 @@ namespace src.MetaBlocks.NftBlock
         public void SetValue(NftBlockProperties.FaceProps value)
         {
             collection.text = value == null ? "" : value.collection;
-            tokenId.text = value == null ? "" : value.tokenId;
+            tokenId.text = value == null ? "" : value.tokenId.ToString();
             width.text = value == null ? DEFAULT_DIMENSION.ToString() : value.width.ToString();
             height.text = value == null ? DEFAULT_DIMENSION.ToString() : value.height.ToString();
             detectCollision.isOn = value == null ? true : value.detectCollision;

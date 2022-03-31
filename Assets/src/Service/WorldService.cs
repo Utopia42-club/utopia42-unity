@@ -70,7 +70,7 @@ namespace src.Service
         public bool IsSolidIfLoaded(VoxelPosition vp)
         {
             if (changes.TryGetValue(vp.chunk, out var chunkChange)
-                && chunkChange.blocks != null && chunkChange.blocks.TryGetValue(vp.chunk, out var block))
+                && chunkChange.blocks != null && chunkChange.blocks.TryGetValue(vp.local, out var block))
                 return Blocks.GetBlockType(block).isSolid;
 
             var type = WorldSliceService.INSTANCE.GetChunkIfLoaded(vp.chunk)?.GetBlockTypeAt(vp.local);
@@ -241,7 +241,7 @@ namespace src.Service
             var block = chunkChanges.metaBlocks[pos.local] =
                 type == null ? MetaBlock.DELETED_METABLOCK : type.Instantiate(land, "");
 
-            Debug.Log(block.type);
+            // Debug.Log(block.type);
             if (type is MarkerBlockType)
                 markerBlocks.Add(pos.ToWorld(), block);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using src.Canvas;
 using src.MetaBlocks.ImageBlock;
 using src.Model;
@@ -68,7 +69,9 @@ namespace src.MetaBlocks.NftBlock
             }
 
             if (stateMsg[face.index] != StateMsg.Ok)
-                lines.Add($"\n{MetaBlockState.ToString(stateMsg[face.index], "image")}");
+                lines.Add(
+                    $"\n{MetaBlockState.ToString(stateMsg[face.index], "image")}");
+
             return lines;
         }
 
@@ -90,13 +93,14 @@ namespace src.MetaBlocks.NftBlock
 
         private void AddFaceProperties(Voxels.Face face, NftBlockProperties.FaceProps props)
         {
-            if (props == null || string.IsNullOrWhiteSpace(props.collection) || string.IsNullOrWhiteSpace(props.tokenId)) return;
+            if (props == null || string.IsNullOrWhiteSpace(props.collection)) return;
+            UpdateStateAndIcon(StateMsg.LoadingMetadata, face);
             StartCoroutine(GetMetadata(props.collection, props.tokenId, md =>
             {
                 metadata.Add(face, md);
                 var imageUrl = string.IsNullOrWhiteSpace(md.image) ? md.imageUrl : md.image;
                 AddFace(face, props.ToImageFaceProp(imageUrl));
-            }, () => { }));
+            }, () => { UpdateStateAndIcon(StateMsg.ConnectionError, face); }));
         }
 
         private void EditProps(Voxels.Face face)
@@ -130,7 +134,7 @@ namespace src.MetaBlocks.NftBlock
             if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
         }
 
-        private IEnumerator GetMetadata(string collection, string tokenId, Action<NftMetadata> onSuccess,
+        private IEnumerator GetMetadata(string collection, long tokenId, Action<NftMetadata> onSuccess,
             Action onFailure)
         {
             string metadataUri = null;
@@ -138,7 +142,7 @@ namespace src.MetaBlocks.NftBlock
                 onFailure);
 
             if (metadataUri == null) yield break;
-            yield return RestClient.Get(metadataUri, onSuccess, onFailure);
+            yield return RestClient.Get(FileService.resolveUrl(metadataUri), onSuccess, onFailure);
         }
     }
 }

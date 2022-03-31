@@ -224,8 +224,7 @@ namespace src
         public bool PutMetaWithProps(VoxelPosition vp, MetaBlockType type, object props, Land ownerLand = null)
         {
             var pos = vp.ToWorld();
-            if (ownerLand == null && !player.CanEdit(pos, out ownerLand, true) ||
-                !WorldService.INSTANCE.IsSolidIfLoaded(vp))
+            if (ownerLand == null && !player.CanEdit(pos, out ownerLand, true) || !IsSolidIfLoaded(vp))
                 return false;
 
             var chunk = GetChunkIfInited(vp.chunk);
@@ -299,7 +298,11 @@ namespace src
 
         public bool IsSolidIfLoaded(Vector3Int pos)
         {
-            var vp = new VoxelPosition(pos);
+            return IsSolidIfLoaded(new VoxelPosition(pos));
+        }
+
+        public bool IsSolidIfLoaded(VoxelPosition vp)
+        {
             Chunk chunk;
             if (chunks.TryGetValue(vp.chunk, out chunk) && chunk.IsInitialized())
                 return chunk.GetBlock(vp.local).isSolid;

@@ -4,15 +4,16 @@ namespace src.MetaBlocks
 {
     public static class MetaBlockState
     {
-        public static string ToString(StateMsg msg, string type)
+        public static string ToString(StateMsg msg, string type = null)
         {
             return msg switch
             {
                 StateMsg.Loading => LoadingMsg(type),
+                StateMsg.LoadingMetadata => LoadingMetadataMsg(),
                 StateMsg.InvalidUrlOrData => InvalidObjUrlOrDataMsg(type),
                 StateMsg.InvalidData => InvalidObjDataMsg(type),
                 StateMsg.OutOfBound => OutOfBoundMsg(type),
-                StateMsg.ConnectionError => ConnectionErrorMsg(type),
+                StateMsg.ConnectionError => ConnectionErrorMsg(),
                 StateMsg.SizeLimit => SizeLimitMsg(type),
                 _ => "" // TODO
             };
@@ -21,6 +22,11 @@ namespace src.MetaBlocks
         private static string LoadingMsg(string type)
         {
             return $"Loading {type} ...";
+        }
+        
+        private static string LoadingMetadataMsg()
+        {
+            return $"Loading metadata ...";
         }
 
         private static string InvalidObjUrlOrDataMsg(string type)
@@ -39,7 +45,7 @@ namespace src.MetaBlocks
                 $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1) : "")} exceeds land boundaries";
         }
 
-        private static string ConnectionErrorMsg(string type)
+        private static string ConnectionErrorMsg()
         {
             return "Connection Error";
         }
@@ -54,6 +60,7 @@ namespace src.MetaBlocks
     public enum StateMsg
     {
         Loading,
+        LoadingMetadata,
         InvalidUrlOrData,
         InvalidData,
         OutOfBound,

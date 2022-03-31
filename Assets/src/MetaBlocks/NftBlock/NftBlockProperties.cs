@@ -101,7 +101,7 @@ namespace src.MetaBlocks.NftBlock
         public class FaceProps
         {
             public string collection;
-            public string tokenId;
+            public long tokenId;
             public int width;
             public int height;
             public bool detectCollision = true;

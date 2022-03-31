@@ -159,13 +159,13 @@ namespace src.Service.Ethereum
         }
 
 
-        public IEnumerator GetTokenUri(string collection, string tokenId, Action<string> consumer, Action onFailed)
+        public IEnumerator GetTokenUri(string collection, BigInteger tokenId, Action<string> consumer, Action onFailed)
         {
             var request =
                 new QueryUnityRequest<TokenUriFunction, TokenUriOutputDto>(network.provider, collection);
             yield return request.Query(new TokenUriFunction()
             {
-                TokenId = BigInteger.Parse(tokenId)
+                TokenId = tokenId
             }, collection);
             if (request.Result != null)
                 consumer(request.Result.ReturnValue1);

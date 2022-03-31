@@ -16,10 +16,14 @@ namespace src.Service
         {
         }
 
+        public static string getUrl(string key)
+        {
+            return SERVER_URL + "/cat?arg=/ipfs/" + key;
+        }
+        
         public IEnumerator DownloadJson<TR>(string key, Action<TR> onSuccess, Action onFailure)
         {
-            string url = SERVER_URL + "/cat?arg=/ipfs/" + key;
-            yield return RestClient.Get(url, onSuccess, onFailure);
+            yield return RestClient.Get(getUrl(key), onSuccess, onFailure);
         }
 
         public IEnumerator UploadJson<TB>(TB body, Action<string> onSuccess, Action onFailure)

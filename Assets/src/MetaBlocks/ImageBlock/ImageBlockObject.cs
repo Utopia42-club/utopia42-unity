@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using src.Canvas;
 using src.Model;
+using src.Service;
 using src.Utils;
 using UnityEngine;
 
@@ -113,7 +114,7 @@ namespace src.MetaBlocks.ImageBlock
                 return;
             }
 
-            imgFace.Init(meshRenderer, props.url, this, face);
+            imgFace.Init(meshRenderer, FileService.resolveUrl(props.url), this, face);
             go.layer = props.detectCollision
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
@@ -129,6 +130,7 @@ namespace src.MetaBlocks.ImageBlock
             {
                 ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines(face));
             }
+
             UpdateIcon(msg);
         }
 
@@ -147,7 +149,7 @@ namespace src.MetaBlocks.ImageBlock
 
         private void UpdateIcon(StateMsg message) // TODO
         {
-            if (message != StateMsg.Loading && message != StateMsg.Ok)
+            if (message != StateMsg.LoadingMetadata && message != StateMsg.Loading && message != StateMsg.Ok)
             {
                 CreateIcon(true);
                 return;
@@ -155,7 +157,7 @@ namespace src.MetaBlocks.ImageBlock
 
             foreach (var msg in stateMsg)
             {
-                if (msg != StateMsg.Loading && msg != StateMsg.Ok)
+                if (message != StateMsg.LoadingMetadata && msg != StateMsg.Loading && msg != StateMsg.Ok)
                 {
                     CreateIcon(true);
                     return;
