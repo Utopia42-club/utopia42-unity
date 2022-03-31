@@ -112,7 +112,8 @@ namespace src.MetaBlocks.NftBlock
                 if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                     return false;
                 var prop = obj as FaceProps;
-                return Equals(collection, prop.collection) && Equals(tokenId, prop.tokenId) && Equals(width, prop.width) && Equals(height, prop.height) &&
+                return Equals(collection, prop.collection) && Equals(tokenId, prop.tokenId) &&
+                       Equals(width, prop.width) && Equals(height, prop.height) &&
                        Equals(detectCollision, prop.detectCollision);
             }
 
@@ -138,8 +139,11 @@ namespace src.MetaBlocks.NftBlock
                     detectCollision = detectCollision,
                 };
             }
-            
-            public string OpenseaUrl => $"https://opensea.io/assets/matic/{collection}/{tokenId}";
+
+            public string GetOpenseaUrl()
+            {
+                return $"https://opensea.io/assets/matic/{collection}/{tokenId}";
+            }
         }
     }
 }

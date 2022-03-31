@@ -56,7 +56,7 @@ namespace src.MetaBlocks.NftBlock
             };
 
             var props = GetBlock().GetProps();
-            var url = (props as NftBlockProperties)?.GetFaceProps(face)?.OpenseaUrl;
+            var url = (props as NftBlockProperties)?.GetFaceProps(face)?.GetOpenseaUrl();
             if (!string.IsNullOrEmpty(url))
                 lines.Add("Press O to open Opensea URL");
 
@@ -130,7 +130,7 @@ namespace src.MetaBlocks.NftBlock
         private void OpenLink(Voxels.Face face)
         {
             var props = GetBlock().GetProps();
-            var url = (props as NftBlockProperties)?.GetFaceProps(face)?.OpenseaUrl;
+            var url = (props as NftBlockProperties)?.GetFaceProps(face)?.GetOpenseaUrl();
             if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
         }
 
