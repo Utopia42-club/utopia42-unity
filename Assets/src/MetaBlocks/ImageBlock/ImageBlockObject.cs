@@ -104,7 +104,7 @@ namespace src.MetaBlocks.ImageBlock
 
             var go = new GameObject();
             go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero + ((Vector3) face.direction) * 0.1f;
+            go.transform.localPosition = Vector3.zero + ((Vector3) face.direction) * 0.2f;
             var imgFace = go.AddComponent<ImageFace>();
             var meshRenderer = imgFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
