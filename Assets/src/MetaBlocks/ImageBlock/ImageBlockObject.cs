@@ -114,7 +114,7 @@ namespace src.MetaBlocks.ImageBlock
                 return;
             }
 
-            imgFace.Init(meshRenderer, FileService.resolveUrl(props.url), this, face);
+            imgFace.Init(meshRenderer, FileService.ResolveUrl(props.url), this, face);
             go.layer = props.detectCollision
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");

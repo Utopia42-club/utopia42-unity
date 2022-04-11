@@ -4,7 +4,7 @@ namespace src.Service
 {
     public static class FileService
     {
-        public static string resolveUrl(string url)
+        public static string ResolveUrl(string url)
         {
             if (!url.StartsWith("ipfs://")) return url;
 

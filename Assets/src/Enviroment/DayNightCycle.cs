@@ -25,17 +25,26 @@ public class DayNightCycle : MonoBehaviour
 
     [Header("Other Lighting")] public AnimationCurve lightingIntensityMultiplier;
     public AnimationCurve reflectionsIntensityMultiplier;
-    
+
     void Start()
     {
         timeRate = 1.0f / fullDayLength;
         time = startTime;
     }
 
+    private float ComputeSpeed()
+    {
+        if (time < rotationOffset)
+            return 10f;
+        if (time > rotationOffset + 0.5f)
+            return 10f;
+        return 1;
+    }
+
     void Update()
     {
         // update time
-        time += timeRate * dayNightSpeed.Evaluate(time) * Time.deltaTime;
+        time += timeRate * ComputeSpeed() * Time.deltaTime;
 
         if (time >= MaxTime)
             time = MinTime;

@@ -69,12 +69,17 @@ namespace src.Service
 
         public bool IsSolidIfLoaded(VoxelPosition vp)
         {
+            return GetBlockTypeIfLoaded(vp)?.isSolid ?? ChunkInitializer.IsDefaultSolidAt(vp);
+        }
+
+        public BlockType GetBlockTypeIfLoaded(VoxelPosition vp)
+        {
             if (changes.TryGetValue(vp.chunk, out var chunkChange)
                 && chunkChange.blocks != null && chunkChange.blocks.TryGetValue(vp.local, out var block))
-                return Blocks.GetBlockType(block).isSolid;
+                return Blocks.GetBlockType(block);
 
             var type = WorldSliceService.INSTANCE.GetChunkIfLoaded(vp.chunk)?.GetBlockTypeAt(vp.local);
-            return type?.isSolid ?? ChunkInitializer.IsDefaultSolidAt(vp);
+            return type;
         }
 
         public List<Land> GetPlayerLands()
@@ -88,25 +93,28 @@ namespace src.Service
             var filteredLands = lands.FindAll(l => changedLands.Contains(l));
 
             yield return LandDetailsService.INSTANCE.GetOrCreate(filteredLands,
-                details => consumer(ApplyChanges(details)),
+                details => consumer(ClearDefaults(ApplyChanges(details))),
                 failure);
+        }
 
+        private Dictionary<long, LandDetails> ClearDefaults(Dictionary<long, LandDetails> detailsMap)
+        {
+            foreach (var details in detailsMap.Values)
+            {
+                if (details.changes != null)
+                {
+                    var toClear = new List<string>(details.changes.Keys.Where(key =>
+                    {
+                        var position = new VoxelPosition(LandDetails.ParseKey(key));
+                        return !ChunkInitializer.IsDefaultSolidAt(position) &&
+                               details.changes[key].name.Equals(Blocks.AIR.name);
+                    }));
+                    foreach (var key in toClear)
+                        details.changes.Remove(key);
+                }
+            }
 
-            // Stream(filteredLands, changes, (key, type, land) =>
-            // {
-            // var change = new Block();
-            // change.name = Blocks.GetBlockType(type).name;
-            // landDetailsMap[land.id].changes[key] = change;
-            // }, m => true); //Filter can check if the block is default
-            // Stream(filteredLands, metaBlocks, (key, metaBlock, land) =>
-            // {
-            // var properties = metaBlock.GetProps();
-            // if (properties == null) return;
-            // var metadata = new MetaBlockData();
-            // metadata.properties = JsonConvert.SerializeObject(properties);
-            // metadata.type = metaBlock.type.name;
-            // landDetailsMap[land.id].metadata[key] = metadata;
-            // }, m => m.GetProps() != null && !m.type.inMemory);
+            return detailsMap;
         }
 
         private Dictionary<long, LandDetails> ApplyChanges(Dictionary<long, LandDetails> detailsMap)
@@ -135,6 +143,7 @@ namespace src.Service
                 if (changeEntry.Value.blocks != null)
                     foreach (var blockEntry in changeEntry.Value.blocks)
                     {
+                        //FIXME do not save redundant data
                         var dt = findDetails(blockEntry.Key);
                         if (dt != null)
                         {
@@ -238,6 +247,16 @@ namespace src.Service
 
             if (chunkChanges.metaBlocks == null)
                 chunkChanges.metaBlocks = new Dictionary<Vector3Int, MetaBlock>();
+
+            if (chunkChanges.metaBlocks.TryGetValue(pos.local, out var prev))
+                prev.DestroyView();
+            WorldSliceService.INSTANCE.GetChunk(pos.chunk, data =>
+            {
+                if (data.metaBlocks != null && data.metaBlocks.TryGetValue(pos.local, out var prev))
+                    prev.DestroyView();
+            });
+
+
             var block = chunkChanges.metaBlocks[pos.local] =
                 type == null ? MetaBlock.DELETED_METABLOCK : type.Instantiate(land, "");
 

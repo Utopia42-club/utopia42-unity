@@ -1,12 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
 using src.Canvas;
 using src.MetaBlocks.ImageBlock;
 using src.Model;
 using src.Service;
-using src.Service.Ethereum;
 using src.Utils;
 using UnityEngine;
 
@@ -14,7 +12,7 @@ namespace src.MetaBlocks.NftBlock
 {
     public class NftBlockObject : ImageBlockObject
     {
-        public Dictionary<Voxels.Face, NftMetadata> metadata = new Dictionary<Voxels.Face, NftMetadata>();
+        private Dictionary<Voxels.Face, NftMetadata> metadata = new Dictionary<Voxels.Face, NftMetadata>();
 
         public override void OnDataUpdate()
         {
@@ -98,7 +96,7 @@ namespace src.MetaBlocks.NftBlock
             StartCoroutine(GetMetadata(props.collection, props.tokenId, md =>
             {
                 metadata.Add(face, md);
-                var imageUrl = string.IsNullOrWhiteSpace(md.image) ? md.imageUrl : md.image;
+                var imageUrl = $"{Constants.ApiURL}/nft-metadata/image/{props.collection}/{props.tokenId}";
                 AddFace(face, props.ToImageFaceProp(imageUrl));
             }, () => { UpdateStateAndIcon(StateMsg.ConnectionError, face); }));
         }
@@ -134,15 +132,11 @@ namespace src.MetaBlocks.NftBlock
             if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
         }
 
-        private IEnumerator GetMetadata(string collection, long tokenId, Action<NftMetadata> onSuccess,
+        private static IEnumerator GetMetadata(string collection, long tokenId, Action<NftMetadata> onSuccess,
             Action onFailure)
         {
-            string metadataUri = null;
-            yield return EthereumClientService.INSTANCE.GetTokenUri(collection, tokenId, uri => { metadataUri = uri; },
-                onFailure);
-
-            if (metadataUri == null) yield break;
-            yield return RestClient.Get(FileService.resolveUrl(metadataUri), onSuccess, onFailure);
+            yield return RestClient.Get($"{Constants.ApiURL}/nft-metadata/{collection}/{tokenId}"
+                , onSuccess, onFailure);
         }
     }
 }

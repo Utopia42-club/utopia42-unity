@@ -78,7 +78,7 @@ namespace src.MetaBlocks
             return properties;
         }
 
-        public void Destroy(bool immediate = true)
+        public void DestroyView(bool immediate = true)
         {
             if (blockObject == null) return;
             if (immediate)

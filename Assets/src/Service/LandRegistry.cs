@@ -191,8 +191,9 @@ namespace src.Service
                 yield return RestClient.Post<Land, List<Land>>(url, lands.Count == 0 ? new Land() : lands.Last(),
                     response =>
                     {
-                        lands.AddRange(response);
-                        hasNext = response.Count == pageSize;
+                        if(response!=null)
+                            lands.AddRange(response);
+                        hasNext = response != null && response.Count == pageSize;
                     }, () =>
                     {
                         failed = true;

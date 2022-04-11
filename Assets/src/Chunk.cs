@@ -344,7 +344,7 @@ namespace src
             var block = metaBlocks[pos.local];
             metaBlocks.Remove(pos.local);
             WorldService.INSTANCE.OnMetaRemoved(block, new VoxelPosition(coordinate, pos.local)); // TODO ?
-            block.Destroy();
+            block.DestroyView();
         }
 
         private void OnChanged(VoxelPosition pos)
@@ -389,7 +389,7 @@ namespace src
             if (metaBlocks != null)
             {
                 foreach (var metaBlock in metaBlocks.Values)
-                    metaBlock.Destroy();
+                    metaBlock.DestroyView();
             }
 
             Object.Destroy(meshRenderer.sharedMaterials[1]);
