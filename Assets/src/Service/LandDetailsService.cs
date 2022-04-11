@@ -36,12 +36,13 @@ namespace src.Service
             var result = new Dictionary<long, LandDetails>();
             var enums = lands.ConvertAll(land =>
             {
-                if (land.ipfsKey == null)
+                if (string.IsNullOrWhiteSpace(land.ipfsKey))
                 {
                     result[land.id] = Create(land);
                     return null;
                 }
 
+                //FIXME create new, if id is not valid
                 return IpfsClient.INSATANCE.DownloadJson<LandDetails>(land.ipfsKey,
                     details => result[land.id] = migrationService.Migrate(land, details), failure);
             });
