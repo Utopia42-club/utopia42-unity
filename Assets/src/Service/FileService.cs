@@ -9,7 +9,8 @@ namespace src.Service
             if (!url.StartsWith("ipfs://")) return url;
 
             var arr = url.Split(new[] {"ipfs://"}, StringSplitOptions.None);
-            return IpfsClient.getUrl(arr[1]);
+            return "https://ipfs.infura.io/ipfs/" + arr[1];
+            // return IpfsClient.ToUrl(arr[1]);
         }
     }
 }

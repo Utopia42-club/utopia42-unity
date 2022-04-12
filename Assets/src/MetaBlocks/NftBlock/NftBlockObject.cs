@@ -26,17 +26,20 @@ namespace src.MetaBlocks.NftBlock
 
         public override void Focus(Voxels.Face face)
         {
-            if (!canEdit) return;
             if (snackItem != null) snackItem.Remove();
 
             snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face), () =>
             {
-                if (Input.GetKeyDown(KeyCode.Z))
-                    EditProps(face);
-                if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
-                if (Input.GetKeyDown(KeyCode.T))
-                    GetIconObject().SetActive(!GetIconObject().activeSelf);
+                if (canEdit)
+                {
+                    if (Input.GetKeyDown(KeyCode.Z))
+                        EditProps(face);
+                    if (Input.GetButtonDown("Delete"))
+                        GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                    if (Input.GetKeyDown(KeyCode.T))
+                        GetIconObject().SetActive(!GetIconObject().activeSelf);
+                }
+
                 if (Input.GetKeyDown(KeyCode.O))
                     OpenLink(face);
             });
@@ -46,12 +49,16 @@ namespace src.MetaBlocks.NftBlock
 
         protected override List<string> GetFaceSnackLines(Voxels.Face face)
         {
-            var lines = new List<string>
+            var lines = new List<string>();
+            if (canEdit)
             {
-                "Press Z for details",
-                "Press T to toggle preview",
-                "Press Del to delete"
-            };
+                lines.AddRange(new[]
+                {
+                    "Press Z for details",
+                    "Press T to toggle preview",
+                    "Press Del to delete"
+                });
+            }
 
             var props = GetBlock().GetProps();
             var url = (props as NftBlockProperties)?.GetFaceProps(face)?.GetOpenseaUrl();
@@ -96,7 +103,8 @@ namespace src.MetaBlocks.NftBlock
             StartCoroutine(GetMetadata(props.collection, props.tokenId, md =>
             {
                 metadata.Add(face, md);
-                var imageUrl = $"{Constants.ApiURL}/nft-metadata/image/{props.collection}/{props.tokenId}";
+                // var imageUrl = $"{Constants.ApiURL}/nft-metadata/image/{props.collection}/{props.tokenId}";
+                var imageUrl = string.IsNullOrWhiteSpace(md.image) ? md.imageUrl : md.image;
                 AddFace(face, props.ToImageFaceProp(imageUrl));
             }, () => { UpdateStateAndIcon(StateMsg.ConnectionError, face); }));
         }

@@ -21,7 +21,8 @@ namespace src.MetaBlocks.ImageBlock
 
         protected void Start()
         {
-            if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
+            canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
+            if (canEdit)
                 CreateIcon();
             ready = true;
         }
@@ -164,7 +165,8 @@ namespace src.MetaBlocks.ImageBlock
                 }
             }
 
-            CreateIcon();
+            if (canEdit)
+                CreateIcon();
         }
 
         private void EditProps(Voxels.Face face)

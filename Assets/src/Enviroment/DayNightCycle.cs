@@ -44,7 +44,7 @@ public class DayNightCycle : MonoBehaviour
     void Update()
     {
         // update time
-        time += timeRate * ComputeSpeed() * Time.deltaTime;
+        // time += timeRate * ComputeSpeed() * Time.deltaTime;
 
         if (time >= MaxTime)
             time = MinTime;

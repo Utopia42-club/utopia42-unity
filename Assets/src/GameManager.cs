@@ -117,15 +117,21 @@ namespace src
 
             if (startingPosition == null)
             {
-                var chunkSize = Chunk.CHUNK_SIZE;
-                pos = new Vector3(0, chunkSize.y + 10, 0);
-                var lands = player.GetOwnedLands();
-                if (lands.Count > 0)
+                startingPosition = Player.GetSavedPosition();
+                if (startingPosition.HasValue)
+                    pos = startingPosition.Value;
+                else
                 {
-                    var land = lands[0];
-                    pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
-                    pos /= 2;
-                    pos.y = chunkSize.y + 10;
+                    var chunkSize = Chunk.CHUNK_SIZE;
+                    pos = new Vector3(0, chunkSize.y + 10, 0);
+                    var lands = player.GetOwnedLands();
+                    if (lands.Count > 0)
+                    {
+                        var land = lands[0];
+                        pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
+                        pos /= 2;
+                        pos.y = chunkSize.y + 10;
+                    }
                 }
             }
             else pos = startingPosition.Value;
@@ -302,6 +308,7 @@ namespace src
         {
             StartCoroutine(DoSave());
         }
+
         private IEnumerator DoSave()
         {
             var openFailureDialog = new Action(() =>

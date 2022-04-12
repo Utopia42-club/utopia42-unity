@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
 using src.MetaBlocks.TdObjectBlock;
@@ -12,6 +14,8 @@ namespace src
 {
     public class Player : MonoBehaviour
     {
+        private static readonly string POSITION_KEY = "PLAYER_POSITION";
+
         public const float CastStep = 0.01f;
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
         private static readonly Color HammerActiveColor = new Color(0.16f, 0.5f, 0.72f, 0.7f);
@@ -82,6 +86,7 @@ namespace src
             });
 
             playerPos = Vectors.TruncateFloor(transform.position);
+            StartCoroutine(SavePosition());
         }
 
         public List<Land> GetOwnedLands()
@@ -375,6 +380,28 @@ namespace src
         public Vector3 GetCurrentPosition()
         {
             return controller.center;
+        }
+
+        public static Vector3? GetSavedPosition()
+        {
+            var str = PlayerPrefs.GetString(POSITION_KEY);
+            return string.IsNullOrWhiteSpace(str)
+                ? (Vector3?) null
+                : JsonConvert.DeserializeObject<SerializableVector3>(str).ToVector3();
+        }
+
+        private IEnumerator SavePosition()
+        {
+            while (true)
+            {
+                if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
+                {
+                    PlayerPrefs.SetString(POSITION_KEY,
+                        JsonConvert.SerializeObject(new SerializableVector3(transform.position)));
+                }
+
+                yield return new WaitForSeconds(5);
+            }
         }
 
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();

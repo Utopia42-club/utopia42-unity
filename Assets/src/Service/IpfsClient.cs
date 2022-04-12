@@ -8,7 +8,7 @@ namespace src.Service
 {
     internal class IpfsClient
     {
-        private static readonly string SERVER_URL = "https://utopia42.club/api/v0";
+        public static readonly string SERVER_URL = "https://utopia42.club/api/v0";
 
         internal static IpfsClient INSATANCE = new IpfsClient();
 
@@ -16,14 +16,14 @@ namespace src.Service
         {
         }
 
-        public static string getUrl(string key)
+        public static string ToUrl(string key)
         {
             return SERVER_URL + "/cat?arg=/ipfs/" + key;
         }
-        
+
         public IEnumerator DownloadJson<TR>(string key, Action<TR> onSuccess, Action onFailure)
         {
-            yield return RestClient.Get(getUrl(key), onSuccess, onFailure);
+            yield return RestClient.Get(ToUrl(key), onSuccess, onFailure);
         }
 
         public IEnumerator UploadJson<TB>(TB body, Action<string> onSuccess, Action onFailure)
@@ -45,7 +45,7 @@ namespace src.Service
             var url = SERVER_URL + "/add?stream-channels=true&progress=false";
             using (var webRequest = UnityWebRequest.Post(url, form))
             {
-                yield return  RestClient.ExecuteRequest<IpfsResponse>(webRequest,
+                yield return RestClient.ExecuteRequest<IpfsResponse>(webRequest,
                     ipfsResponse => onSuccess.Invoke(ipfsResponse.hash),
                     onFailure);
             }

@@ -7,7 +7,7 @@ public class SpotLight : MonoBehaviour
 
     void Start()
     {
-        spotLight.range = 0;
+        spotLight.range = 20;
         GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 gameObject.SetActive(state == GameManager.State.PLAYING || state == GameManager.State.MOVING_OBJECT);
