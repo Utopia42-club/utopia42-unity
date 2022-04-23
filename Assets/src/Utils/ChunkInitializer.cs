@@ -8,17 +8,26 @@ namespace src.Utils
 {
     public static class ChunkInitializer
     {
-        private static readonly uint STONE = Blocks.GetBlockType("end_stone").id;
-        private static readonly uint GRASS = Blocks.GetBlockType("grass").id;
-        private static readonly uint DARK_GRASS = Blocks.GetBlockType("dark_grass").id;
-        private static readonly uint DIRT = Blocks.GetBlockType("dirt").id;
+        private static readonly BlockType STONE = Blocks.GetBlockType("end_stone");
+        private static readonly BlockType GRASS = Blocks.GetBlockType("grass");
+        private static readonly BlockType DARK_GRASS = Blocks.GetBlockType("dark_grass");
+        private static readonly BlockType DIRT = Blocks.GetBlockType("dirt");
 
 
         public static bool IsDefaultSolidAt(VoxelPosition vp)
         {
             return vp.chunk.y <= 0;
         }
-        
+
+        public static BlockType GetDefaultAt(VoxelPosition vp, bool hasLand, bool ownedByCurrentUser)
+        {
+            return vp.chunk.y > 0 ? Blocks.AIR :
+                vp.chunk.y < 0 ? STONE :
+                !hasLand ? STONE :
+                vp.local.y < Chunk.CHUNK_SIZE.y - 1 ? DIRT :
+                ownedByCurrentUser ? DARK_GRASS : GRASS;
+        }
+
         public static void InitializeChunk(Vector3Int position, uint[,,] voxels)
         {
             if (position.y == 0)
@@ -29,7 +38,7 @@ namespace src.Utils
 
             uint block;
             if (position.y < 0)
-                block = STONE;
+                block = STONE.id;
             else
                 block = Blocks.AIR.id;
 
@@ -54,7 +63,7 @@ namespace src.Utils
             {
                 for (var z = 0; z < chunkSize.z; ++z)
                 {
-                    top = body = STONE;
+                    top = body = STONE.id;
                     if (lands != null)
                     {
                         var pos = new Vector3Int(x + position.x * chunkSize.x, 0,
@@ -63,8 +72,8 @@ namespace src.Utils
                             land = lands.FirstOrDefault(l => l.Contains(pos));
                         if (land != null)
                         {
-                            body = DIRT;
-                            top = land.owner.Equals(wallet) ? DARK_GRASS : GRASS;
+                            body = DIRT.id;
+                            top = land.owner.Equals(wallet) ? DARK_GRASS.id : GRASS.id;
                         }
                     }
 

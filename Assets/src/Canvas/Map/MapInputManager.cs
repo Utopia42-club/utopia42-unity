@@ -8,13 +8,26 @@ namespace src.Canvas.Map
 {
     public class MapInputManager : MonoBehaviour
     {
-        [SerializeField] RectTransform vertical;
-        [SerializeField] RectTransform horizontal;
-        [SerializeField] RectPane landRect;
-        [SerializeField] GameObject sidePanel;
-        [SerializeField] GameObject overlayPrefab;
-        [SerializeField] GameObject helpMessage;
-        [SerializeField] GameObject positionBox;
+        [SerializeField]
+        private RectTransform vertical;
+
+        [SerializeField]
+        private RectTransform horizontal;
+
+        [SerializeField]
+        private RectPane landRect;
+
+        [SerializeField]
+        private GameObject sidePanel;
+
+        [SerializeField]
+        private GameObject overlayPrefab;
+
+        [SerializeField]
+        private GameObject helpMessage;
+
+        [SerializeField]
+        private GameObject positionBox;
 
         private bool dragging = false;
         private bool scrollLock = false;

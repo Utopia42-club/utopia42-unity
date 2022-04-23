@@ -106,8 +106,8 @@ namespace src.Service
                     var toClear = new List<string>(details.changes.Keys.Where(key =>
                     {
                         var position = new VoxelPosition(LandDetails.ParseKey(key));
-                        return !ChunkInitializer.IsDefaultSolidAt(position) &&
-                               details.changes[key].name.Equals(Blocks.AIR.name);
+                        return ChunkInitializer.GetDefaultAt(position, true, true)
+                            .name.Equals(details.changes[key].name);
                     }));
                     foreach (var key in toClear)
                         details.changes.Remove(key);

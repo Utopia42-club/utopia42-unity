@@ -41,9 +41,18 @@ namespace src.Service
         public IEnumerator SetLandMetadata(LandMetadata landMetadata, Action success, Action failed)
         {
             string url = Constants.ApiURL + "/land-metadata/set";
-            yield return (url, landMetadata, success, failed);
+            yield return Post(url, landMetadata, success, failed);
         }
 
+        internal static IEnumerator Post<TB>(string url, TB body, Action success, Action failure)
+        {
+            using (var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            {
+                webRequest.SetRequestHeader("Content-Type", "application/json");
+                webRequest.SetRequestHeader("Accept", "*/*");
+                yield return ExecuteRequest(webRequest, body, success, failure);
+            }
+        }
 
         internal static IEnumerator Post<TB, TR>(string url, TB body, Action<TR> success, Action failure)
         {
