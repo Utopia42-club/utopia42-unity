@@ -2,14 +2,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
 using src.MetaBlocks.MarkerBlock;
 using src.Model;
+using src.Service.Ethereum;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
+using Vector3 = UnityEngine.Vector3;
 
 namespace src.Service
 {
@@ -380,6 +383,23 @@ namespace src.Service
                 this.position = new SerializableVector3(position);
                 this.type = type;
             }
+        }
+
+        public IEnumerator ReloadLandOwnerAndNft(long id, Action success, Action failure)
+        {
+            var ids = new List<BigInteger>();
+            ids.Add(id);
+            yield return EthereumClientService.INSTANCE.GetLandsByIds(ids, lands =>
+            {
+                var land = landRegistry.Get(id);
+                if (lands.Count == 1 && land != null)
+                {
+                    land.owner = lands[0].owner;
+                    land.isNft = lands[0].isNft;
+                }
+
+                success();
+            }, failure);
         }
     }
 }

@@ -373,7 +373,7 @@ namespace src
         public void Transfer(long landId)
         {
             BrowserConnector.INSTANCE.Transfer(landId,
-                () => StartCoroutine(ReloadLands()),
+                () => StartCoroutine(ReloadLandOwnerAndNft(landId, true)),
                 () => SetState(State.PLAYING));
         }
 
@@ -389,7 +389,7 @@ namespace src
                     //     }
                     // }
                     StartCoroutine(IpfsClient.INSATANCE.UploadImage(screenshot,
-                        ipfsKey => SetLandMetadata(ipfsKey, land.id), () =>
+                        ipfsKey => SetLandNftImage(ipfsKey, land), () =>
                         {
                             var dialog = INSTANCE.OpenDialog();
                             dialog
@@ -408,17 +408,28 @@ namespace src
             else
             {
                 BrowserConnector.INSTANCE.SetNft(land.id, false,
-                    () => StartCoroutine(ReloadLands()),
-                    () => SetState(State.PLAYING));
+                    (reload) =>
+                    {
+                        if (reload)
+                            StartCoroutine(ReloadLandOwnerAndNft(land.id, false));
+                        else
+                            land.isNft = false;
+                    }, () => SetState(State.PLAYING));
             }
         }
 
-        private void SetLandMetadata(string key, long landId)
+        private void SetLandNftImage(string key, Land land)
         {
-            StartCoroutine(RestClient.INSATANCE.SetLandMetadata(new LandMetadata(landId, key), () =>
+            StartCoroutine(RestClient.INSATANCE.SetLandMetadata(new LandMetadata(land.id, key), () =>
             {
-                BrowserConnector.INSTANCE.SetNft(landId, true,
-                    () => StartCoroutine(ReloadLands()),
+                BrowserConnector.INSTANCE.SetNft(land.id, true,
+                    (reload) =>
+                    {
+                        if (reload)
+                            StartCoroutine(ReloadLandOwnerAndNft(land.id, false));
+                        else
+                            land.isNft = true;
+                    },
                     () => SetState(State.PLAYING));
             }, () =>
             {
@@ -478,13 +489,13 @@ namespace src
             }, () => { SetState(State.PLAYING); });
         }
 
-        private IEnumerator ReloadLands()
+        private IEnumerator ReloadLandOwnerAndNft(long id, bool reCreateWorld)
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Reloading Lands...");
+            Loading.INSTANCE.UpdateText($"Reloading Land {id}...");
 
             var failed = false;
-            yield return WorldService.INSTANCE.ReloadLands(() =>
+            yield return WorldService.INSTANCE.ReloadLandOwnerAndNft(id, () => { }, () =>
             {
                 failed = true;
                 Loading.INSTANCE.ShowConnectionError();
@@ -493,7 +504,9 @@ namespace src
 
             var player = Player.INSTANCE;
             player.ResetLands();
-            yield return InitWorld(player.transform.position, true);
+            if (reCreateWorld)
+                yield return InitWorld(player.transform.position, true);
+            else SetState(State.PLAYING);
         }
 
         private IEnumerator ReloadOwnerLands()

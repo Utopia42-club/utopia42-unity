@@ -191,7 +191,7 @@ namespace src.Service
                 yield return RestClient.Post<Land, List<Land>>(url, lands.Count == 0 ? new Land() : lands.Last(),
                     response =>
                     {
-                        if(response!=null)
+                        if (response != null)
                             lands.AddRange(response);
                         hasNext = response != null && response.Count == pageSize;
                     }, () =>
@@ -265,6 +265,11 @@ namespace src.Service
             foreach (var land in lands)
                 ids.Add(land.id);
             return ids;
+        }
+
+        public Land Get(long id)
+        {
+            return validLands[id];
         }
     }
 }
