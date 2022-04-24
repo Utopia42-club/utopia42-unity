@@ -12,7 +12,7 @@ namespace src
             var textAsset = Resources.Load<TextAsset>("Test/" + putMetasSampleName);
             if (textAsset == null)
             {
-                Debug.Log("Could not load put metas sample");
+                Debug.LogError("Could not load put metas sample");
                 return;
             }
             UtopiaApi.INSTANCE.PlaceMetaBlocks(textAsset.text);

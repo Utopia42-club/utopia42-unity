@@ -46,7 +46,6 @@ namespace src
                 var globalPos = pos.ToWorld();
                 if (placed.ContainsKey(globalPos))
                 {
-                    Debug.Log("Duplicate position detected");
                     continue;
                 }
 

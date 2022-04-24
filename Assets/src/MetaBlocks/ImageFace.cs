@@ -24,7 +24,6 @@ namespace src
 
             if (request.result == UnityWebRequest.Result.ConnectionError)
             {
-                Debug.Log("loading image from: " + request.url + ", caused error: " + request.error);
                 block.UpdateStateAndIcon(StateMsg.ConnectionError, face);
                 yield break;
             }
@@ -32,7 +31,6 @@ namespace src
             if (request.result == UnityWebRequest.Result.ProtocolError ||
                 request.result == UnityWebRequest.Result.DataProcessingError)
             {
-                Debug.Log("loading image from: " + request.url + ", caused error: " + request.error);
                 if (retries > 0 && request.responseCode == 504)// && url.StartsWith(IpfsClient.SERVER_URL))
                     yield return LoadImage(material, url, block, face, retries - 1);
                 else block.UpdateStateAndIcon(StateMsg.InvalidUrlOrData, face);

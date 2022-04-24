@@ -29,15 +29,15 @@ namespace src.Canvas
                 WebBridge.Call<object>("editProfile", null);
                 OpenDialog(
                     "Edit your profile on your browser. Click RELOAD when it is done"
-                    , () =>
-                    {
-                        WebGLInput.captureAllKeyboardInput = orig;
-                        onDone();
-                    }, () =>
-                    {
-                        WebGLInput.captureAllKeyboardInput = orig;
-                        onCancel();
-                    });
+                    ,() =>
+                {
+                    WebGLInput.captureAllKeyboardInput = orig;
+                    onDone();
+                }, () =>
+                {
+                    WebGLInput.captureAllKeyboardInput = orig;
+                    onCancel();
+                });
 #endif
             }
             else
@@ -55,23 +55,18 @@ namespace src.Canvas
                 CallUrl("transfer", landId.ToString(), onDone, onCancel);
         }
 
-        public void SetNft(long landId, bool value, Action<bool> onDone, Action onCancel)
+        public void SetNft(long landId, bool value, Action onDone, Action onCancel)
         {
             if (WebBridge.IsPresent())
             {
                 var data = new Dictionary<string, object>();
                 data.Add("landId", landId);
                 data.Add("nft", value);
-                WebBridge.CallAsync<bool>("setNft", data, (success) =>
-                {
-                    if (success)
-                        onDone(false);
-                    else onCancel();
-                });
-                // OpenDialog(() => onDone(true), onCancel);
+                WebBridge.Call<object>("setNft", data);
+                OpenDialog(onDone, onCancel);
             }
             else
-                CallUrl("setNft", $"{landId}_{value}", () => onDone(true), onCancel);
+                CallUrl("setNft", $"{landId}_{value}", onDone, onCancel);
         }
 
         public void Save(Dictionary<long, string> data, Action onDone, Action onCancel)
@@ -102,8 +97,7 @@ namespace src.Canvas
             {
                 List<string> parameters = new List<string>();
                 foreach (var l in lands)
-                    parameters.Add(string.Join("_",
-                        new long[] {l.startCoordinate.x, l.startCoordinate.z, l.endCoordinate.x, l.endCoordinate.z}));
+                    parameters.Add(string.Join("_", new long[] {l.startCoordinate.x, l.startCoordinate.z, l.endCoordinate.x, l.endCoordinate.z}));
                 CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
             }
         }

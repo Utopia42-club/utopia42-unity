@@ -22,7 +22,7 @@ namespace src
             var textAsset = Resources.Load<TextAsset>("Test/" + voxSampleName);
             if (textAsset == null)
             {
-                Debug.Log("Could not load vox sample");
+                Debug.LogError("Could not load vox sample");
                 return;
             }
             StartCoroutine(PlaceBlocksTest(textAsset.text, Input.GetKey(KeyCode.RightShift), selectAfter));

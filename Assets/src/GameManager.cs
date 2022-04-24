@@ -408,13 +408,7 @@ namespace src
             else
             {
                 BrowserConnector.INSTANCE.SetNft(land.id, false,
-                    (reload) =>
-                    {
-                        if (reload)
-                            StartCoroutine(ReloadLandOwnerAndNft(land.id, false));
-                        else
-                            land.isNft = false;
-                    }, () => SetState(State.PLAYING));
+                    () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)), () => SetState(State.PLAYING));
             }
         }
 
@@ -423,13 +417,7 @@ namespace src
             StartCoroutine(RestClient.INSATANCE.SetLandMetadata(new LandMetadata(land.id, key), () =>
             {
                 BrowserConnector.INSTANCE.SetNft(land.id, true,
-                    (reload) =>
-                    {
-                        if (reload)
-                            StartCoroutine(ReloadLandOwnerAndNft(land.id, false));
-                        else
-                            land.isNft = true;
-                    },
+                    () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
                     () => SetState(State.PLAYING));
             }, () =>
             {
