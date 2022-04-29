@@ -1,11 +1,11 @@
-using System;
 using UnityEngine;
 
-namespace src
+namespace src.TestUtils
 {
-    public class TestPutMetas: MonoBehaviour
+    public class TestPutMetas : MonoBehaviour
     {
         [SerializeField] private string putMetasSampleName;
+
         private void Update()
         {
             if (putMetasSampleName == null || !Input.GetKeyDown(KeyCode.T) || !Input.GetKey(KeyCode.LeftShift)) return;
@@ -15,6 +15,7 @@ namespace src
                 Debug.LogError("Could not load put metas sample");
                 return;
             }
+
             UtopiaApi.INSTANCE.PlaceMetaBlocks(textAsset.text);
         }
     }

@@ -2,7 +2,7 @@ using System.Text;
 using Unity.Profiling;
 using UnityEngine;
 
-namespace src
+namespace src.TestUtils
 {
     public class MemoryStats : MonoBehaviour
     {
@@ -20,6 +20,7 @@ namespace src
             systemUsedMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "System Used Memory");
             textureMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Texture Memory");
             meshMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Mesh Memory");
+            
         }
 
         private void OnDisable()

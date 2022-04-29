@@ -8,8 +8,6 @@ using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 
-// using Dummiesman;
-
 namespace src.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockObject : MetaBlockObject
