@@ -214,7 +214,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 UpdateStateAndIcon(StateMsg.Loading);
                 var reinitialize = !currentUrl.Equals("") || initialScale == 0;
                 currentUrl = properties.url;
-                StartCoroutine(LoadZip(properties.url, go =>
+                StartCoroutine(LoadBytes(properties.url, properties.type, go =>
                 {
                     tdObjectContainer = new GameObject("3d object container");
                     tdObjectContainer.transform.SetParent(transform, false);
@@ -414,7 +414,8 @@ namespace src.MetaBlocks.TdObjectBlock
             return bounds.size;
         }
 
-        private IEnumerator LoadZip(string url, Action<GameObject> onSucess)
+        private IEnumerator LoadBytes(string url, TdObjectBlockProperties.TdObjectType type,
+            Action<GameObject> onSuccess)
         {
             using var webRequest = UnityWebRequest.Get(url);
             var op = webRequest.SendWebRequest();
@@ -444,11 +445,25 @@ namespace src.MetaBlocks.TdObjectBlock
                     UpdateStateAndIcon(StateMsg.InvalidUrlOrData);
                     break;
                 case UnityWebRequest.Result.Success:
-                    TdObjectLoader.INSTANCE.InitTask(webRequest.downloadHandler.data, onSucess, () =>
+                    Action onFailure = () =>
                     {
                         DestroyObject();
                         UpdateStateAndIcon(StateMsg.InvalidData);
-                    });
+                    };
+
+                    switch (type)
+                    {
+                        case TdObjectBlockProperties.TdObjectType.OBJ:
+                            ObjLoader.INSTANCE.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
+                            break;
+                        case TdObjectBlockProperties.TdObjectType.GLB:
+                            GlbLoader.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
+                            break;
+                        default:
+                            onFailure.Invoke();
+                            break;
+                    }
+
                     break;
             }
         }

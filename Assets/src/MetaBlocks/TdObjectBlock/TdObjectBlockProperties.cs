@@ -16,7 +16,8 @@ namespace src.MetaBlocks.TdObjectBlock
         public float initialScale = 0;
 
         public bool detectCollision = true;
-
+        public TdObjectType type = TdObjectType.OBJ;
+        
         public TdObjectBlockProperties()
         {
         }
@@ -32,6 +33,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 initialPosition = obj.initialPosition;
                 initialScale = obj.initialScale;
                 detectCollision = obj.detectCollision;
+                type = obj.type;
             }
         }
 
@@ -43,6 +45,7 @@ namespace src.MetaBlocks.TdObjectBlock
             this.offset = props.offset;
             this.rotation = props.rotation;
             this.detectCollision = props.detectCollision;
+            this.type = props.type;
         }
 
         public override bool Equals(object obj)
@@ -54,7 +57,7 @@ namespace src.MetaBlocks.TdObjectBlock
             return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(offset, prop.offset) &&
                    Equals(rotation, prop.rotation)
                    && Equals(initialPosition, prop.initialPosition) && Equals(initialScale, prop.initialScale) &&
-                   Equals(detectCollision, prop.detectCollision);
+                   Equals(detectCollision, prop.detectCollision) && Equals(type, prop.type);
         }
 
         public object Clone()
@@ -67,13 +70,19 @@ namespace src.MetaBlocks.TdObjectBlock
                 rotation = rotation.Clone(),
                 initialPosition = initialPosition.Clone(),
                 initialScale = initialScale,
-                detectCollision = detectCollision
+                detectCollision = detectCollision,
+                type = type
             };
         }
 
         public bool IsEmpty()
         {
             return url == null || url.Equals("");
+        }
+
+        public enum TdObjectType
+        {
+            OBJ, GLB
         }
     }
 }
