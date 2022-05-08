@@ -15,7 +15,9 @@ namespace src
         public Vector3Int Position { get; }
         private readonly Land land;
         private readonly Transform highlight;
-        private Transform tdHighlight;
+
+        private Transform tdHighlight; // Highlight for box collider
+        private MeshRenderer colliderRenderer; // Highlight for mesh collider
 
         private readonly uint blockTypeId;
         private readonly uint metaBlockTypeId;
@@ -35,6 +37,32 @@ namespace src
             this.metaProperties = metaProperties;
             this.highlight = highlight;
             this.tdHighlight = tdHighlight;
+            this.land = land;
+        }
+
+        private SelectableBlock(Vector3Int pos, uint blockTypeId, Transform highlight, MeshRenderer colliderRenderer,
+            uint metaBlockTypeId,
+            object metaProperties, Land land)
+        {
+            metaAttached = true;
+            Position = pos;
+            this.blockTypeId = blockTypeId;
+            this.metaBlockTypeId = metaBlockTypeId;
+            this.metaProperties = metaProperties;
+            this.highlight = highlight;
+            this.colliderRenderer = colliderRenderer;
+            this.land = land;
+        }
+
+        private SelectableBlock(Vector3Int pos, uint blockTypeId, Transform highlight, uint metaBlockTypeId,
+            object metaProperties, Land land)
+        {
+            metaAttached = true;
+            Position = pos;
+            this.blockTypeId = blockTypeId;
+            this.metaBlockTypeId = metaBlockTypeId;
+            this.metaProperties = metaProperties;
+            this.highlight = highlight;
             this.land = land;
         }
 
@@ -67,21 +95,24 @@ namespace src
             blockHighlight.gameObject.SetActive(showHighlight);
 
             var meta = chunk.GetMetaAt(vp);
-            if (meta != null)
-            {
-                if (meta.blockObject is TdObjectBlockObject)
-                {
-                    return new SelectableBlock(position, blockTypeId, blockHighlight,
-                        CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
-                            tdHighlightModel, showHighlight), meta.type.id, ((ICloneable) meta.GetProps())?.Clone(),
-                        land);
-                }
+            if (meta == null) return new SelectableBlock(position, blockTypeId, blockHighlight, land);
 
-                return new SelectableBlock(position, blockTypeId, blockHighlight, null, meta.type.id,
+            if (!(meta.blockObject is TdObjectBlockObject blockObject))
+                return new SelectableBlock(position, blockTypeId, blockHighlight, meta.type.id,
                     ((ICloneable) meta.GetProps())?.Clone(), land);
+
+            var collider = blockObject.TdObjectCollider;
+            if (collider is BoxCollider boxCollider)
+            {
+                return new SelectableBlock(position, blockTypeId, blockHighlight,
+                    CreateObjectHighlightBox(boxCollider, tdHighlightModel, showHighlight),
+                    meta.type.id, ((ICloneable) meta.GetProps())?.Clone(), land);
             }
 
-            return new SelectableBlock(position, blockTypeId, blockHighlight, land);
+            if (showHighlight)
+                blockObject.ColliderRendererFoSelection.enabled = true;
+            return new SelectableBlock(position, blockTypeId, blockHighlight, blockObject.ColliderRendererFoSelection,
+                meta.type.id, ((ICloneable) meta.GetProps())?.Clone(), land);
         }
 
         public static void PutInPositions(World world,
@@ -148,12 +179,17 @@ namespace src
             return !Position.Equals(HighlightPosition);
         }
 
-        public void DestroyHighlights()
+        public void RemoveHighlights()
         {
             Object.DestroyImmediate(highlight.gameObject);
             if (tdHighlight != null)
             {
                 Object.DestroyImmediate(tdHighlight.gameObject);
+            }
+
+            if (colliderRenderer != null)
+            {
+                colliderRenderer.enabled = false;
             }
         }
 
@@ -186,8 +222,17 @@ namespace src
             var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk == null) return;
             var meta = chunk.GetMetaAt(vp);
-            tdHighlight = CreateObjectHighlightBox(((TdObjectBlockObject) meta.blockObject).TdObjectBoxCollider,
-                tdObjectHighlightBox);
+
+            if (((TdObjectBlockObject) meta.blockObject).TdObjectCollider is BoxCollider boxCollider)
+            {
+                tdHighlight = CreateObjectHighlightBox(boxCollider, tdObjectHighlightBox);
+                colliderRenderer = null;
+            }
+            else
+            {
+                tdHighlight = null;
+                colliderRenderer = ((TdObjectBlockObject) meta.blockObject).ColliderRendererFoSelection;
+            }
         }
 
         public Vector3Int HighlightPosition => Vectors.FloorToInt(highlight.position);

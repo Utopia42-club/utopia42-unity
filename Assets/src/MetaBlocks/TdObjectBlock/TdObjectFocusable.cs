@@ -15,6 +15,12 @@ namespace src.MetaBlocks.TdObjectBlock
         public override void Focus()
         {
             if (!initialized) return;
+
+            if (BlockSelectionController.INSTANCE.SelectionActive)
+            {
+                Player.INSTANCE.ShowTdObjectHighlight(metaBlockObject as TdObjectBlockObject);
+                return;
+            }
             metaBlockObject.Focus(null);
         }
 

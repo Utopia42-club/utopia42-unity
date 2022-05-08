@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using src.Canvas;
 using src.Model;
-using src.Service;
 using src.Utils;
 using TMPro;
 using UnityEngine;
@@ -216,7 +215,7 @@ namespace src
             if (indicesToRemove.Count <= 0) return AddNewSelectedBlock(position);
             foreach (var index in indicesToRemove.OrderByDescending(i => i))
             {
-                selectedBlocks[index].DestroyHighlights();
+                selectedBlocks[index].RemoveHighlights();
                 selectedBlocks.RemoveAt(index);
                 UpdateCountMsg();
                 if (selectedBlocks.Count == 0)
@@ -298,7 +297,7 @@ namespace src
                     }
 
                     SelectableBlock.PutInPositions(world, toBePut);
-                    foreach (var pos in toBePut.Keys)
+                    foreach (var pos in toBePut.Keys) 
                         AddNewSelectedBlock(pos);
                 }
             }
@@ -364,7 +363,7 @@ namespace src
         private void ClearSelection()
         {
             foreach (var block in selectedBlocks)
-                block.DestroyHighlights();
+                block.RemoveHighlights();
             selectedBlocks.Clear();
             selectedBlocksCountTextContainer.gameObject.SetActive(false);
         }
@@ -372,7 +371,7 @@ namespace src
         private void ClearClipboard()
         {
             foreach (var block in copiedBlocks)
-                block.DestroyHighlights();
+                block.RemoveHighlights();
             copiedBlocks.Clear();
         }
 

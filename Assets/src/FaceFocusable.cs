@@ -18,7 +18,7 @@ namespace src
 
         public override void Focus()
         {
-            if (!initialized) return;
+            if (!initialized || BlockSelectionController.INSTANCE.SelectionActive) return;
             metaBlockObject.Focus(face);
         }
 

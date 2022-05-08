@@ -18,8 +18,6 @@ namespace src
 
         public const float CastStep = 0.01f;
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
-        private static readonly Color HammerActiveColor = new Color(0.16f, 0.5f, 0.72f, 0.7f);
-        private static readonly Color HammerNotActiveColor = new Color(0, 0, 0, 0.5f);
 
         [SerializeField] private Transform cam;
         [SerializeField] private World world;
@@ -31,6 +29,7 @@ namespace src
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
         [SerializeField] private Transform tdObjectHighlightBox;
+        [SerializeField] private Material highlightMaterial;
 
         [NonSerialized] public uint selectedBlockId = 1;
 
@@ -67,9 +66,10 @@ namespace src
         public float Vertical { get; private set; }
         public MetaFocusable FocusedMeta { get; private set; }
         public Vector3Int PlaceBlockPosInt { get; private set; }
+        public MeshRenderer EnabledColliderRenderer { get; private set; }
 
         public Land HighlightLand => highlightLand;
-        public Land PlaceLand => placeLand;
+        public Material HighlightMaterial => highlightMaterial;
 
 
         private void Start()
@@ -148,18 +148,8 @@ namespace src
                 {
                     focusedMetaFace = null;
                     if (FocusedMeta != null)
-                    {
                         FocusedMeta.UnFocus();
-                    }
-
-                    if (!blockSelectionController.SelectionActive)
-                        metaFocusable.Focus();
-                    else if (metaFocusable.metaBlockObject is TdObjectBlockObject)
-                    {
-                        ShowTdObjectHighlightBox(((TdObjectBlockObject) metaFocusable.metaBlockObject)
-                            .TdObjectBoxCollider);
-                    }
-
+                    metaFocusable.Focus();
                     FocusedMeta = metaFocusable;
                     return;
                 }
@@ -355,25 +345,40 @@ namespace src
             return new VoxelPosition(playerPos);
         }
 
-        public void ShowTdObjectHighlightBox(BoxCollider boxCollider)
+        public void ShowTdObjectHighlight(TdObjectBlockObject obj)
         {
-            var colliderTransform = boxCollider.transform;
-            tdObjectHighlightBox.transform.rotation = colliderTransform.rotation;
+            if (obj.TdObjectCollider is BoxCollider boxCollider)
+            {
+                var colliderTransform = boxCollider.transform;
+                tdObjectHighlightBox.transform.rotation = colliderTransform.rotation;
 
-            var size = boxCollider.size;
-            var minPos = boxCollider.center - size / 2;
+                var size = boxCollider.size;
+                var minPos = boxCollider.center - size / 2;
 
-            var gameObjectTransform = boxCollider.gameObject.transform;
-            size.Scale(gameObjectTransform.localScale);
-            size.Scale(gameObjectTransform.parent.localScale);
+                var gameObjectTransform = boxCollider.gameObject.transform;
+                size.Scale(gameObjectTransform.localScale);
+                size.Scale(gameObjectTransform.parent.localScale);
 
-            tdObjectHighlightBox.localScale = size;
-            tdObjectHighlightBox.position = colliderTransform.TransformPoint(minPos);
-            tdObjectHighlightBox.gameObject.SetActive(true);
+                tdObjectHighlightBox.localScale = size;
+                tdObjectHighlightBox.position = colliderTransform.TransformPoint(minPos);
+                tdObjectHighlightBox.gameObject.SetActive(true);
+            }
+            else
+            {
+                obj.ColliderRenderer.enabled = true;
+                EnabledColliderRenderer = obj.ColliderRenderer;
+            }
         }
 
-        public void HideTdObjectHighlightBox()
+        public void HideTdObjectHighlight()
         {
+            if (EnabledColliderRenderer != null)
+            {
+                EnabledColliderRenderer.enabled = false;
+                EnabledColliderRenderer = null;
+                return;
+            }
+
             tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
