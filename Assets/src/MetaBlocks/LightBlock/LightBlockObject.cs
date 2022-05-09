@@ -150,6 +150,14 @@ namespace src.MetaBlocks.LightBlock
             };
         }
 
+        public override void ShowFocusHighlight()
+        {
+        }
+
+        public override void RemoveFocusHighlight()
+        {
+        }
+
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;

@@ -116,5 +116,9 @@ namespace src.MetaBlocks
                 return true;
             return block.land.Contains(p);
         }
+
+        public abstract void ShowFocusHighlight();
+
+        public abstract void RemoveFocusHighlight();
     }
 }

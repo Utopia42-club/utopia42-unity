@@ -198,5 +198,13 @@ namespace src.MetaBlocks.ImageBlock
             DestroyImages(false);
             base.OnDestroy();
         }
+
+        public override void ShowFocusHighlight()
+        {
+        }
+
+        public override void RemoveFocusHighlight()
+        {
+        }
     }
 }

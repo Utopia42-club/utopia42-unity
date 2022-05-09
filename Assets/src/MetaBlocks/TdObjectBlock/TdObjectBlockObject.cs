@@ -31,12 +31,14 @@ namespace src.MetaBlocks.TdObjectBlock
         private StateMsg stateMsg = StateMsg.Ok;
 
         private TdObjectMoveController moveController;
+        private Player player;
 
         private void Start()
         {
             if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
                 CreateIcon();
             ready = true;
+            player = Player.INSTANCE;
         }
 
         public override bool IsReady()
@@ -59,7 +61,41 @@ namespace src.MetaBlocks.TdObjectBlock
             if (!canEdit) return;
             SetupDefaultSnack();
             if (TdObjectCollider != null)
-                Player.INSTANCE.ShowTdObjectHighlight(this);
+                ShowFocusHighlight();
+        }
+        
+        public override void ShowFocusHighlight()
+        {
+            if (TdObjectCollider is BoxCollider boxCollider)
+            {
+                var colliderTransform = boxCollider.transform;
+                player.tdObjectHighlightBox.transform.rotation = colliderTransform.rotation;
+
+                var size = boxCollider.size;
+                var minPos = boxCollider.center - size / 2;
+
+                var gameObjectTransform = boxCollider.gameObject.transform;
+                size.Scale(gameObjectTransform.localScale);
+                size.Scale(gameObjectTransform.parent.localScale);
+
+                player.tdObjectHighlightBox.localScale = size;
+                player.tdObjectHighlightBox.position = colliderTransform.TransformPoint(minPos);
+                player.tdObjectHighlightBox.gameObject.SetActive(true);
+            }
+            else if (ColliderRenderer != null)
+            {
+                ColliderRenderer.enabled = true;
+            }
+        }
+
+        public override void RemoveFocusHighlight()
+        {
+            if (ColliderRenderer != null)
+            {
+                ColliderRenderer.enabled = false;
+                return;
+            }
+            player.tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
         public void ExitMovingState()
@@ -87,7 +123,7 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
-                    Player.INSTANCE.HideTdObjectHighlight();
+                    RemoveFocusHighlight();
                     EditProps();
                 }
 
@@ -95,7 +131,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetKeyDown(KeyCode.V) && tdObjectContainer != null)
                 {
-                    Player.INSTANCE.HideTdObjectHighlight();
+                    RemoveFocusHighlight();
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
                 }
 
@@ -168,7 +204,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem = null;
             }
 
-            Player.INSTANCE.HideTdObjectHighlight();
+            RemoveFocusHighlight();
         }
 
         public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face = null)

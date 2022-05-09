@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
-using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -28,7 +27,7 @@ namespace src
         [SerializeField] private float gravity = -9.8f;
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
-        [SerializeField] private Transform tdObjectHighlightBox;
+        [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] private Material highlightMaterial;
 
         [NonSerialized] public uint selectedBlockId = 1;
@@ -66,7 +65,6 @@ namespace src
         public float Vertical { get; private set; }
         public MetaFocusable FocusedMeta { get; private set; }
         public Vector3Int PlaceBlockPosInt { get; private set; }
-        public MeshRenderer EnabledColliderRenderer { get; private set; }
 
         public Land HighlightLand => highlightLand;
         public Material HighlightMaterial => highlightMaterial;
@@ -343,43 +341,6 @@ namespace src
         private VoxelPosition ComputePosition()
         {
             return new VoxelPosition(playerPos);
-        }
-
-        public void ShowTdObjectHighlight(TdObjectBlockObject obj)
-        {
-            if (obj.TdObjectCollider is BoxCollider boxCollider)
-            {
-                var colliderTransform = boxCollider.transform;
-                tdObjectHighlightBox.transform.rotation = colliderTransform.rotation;
-
-                var size = boxCollider.size;
-                var minPos = boxCollider.center - size / 2;
-
-                var gameObjectTransform = boxCollider.gameObject.transform;
-                size.Scale(gameObjectTransform.localScale);
-                size.Scale(gameObjectTransform.parent.localScale);
-
-                tdObjectHighlightBox.localScale = size;
-                tdObjectHighlightBox.position = colliderTransform.TransformPoint(minPos);
-                tdObjectHighlightBox.gameObject.SetActive(true);
-            }
-            else
-            {
-                obj.ColliderRenderer.enabled = true;
-                EnabledColliderRenderer = obj.ColliderRenderer;
-            }
-        }
-
-        public void HideTdObjectHighlight()
-        {
-            if (EnabledColliderRenderer != null)
-            {
-                EnabledColliderRenderer.enabled = false;
-                EnabledColliderRenderer = null;
-                return;
-            }
-
-            tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
         public Vector3 GetCurrentPosition()

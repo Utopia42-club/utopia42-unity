@@ -8,8 +8,7 @@ namespace src
     {
         public MetaBlockObject metaBlockObject { protected set; get; }
         protected bool initialized = false;
-
-        public abstract void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null);
+        protected Voxels.Face face;
 
         public void UnFocus()
         {
@@ -17,7 +16,17 @@ namespace src
             metaBlockObject.UnFocus();
         }
 
-        public abstract void Focus();
+        public void Focus()
+        {
+            if (!initialized) return;
+
+            if (BlockSelectionController.INSTANCE.SelectionActive)
+            {
+                metaBlockObject.ShowFocusHighlight();
+                return;
+            }
+            metaBlockObject.Focus(face);
+        }
 
         public abstract Vector3 GetBlockPosition();
     }

@@ -83,6 +83,14 @@ namespace src.MetaBlocks.MarkerBlock
             };
         }
 
+        public override void ShowFocusHighlight()
+        {
+        }
+
+        public override void RemoveFocusHighlight()
+        {
+        }
+
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;
