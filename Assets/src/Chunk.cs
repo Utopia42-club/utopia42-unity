@@ -63,12 +63,14 @@ namespace src
             meshFilter = chunkObject.AddComponent<MeshFilter>();
             meshRenderer = chunkObject.AddComponent<MeshRenderer>();
             meshCollider = chunkObject.AddComponent<MeshCollider>();
+            var focusable = chunkObject.AddComponent<ChunkFocusable>();
+            focusable.Initialize(this);
 
             meshRenderer.sharedMaterials = new[]
                 {world.material, new Material(Shader.Find("Particles/Standard Surface"))};
             chunkObject.transform.SetParent(world.transform);
             chunkObject.transform.position = position;
-            chunkObject.name = "Chunck " + coordinate;
+            chunkObject.name = "Chunk " + coordinate;
 
             ChunkInitializer.InitializeChunk(coordinate, voxels);
             WorldService.INSTANCE.GetChunkData(coordinate, (data) =>

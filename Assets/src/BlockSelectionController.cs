@@ -128,7 +128,7 @@ namespace src
         private void HandleBlockSelection()
         {
             if (rotationMode || !mouseLook.cursorLocked) return;
-            var selectVoxel = (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null) &&
+            var selectVoxel = (player.HighlightBlock.gameObject.activeSelf || player.focused != null) &&
                               Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftControl) ||
                                                               Input.GetKey(KeyCode.RightControl) ||
                                                               Input.GetKey(KeyCode.LeftCommand) ||
@@ -141,9 +141,9 @@ namespace src
             {
                 var lastSelectedPosition = selectedBlocks.Last().Position;
                 var currentSelectedPosition =
-                    Vectors.FloorToInt(player.FocusedMeta == null
+                    Vectors.FloorToInt(player.focused == null
                         ? player.HighlightBlock.position
-                        : player.FocusedMeta.GetBlockPosition());
+                        : player.focused.GetBlockPosition());
 
                 var from = new Vector3Int(Mathf.Min(lastSelectedPosition.x, currentSelectedPosition.x),
                     Mathf.Min(lastSelectedPosition.y, currentSelectedPosition.y),
@@ -166,14 +166,14 @@ namespace src
             else if (selectVoxel)
             {
                 var selectedBlockPosition =
-                    Vectors.FloorToInt(player.FocusedMeta == null
+                    Vectors.FloorToInt(player.focused == null
                         ? player.HighlightBlock.position
-                        : player.FocusedMeta.GetBlockPosition());
+                        : player.focused.GetBlockPosition());
                 SelectBlockAtPosition(selectedBlockPosition);
             }
             else if (Input.GetMouseButtonDown(0))
             {
-                if (player.HammerMode && (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null))
+                if (player.HammerMode && (player.HighlightBlock.gameObject.activeSelf || player.focused != null))
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
@@ -182,20 +182,20 @@ namespace src
                 }
             }
             else if (Input.GetMouseButtonDown(1) &&
-                     (player.HighlightBlock.gameObject.activeSelf || player.FocusedMeta != null))
+                     (player.HighlightBlock.gameObject.activeSelf || player.focused != null))
                 DeleteBlock();
         }
 
         private void DeleteBlock()
         {
-            var position = Vectors.FloorToInt(player.FocusedMeta == null
+            var position = Vectors.FloorToInt(player.focused == null
                 ? player.HighlightBlock.position
-                : player.FocusedMeta.GetBlockPosition());
+                : player.focused.GetBlockPosition());
             var vp = new VoxelPosition(position);
             var chunk = world.GetChunkIfInited(vp.chunk);
             if (chunk != null)
             {
-                if (player.FocusedMeta == null)
+                if (player.focused == null)
                     chunk.DeleteVoxel(vp, player.HighlightLand);
                 if (chunk.GetMetaAt(vp) != null)
                     chunk.DeleteMeta(vp);

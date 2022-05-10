@@ -63,7 +63,7 @@ namespace src
 
         public float Horizontal { get; private set; }
         public float Vertical { get; private set; }
-        public MetaFocusable FocusedMeta { get; private set; }
+        public Focusable focused { get; private set; }
         public Vector3Int PlaceBlockPosInt { get; private set; }
 
         public Land HighlightLand => highlightLand;
@@ -138,17 +138,16 @@ namespace src
         {
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
-                PlaceCursorBlocks(raycastHit.point);
-                if (hitCollider == raycastHit.collider) return;
+                if (hitCollider == raycastHit.collider && hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
                 hitCollider = raycastHit.collider;
-                var metaFocusable = hitCollider.GetComponent<MetaFocusable>();
-                if (metaFocusable != null)
+                var focusable = hitCollider.GetComponent<Focusable>();
+                if (focusable != null)
                 {
                     focusedMetaFace = null;
-                    if (FocusedMeta != null)
-                        FocusedMeta.UnFocus();
-                    metaFocusable.Focus();
-                    FocusedMeta = metaFocusable;
+                    if (focused != null)
+                        focused.UnFocus();
+                    focusable.Focus(raycastHit.point);
+                    focused = focusable;
                     return;
                 }
             }
@@ -160,10 +159,10 @@ namespace src
                     focusedMetaBlock.UnFocus();
             }
 
-            if (FocusedMeta != null)
-                FocusedMeta.UnFocus();
+            if (focused != null)
+                focused.UnFocus();
             focusedMetaFace = null;
-            FocusedMeta = null;
+            focused = null;
             hitCollider = null;
         }
 
@@ -217,15 +216,14 @@ namespace src
             placeBlock.gameObject.SetActive(!active);
         }
 
-        private void PlaceCursorBlocks(Vector3 blockHitPoint)
+        public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk)
         {
             var epsilon = cam.forward * CastStep;
             PlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
-
             var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
             var vp = new VoxelPosition(posInt);
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk == null) return;
+            // var chunk = world.GetChunkIfInited(vp.chunk);
+            // if (chunk == null) return;
             var metaToFocus = chunk.GetMetaAt(vp);
             var foundSolid = chunk.GetBlock(vp.local).isSolid;
 

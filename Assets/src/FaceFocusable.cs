@@ -6,7 +6,7 @@ namespace src
 {
     public class FaceFocusable : MetaFocusable
     {
-        public void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null)
+        public void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face)
         {
             if (initialized) return;
             this.metaBlockObject = metaBlockObject;
