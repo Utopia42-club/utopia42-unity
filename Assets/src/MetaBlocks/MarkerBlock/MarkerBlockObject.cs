@@ -91,6 +91,11 @@ namespace src.MetaBlocks.MarkerBlock
         {
         }
 
+        public override Transform CreateSelectHighlight(bool show = true)
+        {
+            return null;
+        }
+
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;

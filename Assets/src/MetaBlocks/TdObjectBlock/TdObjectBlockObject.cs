@@ -7,7 +7,6 @@ using src.Model;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
-using Object = UnityEngine.Object;
 
 namespace src.MetaBlocks.TdObjectBlock
 {
@@ -17,9 +16,9 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private GameObject tdObjectContainer;
         private GameObject tdObject;
+
         public Collider TdObjectCollider { private set; get; }
-        public MeshRenderer ColliderRenderer { private set; get; }
-        public MeshRenderer ColliderRendererFoSelection { private set; get; }
+
         private TdObjectFocusable tdObjectFocusable;
 
         private SnackItem snackItem;
@@ -32,6 +31,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private TdObjectMoveController moveController;
         private Player player;
+        private Transform selectHighlight;
 
         private void Start()
         {
@@ -63,39 +63,58 @@ namespace src.MetaBlocks.TdObjectBlock
             if (TdObjectCollider != null)
                 ShowFocusHighlight();
         }
-        
+
         public override void ShowFocusHighlight()
         {
+            if (TdObjectCollider == null) return;
             if (TdObjectCollider is BoxCollider boxCollider)
+                AdjustHighlightBox(player.tdObjectHighlightBox, boxCollider, true);
+            else
             {
-                var colliderTransform = boxCollider.transform;
-                player.tdObjectHighlightBox.transform.rotation = colliderTransform.rotation;
-
-                var size = boxCollider.size;
-                var minPos = boxCollider.center - size / 2;
-
-                var gameObjectTransform = boxCollider.gameObject.transform;
-                size.Scale(gameObjectTransform.localScale);
-                size.Scale(gameObjectTransform.parent.localScale);
-
-                player.tdObjectHighlightBox.localScale = size;
-                player.tdObjectHighlightBox.position = colliderTransform.TransformPoint(minPos);
-                player.tdObjectHighlightBox.gameObject.SetActive(true);
-            }
-            else if (ColliderRenderer != null)
-            {
-                ColliderRenderer.enabled = true;
+                player.RemoveHighlightMesh();
+                player.tdObjectHighlightMesh = CreateMeshHighlight();
             }
         }
 
         public override void RemoveFocusHighlight()
         {
-            if (ColliderRenderer != null)
-            {
-                ColliderRenderer.enabled = false;
-                return;
-            }
+            if (player.RemoveHighlightMesh()) return;
             player.tdObjectHighlightBox.gameObject.SetActive(false);
+        }
+
+        public override Transform CreateSelectHighlight(bool show = true)
+        {
+            if (TdObjectCollider == null) return null;
+            if (!(TdObjectCollider is BoxCollider boxCollider)) return CreateMeshHighlight(show);
+            var highlightBox = Instantiate(player.tdObjectHighlightBox, default, Quaternion.identity);
+            AdjustHighlightBox(highlightBox, boxCollider, show);
+            return highlightBox;
+        }
+
+        private Transform CreateMeshHighlight(bool active = true)
+        {
+            var go = TdObjectCollider.gameObject;
+            var clone = Instantiate(go.transform, go.transform.parent);
+            DestroyImmediate(clone.GetComponent<MeshCollider>());
+            clone.GetComponent<MeshRenderer>().enabled = active;
+            return clone;
+        }
+
+        private static void AdjustHighlightBox(Transform highlightBox, BoxCollider referenceCollider, bool active)
+        {
+            var colliderTransform = referenceCollider.transform;
+            highlightBox.transform.rotation = colliderTransform.rotation;
+
+            var size = referenceCollider.size;
+            var minPos = referenceCollider.center - size / 2;
+
+            var gameObjectTransform = referenceCollider.gameObject.transform;
+            size.Scale(gameObjectTransform.localScale);
+            size.Scale(gameObjectTransform.parent.localScale);
+
+            highlightBox.localScale = size;
+            highlightBox.position = colliderTransform.TransformPoint(minPos);
+            highlightBox.gameObject.SetActive(active);
         }
 
         public void ExitMovingState()
@@ -255,9 +274,6 @@ namespace src.MetaBlocks.TdObjectBlock
                 StartCoroutine(LoadBytes(properties.url, properties.type, go =>
                 {
                     TdObjectCollider = null;
-                    ColliderRenderer = null;
-                    ColliderRendererFoSelection = null;
-                    
                     tdObjectContainer = new GameObject("3d object container");
                     tdObjectContainer.transform.SetParent(transform, false);
                     tdObjectContainer.transform.localPosition = Vector3.zero;
@@ -274,25 +290,25 @@ namespace src.MetaBlocks.TdObjectBlock
                         .FirstOrDefault(t => t.name.EndsWith("_collider"));
                     if (colliderTransform == null ||
                         properties.type != TdObjectBlockProperties.TdObjectType.GLB) return;
-                    Destroy(tdObjectFocusable);
-                    Destroy(TdObjectCollider);
-
-                    colliderTransform.localScale = 1.01f * colliderTransform.localScale;
-
-                    var clone = Instantiate(colliderTransform.gameObject, colliderTransform.transform.parent);
-                    ColliderRendererFoSelection = clone.GetComponent<MeshRenderer>();
-                    ColliderRendererFoSelection.enabled = false;
-                    ColliderRendererFoSelection.material = Player.INSTANCE.HighlightMaterial;
-
-                    ColliderRenderer = colliderTransform.gameObject.GetComponent<MeshRenderer>();
-                    ColliderRenderer.enabled = false;
-                    ColliderRenderer.material = Player.INSTANCE.HighlightMaterial;
-                    
-                    TdObjectCollider = colliderTransform.gameObject.AddComponent<MeshCollider>();
-                    tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
-                    tdObjectFocusable.Initialize(this);
+                    SetMeshCollider(colliderTransform);
                 }));
             }
+        }
+
+        private void SetMeshCollider(Transform colliderTransform)
+        {
+            Destroy(tdObjectFocusable);
+            Destroy(TdObjectCollider);
+
+            colliderTransform.localScale = 1.01f * colliderTransform.localScale;
+
+            var colliderRenderer = colliderTransform.gameObject.GetComponent<MeshRenderer>();
+            colliderRenderer.enabled = false;
+            colliderRenderer.material = Player.INSTANCE.HighlightMaterial;
+
+            TdObjectCollider = colliderTransform.gameObject.AddComponent<MeshCollider>();
+            tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
+            tdObjectFocusable.Initialize(this);
         }
 
         private void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation, Vector3 initialPosition,

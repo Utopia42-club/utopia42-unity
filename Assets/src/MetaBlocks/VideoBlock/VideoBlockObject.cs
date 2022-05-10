@@ -227,5 +227,10 @@ namespace src.MetaBlocks.VideoBlock
         public override void RemoveFocusHighlight()
         {
         }
+
+        public override Transform CreateSelectHighlight(bool show = true)
+        {
+            return null;
+        }
     }
 }

@@ -224,6 +224,7 @@ namespace src
                     break;
                 }
             }
+
             return false;
         }
 
@@ -297,7 +298,7 @@ namespace src
                     }
 
                     SelectableBlock.PutInPositions(world, toBePut);
-                    foreach (var pos in toBePut.Keys) 
+                    foreach (var pos in toBePut.Keys)
                         AddNewSelectedBlock(pos);
                 }
             }
@@ -306,8 +307,7 @@ namespace src
         private bool AddNewSelectedBlock(Vector3Int position)
         {
             if (!player.CanEdit(position, out var land)) return false;
-            var selectedBlock = SelectableBlock.Create(position, world, player.HighlightBlock,
-                player.TdObjectHighlightBox, land);
+            var selectedBlock = SelectableBlock.Create(position, land);
             if (selectedBlock == null) return false;
             selectedBlocks.Add(selectedBlock);
             if (selectedBlocks.Count == 1 && !SelectionActive)
@@ -327,7 +327,7 @@ namespace src
             if (player.CanEdit(position, out var land))
             {
                 var copiedBlock =
-                    SelectableBlock.Create(position, world, player.HighlightBlock, player.TdObjectHighlightBox, land,
+                    SelectableBlock.Create(position, land,
                         false);
                 if (copiedBlock != null)
                     copiedBlocks.Add(copiedBlock);
@@ -458,7 +458,7 @@ namespace src
         {
             foreach (var s in selectedBlocks.Where(s => s.Position.Equals(position)))
             {
-                s.ReCreateTdObjectHighlight(world, player.TdObjectHighlightBox);
+                s.ReCreateTdObjectHighlight();
                 return;
             }
         }

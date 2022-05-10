@@ -27,8 +27,8 @@ namespace src
         [SerializeField] private float gravity = -9.8f;
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
-        [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] private Material highlightMaterial;
+        [SerializeField] public Transform tdObjectHighlightBox;
 
         [NonSerialized] public uint selectedBlockId = 1;
 
@@ -48,11 +48,11 @@ namespace src
         private BlockSelectionController blockSelectionController;
         private bool ctrlDown = false;
         private Vector3Int playerPos;
+        public Transform tdObjectHighlightMesh;
 
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
-        public Transform TdObjectHighlightBox => tdObjectHighlightBox;
 
         public Player(Transform tdObjectHighlightBox, Transform placeBlock, Transform highlightBlock)
         {
@@ -371,5 +371,13 @@ namespace src
         }
 
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
+
+        public bool RemoveHighlightMesh()
+        {
+            if (tdObjectHighlightMesh == null) return false;
+            DestroyImmediate(tdObjectHighlightMesh.gameObject);
+            tdObjectHighlightMesh = null;
+            return true;
+        }
     }
 }

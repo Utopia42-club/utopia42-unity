@@ -206,5 +206,10 @@ namespace src.MetaBlocks.ImageBlock
         public override void RemoveFocusHighlight()
         {
         }
+
+        public override Transform CreateSelectHighlight(bool show = true)
+        {
+            return null;
+        }
     }
 }
