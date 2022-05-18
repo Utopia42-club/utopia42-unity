@@ -389,7 +389,7 @@ namespace src
         public void SetActive(bool active)
         {
             if (chunkObject != null) chunkObject.SetActive(active);
-            if (highlightObject != null) chunkObject.SetActive(active);
+            if (highlightObject != null) highlightObject.SetActive(active);
             this.active = active;
         }
 

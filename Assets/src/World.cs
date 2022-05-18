@@ -24,6 +24,8 @@ namespace src
         private readonly Dictionary<Vector3Int, HashSet<Vector3Int>> selectedPositions =
             new Dictionary<Vector3Int, HashSet<Vector3Int>>(); // chunk coordinate -> selected blocks local coordinates, SelectableBlockProps
 
+        private readonly HashSet<VoxelPosition> clipboard = new HashSet<VoxelPosition>();
+
         private readonly HashSet<Chunk> chunksToUpdateHighlights = new HashSet<Chunk>();
         public Dictionary<VoxelPosition, Vector3Int> highlightOffsets = new Dictionary<VoxelPosition, Vector3Int>();
 
@@ -47,6 +49,9 @@ namespace src
             selectedPositions.Values.Where(items => items != null).Sum(items => items.Count);
 
         public bool SelectionActive => TotalBlocksSelected > 0; // TODO: enhance performance
+        public bool ClipboardEmpty => clipboard.Count == 0;
+
+        public List<Vector3Int> ClipboardWorldPositions => clipboard.Select(vp => vp.ToWorld()).ToList();
 
         private IEnumerable<VoxelPosition> SelectedVoxelPositions =>
             from chunkCoordinate in selectedPositions.Keys
@@ -170,66 +175,101 @@ namespace src
 
         public void DuplicateSelectedBlocks()
         {
-            var selectedBlocks = GetSelectedBlocksProperties();
-            var blocks = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
-            var metas = new Dictionary<VoxelPosition, Tuple<SelectedBlockProperties, Land>>();
-            foreach (var pos in selectedBlocks.Keys)
+            StartCoroutine(GetSelectedBlocksProperties(selectedBlocks =>
             {
-                var offset = GetHighlightOffset(pos);
-                if (offset == Vector3Int.zero) continue;
+                var blocks = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+                var metas = new Dictionary<VoxelPosition, Tuple<SelectedBlockProperties, Land>>();
+                foreach (var pos in selectedBlocks.Keys)
+                {
+                    var offset = GetHighlightOffset(pos);
+                    if (offset == Vector3Int.zero) continue;
 
-                var newPos = pos.ToWorld() + offset;
-                if (!player.CanEdit(newPos, out var land)) continue;
+                    var newPos = pos.ToWorld() + offset;
+                    if (!player.CanEdit(newPos, out var land)) continue;
 
-                var newPosVp = new VoxelPosition(newPos);
-                var selectedBlockProperties = selectedBlocks[pos];
-                blocks.Add(newPosVp,
-                    new Tuple<BlockType, Land>(Blocks.GetBlockType(selectedBlockProperties.blockTypeId), land));
-                if (selectedBlockProperties.metaAttached)
-                    metas.Add(newPosVp, new Tuple<SelectedBlockProperties, Land>(selectedBlockProperties, land));
-            }
+                    var newPosVp = new VoxelPosition(newPos);
+                    var selectedBlockProperties = selectedBlocks[pos];
+                    blocks.Add(newPosVp,
+                        new Tuple<BlockType, Land>(Blocks.GetBlockType(selectedBlockProperties.blockTypeId), land));
+                    if (selectedBlockProperties.metaAttached)
+                        metas.Add(newPosVp, new Tuple<SelectedBlockProperties, Land>(selectedBlockProperties, land));
+                }
 
-            PutBlocks(blocks);
-            foreach (var vp in metas.Keys)
-            {
-                var (selectedBlockProperties, land) = metas[vp];
-                PutMetaWithProps(vp,
-                    (MetaBlockType) Blocks.GetBlockType(selectedBlockProperties.metaBlockTypeId),
-                    selectedBlockProperties.metaProperties, land);
-            }
+                PutBlocks(blocks);
+                foreach (var vp in metas.Keys)
+                {
+                    var (selectedBlockProperties, land) = metas[vp];
+                    PutMetaWithProps(vp,
+                        (MetaBlockType) Blocks.GetBlockType(selectedBlockProperties.metaBlockTypeId),
+                        selectedBlockProperties.metaProperties, land);
+                }
+            }));
         }
 
-        private Dictionary<VoxelPosition, SelectedBlockProperties> GetSelectedBlocksProperties()
+        private IEnumerator GetSelectedBlocksProperties(
+            Action<Dictionary<VoxelPosition, SelectedBlockProperties>> consumer)
         {
             var result = new Dictionary<VoxelPosition, SelectedBlockProperties>();
             foreach (var vp in SelectedVoxelPositions)
             {
-                var props = GetSelectedBlockProperties(vp);
+                SelectedBlockProperties props = null;
+                var callbackCalled = false;
+                GetSelectedBlockProperties(vp, properties =>
+                {
+                    props = properties;
+                    callbackCalled = true;
+                });
+                while (!callbackCalled) yield return null;
                 if (props != null)
                     result.Add(vp, props);
             }
 
-            return result;
+            consumer.Invoke(result);
         }
 
-        private SelectedBlockProperties GetSelectedBlockProperties(VoxelPosition vp)
+        private void GetSelectedBlockProperties(VoxelPosition vp, Action<SelectedBlockProperties> consumer)
         {
-            if (!player.CanEdit(vp.ToWorld(), out var land)) return null;
+            if (!player.CanEdit(vp.ToWorld(), out var land))
+            {
+                consumer.Invoke(null);
+                return;
+            }
 
             var chunk = GetChunkIfInited(vp.chunk);
-            if (chunk == null)
-                return
-                    null; // TODO: we need a mechanism to be able to retrieve the props independent of the related chunk
+            if (chunk != null)
+            {
+                var blockType = chunk.GetBlock(vp.local);
+                if (!blockType.isSolid)
+                {
+                    consumer.Invoke(null); // air block is ignored
+                    return;
+                }
 
-            var blockType = chunk.GetBlock(vp.local);
-            if (!blockType.isSolid) return null; // air block is ignored
+                consumer.Invoke(GetSelectedBlockProperties(blockType.id, chunk.GetMetaAt(vp)));
+                return;
+            }
 
-            var blockTypeId = blockType.id;
+            WorldService.INSTANCE.GetBlockType(vp, blockType =>
+            {
+                if (blockType == null || !blockType.isSolid)
+                {
+                    consumer.Invoke(null); // air block is ignored
+                    return;
+                }
 
-            var meta = chunk.GetMetaAt(vp);
-            if (meta == null) return new SelectedBlockProperties(blockTypeId);
-            return new SelectedBlockProperties(blockTypeId, meta.type.id, ((ICloneable) meta.GetProps())?.Clone());
+                WorldService.INSTANCE.GetMetaBlock(vp,
+                    meta => { consumer.Invoke(GetSelectedBlockProperties(blockType.id, meta)); });
+            });
         }
+
+        private SelectedBlockProperties GetSelectedBlockProperties(uint blockTypeId, MetaBlock meta = null)
+        {
+            return meta == null
+                ? new SelectedBlockProperties(blockTypeId)
+                : new SelectedBlockProperties(blockTypeId, meta.type.id,
+                    ((ICloneable) meta.GetProps())?.Clone());
+        }
+
 
         public Vector3Int CalculateSelectionDisplacement(Vector3 moveDirection)
         {
@@ -262,7 +302,8 @@ namespace src
             {
                 var offset = GetHighlightOffset(vp);
                 var highlightPosition = vp.ToWorld() + offset;
-                var rotatedVector = Quaternion.AngleAxis(90, axis) * (highlightPosition + 0.5f * Vector3.one - center.Value);
+                var rotatedVector = Quaternion.AngleAxis(90, axis) *
+                                    (highlightPosition + 0.5f * Vector3.one - center.Value);
                 var newHighlightPosition = Vectors.TruncateFloor(center.Value + rotatedVector - 0.5f * Vector3.one);
                 highlightOffsets[vp] = offset + newHighlightPosition - highlightPosition;
             }
@@ -270,6 +311,43 @@ namespace src
             foreach (var chunk in ActiveChunksContainingSelections)
                 chunk.UpdateHighlight();
             chunksToUpdateHighlights.Clear();
+        }
+
+        public void ResetClipboard()
+        {
+            clipboard.Clear();
+            foreach (var vp in SelectedVoxelPositions)
+                clipboard.Add(vp);
+        }
+
+        public Vector3Int GetClipboardMinPoint()
+        {
+            var minX = int.MaxValue;
+            var minY = int.MaxValue;
+            var minZ = int.MaxValue;
+            foreach (var pos in ClipboardWorldPositions)
+            {
+                if (pos.x < minX)
+                    minX = pos.x;
+                if (pos.y < minY)
+                    minY = pos.y;
+                if (pos.z < minZ)
+                    minZ = pos.z;
+            }
+
+            return new Vector3Int(minX, minY, minZ);
+        }
+
+        public void PasteClipboard(Vector3Int offset)
+        {
+            ClearHighlights();
+            foreach (var vp in clipboard)
+            {
+                AddHighlight(vp, true);
+                highlightOffsets.Add(vp, offset);
+            }
+
+            UpdateHighlights();
         }
 
         private Chunk PopRequest()
