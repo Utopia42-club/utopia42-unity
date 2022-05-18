@@ -135,12 +135,6 @@ namespace src
             return chunk.GetMetaAt(vp)?.blockObject.CreateSelectHighlight();
         }
 
-        // private void Add(VoxelPosition vp)
-        // {
-        //     if (TryAdd(vp))
-        //         OnChanged();
-        // }
-
         private void Add(List<VoxelPosition> vps, bool forceRedraw = false)
         {
             var changed = false;
@@ -155,40 +149,12 @@ namespace src
         {
             var blockType = chunk.GetBlock(vp.local);
             if (!blockType.isSolid) return false;
-            // if (!TryRemove(vp)) // remove and do not add if it already exists
-            // {
             var metaHighlight = GetMetaBlockHighlight(vp);
             if (metaHighlight != null)
                 metaHighlight.position = metaHighlight.position + world.GetHighlightOffset(vp);
             selectedBlocks.Add(vp.local, metaHighlight);
-            // }
             return true;
         }
-
-        // private void Remove(VoxelPosition vp)
-        // {
-        //     if (TryRemove(vp))
-        //         OnChanged();
-        // }
-        //
-        // private void Remove(List<VoxelPosition> vps)
-        // {
-        //     var changed = false;
-        //     foreach (var vp in vps)
-        //         if (TryRemove(vp))
-        //             changed = true;
-        //     if (changed) OnChanged();
-        // }
-
-        // private bool TryRemove(VoxelPosition vp)
-        // {
-        //     if (!selectedBlocks.TryGetValue(vp.local, out var metaHighlight)) return false;
-        //     if (metaHighlight != null)
-        //         Destroy(metaHighlight.gameObject);
-        //     selectedBlocks.Remove(vp.local);
-        //     return true;
-        // }
-
         private void Clean()
         {
             DestroyMeshAndMaterial();
