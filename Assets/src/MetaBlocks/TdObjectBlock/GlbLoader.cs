@@ -22,7 +22,7 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             try
             {
-                AnimationClip[] clips; // TODO
+                AnimationClip[] clips; // TODO: use glb animation
                 var go = Importer.LoadFromBytes(data, ImportSettings, out clips);
                 onSuccess.Invoke(go);
             }

@@ -255,7 +255,7 @@ namespace src.Service
                 prev.DestroyView();
             WorldSliceService.INSTANCE.GetChunk(pos.chunk, data =>
             {
-                if (data.metaBlocks != null && data.metaBlocks.TryGetValue(pos.local, out var prev))
+                if (data != null && data.metaBlocks != null && data.metaBlocks.TryGetValue(pos.local, out var prev)) // TODO: correct null check?
                     prev.DestroyView();
             });
 

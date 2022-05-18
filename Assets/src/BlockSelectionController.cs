@@ -17,15 +17,9 @@ namespace src
 
         private MouseLook mouseLook;
         private Player player;
-        private World world;
         private SnackItem snackItem;
 
-        private readonly List<SelectableBlock> selectedBlocks = new List<SelectableBlock>();
-        private readonly List<SelectableBlock> copiedBlocks = new List<SelectableBlock>();
-
         private Vector3 rotationSum = Vector3.zero;
-
-        public bool SelectionActive { get; private set; } = false; // whether we have any selected any blocks or not
 
         private bool
             movingSelectionAllowed =
@@ -33,16 +27,15 @@ namespace src
 
         private bool rotationMode = false;
 
-        public bool PlayerMovementAllowed => !SelectionActive || !movingSelectionAllowed;
+        public bool PlayerMovementAllowed => !World.INSTANCE.SelectionActive || !movingSelectionAllowed;
 
         public void Start()
         {
             player = Player.INSTANCE;
             mouseLook = MouseLook.INSTANCE;
-            world = World.INSTANCE;
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
-                if (state != GameManager.State.PLAYING && SelectionActive)
+                if (state != GameManager.State.PLAYING && World.INSTANCE.SelectionActive)
                     ExitSelectionMode();
             });
         }
@@ -61,10 +54,8 @@ namespace src
             rotationMode = !rotationMode;
             if (!rotationMode)
                 mouseLook.RemoveRotationTarget();
-            else if (selectedBlocks.Count > 0 && SelectionActive)
-            {
+            else if (World.INSTANCE.SelectionActive)
                 mouseLook.SetRotationTarget(RotateSelection);
-            }
         }
 
         private void RotateSelection(Vector3 rotation)
@@ -93,17 +84,13 @@ namespace src
                 rotationAxis = rotationSum.x > 0 ? axis : -axis;
             }
 
-            var center = selectedBlocks[0].HighlightPosition + 0.5f * Vector3.one;
-
-            foreach (var block in selectedBlocks)
-                block.RotateAround(center, rotationAxis);
-
+            World.INSTANCE.RotateSelection(rotationAxis);
             rotationSum = Vector3.zero;
         }
 
         private void HandleBlockMovement()
         {
-            if (selectedBlocks.Count == 0 || !SelectionActive || !movingSelectionAllowed) return;
+            if (!World.INSTANCE.SelectionActive || !movingSelectionAllowed) return;
             var moveDown = Input.GetButtonDown("Jump") &&
                            (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
             var moveUp = !moveDown && Input.GetButtonDown("Jump");
@@ -115,14 +102,11 @@ namespace src
 
             if (!movement) return;
 
-            var delta = Vectors.FloorToInt(
-                Vectors.FloorToInt(selectedBlocks[0].HighlightPosition + 0.5f * Vector3.one + moveDirection) -
-                selectedBlocks[0].HighlightPosition +
-                (moveUp ? Vector3.up : moveDown ? Vector3.down : Vector3.zero));
-            foreach (var block in selectedBlocks)
-            {
-                block.Move(delta);
-            }
+            var delta =
+                World.INSTANCE.CalculateSelectionDisplacement(moveDirection) +
+                (moveUp ? Vector3Int.up : moveDown ? Vector3Int.down : Vector3Int.zero);
+
+            World.INSTANCE.MoveSelection(delta);
         }
 
         private void HandleBlockSelection()
@@ -134,12 +118,12 @@ namespace src
                                                               Input.GetKey(KeyCode.LeftCommand) ||
                                                               Input.GetKey(KeyCode.RightCommand));
 
-            var multipleSelect = selectVoxel && selectedBlocks.Count > 0 &&
+            var multipleSelect = selectVoxel && World.INSTANCE.SelectionActive &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
 
             if (multipleSelect)
             {
-                var lastSelectedPosition = selectedBlocks.Last().Position;
+                var lastSelectedPosition = World.INSTANCE.lastSelectedPosition.ToWorld();
                 var currentSelectedPosition =
                     Vectors.FloorToInt(player.focused == null
                         ? player.HighlightBlock.position
@@ -158,10 +142,9 @@ namespace src
                 {
                     var position = new Vector3Int(x, y, z);
                     if (position.Equals(lastSelectedPosition) || position.Equals(currentSelectedPosition)) continue;
-                    SelectBlockAtPosition(position);
+                    World.INSTANCE.AddHighlight(new VoxelPosition(position), true);
                 }
-
-                SelectBlockAtPosition(currentSelectedPosition);
+                AddNewSelectedBlock(currentSelectedPosition); // TODO: refactor?
             }
             else if (selectVoxel)
             {
@@ -169,7 +152,7 @@ namespace src
                     Vectors.FloorToInt(player.focused == null
                         ? player.HighlightBlock.position
                         : player.focused.GetBlockPosition());
-                SelectBlockAtPosition(selectedBlockPosition);
+                AddNewSelectedBlock(selectedBlockPosition);
             }
             else if (Input.GetMouseButtonDown(0))
             {
@@ -177,7 +160,7 @@ namespace src
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
-                    world.PutBlock(new VoxelPosition(player.PlaceBlock.position),
+                    World.INSTANCE.PutBlock(new VoxelPosition(player.PlaceBlock.position),
                         Blocks.GetBlockType(player.selectedBlockId));
                 }
             }
@@ -192,40 +175,14 @@ namespace src
                 ? player.HighlightBlock.position
                 : player.focused.GetBlockPosition());
             var vp = new VoxelPosition(position);
-            var chunk = world.GetChunkIfInited(vp.chunk);
+            var chunk = World.INSTANCE.GetChunkIfInited(vp.chunk);
             if (chunk != null)
             {
-                if (player.focused == null)
+                if (player.focused == null || player.focused is ChunkFocusable)
                     chunk.DeleteVoxel(vp, player.HighlightLand);
                 if (chunk.GetMetaAt(vp) != null)
                     chunk.DeleteMeta(vp);
             }
-        }
-
-        public bool SelectBlockAtPosition(Vector3Int position)
-        {
-            // Remove any existing selections
-            var indicesToRemove = new List<int>();
-            for (var i = 0; i < selectedBlocks.Count; i++)
-            {
-                if (selectedBlocks[i].Position.Equals(position))
-                    indicesToRemove.Add(i);
-            }
-
-            if (indicesToRemove.Count <= 0) return AddNewSelectedBlock(position);
-            foreach (var index in indicesToRemove.OrderByDescending(i => i))
-            {
-                selectedBlocks[index].RemoveHighlights();
-                selectedBlocks.RemoveAt(index);
-                UpdateCountMsg();
-                if (selectedBlocks.Count == 0)
-                {
-                    ExitSelectionMode();
-                    break;
-                }
-            }
-
-            return false;
         }
 
         private void HandleBlockClipboard()
@@ -234,15 +191,15 @@ namespace src
             {
                 ExitSelectionMode();
             }
-            else if (Input.GetKeyDown(KeyCode.C) &&
-                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
-            {
-                ClearClipboard();
-                foreach (var block in selectedBlocks)
-                    AddNewCopiedBlock(block.HighlightPosition);
-                ExitSelectionMode();
-            }
+            // else if (Input.GetKeyDown(KeyCode.C) &&
+            //          (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+            //           Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand))) // copy paste TODO
+            // {
+            //     ClearClipboard();
+            //     foreach (var block in selectedBlocks)
+            //         AddNewCopiedBlock(block.HighlightPosition);
+            //     ExitSelectionMode();
+            // }
 
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
             {
@@ -251,68 +208,72 @@ namespace src
             }
             else if (Input.GetButtonDown("Delete"))
             {
-                SelectableBlock.Remove(world, selectedBlocks);
+                World.INSTANCE.RemoveSelectedBlocks();
                 ExitSelectionMode();
             }
-            else if (player.PlaceBlock.gameObject.activeSelf && copiedBlocks.Count > 0 &&
-                     Input.GetKeyDown(KeyCode.V) &&
-                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
-            {
-                var minX = int.MaxValue;
-                var minY = int.MaxValue;
-                var minZ = int.MaxValue;
-                foreach (var srcBlock in copiedBlocks)
-                {
-                    if (srcBlock.Position.x < minX)
-                        minX = srcBlock.Position.x;
-                    if (srcBlock.Position.y < minY)
-                        minY = srcBlock.Position.y;
-                    if (srcBlock.Position.z < minZ)
-                        minZ = srcBlock.Position.z;
-                }
-
-                var minPoint = new Vector3Int(minX, minY, minZ);
-                var conflictWithPlayer = false;
-                var currVox = Vectors.TruncateFloor(transform.position);
-                ClearSelection();
-                foreach (var srcBlock in copiedBlocks)
-                {
-                    var newPosition = srcBlock.Position - minPoint + player.PlaceBlockPosInt;
-                    if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
-                        currVox.Equals(newPosition - Vector3Int.up))
-                    {
-                        conflictWithPlayer = true;
-                        break;
-                    }
-                }
-
-                if (!conflictWithPlayer)
-                {
-                    var toBePut = new Dictionary<Vector3Int, Tuple<SelectableBlock, Land>>();
-                    foreach (var srcBlock in copiedBlocks)
-                    {
-                        var newPosition = srcBlock.Position - minPoint + player.PlaceBlockPosInt;
-                        if (player.CanEdit(newPosition, out var land))
-                            toBePut.Add(newPosition, new Tuple<SelectableBlock, Land>(srcBlock, land));
-                    }
-
-                    SelectableBlock.PutInPositions(world, toBePut);
-                    foreach (var pos in toBePut.Keys)
-                        AddNewSelectedBlock(pos);
-                }
-            }
+            // else if (player.PlaceBlock.gameObject.activeSelf && copiedBlocks.Count > 0 && 
+            //          Input.GetKeyDown(KeyCode.V) &&
+            //          (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+            //           Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand))) // copy paste TODO
+            // {
+            //     var minX = int.MaxValue;
+            //     var minY = int.MaxValue;
+            //     var minZ = int.MaxValue;
+            //     foreach (var srcBlock in copiedBlocks)
+            //     {
+            //         if (srcBlock.Position.x < minX)
+            //             minX = srcBlock.Position.x;
+            //         if (srcBlock.Position.y < minY)
+            //             minY = srcBlock.Position.y;
+            //         if (srcBlock.Position.z < minZ)
+            //             minZ = srcBlock.Position.z;
+            //     }
+            //
+            //     var minPoint = new Vector3Int(minX, minY, minZ);
+            //     var conflictWithPlayer = false;
+            //     var currVox = Vectors.TruncateFloor(transform.position);
+            //     ClearSelection();
+            //     foreach (var srcBlock in copiedBlocks)
+            //     {
+            //         var newPosition = srcBlock.Position - minPoint + player.PlaceBlockPosInt;
+            //         if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
+            //             currVox.Equals(newPosition - Vector3Int.up))
+            //         {
+            //             conflictWithPlayer = true;
+            //             break;
+            //         }
+            //     }
+            //
+            //     if (!conflictWithPlayer)
+            //     {
+            //         var toBePut = new Dictionary<Vector3Int, Tuple<SelectedBlockProperties, Land>>();
+            //         foreach (var srcBlock in copiedBlocks)
+            //         {
+            //             var newPosition = srcBlock.Position - minPoint + player.PlaceBlockPosInt;
+            //             if (player.CanEdit(newPosition, out var land))
+            //                 toBePut.Add(newPosition, new Tuple<SelectedBlockProperties, Land>(srcBlock, land));
+            //         }
+            //
+            //         SelectedBlockProperties.PutInPositions(world, toBePut);
+            //         foreach (var pos in toBePut.Keys)
+            //             AddNewSelectedBlock(pos);
+            //     }
+            // }
         }
 
         private bool AddNewSelectedBlock(Vector3Int position)
         {
             if (!player.CanEdit(position, out var land)) return false;
-            var selectedBlock = SelectableBlock.Create(position, land);
-            if (selectedBlock == null) return false;
-            selectedBlocks.Add(selectedBlock);
-            if (selectedBlocks.Count == 1 && !SelectionActive)
+            var added = World.INSTANCE.AddHighlight(new VoxelPosition(position)); 
+            if (!added) // removed
             {
-                SelectionActive = true;
+                if (!World.INSTANCE.SelectionActive)
+                    ExitSelectionMode();
+                return false;
+            }
+            
+            if (World.INSTANCE.TotalBlocksSelected == 1)
+            {
                 movingSelectionAllowed = false;
                 SetBlockSelectionSnack();
                 selectedBlocksCountTextContainer.gameObject.SetActive(true);
@@ -322,62 +283,40 @@ namespace src
             return true;
         }
 
-        private void AddNewCopiedBlock(Vector3Int position)
-        {
-            if (player.CanEdit(position, out var land))
-            {
-                var copiedBlock =
-                    SelectableBlock.Create(position, land,
-                        false);
-                if (copiedBlock != null)
-                    copiedBlocks.Add(copiedBlock);
-            }
-        }
+        // private void AddNewCopiedBlock(Vector3Int position) // copy paste TODO
+        // {
+        //     if (player.CanEdit(position, out var land))
+        //     {
+        //         var copiedBlock =
+        //             SelectedBlockProperties.Create(position, land,
+        //                 false);
+        //         if (copiedBlock != null)
+        //             copiedBlocks.Add(copiedBlock);
+        //     }
+        // }
 
         private void ConfirmMove()
         {
-            var movedBlocks = selectedBlocks.Where(block => block.IsMoved()).ToList();
-            var currVox = Vectors.TruncateFloor(transform.position);
-            foreach (var block in movedBlocks)
-            {
-                var position = block.HighlightPosition;
-                if (currVox.Equals(position) || currVox.Equals(position + Vector3Int.up) ||
-                    currVox.Equals(position - Vector3Int.up))
-                    return;
-            }
-
-            SelectableBlock.Remove(world, movedBlocks);
-
-
-            var toBePut = new Dictionary<Vector3Int, Tuple<SelectableBlock, Land>>();
-            foreach (var block in movedBlocks)
-            {
-                var pos = block.HighlightPosition;
-                if (player.CanEdit(pos, out var land))
-                    toBePut.Add(pos, new Tuple<SelectableBlock, Land>(block, land));
-            }
-
-            SelectableBlock.PutInPositions(world, toBePut);
+            World.INSTANCE.DuplicateSelectedBlocks();
+            World.INSTANCE.RemoveSelectedBlocks(true);
         }
 
         private void ClearSelection()
         {
-            foreach (var block in selectedBlocks)
-                block.RemoveHighlights();
-            selectedBlocks.Clear();
+            World.INSTANCE.ClearHighlights();
             selectedBlocksCountTextContainer.gameObject.SetActive(false);
         }
 
-        private void ClearClipboard()
-        {
-            foreach (var block in copiedBlocks)
-                block.RemoveHighlights();
-            copiedBlocks.Clear();
-        }
+        // private void ClearClipboard() // copy paste TODO
+        // {
+        //     // foreach (var block in copiedBlocks)
+        //     //     block.RemoveHighlights();
+        //     copiedBlocks.Clear();
+        // }
 
         private void UpdateCountMsg()
         {
-            var count = selectedBlocks.Count;
+            var count = World.INSTANCE.TotalBlocksSelected;
             selectedBlocksCountText.text = count == 1 ? "1 Block Selected" : count + " Blocks Selected";
         }
 
@@ -441,26 +380,15 @@ namespace src
             return lines;
         }
 
-        private void ExitSelectionMode()
+        public void ExitSelectionMode()
         {
             if (snackItem != null)
             {
                 snackItem.Remove();
                 snackItem = null;
             }
-
             ClearSelection();
-            SelectionActive = false;
             movingSelectionAllowed = false;
-        }
-
-        public void ReCreateTdObjectHighlightIfSelected(Vector3Int position)
-        {
-            foreach (var s in selectedBlocks.Where(s => s.Position.Equals(position)))
-            {
-                s.ReCreateTdObjectHighlight();
-                return;
-            }
         }
 
         public static BlockSelectionController INSTANCE =>

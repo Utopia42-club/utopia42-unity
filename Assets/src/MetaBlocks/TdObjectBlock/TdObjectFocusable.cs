@@ -14,7 +14,10 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public override Vector3 GetBlockPosition()
         {
-            return Vectors.TruncateFloor(transform.parent.parent.position);
+            var collider = GetComponent<Collider>();
+            if(collider != null && collider is BoxCollider)
+                return Vectors.TruncateFloor(transform.parent.parent.position);
+            return Vectors.TruncateFloor(transform.parent.parent.parent.position);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace src
         {
             if (!initialized) return;
 
-            if (BlockSelectionController.INSTANCE.SelectionActive)
+            if (World.INSTANCE.SelectionActive)
             {
                 metaBlockObject.ShowFocusHighlight();
                 return;

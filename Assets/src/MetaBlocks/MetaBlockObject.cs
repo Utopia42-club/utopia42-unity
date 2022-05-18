@@ -7,7 +7,7 @@ namespace src.MetaBlocks
     public abstract class MetaBlockObject : MonoBehaviour
     {
         private MetaBlock block;
-        private Chunk chunk;
+        protected Chunk chunk;
         private GameObject iconObject;
 
         public void Initialize(MetaBlock block, Chunk chunk)

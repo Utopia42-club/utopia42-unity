@@ -27,7 +27,6 @@ namespace src
         [SerializeField] private float gravity = -9.8f;
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
-        [SerializeField] private Material highlightMaterial;
         [SerializeField] public Transform tdObjectHighlightBox;
 
         [NonSerialized] public uint selectedBlockId = 1;
@@ -67,8 +66,6 @@ namespace src
         public Vector3Int PlaceBlockPosInt { get; private set; }
 
         public Land HighlightLand => highlightLand;
-        public Material HighlightMaterial => highlightMaterial;
-
 
         private void Start()
         {
@@ -279,7 +276,7 @@ namespace src
                 focusedMetaBlock = metaToFocus;
                 focusedMetaFace = faceToFocus;
 
-                if (focusedMetaBlock != null && !blockSelectionController.SelectionActive)
+                if (focusedMetaBlock != null && !World.INSTANCE.SelectionActive)
                 {
                     if (!focusedMetaBlock.Focus(focusedMetaFace))
                     {

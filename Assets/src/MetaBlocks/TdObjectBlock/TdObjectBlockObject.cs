@@ -87,6 +87,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if (TdObjectCollider == null) return null;
             if (!(TdObjectCollider is BoxCollider boxCollider)) return CreateMeshHighlight(show);
             var highlightBox = Instantiate(player.tdObjectHighlightBox, default, Quaternion.identity);
+            highlightBox.GetComponentInChildren<MeshRenderer>().material = World.INSTANCE.SelectedBlock;
             AdjustHighlightBox(highlightBox, boxCollider, show);
             return highlightBox;
         }
@@ -96,7 +97,9 @@ namespace src.MetaBlocks.TdObjectBlock
             var go = TdObjectCollider.gameObject;
             var clone = Instantiate(go.transform, go.transform.parent);
             DestroyImmediate(clone.GetComponent<MeshCollider>());
-            clone.GetComponent<MeshRenderer>().enabled = active;
+            var renderer = clone.GetComponent<MeshRenderer>();
+            renderer.enabled = active;
+            renderer.material = World.INSTANCE.SelectedBlock;
             return clone;
         }
 
@@ -263,7 +266,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if (currentUrl.Equals(properties.url) && tdObjectContainer != null)
             {
                 LoadGameObject(scale, offset, rotation, initialPosition, properties.initialScale,
-                    properties.detectCollision);
+                    properties.detectCollision, properties.type);
             }
             else
             {
@@ -283,14 +286,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     tdObject.name = TdObjectBlockType.Name;
 
                     LoadGameObject(scale, offset, rotation, initialPosition, properties.initialScale,
-                        properties.detectCollision, reinitialize);
-
-                    // replace box collider with mesh collider if any colliders are defined in the glb object
-                    var colliderTransform = tdObject.GetComponentsInChildren<Transform>()
-                        .FirstOrDefault(t => t.name.EndsWith("_collider"));
-                    if (colliderTransform == null ||
-                        properties.type != TdObjectBlockProperties.TdObjectType.GLB) return;
-                    SetMeshCollider(colliderTransform);
+                        properties.detectCollision, properties.type, reinitialize);
                 }));
             }
         }
@@ -304,7 +300,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             var colliderRenderer = colliderTransform.gameObject.GetComponent<MeshRenderer>();
             colliderRenderer.enabled = false;
-            colliderRenderer.material = Player.INSTANCE.HighlightMaterial;
+            colliderRenderer.material = World.INSTANCE.HighlightBlock;
 
             TdObjectCollider = colliderTransform.gameObject.AddComponent<MeshCollider>();
             tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
@@ -312,7 +308,8 @@ namespace src.MetaBlocks.TdObjectBlock
         }
 
         private void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation, Vector3 initialPosition,
-            float initialScale, bool detectCollision, bool reinitialize = false)
+            float initialScale, bool detectCollision, TdObjectBlockProperties.TdObjectType type,
+            bool reinitialize = false)
         {
             if (TdObjectCollider == null)
             {
@@ -332,13 +329,16 @@ namespace src.MetaBlocks.TdObjectBlock
 
                 var size = ((BoxCollider) TdObjectCollider).size;
                 var maxD = new[] {size.x, size.y, size.z}.Max();
-                initialScale = maxD > 10f ? 10f / maxD : 1;
+                var newInitScale = maxD > 10f ? 10f / maxD : 1;
+                tdObject.transform.localScale = newInitScale * Vector3.one;
+                var newInitPosition = tdObjectContainer.transform.TransformPoint(Vector3.zero) -
+                                      TdObjectCollider.transform.TransformPoint(((BoxCollider) TdObjectCollider).center);
 
-                tdObject.transform.localScale = initialScale * Vector3.one;
-                InitializeProps(
-                    tdObjectContainer.transform.TransformPoint(Vector3.zero) -
-                    TdObjectCollider.transform.TransformPoint(((BoxCollider) TdObjectCollider).center), initialScale);
-                return;
+                if (Math.Abs(newInitScale - initialScale) > 0.0001 || newInitPosition != initialPosition)
+                {
+                    InitializeProps(newInitPosition, newInitScale);
+                    return;
+                }
             }
 
             tdObject.transform.localScale = initialScale * Vector3.one;
@@ -348,19 +348,33 @@ namespace src.MetaBlocks.TdObjectBlock
             tdObjectContainer.transform.localPosition = offset;
             tdObjectContainer.transform.eulerAngles = rotation;
 
-            tdObject.layer =
-                detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
-            if (GetBlock().land != null && !InLand(((BoxCollider) TdObjectCollider)))
+            var colliderTransform = tdObject.GetComponentsInChildren<Transform>()
+                .FirstOrDefault(t => t.name.EndsWith("_collider"));
+            if (colliderTransform != null && type == TdObjectBlockProperties.TdObjectType.GLB)
+            {
+                // replace box collider with mesh collider if any colliders are defined in the glb object
+                if(TdObjectCollider is BoxCollider)
+                    SetMeshCollider(colliderTransform);
+
+                if (GetBlock().land != null && !InLand(TdObjectCollider.GetComponent<MeshRenderer>()))
+                {
+                    DestroyObject();
+                    UpdateStateAndIcon(StateMsg.OutOfBound);
+                    return;
+                }
+            }
+            else if (GetBlock().land != null && !InLand((BoxCollider) TdObjectCollider))
             {
                 DestroyObject();
                 UpdateStateAndIcon(StateMsg.OutOfBound);
+                return;
             }
-            else
-            {
-                UpdateStateAndIcon(StateMsg.Ok);
-                BlockSelectionController.INSTANCE.ReCreateTdObjectHighlightIfSelected(
-                    Vectors.FloorToInt(transform.position));
-            }
+
+            TdObjectCollider.gameObject.layer =
+                detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
+
+            UpdateStateAndIcon(StateMsg.Ok);
+            chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position)));
         }
 
         private void DestroyObject(bool immediate = true)

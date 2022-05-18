@@ -86,9 +86,10 @@ namespace src
         public Dictionary<Vector3Int, bool> SelectBlocks(string request)
         {
             var positions = JsonConvert.DeserializeObject<List<SerializableVector3>>(request);
-            var selectionController = BlockSelectionController.INSTANCE;
-            return positions.Select(pos => pos.ToVector3Int()).ToDictionary(position => position,
-                position => selectionController.SelectBlockAtPosition(position));
+            var result = positions.Select(pos => pos.ToVector3Int()).ToDictionary(position => position,
+                position => World.INSTANCE.AddHighlight(new VoxelPosition(position), true));
+            World.INSTANCE.UpdateHighlights();
+            return result;
         }
 
         public SerializableVector3 GetPlayerPosition()

@@ -26,7 +26,7 @@ namespace src
 
         public override Vector3 GetBlockPosition()
         {
-            throw new System.NotImplementedException();
+            return Player.INSTANCE.HighlightBlock.position;
         }
     }
 }

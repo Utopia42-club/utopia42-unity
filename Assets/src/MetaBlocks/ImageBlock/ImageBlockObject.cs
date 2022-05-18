@@ -148,7 +148,7 @@ namespace src.MetaBlocks.ImageBlock
             return lines;
         }
 
-        private void UpdateIcon(StateMsg message) // TODO
+        private void UpdateIcon(StateMsg message) 
         {
             if (message != StateMsg.LoadingMetadata && message != StateMsg.Loading && message != StateMsg.Ok)
             {
