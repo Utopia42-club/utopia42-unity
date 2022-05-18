@@ -72,7 +72,7 @@ namespace src.MetaBlocks.TdObjectBlock
             else
             {
                 player.RemoveHighlightMesh();
-                player.tdObjectHighlightMesh = CreateMeshHighlight();
+                player.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
             }
         }
 
@@ -85,21 +85,21 @@ namespace src.MetaBlocks.TdObjectBlock
         public override Transform CreateSelectHighlight(bool show = true)
         {
             if (TdObjectCollider == null) return null;
-            if (!(TdObjectCollider is BoxCollider boxCollider)) return CreateMeshHighlight(show);
+            if (!(TdObjectCollider is BoxCollider boxCollider)) return CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
             var highlightBox = Instantiate(player.tdObjectHighlightBox, default, Quaternion.identity);
             highlightBox.GetComponentInChildren<MeshRenderer>().material = World.INSTANCE.SelectedBlock;
             AdjustHighlightBox(highlightBox, boxCollider, show);
             return highlightBox;
         }
 
-        private Transform CreateMeshHighlight(bool active = true)
+        private Transform CreateMeshHighlight(Material material, bool active = true)
         {
             var go = TdObjectCollider.gameObject;
             var clone = Instantiate(go.transform, go.transform.parent);
             DestroyImmediate(clone.GetComponent<MeshCollider>());
             var renderer = clone.GetComponent<MeshRenderer>();
             renderer.enabled = active;
-            renderer.material = World.INSTANCE.SelectedBlock;
+            renderer.material = material;
             return clone;
         }
 
@@ -399,7 +399,8 @@ namespace src.MetaBlocks.TdObjectBlock
                     else
                     {
                         Destroy(mat.mainTexture);
-                        Destroy(mat); // TODO: not allowed to destroy GLB mats
+                        if(!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                            Destroy(mat);
                     }
                 }
 
