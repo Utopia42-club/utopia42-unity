@@ -50,8 +50,12 @@ namespace src.Service
             WorldSliceService.INSTANCE.GetChunk(vp.ToWorld(), chunkData =>
             {
                 if (chunkData?.metaBlocks != null &&
-                    chunkData.metaBlocks.TryGetValue(vp.local, out var metaBlock))
+                    chunkData.metaBlocks.TryGetValue(vp.local, out var metaBlock)) // TODO: fix bug (null chunkData?)
+                {
                     consumer.Invoke(metaBlock);
+                    return;
+                }
+                consumer.Invoke(null);
             });
         }
 

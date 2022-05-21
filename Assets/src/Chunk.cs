@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Codice.CM.Client.Differences;
 using src.MetaBlocks;
 using src.Model;
 using src.Service;
@@ -21,7 +20,6 @@ namespace src
         private readonly uint[,,] voxels = new uint[CHUNK_SIZE.x, CHUNK_SIZE.y, CHUNK_SIZE.z];
         private World world;
         public GameObject chunkObject;
-        public GameObject highlightObject;
 
         public readonly Vector3Int position;
         public readonly Vector3Int coordinate;
@@ -31,7 +29,6 @@ namespace src
         private bool initStarted = false;
         private bool inited = false;
         private bool active = true;
-        private HighlightChunk highlight;
 
         public Chunk(Vector3Int coordinate, World world)
         {
@@ -69,13 +66,6 @@ namespace src
             var focusable = chunkObject.AddComponent<ChunkFocusable>();
             focusable.Initialize(this);
 
-            highlightObject = new GameObject();
-            highlightObject.SetActive(active);
-            highlightObject.transform.SetParent(world.transform);
-            highlightObject.transform.position = position;
-            highlight = HighlightChunk.Create(highlightObject, world, this);
-            highlightObject.name = "Chunk " + coordinate + " Highlight";
-            
             meshRenderer.sharedMaterials = new[]
                 {world.Material, new Material(Shader.Find("Particles/Standard Surface"))};
             chunkObject.transform.SetParent(world.transform);
@@ -295,17 +285,6 @@ namespace src
             WorldService.INSTANCE.AddChange(pos, type, land);
             OnChanged(pos);
         }
-
-        public void UpdateHighlight()
-        {
-            highlight.UpdateHighlights();
-        }
-        
-        public void UpdateMetaHighlight(VoxelPosition vp)
-        {
-            highlight.UpdateMetaHighlight(vp);
-        }
-
         public void PutVoxels(Dictionary<VoxelPosition, Tuple<BlockType, Land>> blocks)
         {
             var neighbourChunks = new HashSet<Chunk>();
@@ -389,7 +368,6 @@ namespace src
         public void SetActive(bool active)
         {
             if (chunkObject != null) chunkObject.SetActive(active);
-            if (highlightObject != null) highlightObject.SetActive(active);
             this.active = active;
         }
 
@@ -418,7 +396,6 @@ namespace src
             Object.Destroy(meshRenderer.sharedMaterials[1]);
             Object.Destroy(meshFilter.sharedMesh);
             Object.Destroy(chunkObject);
-            Object.Destroy(highlight);
         }
     }
 }

@@ -83,13 +83,11 @@ namespace src
             return placed;
         }
 
-        public Dictionary<Vector3Int, bool> SelectBlocks(string request)
+        public void SelectBlocks(string request)
         {
-            var positions = JsonConvert.DeserializeObject<List<SerializableVector3>>(request);
-            var result = positions.Select(pos => pos.ToVector3Int()).ToDictionary(position => position,
-                position => World.INSTANCE.AddHighlight(new VoxelPosition(position), true));
-            World.INSTANCE.UpdateHighlights();
-            return result;
+            World.INSTANCE.AddHighlights(JsonConvert
+                .DeserializeObject<List<SerializableVector3>>(request)
+                .Select(pos => new VoxelPosition(pos.ToVector3Int())).ToList());
         }
 
         public SerializableVector3 GetPlayerPosition()

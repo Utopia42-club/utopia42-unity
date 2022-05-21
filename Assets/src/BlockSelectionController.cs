@@ -108,7 +108,7 @@ namespace src
             if (!movement) return;
 
             var delta =
-                World.INSTANCE.CalculateSelectionDisplacement(moveDirection) +
+                Vectors.FloorToInt(0.5f * Vector3.one + moveDirection) +
                 (moveUp ? Vector3Int.up : moveDown ? Vector3Int.down : Vector3Int.zero);
 
             World.INSTANCE.MoveSelection(delta);
@@ -142,15 +142,17 @@ namespace src
                     Mathf.Max(lastSelectedPosition.y, currentSelectedPosition.y),
                     Mathf.Max(lastSelectedPosition.z, currentSelectedPosition.z));
 
+                var vps = new List<VoxelPosition>();
                 for (var x = from.x; x <= to.x; x++)
                 for (var y = from.y; y <= to.y; y++)
                 for (var z = from.z; z <= to.z; z++)
                 {
                     var position = new Vector3Int(x, y, z);
                     if (position.Equals(lastSelectedPosition) || position.Equals(currentSelectedPosition)) continue;
-                    World.INSTANCE.AddHighlight(new VoxelPosition(position), true);
+                    vps.Add(new VoxelPosition(position));
                 }
-                AddHighlight(currentSelectedPosition); // TODO: refactor?
+                vps.Add(new VoxelPosition(currentSelectedPosition));
+                World.INSTANCE.AddHighlights(vps, AfterAddHighlight);
             }
             else if (selectVoxel)
             {
@@ -158,7 +160,7 @@ namespace src
                     Vectors.FloorToInt(player.focused == null
                         ? player.HighlightBlock.position
                         : player.focused.GetBlockPosition());
-                AddHighlight(selectedBlockPosition);
+                World.INSTANCE.AddHighlight(new VoxelPosition(selectedBlockPosition), AfterAddHighlight);
             }
             else if (Input.GetMouseButtonDown(0))
             {
@@ -243,28 +245,6 @@ namespace src
                     SetBlockSelectionSnack();
                 }
             }
-        }
-
-        private bool AddHighlight(Vector3Int position)
-        {
-            if (!player.CanEdit(position, out var land)) return false;
-            var added = World.INSTANCE.AddHighlight(new VoxelPosition(position));
-            if (!added) // removed
-            {
-                if (!World.INSTANCE.SelectionActive)
-                    ExitSelectionMode();
-                return false;
-            }
-
-            if (World.INSTANCE.TotalBlocksSelected == 1)
-            {
-                movingSelectionAllowed = false;
-                SetBlockSelectionSnack();
-                selectedBlocksCountTextContainer.gameObject.SetActive(true);
-            }
-
-            UpdateCountMsg();
-            return true;
         }
 
         private void ConfirmMove()
@@ -357,6 +337,24 @@ namespace src
 
             ClearSelection();
             movingSelectionAllowed = false;
+        }
+
+        private void AfterAddHighlight()
+        {
+            var total = World.INSTANCE.TotalBlocksSelected;
+            switch (total)
+            {
+                case 0:
+                    ExitSelectionMode();
+                    break;
+                case 1:
+                    movingSelectionAllowed = false;
+                    SetBlockSelectionSnack();
+                    selectedBlocksCountTextContainer.gameObject.SetActive(true);
+                    break;
+            }
+
+            UpdateCountMsg();
         }
 
         public static BlockSelectionController INSTANCE =>

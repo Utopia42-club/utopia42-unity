@@ -374,7 +374,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
 
             UpdateStateAndIcon(StateMsg.Ok);
-            chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position)));
+            // chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position))); // TODO: fix on focus
         }
 
         private void DestroyObject(bool immediate = true)

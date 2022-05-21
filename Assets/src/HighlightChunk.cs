@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using src.Model;
+using src.Service;
 using src.Utils;
 using UnityEngine;
 
@@ -8,46 +10,93 @@ namespace src
 {
     public class HighlightChunk : MonoBehaviour
     {
-        private readonly Dictionary<Vector3Int, Transform> selectedBlocks = new Dictionary<Vector3Int, Transform>();
+        private readonly Dictionary<Vector3Int, HighlightedBlock> highlightedBlocks =
+            new Dictionary<Vector3Int, HighlightedBlock>(); // local coordinate -> selected block
+
+        public Vector3Int Position { get; private set; }
+
+        // TODO: The parent of each selected block should be highlight chunk so that they would be destroyed with it   
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
-        private Chunk chunk;
-        private World world;
-        private bool started = false;
+        private GameObject highlightChunkGameObject;
+
+        public int TotalBlocksHighlighted => highlightedBlocks.Count(pair => pair.Value != null);
+        public List<HighlightedBlock> HighlightedBlocks => new List<HighlightedBlock>(highlightedBlocks.Values);
+        public HashSet<Vector3Int> HighlightedLocalPositions => new HashSet<Vector3Int>(highlightedBlocks.Keys);
 
         private void Start()
         {
-            meshFilter = gameObject.AddComponent<MeshFilter>();
-            meshRenderer = gameObject.AddComponent<MeshRenderer>();
-            meshRenderer.sharedMaterial = world.SelectedBlock;
-            UpdateHighlights(false);
-            started = true;
+            meshFilter = highlightChunkGameObject.AddComponent<MeshFilter>();
+            meshRenderer = highlightChunkGameObject.AddComponent<MeshRenderer>();
+            meshRenderer.sharedMaterial = World.INSTANCE.SelectedBlock;
         }
-
-        public void UpdateHighlights(bool destroyFirst = true)
+        
+        public static HighlightChunk Create(GameObject parent, Vector3Int coordinate)
         {
-            if (destroyFirst)
-                Clean();
-            var chunkSelectedPositions = world.GetChunkSelectedPositions(chunk.coordinate);
-            if (chunkSelectedPositions == null) OnChanged();
-            else
-                Add(chunkSelectedPositions.Select(localPos => new VoxelPosition(chunk.coordinate, localPos)).ToList(),
-                    true);
-        }
-
-        public static HighlightChunk Create(GameObject highlightObject, World world, Chunk chunk)
-        {
-            var highlightChunk = highlightObject.AddComponent<HighlightChunk>();
-            highlightChunk.world = world;
-            highlightChunk.chunk = chunk;
+            var highlightChunk = parent.AddComponent<HighlightChunk>(); // TODO: necessary?
+            highlightChunk.highlightChunkGameObject = new GameObject
+            {
+                name = "Highlight Chunk " + coordinate
+            };
+            var transform = highlightChunk.highlightChunkGameObject.transform;
+            transform.SetParent(parent.transform);
+            var position = coordinate;
+            position.Scale(Chunk.CHUNK_SIZE);
+            transform.localPosition = position;
+            highlightChunk.Position = position;
             return highlightChunk;
         }
+        
+        public bool Contains(Vector3Int localPos)
+        {
+            return highlightedBlocks.ContainsKey(localPos);
+        }
 
-        private void OnChanged()
+        public void Add(Vector3Int localPos, HighlightedBlock highlightedBlock)
+        {
+            if (highlightedBlocks.ContainsKey(localPos))
+            {
+                Debug.LogError("HighlightChunk already contains given selected position");
+                return;
+            }
+
+            highlightedBlocks.Add(localPos, highlightedBlock);
+        }
+
+        public bool Remove(Vector3Int localPos)
+        {
+            if (highlightedBlocks.TryGetValue(localPos, out var highlightedBlock) && highlightedBlock != null)
+                DestroyImmediate(highlightedBlock);
+            return highlightedBlocks.Remove(localPos);
+        }
+
+        public void Rotate(Vector3 center, Vector3 axis)
+        {
+            center = Position - center;
+            foreach (var highlightedBlock in highlightedBlocks.Values)
+                highlightedBlock.Rotate(center, axis);
+        }
+
+        public void Move(Vector3Int offset) // temp
+        {
+            foreach (var highlightedBlock in highlightedBlocks.Values)
+                highlightedBlock.UpdateMetaBlockHighlightPosition();
+        }
+
+        public Vector3Int? GetRotationOffset(Vector3Int localPos)
+        {
+            if (!highlightedBlocks.TryGetValue(localPos, out var highlightedBlock) ||
+                highlightedBlock == null) return null;
+            return highlightedBlock.Offset;
+        }
+
+        public void Redraw()
         {
             // TODO: redraw neighbors? here or in Chunk class?
             DestroyMeshAndMaterial();
             DrawHighlights();
+            foreach (var highlightedBlock in highlightedBlocks.Values)
+                highlightedBlock.UpdateMetaBlockHighlightPosition();
         }
 
         private void DrawHighlights()
@@ -62,10 +111,12 @@ namespace src
 
         private void CreateMeshData(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs)
         {
-            foreach (var pos in selectedBlocks.Keys)
+            foreach (var pos in highlightedBlocks.Keys)
             {
-                AddVisibleFaces(pos + world.GetHighlightOffset(new VoxelPosition(chunk.coordinate, pos)), vertices,
-                    triangles, uvs);
+                var highlightedBlock = highlightedBlocks[pos];
+                if (highlightedBlock != null)
+                    AddVisibleFaces(highlightedBlock.CurrentPosition, vertices,
+                        triangles, uvs);
             }
         }
 
@@ -122,62 +173,50 @@ namespace src
             meshFilter.sharedMesh = mesh;
         }
 
-        public void UpdateMetaHighlight(VoxelPosition vp)
-        {
-            if (!selectedBlocks.TryGetValue(vp.local, out var metaBlockHighlight)) return;
-            if (metaBlockHighlight != null)
-                DestroyImmediate(metaBlockHighlight);
-            selectedBlocks[vp.local] = GetMetaBlockHighlight(vp);
-        }
+        // public void UpdateMetaHighlight(Vector3Int localPos)
+        // {
+        //     if (!highlightedBlocks.TryGetValue(localPos, out var highlightedBlock) || highlightedBlock == null) return;
+        //     var vp = new VoxelPosition(coordinate, localPos);
+        //     var chunk = World.INSTANCE.GetChunkIfInited(coordinate);
+        //     if (chunk != null)
+        //         highlightedBlock.UpdateMetaHighlight(chunk.GetMetaAt(vp)?.blockObject.CreateSelectHighlight()
+        //             ?.gameObject);
+        //     else
+        //         WorldService.INSTANCE.GetMetaBlock(vp,
+        //             metaBlock =>
+        //             {
+        //                 highlightedBlock.UpdateMetaHighlight(metaBlock?.blockObject.CreateSelectHighlight()
+        //                     ?.gameObject);
+        //             });
+        // }
 
-        private Transform GetMetaBlockHighlight(VoxelPosition vp)
-        {
-            return chunk.GetMetaAt(vp)?.blockObject.CreateSelectHighlight();
-        }
-
-        private void Add(List<VoxelPosition> vps, bool forceRedraw = false)
-        {
-            var changed = false;
-            foreach (var vp in vps)
-                if (TryAdd(vp))
-                    changed = true;
-            if (forceRedraw || changed)
-                OnChanged();
-        }
-
-        private bool TryAdd(VoxelPosition vp)
-        {
-            var blockType = chunk.GetBlock(vp.local);
-            if (!blockType.isSolid) return false;
-            var metaHighlight = GetMetaBlockHighlight(vp);
-            if (metaHighlight != null)
-                metaHighlight.position = metaHighlight.position + world.GetHighlightOffset(vp);
-            selectedBlocks.Add(vp.local, metaHighlight);
-            return true;
-        }
-        private void Clean()
-        {
-            DestroyMeshAndMaterial();
-            foreach (var metaHighlight in selectedBlocks.Values.Where(v => v != null))
-                Destroy(metaHighlight.gameObject);
-            selectedBlocks.Clear();
-        }
+        // private void Add(List<VoxelPosition> vps, bool forceRedraw = false)
+        // {
+        //     var changed = false;
+        //     foreach (var vp in vps)
+        //         if (TryAdd(vp))
+        //             changed = true;
+        //     if (forceRedraw || changed)
+        //         OnChanged();
+        // }
+        //
+        // private bool TryAdd(VoxelPosition vp)
+        // {
+        //     var blockType = chunk.GetBlock(vp.local);
+        //     if (!blockType.isSolid) return false;
+        //     var metaHighlight = GetMetaBlockHighlight(vp);
+        //     if (metaHighlight != null)
+        //         metaHighlight.position = metaHighlight.position + World.INSTANCE.GetHighlightRotationOffset(vp);
+        //     highlightedBlocks.Add(vp.local, metaHighlight);
+        //     return true;
+        // }
 
         private void DestroyMeshAndMaterial()
         {
             // Destroy(meshRenderer.sharedMaterial); // Destroying assets not allowed
+            if (meshFilter.sharedMesh == null) return;
             Destroy(meshFilter.sharedMesh);
-        }
-
-        private void OnDisable()
-        {
-            Clean();
-        }
-
-        private void OnEnable() // in case a garbage chunk gets activated again
-        {
-            if (!started) return;
-            UpdateHighlights(false);
+            meshFilter.sharedMesh = null;
         }
     }
 }
