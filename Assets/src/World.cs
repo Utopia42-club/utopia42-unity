@@ -277,7 +277,7 @@ namespace src
                 highlightChunk == null) return null;
             var rotationOffset = highlightChunk.GetRotationOffset(firstSelectedPosition.local);
             if (!rotationOffset.HasValue) return null;
-            return firstSelectedPosition.ToWorld() + rotationOffset.Value + 0.5f * Vector3.one;
+            return firstSelectedPosition.ToWorld() + HighlightOffset + rotationOffset.Value  + 0.5f * Vector3.one;
         }
 
         public void RotateSelection(Vector3 axis)

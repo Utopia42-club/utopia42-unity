@@ -47,7 +47,7 @@ namespace src.Service
                 return;
             }
 
-            WorldSliceService.INSTANCE.GetChunk(vp.ToWorld(), chunkData =>
+            WorldSliceService.INSTANCE.GetChunk(vp.chunk, chunkData =>
             {
                 if (chunkData?.metaBlocks != null &&
                     chunkData.metaBlocks.TryGetValue(vp.local, out var metaBlock)) // TODO: fix bug (null chunkData?)

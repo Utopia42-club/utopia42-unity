@@ -72,9 +72,8 @@ namespace src
 
         public void Rotate(Vector3 center, Vector3 axis)
         {
-            center = Position - center;
             foreach (var highlightedBlock in highlightedBlocks.Values)
-                highlightedBlock.Rotate(center, axis);
+                highlightedBlock.Rotate(center, axis, Position);
         }
 
         public void Move(Vector3Int offset) // temp

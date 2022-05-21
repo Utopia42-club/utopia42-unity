@@ -41,9 +41,9 @@ namespace src
             return highlightedBlock;
         }
 
-        public void Rotate(Vector3 center, Vector3 axis) // Reset offset and move metaHighlight accordingly
+        public void Rotate(Vector3 center, Vector3 axis, Vector3Int chunkPosition) // Reset offset and move metaHighlight accordingly
         {
-            var currentPosition = CurrentPosition;
+            var currentPosition = CurrentPosition + chunkPosition + World.INSTANCE.HighlightOffset;
             var rotatedVector = Quaternion.AngleAxis(90, axis) *
                                 (currentPosition + 0.5f * Vector3.one - center);
             var newPosition = Vectors.TruncateFloor(center + rotatedVector - 0.5f * Vector3.one);
