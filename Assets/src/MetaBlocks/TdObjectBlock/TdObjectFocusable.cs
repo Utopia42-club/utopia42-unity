@@ -12,7 +12,7 @@ namespace src.MetaBlocks.TdObjectBlock
             initialized = true;
         }
 
-        public override Vector3 GetBlockPosition()
+        public override Vector3? GetBlockPosition()
         {
             var collider = GetComponent<Collider>();
             if(collider != null && collider is BoxCollider)

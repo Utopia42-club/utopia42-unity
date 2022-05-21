@@ -82,14 +82,30 @@ namespace src.MetaBlocks.TdObjectBlock
             player.tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
-        public override Transform CreateSelectHighlight(bool show = true)
+        public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
             if (TdObjectCollider == null) return null;
-            if (!(TdObjectCollider is BoxCollider boxCollider)) return CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
-            var highlightBox = Instantiate(player.tdObjectHighlightBox, default, Quaternion.identity);
-            highlightBox.GetComponentInChildren<MeshRenderer>().material = World.INSTANCE.SelectedBlock;
-            AdjustHighlightBox(highlightBox, boxCollider, show);
-            return highlightBox;
+
+            Transform highlight;
+
+            if (!(TdObjectCollider is BoxCollider boxCollider))
+                highlight = CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
+            else
+            {
+                highlight = Instantiate(player.tdObjectHighlightBox, default, Quaternion.identity);
+                highlight.GetComponentInChildren<MeshRenderer>().material = World.INSTANCE.SelectedBlock;
+                AdjustHighlightBox(highlight, boxCollider, show);
+            }
+
+            ChangeParent(highlight, parent);
+            highlight.gameObject.name = "3d_object_highlight";
+
+            return highlight.gameObject;
+        }
+
+        private void ChangeParent(Transform highlight, Transform parent)
+        {
+            highlight.SetParent(parent, true);
         }
 
         private Transform CreateMeshHighlight(Material material, bool active = true)
@@ -332,7 +348,8 @@ namespace src.MetaBlocks.TdObjectBlock
                 var newInitScale = maxD > 10f ? 10f / maxD : 1;
                 tdObject.transform.localScale = newInitScale * Vector3.one;
                 var newInitPosition = tdObjectContainer.transform.TransformPoint(Vector3.zero) -
-                                      TdObjectCollider.transform.TransformPoint(((BoxCollider) TdObjectCollider).center);
+                                      TdObjectCollider.transform.TransformPoint(((BoxCollider) TdObjectCollider)
+                                          .center);
 
                 if (Math.Abs(newInitScale - initialScale) > 0.0001 || newInitPosition != initialPosition)
                 {
@@ -353,7 +370,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if (colliderTransform != null && type == TdObjectBlockProperties.TdObjectType.GLB)
             {
                 // replace box collider with mesh collider if any colliders are defined in the glb object
-                if(TdObjectCollider is BoxCollider)
+                if (TdObjectCollider is BoxCollider)
                     SetMeshCollider(colliderTransform);
 
                 if (GetBlock().land != null && !InLand(TdObjectCollider.GetComponent<MeshRenderer>()))
@@ -399,7 +416,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     else
                     {
                         Destroy(mat.mainTexture);
-                        if(!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
                             Destroy(mat);
                     }
                 }

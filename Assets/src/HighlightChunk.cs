@@ -20,6 +20,8 @@ namespace src
         private MeshRenderer meshRenderer;
         private GameObject highlightChunkGameObject;
 
+        public Transform transform => highlightChunkGameObject.transform;
+        
         public int TotalBlocksHighlighted => highlightedBlocks.Count(pair => pair.Value != null);
         public List<HighlightedBlock> HighlightedBlocks => new List<HighlightedBlock>(highlightedBlocks.Values);
         public HashSet<Vector3Int> HighlightedLocalPositions => new HashSet<Vector3Int>(highlightedBlocks.Keys);
@@ -39,7 +41,7 @@ namespace src
             {
                 name = "Highlight Chunk " + coordinate
             };
-            var transform = highlightChunk.highlightChunkGameObject.transform;
+            var transform = highlightChunk.transform;
             transform.SetParent(parent.transform);
             var position = coordinate;
             position.Scale(Chunk.CHUNK_SIZE);
@@ -75,12 +77,6 @@ namespace src
         {
             foreach (var highlightedBlock in highlightedBlocks.Values)
                 highlightedBlock.Rotate(center, axis, Position);
-        }
-
-        public void Move(Vector3Int offset) // temp
-        {
-            foreach (var highlightedBlock in highlightedBlocks.Values)
-                highlightedBlock.UpdateMetaBlockHighlightPosition();
         }
 
         public Vector3Int? GetRotationOffset(Vector3Int localPos)

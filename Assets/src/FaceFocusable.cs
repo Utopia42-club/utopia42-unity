@@ -14,7 +14,7 @@ namespace src
             initialized = true;
         }
 
-        public override Vector3 GetBlockPosition()
+        public override Vector3? GetBlockPosition()
         {
             return Vectors.TruncateFloor(transform.parent.position);
         }

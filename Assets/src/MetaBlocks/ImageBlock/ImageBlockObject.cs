@@ -207,7 +207,7 @@ namespace src.MetaBlocks.ImageBlock
         {
         }
 
-        public override Transform CreateSelectHighlight(bool show = true)
+        public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
             return null;
         }

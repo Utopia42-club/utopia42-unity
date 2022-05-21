@@ -304,7 +304,8 @@ namespace src
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
-            if (!isMeta && (playerPos.Equals(blockPos) || playerPos.Equals(blockPos + Vector3Int.up) ||
+            if (!isMeta && (playerPos.Equals(blockPos) || 
+                            // playerPos.Equals(blockPos + Vector3Int.up) ||
                             playerPos.Equals(blockPos - Vector3Int.up)))
             {
                 land = null;

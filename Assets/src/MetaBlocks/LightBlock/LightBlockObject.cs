@@ -158,7 +158,7 @@ namespace src.MetaBlocks.LightBlock
         {
         }
 
-        public override Transform CreateSelectHighlight(bool show = true)
+        public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
             return null;
         }

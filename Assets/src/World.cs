@@ -52,6 +52,7 @@ namespace src
         public bool ClipboardEmpty => clipboard.Count == 0;
 
         public List<Vector3Int> ClipboardWorldPositions => clipboard.Select(vp => vp.ToWorld()).ToList();
+
         public bool SelectionDisplaced =>
             HighlightOffset != Vector3Int.zero ||
             highlightChunks.Values.Any(highlightChunk => highlightChunk.SelectionDisplaced);
@@ -95,7 +96,12 @@ namespace src
             Action consumer = null)
         {
             if (!player.CanEdit(vp.ToWorld(), out _)) yield break;
-            if (highlight == null) highlight = new GameObject();
+            if (highlight == null)
+            {
+                highlight = new GameObject();
+                highlight.name = "World Highlight";
+            }
+
             if (!highlightChunks.TryGetValue(vp.chunk, out var highlightChunk))
             {
                 highlightChunk = HighlightChunk.Create(highlight, vp.chunk);
@@ -271,8 +277,6 @@ namespace src
         {
             HighlightOffset += delta;
             highlight.transform.position += delta;
-            foreach (var highlightChunk in highlightChunks.Values)
-                highlightChunk.Move(delta);
         }
 
         private Vector3? GetSelectionRotationCenter()

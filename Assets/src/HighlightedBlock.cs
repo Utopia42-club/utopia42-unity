@@ -30,14 +30,14 @@ namespace src
 
             if (meta == null) return highlightedBlock;
 
-            var metaBlockHighlight = meta.blockObject.CreateSelectHighlight()?.gameObject; // TODO: if the highlight original chunk is inactive then we cannot see the highlight (for instance after pasting)
+            var metaBlockHighlight = meta.blockObject.CreateSelectHighlight(highlightChunk.transform);
             highlightedBlock.MetaAttached = true;
             highlightedBlock.MetaBlockTypeId = meta.type.id;
             highlightedBlock.MetaProperties = ((ICloneable) meta.GetProps())?.Clone();
             highlightedBlock.metaBlockHighlight =
-                metaBlockHighlight; // TODO: set parent so that it would be destroyed with its SelectedBlock (custom OnDestroy would be removed)
+                metaBlockHighlight;
             if (metaBlockHighlight != null)
-                highlightedBlock.metaBlockHighlightPosition = metaBlockHighlight.transform.position;
+                highlightedBlock.metaBlockHighlightPosition = metaBlockHighlight.transform.localPosition;
             return highlightedBlock;
         }
 
@@ -53,7 +53,7 @@ namespace src
         public void UpdateMetaBlockHighlightPosition() // TODO: modify?
         {
             if (metaBlockHighlight == null) return;
-                metaBlockHighlight.transform.position = metaBlockHighlightPosition + Offset + World.INSTANCE.HighlightOffset;
+                metaBlockHighlight.transform.localPosition = metaBlockHighlightPosition + Offset;
         }
 
         private void OnDestroy()

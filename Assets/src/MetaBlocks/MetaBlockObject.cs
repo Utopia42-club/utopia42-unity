@@ -121,6 +121,6 @@ namespace src.MetaBlocks
 
         public abstract void RemoveFocusHighlight();
 
-        public abstract Transform CreateSelectHighlight(bool show = true);
+        public abstract GameObject CreateSelectHighlight(Transform parent, bool show = true);
     }
 }

@@ -7,16 +7,17 @@ namespace src
     public class ChunkFocusable : Focusable
     {
         private Chunk chunk;
+
         public void Initialize(Chunk chunk)
         {
-            if(initialized) return;
+            if (initialized) return;
             this.chunk = chunk;
             initialized = true;
         }
 
         public override void Focus(Vector3? point = null)
         {
-            if(!initialized || point == null) return;
+            if (!initialized || point == null) return;
             Player.INSTANCE.PlaceCursorBlocks(point.Value, chunk);
         }
 
@@ -24,8 +25,9 @@ namespace src
         {
         }
 
-        public override Vector3 GetBlockPosition()
+        public override Vector3? GetBlockPosition()
         {
+            if (!Player.INSTANCE.HighlightBlock.gameObject.activeSelf) return null;
             return Player.INSTANCE.HighlightBlock.position;
         }
     }

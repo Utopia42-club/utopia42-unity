@@ -130,10 +130,12 @@ namespace src
             if (multipleSelect)
             {
                 var lastSelectedPosition = World.INSTANCE.lastSelectedPosition.ToWorld();
+                var possibleCurrentSelectedPosition = player.focused == null
+                    ? player.HighlightBlock.position
+                    : player.focused.GetBlockPosition();
+                if(!possibleCurrentSelectedPosition.HasValue) return;
                 var currentSelectedPosition =
-                    Vectors.FloorToInt(player.focused == null
-                        ? player.HighlightBlock.position
-                        : player.focused.GetBlockPosition());
+                    Vectors.FloorToInt(possibleCurrentSelectedPosition.Value); // TODO: extract method
 
                 var from = new Vector3Int(Mathf.Min(lastSelectedPosition.x, currentSelectedPosition.x),
                     Mathf.Min(lastSelectedPosition.y, currentSelectedPosition.y),
@@ -157,11 +159,13 @@ namespace src
             }
             else if (selectVoxel)
             {
-                var selectedBlockPosition =
-                    Vectors.FloorToInt(player.focused == null
-                        ? player.HighlightBlock.position
-                        : player.focused.GetBlockPosition());
-                World.INSTANCE.AddHighlight(new VoxelPosition(selectedBlockPosition), AfterAddHighlight);
+                var possibleCurrentSelectedPosition = player.focused == null
+                    ? player.HighlightBlock.position
+                    : player.focused.GetBlockPosition();
+                if(!possibleCurrentSelectedPosition.HasValue) return;
+                var currentSelectedPosition =
+                    Vectors.FloorToInt(possibleCurrentSelectedPosition.Value);
+                World.INSTANCE.AddHighlight(new VoxelPosition(currentSelectedPosition), AfterAddHighlight);
             }
 
             if (ctrlHeld) return;
@@ -183,9 +187,12 @@ namespace src
 
         private void DeleteBlock()
         {
-            var position = Vectors.FloorToInt(player.focused == null
+            var possiblePosition = player.focused == null
                 ? player.HighlightBlock.position
-                : player.focused.GetBlockPosition());
+                : player.focused.GetBlockPosition();
+            if(!possiblePosition.HasValue) return;
+            var position =
+                Vectors.FloorToInt(possiblePosition.Value);
             var vp = new VoxelPosition(position);
             var chunk = World.INSTANCE.GetChunkIfInited(vp.chunk);
             if (chunk != null)

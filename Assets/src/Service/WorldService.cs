@@ -99,7 +99,7 @@ namespace src.Service
         public void GetBlockType(VoxelPosition voxelPosition, Action<BlockType> consumer)
         {
             if (changes.TryGetValue(voxelPosition.chunk, out var chunkChange)
-                && chunkChange.blocks != null && chunkChange.blocks.TryGetValue(voxelPosition.chunk, out var block))
+                && chunkChange.blocks != null && chunkChange.blocks.TryGetValue(voxelPosition.local, out var block))
             {
                 consumer.Invoke(Blocks.GetBlockType(block));
                 return;
