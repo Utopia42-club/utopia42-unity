@@ -148,7 +148,7 @@ namespace src.MetaBlocks.ImageBlock
             return lines;
         }
 
-        private void UpdateIcon(StateMsg message) // TODO
+        private void UpdateIcon(StateMsg message) 
         {
             if (message != StateMsg.LoadingMetadata && message != StateMsg.Loading && message != StateMsg.Ok)
             {
@@ -197,6 +197,19 @@ namespace src.MetaBlocks.ImageBlock
         {
             DestroyImages(false);
             base.OnDestroy();
+        }
+
+        public override void ShowFocusHighlight()
+        {
+        }
+
+        public override void RemoveFocusHighlight()
+        {
+        }
+
+        public override Transform CreateSelectHighlight(bool show = true)
+        {
+            return null;
         }
     }
 }

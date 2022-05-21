@@ -5,22 +5,19 @@ namespace src.MetaBlocks.TdObjectBlock
 {
     public class TdObjectFocusable : MetaFocusable
     {
-        public override void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null)
+        public void Initialize(MetaBlockObject metaBlockObject)
         {
             if (initialized) return;
             this.metaBlockObject = metaBlockObject;
             initialized = true;
         }
 
-        public override void Focus()
-        {
-            if (!initialized) return;
-            metaBlockObject.Focus(null);
-        }
-
         public override Vector3 GetBlockPosition()
         {
-            return Vectors.TruncateFloor(transform.parent.parent.position);
+            var collider = GetComponent<Collider>();
+            if(collider != null && collider is BoxCollider)
+                return Vectors.TruncateFloor(transform.parent.parent.position);
+            return Vectors.TruncateFloor(transform.parent.parent.parent.position);
         }
     }
 }

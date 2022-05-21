@@ -1,14 +1,12 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using src.Model;
-using src.Service;
 using src.Utils;
 using UnityEngine;
 
-namespace src
+namespace src.TestUtils
 {
     public class VoxStressTest : MonoBehaviour
     {

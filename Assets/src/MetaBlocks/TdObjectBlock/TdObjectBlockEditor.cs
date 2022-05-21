@@ -22,6 +22,7 @@ namespace src.MetaBlocks.TdObjectBlock
         [SerializeField] public InputField rotationZ;
 
         [SerializeField] public Toggle detectCollision;
+        [SerializeField] public Dropdown type;
 
         public TdObjectBlockProperties GetValue()
         {
@@ -38,6 +39,9 @@ namespace src.MetaBlocks.TdObjectBlock
                 props.rotation = new SerializableVector3(float.Parse(rotationX.text), float.Parse(rotationY.text),
                     float.Parse(rotationZ.text));
                 props.detectCollision = detectCollision.isOn;
+                props.type = type.value == 0
+                    ? TdObjectBlockProperties.TdObjectType.OBJ
+                    : TdObjectBlockProperties.TdObjectType.GLB;
                 return props;
             }
 
@@ -59,6 +63,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 rotationY.text = "0";
                 rotationZ.text = "0";
                 detectCollision.isOn = true;
+                type.value = 0;
                 return;
             }
 
@@ -85,6 +90,7 @@ namespace src.MetaBlocks.TdObjectBlock
             }
 
             detectCollision.isOn = value.detectCollision;
+            type.value = value.type == TdObjectBlockProperties.TdObjectType.OBJ ? 0 : 1;
         }
 
         private bool HasValue(InputField f)

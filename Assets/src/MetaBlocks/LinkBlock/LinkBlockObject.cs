@@ -104,6 +104,19 @@ namespace src.MetaBlocks.LinkBlock
             throw new System.NotImplementedException();
         }
 
+        public override void ShowFocusHighlight()
+        {
+        }
+
+        public override void RemoveFocusHighlight()
+        {
+        }
+
+        public override Transform CreateSelectHighlight(bool show = true)
+        {
+            return null;
+        }
+
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;

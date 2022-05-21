@@ -219,5 +219,18 @@ namespace src.MetaBlocks.VideoBlock
             DestroyVideos(false);
             base.OnDestroy();
         }
+
+        public override void ShowFocusHighlight()
+        {
+        }
+
+        public override void RemoveFocusHighlight()
+        {
+        }
+
+        public override Transform CreateSelectHighlight(bool show = true)
+        {
+            return null;
+        }
     }
 }

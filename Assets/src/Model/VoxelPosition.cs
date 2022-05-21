@@ -50,5 +50,26 @@ namespace src.Model
             chunk.Scale(Chunk.CHUNK_SIZE);
             return chunk + local;
         }
+
+        protected bool Equals(VoxelPosition other)
+        {
+            return chunk.Equals(other.chunk) && local.Equals(other.local);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((VoxelPosition) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (chunk.GetHashCode() * 397) ^ local.GetHashCode();
+            }
+        }
     }
 }

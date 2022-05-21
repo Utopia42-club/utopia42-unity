@@ -4,21 +4,27 @@ using UnityEngine;
 
 namespace src
 {
-    public abstract class MetaFocusable : MonoBehaviour
+    public abstract class MetaFocusable : Focusable
     {
         public MetaBlockObject metaBlockObject { protected set; get; }
-        protected bool initialized = false;
+        protected Voxels.Face face;
 
-        public abstract void Initialize(MetaBlockObject metaBlockObject, Voxels.Face face = null);
-
-        public void UnFocus()
+        public override void UnFocus()
         {
             if (!initialized) return;
             metaBlockObject.UnFocus();
         }
 
-        public abstract void Focus();
+        public override void Focus(Vector3? point = null)
+        {
+            if (!initialized) return;
 
-        public abstract Vector3 GetBlockPosition();
+            if (World.INSTANCE.SelectionActive)
+            {
+                metaBlockObject.ShowFocusHighlight();
+                return;
+            }
+            metaBlockObject.Focus(face);
+        }
     }
 }

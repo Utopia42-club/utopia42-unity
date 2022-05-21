@@ -38,6 +38,27 @@ namespace src.Service
             });
         }
 
+        public void GetMetaBlock(VoxelPosition vp, Action<MetaBlock> consumer)
+        {
+            if (changes.TryGetValue(vp.chunk, out var chunkData) && chunkData.metaBlocks != null &&
+                chunkData.metaBlocks.TryGetValue(vp.local, out var metaBlock))
+            {
+                consumer.Invoke(metaBlock);
+                return;
+            }
+
+            WorldSliceService.INSTANCE.GetChunk(vp.chunk, chunkData =>
+            {
+                if (chunkData?.metaBlocks != null &&
+                    chunkData.metaBlocks.TryGetValue(vp.local, out var metaBlock)) // TODO: fix bug (null chunkData?)
+                {
+                    consumer.Invoke(metaBlock);
+                    return;
+                }
+                consumer.Invoke(null);
+            });
+        }
+
         public IEnumerator Initialize(Loading loading, Action onDone, Action onFailed)
         {
             if (IsInitialized()) yield break;
@@ -74,6 +95,20 @@ namespace src.Service
         {
             return GetBlockTypeIfLoaded(vp)?.isSolid ?? ChunkInitializer.IsDefaultSolidAt(vp);
         }
+
+        public void GetBlockType(VoxelPosition voxelPosition, Action<BlockType> consumer)
+        {
+            if (changes.TryGetValue(voxelPosition.chunk, out var chunkChange)
+                && chunkChange.blocks != null && chunkChange.blocks.TryGetValue(voxelPosition.chunk, out var block))
+            {
+                consumer.Invoke(Blocks.GetBlockType(block));
+                return;
+            }
+
+            WorldSliceService.INSTANCE.GetChunk(voxelPosition.chunk,
+                chunk => { consumer.Invoke(chunk?.GetBlockTypeAt(voxelPosition.local)); });
+        }
+
 
         public BlockType GetBlockTypeIfLoaded(VoxelPosition vp)
         {
@@ -255,7 +290,7 @@ namespace src.Service
                 prev.DestroyView();
             WorldSliceService.INSTANCE.GetChunk(pos.chunk, data =>
             {
-                if (data.metaBlocks != null && data.metaBlocks.TryGetValue(pos.local, out var prev))
+                if (data != null && data.metaBlocks != null && data.metaBlocks.TryGetValue(pos.local, out var prev))
                     prev.DestroyView();
             });
 

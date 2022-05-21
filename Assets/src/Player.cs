@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using src.Canvas;
 using src.MetaBlocks;
-using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -18,8 +17,6 @@ namespace src
 
         public const float CastStep = 0.01f;
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
-        private static readonly Color HammerActiveColor = new Color(0.16f, 0.5f, 0.72f, 0.7f);
-        private static readonly Color HammerNotActiveColor = new Color(0, 0, 0, 0.5f);
 
         [SerializeField] private Transform cam;
         [SerializeField] private World world;
@@ -30,7 +27,7 @@ namespace src
         [SerializeField] private float gravity = -9.8f;
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
-        [SerializeField] private Transform tdObjectHighlightBox;
+        [SerializeField] public Transform tdObjectHighlightBox;
 
         [NonSerialized] public uint selectedBlockId = 1;
 
@@ -50,11 +47,11 @@ namespace src
         private BlockSelectionController blockSelectionController;
         private bool ctrlDown = false;
         private Vector3Int playerPos;
+        public Transform tdObjectHighlightMesh;
 
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
-        public Transform TdObjectHighlightBox => tdObjectHighlightBox;
 
         public Player(Transform tdObjectHighlightBox, Transform placeBlock, Transform highlightBlock)
         {
@@ -65,12 +62,10 @@ namespace src
 
         public float Horizontal { get; private set; }
         public float Vertical { get; private set; }
-        public MetaFocusable FocusedMeta { get; private set; }
+        public Focusable focused { get; private set; }
         public Vector3Int PlaceBlockPosInt { get; private set; }
 
         public Land HighlightLand => highlightLand;
-        public Land PlaceLand => placeLand;
-
 
         private void Start()
         {
@@ -140,27 +135,16 @@ namespace src
         {
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
-                PlaceCursorBlocks(raycastHit.point);
-                if (hitCollider == raycastHit.collider) return;
+                if (hitCollider == raycastHit.collider && hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
                 hitCollider = raycastHit.collider;
-                var metaFocusable = hitCollider.GetComponent<MetaFocusable>();
-                if (metaFocusable != null)
+                var focusable = hitCollider.GetComponent<Focusable>();
+                if (focusable != null)
                 {
                     focusedMetaFace = null;
-                    if (FocusedMeta != null)
-                    {
-                        FocusedMeta.UnFocus();
-                    }
-
-                    if (!blockSelectionController.SelectionActive)
-                        metaFocusable.Focus();
-                    else if (metaFocusable.metaBlockObject is TdObjectBlockObject)
-                    {
-                        ShowTdObjectHighlightBox(((TdObjectBlockObject) metaFocusable.metaBlockObject)
-                            .TdObjectBoxCollider);
-                    }
-
-                    FocusedMeta = metaFocusable;
+                    if (focused != null)
+                        focused.UnFocus();
+                    focusable.Focus(raycastHit.point);
+                    focused = focusable;
                     return;
                 }
             }
@@ -172,10 +156,10 @@ namespace src
                     focusedMetaBlock.UnFocus();
             }
 
-            if (FocusedMeta != null)
-                FocusedMeta.UnFocus();
+            if (focused != null)
+                focused.UnFocus();
             focusedMetaFace = null;
-            FocusedMeta = null;
+            focused = null;
             hitCollider = null;
         }
 
@@ -229,15 +213,14 @@ namespace src
             placeBlock.gameObject.SetActive(!active);
         }
 
-        private void PlaceCursorBlocks(Vector3 blockHitPoint)
+        public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk)
         {
             var epsilon = cam.forward * CastStep;
             PlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
-
             var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
             var vp = new VoxelPosition(posInt);
-            var chunk = world.GetChunkIfInited(vp.chunk);
-            if (chunk == null) return;
+            // var chunk = world.GetChunkIfInited(vp.chunk);
+            // if (chunk == null) return;
             var metaToFocus = chunk.GetMetaAt(vp);
             var foundSolid = chunk.GetBlock(vp.local).isSolid;
 
@@ -293,7 +276,7 @@ namespace src
                 focusedMetaBlock = metaToFocus;
                 focusedMetaFace = faceToFocus;
 
-                if (focusedMetaBlock != null && !blockSelectionController.SelectionActive)
+                if (focusedMetaBlock != null && !World.INSTANCE.SelectionActive)
                 {
                     if (!focusedMetaBlock.Focus(focusedMetaFace))
                     {
@@ -355,28 +338,6 @@ namespace src
             return new VoxelPosition(playerPos);
         }
 
-        public void ShowTdObjectHighlightBox(BoxCollider boxCollider)
-        {
-            var colliderTransform = boxCollider.transform;
-            tdObjectHighlightBox.transform.rotation = colliderTransform.rotation;
-
-            var size = boxCollider.size;
-            var minPos = boxCollider.center - size / 2;
-
-            var gameObjectTransform = boxCollider.gameObject.transform;
-            size.Scale(gameObjectTransform.localScale);
-            size.Scale(gameObjectTransform.parent.localScale);
-
-            tdObjectHighlightBox.localScale = size;
-            tdObjectHighlightBox.position = colliderTransform.TransformPoint(minPos);
-            tdObjectHighlightBox.gameObject.SetActive(true);
-        }
-
-        public void HideTdObjectHighlightBox()
-        {
-            tdObjectHighlightBox.gameObject.SetActive(false);
-        }
-
         public Vector3 GetCurrentPosition()
         {
             return controller.center;
@@ -405,5 +366,13 @@ namespace src
         }
 
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
+
+        public bool RemoveHighlightMesh()
+        {
+            if (tdObjectHighlightMesh == null) return false;
+            DestroyImmediate(tdObjectHighlightMesh.gameObject);
+            tdObjectHighlightMesh = null;
+            return true;
+        }
     }
 }

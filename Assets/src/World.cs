@@ -1,21 +1,34 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using src.MetaBlocks;
 using src.Model;
 using src.Service;
+using src.Utils;
 using UnityEngine;
 
 namespace src
 {
     public class World : MonoBehaviour
     {
-        public Material material;
+        [SerializeField] private Material material;
+        [SerializeField] private Material highlightBlock;
+        [SerializeField] private Material selectedBlock;
 
         //TODO take care of size/time limit
         //Deactivated chunks are added to this collection for possible future reuse
         private Dictionary<Vector3Int, Chunk> garbageChunks = new Dictionary<Vector3Int, Chunk>();
         private readonly Dictionary<Vector3Int, Chunk> chunks = new Dictionary<Vector3Int, Chunk>();
+
+        private readonly Dictionary<Vector3Int, HighlightChunk> highlightChunks =
+            new Dictionary<Vector3Int, HighlightChunk>(); // chunk coordinate -> highlight chunk
+
+        private readonly HashSet<VoxelPosition> clipboard = new HashSet<VoxelPosition>();
+        private readonly HashSet<HighlightChunk> highlightChunksToRedraw = new HashSet<HighlightChunk>();
+        public Vector3Int HighlightOffset { private set; get; } = Vector3Int.zero;
+        private GameObject highlight;
+
 
         private bool creatingChunks = false;
         private List<Chunk> chunkRequests = new List<Chunk>();
@@ -25,6 +38,20 @@ namespace src
         public GameObject cursorSlot;
         public GameObject help;
         public Player player;
+        private VoxelPosition firstSelectedPosition;
+        public VoxelPosition lastSelectedPosition { get; private set; }
+
+        public Material Material => material;
+        public Material HighlightBlock => highlightBlock;
+        public Material SelectedBlock => selectedBlock;
+
+        public int TotalBlocksSelected =>
+            highlightChunks.Values.Where(chunk => chunk != null).Sum(chunk => chunk.TotalBlocksHighlighted);
+
+        public bool SelectionActive => TotalBlocksSelected > 0;
+        public bool ClipboardEmpty => clipboard.Count == 0;
+
+        public List<Vector3Int> ClipboardWorldPositions => clipboard.Select(vp => vp.ToWorld()).ToList();
 
         private void Start()
         {
@@ -40,6 +67,269 @@ namespace src
         {
             if (Input.GetKeyDown(KeyCode.F3))
                 debugScreen.SetActive(!debugScreen.activeSelf);
+        }
+
+        public void AddHighlights(List<VoxelPosition> vps, Action consumer = null)
+        {
+            StartCoroutine(AddHighlights(vps, null, consumer));
+        }
+
+        private IEnumerator AddHighlights(List<VoxelPosition> vps, Vector3Int? offset, Action consumer)
+        {
+            var offsetValue = offset ?? Vector3Int.zero;
+            foreach (var vp in vps)
+                yield return AddHighlight(vp, offsetValue, true);
+            RedrawChangedHighlightChunks();
+            consumer?.Invoke();
+        }
+
+        public void AddHighlight(VoxelPosition vp, Action consumer = null)
+        {
+            StartCoroutine(AddHighlight(vp, Vector3Int.zero, false, consumer));
+        }
+
+        private IEnumerator AddHighlight(VoxelPosition vp, Vector3Int offset, bool delayedUpdate,
+            Action consumer = null)
+        {
+            if (!player.CanEdit(vp.ToWorld(), out _)) yield break;
+            if (highlight == null) highlight = new GameObject();
+            if (!highlightChunks.TryGetValue(vp.chunk, out var highlightChunk))
+            {
+                highlightChunk = HighlightChunk.Create(highlight, vp.chunk);
+                yield return null;
+                highlightChunks[vp.chunk] = highlightChunk;
+            }
+
+            if (highlightChunk.Contains(vp.local))
+            {
+                RemoveHighlight(vp, delayedUpdate);
+                consumer?.Invoke();
+                yield break;
+            }
+
+            var done = false;
+            GetHighlightedBlock(highlightChunk, vp, offset, highlightedBlock =>
+            {
+                if (highlightedBlock == null)
+                {
+                    done = true;
+                    return;
+                }
+                highlightChunk.Add(vp.local, highlightedBlock);
+                if (TotalBlocksSelected == 1)
+                    firstSelectedPosition = vp;
+                lastSelectedPosition = vp;
+                highlightChunksToRedraw.Add(highlightChunk);
+                if (!delayedUpdate)
+                    RedrawChangedHighlightChunks();
+                done = true;
+                consumer?.Invoke();
+            });
+            if (!delayedUpdate) yield break;
+            while (!done) yield return null;
+        }
+
+        private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp, Vector3Int offset,
+            Action<HighlightedBlock> consumer)
+        {
+            if (!player.CanEdit(vp.ToWorld(), out var land))
+            {
+                consumer.Invoke(null);
+                return;
+            }
+
+            var chunk = GetChunkIfInited(vp.chunk);
+            if (chunk != null)
+            {
+                var blockType = chunk.GetBlock(vp.local);
+                if (!blockType.isSolid)
+                {
+                    consumer.Invoke(null); // air block is ignored
+                    return;
+                }
+
+                consumer.Invoke(HighlightedBlock.Create(vp.local, offset, highlightChunk, blockType.id,
+                    chunk.GetMetaAt(vp)));
+                return;
+            }
+
+            WorldService.INSTANCE.GetBlockType(vp, blockType =>
+            {
+                if (blockType == null || !blockType.isSolid)
+                {
+                    consumer.Invoke(null); // air block is ignored
+                    return;
+                }
+
+                WorldService.INSTANCE.GetMetaBlock(vp,
+                    meta =>
+                    {
+                        consumer.Invoke(HighlightedBlock.Create(vp.local, offset, highlightChunk, blockType.id, meta));
+                    });
+            });
+        }
+
+        private void RemoveHighlight(VoxelPosition vp, bool delayedUpdate = false)
+        {
+            if (highlightChunks.TryGetValue(vp.chunk, out var highlightChunk) && highlightChunk != null &&
+                highlightChunk.Remove(vp.local))
+                highlightChunksToRedraw.Add(highlightChunk);
+            if (!delayedUpdate)
+                RedrawChangedHighlightChunks();
+        }
+
+        private void RedrawChangedHighlightChunks()
+        {
+            foreach (var chunk in highlightChunksToRedraw.Where(chunk => chunk != null))
+                chunk.Redraw();
+            highlightChunksToRedraw.Clear();
+        }
+
+        public void ClearHighlights()
+        {
+            if (highlight != null)
+            {
+                DestroyImmediate(highlight);
+                highlight = null;
+            }
+
+            highlightChunks.Clear();
+            highlightChunksToRedraw.Clear();
+            HighlightOffset = Vector3Int.zero;
+        }
+
+        public void RemoveSelectedBlocks(bool ignoreUnmovedBlocks = false)
+        {
+            var blocks = new Dictionary<VoxelPosition, Land>();
+            foreach (var highlightChunkCoordinate in highlightChunks.Keys)
+            {
+                var highlightChunk = highlightChunks[highlightChunkCoordinate];
+                if (highlightChunk == null) continue;
+                foreach (var localPosition in highlightChunk.HighlightedLocalPositions)
+                {
+                    var offset = highlightChunk.GetRotationOffset(localPosition);
+                    if (!offset.HasValue ||
+                        ignoreUnmovedBlocks && HighlightOffset + offset.Value == Vector3Int.zero) continue;
+                    var vp = new VoxelPosition(highlightChunkCoordinate, localPosition);
+                    if (!player.CanEdit(vp.ToWorld(), out var land)) continue;
+                    var chunk = GetChunkIfInited(vp.chunk);
+                    if (chunk != null)
+                    {
+                        blocks.Add(vp, land);
+                        if (chunk.GetMetaAt(vp) != null)
+                            chunk.DeleteMeta(vp);
+                        continue;
+                    }
+
+                    WorldService.INSTANCE.GetMetaBlock(vp,
+                        meta => { WorldService.INSTANCE.OnMetaRemoved(meta, vp); });
+                }
+            }
+
+            DeleteBlocks(blocks);
+        }
+
+        public void DuplicateSelectedBlocks()
+        {
+            foreach (var highlightChunk in highlightChunks.Values)
+            {
+                if (highlightChunk == null) continue;
+                var highlightedBlocks = highlightChunk.HighlightedBlocks;
+                var blocks = new Dictionary<VoxelPosition, Tuple<BlockType, Land>>();
+                var metas = new Dictionary<VoxelPosition, Tuple<HighlightedBlock, Land>>();
+                foreach (var highlightedBlock in highlightedBlocks)
+                {
+                    if (highlightedBlock == null) continue;
+                    if (HighlightOffset + highlightedBlock.Offset == Vector3Int.zero) continue;
+
+                    var newPos = HighlightOffset + highlightChunk.Position + highlightedBlock.CurrentPosition;
+                    if (!player.CanEdit(newPos, out var land)) continue;
+
+                    var newPosVp = new VoxelPosition(newPos);
+                    blocks.Add(newPosVp,
+                        new Tuple<BlockType, Land>(Blocks.GetBlockType(highlightedBlock.BlockTypeId), land));
+                    if (highlightedBlock.MetaAttached)
+                        metas.Add(newPosVp, new Tuple<HighlightedBlock, Land>(highlightedBlock, land));
+                }
+
+                PutBlocks(blocks);
+                foreach (var vp in metas.Keys)
+                {
+                    var (selectedBlockProperties, land) = metas[vp];
+                    PutMetaWithProps(vp,
+                        (MetaBlockType) Blocks.GetBlockType(selectedBlockProperties.MetaBlockTypeId),
+                        selectedBlockProperties.MetaProperties, land);
+                }
+            }
+        }
+
+        public void MoveSelection(Vector3Int delta)
+        {
+            HighlightOffset += delta;
+            highlight.transform.position += delta;
+            foreach (var highlightChunk in highlightChunks.Values)
+                highlightChunk.Move(delta);
+        }
+
+        private Vector3? GetSelectionRotationCenter()
+        {
+            if (!SelectionActive || !highlightChunks.TryGetValue(firstSelectedPosition.chunk, out var highlightChunk) ||
+                highlightChunk == null) return null;
+            var rotationOffset = highlightChunk.GetRotationOffset(firstSelectedPosition.local);
+            if (!rotationOffset.HasValue) return null;
+            return firstSelectedPosition.ToWorld() + HighlightOffset + rotationOffset.Value  + 0.5f * Vector3.one;
+        }
+
+        public void RotateSelection(Vector3 axis)
+        {
+            var center = GetSelectionRotationCenter();
+            if (!center.HasValue) return;
+
+            foreach (var highlightChunk in highlightChunks.Values.Where(highlightChunk => highlightChunk != null))
+            {
+                highlightChunk.Rotate(center.Value, axis);
+                highlightChunksToRedraw.Add(highlightChunk);
+            }
+
+            RedrawChangedHighlightChunks();
+        }
+
+        public void ResetClipboard()
+        {
+            clipboard.Clear();
+            foreach (var highlightChunkCoordinate in highlightChunks.Keys)
+            {
+                var highlightChunk = highlightChunks[highlightChunkCoordinate];
+                if (highlightChunk == null) continue;
+                foreach (var localPosition in highlightChunk.HighlightedLocalPositions)
+                {
+                    clipboard.Add(new VoxelPosition(highlightChunkCoordinate, localPosition));
+                }
+            }
+        }
+
+        public Vector3Int GetClipboardMinPoint()
+        {
+            var minX = int.MaxValue;
+            var minY = int.MaxValue;
+            var minZ = int.MaxValue;
+            foreach (var pos in ClipboardWorldPositions)
+            {
+                if (pos.x < minX)
+                    minX = pos.x;
+                if (pos.y < minY)
+                    minY = pos.y;
+                if (pos.z < minZ)
+                    minZ = pos.z;
+            }
+
+            return new Vector3Int(minX, minY, minZ);
+        }
+
+        public void PasteClipboard(Vector3Int offset)
+        {
+            ClearHighlights();
+            StartCoroutine(AddHighlights(clipboard.ToList(), offset, null));
         }
 
         private Chunk PopRequest()
@@ -269,7 +559,7 @@ namespace src
                 chunk.PutVoxels(chunks[chunk]);
         }
 
-        public void DeleteBlocks(Dictionary<VoxelPosition, Land> blocks)
+        private void DeleteBlocks(Dictionary<VoxelPosition, Land> blocks)
         {
             var chunks = new Dictionary<Chunk, Dictionary<VoxelPosition, Land>>();
             // var nullChunkNeighbors = new List<Chunk>();

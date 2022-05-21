@@ -7,7 +7,7 @@ namespace src.MetaBlocks
     public abstract class MetaBlockObject : MonoBehaviour
     {
         private MetaBlock block;
-        private Chunk chunk;
+        protected Chunk chunk;
         private GameObject iconObject;
 
         public void Initialize(MetaBlock block, Chunk chunk)
@@ -116,5 +116,11 @@ namespace src.MetaBlocks
                 return true;
             return block.land.Contains(p);
         }
+
+        public abstract void ShowFocusHighlight();
+
+        public abstract void RemoveFocusHighlight();
+
+        public abstract Transform CreateSelectHighlight(bool show = true);
     }
 }
