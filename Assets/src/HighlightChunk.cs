@@ -23,7 +23,8 @@ namespace src
         public int TotalBlocksHighlighted => highlightedBlocks.Count(pair => pair.Value != null);
         public List<HighlightedBlock> HighlightedBlocks => new List<HighlightedBlock>(highlightedBlocks.Values);
         public HashSet<Vector3Int> HighlightedLocalPositions => new HashSet<Vector3Int>(highlightedBlocks.Keys);
-
+        public bool SelectionDisplaced =>
+            highlightedBlocks.Values.Any(highlightedBlock => highlightedBlock.Offset != Vector3Int.zero);
         private void Start()
         {
             meshFilter = highlightChunkGameObject.AddComponent<MeshFilter>();
@@ -171,44 +172,6 @@ namespace src
             Destroy(meshFilter.sharedMesh);
             meshFilter.sharedMesh = mesh;
         }
-
-        // public void UpdateMetaHighlight(Vector3Int localPos)
-        // {
-        //     if (!highlightedBlocks.TryGetValue(localPos, out var highlightedBlock) || highlightedBlock == null) return;
-        //     var vp = new VoxelPosition(coordinate, localPos);
-        //     var chunk = World.INSTANCE.GetChunkIfInited(coordinate);
-        //     if (chunk != null)
-        //         highlightedBlock.UpdateMetaHighlight(chunk.GetMetaAt(vp)?.blockObject.CreateSelectHighlight()
-        //             ?.gameObject);
-        //     else
-        //         WorldService.INSTANCE.GetMetaBlock(vp,
-        //             metaBlock =>
-        //             {
-        //                 highlightedBlock.UpdateMetaHighlight(metaBlock?.blockObject.CreateSelectHighlight()
-        //                     ?.gameObject);
-        //             });
-        // }
-
-        // private void Add(List<VoxelPosition> vps, bool forceRedraw = false)
-        // {
-        //     var changed = false;
-        //     foreach (var vp in vps)
-        //         if (TryAdd(vp))
-        //             changed = true;
-        //     if (forceRedraw || changed)
-        //         OnChanged();
-        // }
-        //
-        // private bool TryAdd(VoxelPosition vp)
-        // {
-        //     var blockType = chunk.GetBlock(vp.local);
-        //     if (!blockType.isSolid) return false;
-        //     var metaHighlight = GetMetaBlockHighlight(vp);
-        //     if (metaHighlight != null)
-        //         metaHighlight.position = metaHighlight.position + World.INSTANCE.GetHighlightRotationOffset(vp);
-        //     highlightedBlocks.Add(vp.local, metaHighlight);
-        //     return true;
-        // }
 
         private void DestroyMeshAndMaterial()
         {

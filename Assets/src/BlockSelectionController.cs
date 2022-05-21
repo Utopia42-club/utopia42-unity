@@ -44,18 +44,15 @@ namespace src
         public void DoUpdate()
         {
             if (World.INSTANCE.SelectionActive && movingSelectionAllowed)
-            {
-                HandleBlockRotation();
                 HandleBlockMovement();
-            }
-
+            HandleBlockRotation();
             HandleBlockSelection();
             HandleBlockClipboard();
         }
 
         private void HandleBlockRotation()
         {
-            if (!World.INSTANCE.SelectionActive || !movingSelectionAllowed) return;
+            if (!World.INSTANCE.SelectionActive) return;
             if (rotationMode == Input.GetKey(KeyCode.R)) return;
             rotationMode = !rotationMode;
             if (!rotationMode)
@@ -117,12 +114,15 @@ namespace src
         private void HandleBlockSelection()
         {
             if (rotationMode || !mouseLook.cursorLocked) return;
-            var selectVoxel = !movingSelectionAllowed &&
+
+            var ctrlHeld = Input.GetKey(KeyCode.LeftControl) ||
+                           Input.GetKey(KeyCode.RightControl) ||
+                           Input.GetKey(KeyCode.LeftCommand) ||
+                           Input.GetKey(KeyCode.RightCommand);
+
+            var selectVoxel = !World.INSTANCE.SelectionDisplaced &&
                               (player.HighlightBlock.gameObject.activeSelf || player.focused != null) &&
-                              Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftControl) ||
-                                                              Input.GetKey(KeyCode.RightControl) ||
-                                                              Input.GetKey(KeyCode.LeftCommand) ||
-                                                              Input.GetKey(KeyCode.RightCommand));
+                              Input.GetMouseButtonDown(0) && ctrlHeld;
 
             var multipleSelect = selectVoxel && World.INSTANCE.SelectionActive &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
@@ -151,6 +151,7 @@ namespace src
                     if (position.Equals(lastSelectedPosition) || position.Equals(currentSelectedPosition)) continue;
                     vps.Add(new VoxelPosition(position));
                 }
+
                 vps.Add(new VoxelPosition(currentSelectedPosition));
                 World.INSTANCE.AddHighlights(vps, AfterAddHighlight);
             }
@@ -162,7 +163,10 @@ namespace src
                         : player.focused.GetBlockPosition());
                 World.INSTANCE.AddHighlight(new VoxelPosition(selectedBlockPosition), AfterAddHighlight);
             }
-            else if (Input.GetMouseButtonDown(0))
+
+            if (ctrlHeld) return;
+
+            if (Input.GetMouseButtonDown(0))
             {
                 if (player.HammerMode && (player.HighlightBlock.gameObject.activeSelf || player.focused != null))
                     DeleteBlock();
@@ -303,14 +307,14 @@ namespace src
                     lines.Add("SHIFT+SPACE : down");
                     lines.Add("A : left");
                     lines.Add("D : right");
-                    lines.Add("R + horizontal mouse movement : rotate around y axis");
-                    lines.Add("R + vertical mouse movement : rotate around player right axis");
                 }
 
                 lines.Add("CTRL+C/V : copy/paste selection");
                 lines.Add("CTRL+CLICK : select/unselect block");
                 lines.Add(
                     "CTRL+SHIFT+CLICK : select/unselect all blocks between the last selected block and current block");
+                lines.Add("R + horizontal mouse movement : rotate around y axis");
+                lines.Add("R + vertical mouse movement : rotate around player right axis");
             }
             else
             {

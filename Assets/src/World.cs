@@ -52,6 +52,9 @@ namespace src
         public bool ClipboardEmpty => clipboard.Count == 0;
 
         public List<Vector3Int> ClipboardWorldPositions => clipboard.Select(vp => vp.ToWorld()).ToList();
+        public bool SelectionDisplaced =>
+            HighlightOffset != Vector3Int.zero ||
+            highlightChunks.Values.Any(highlightChunk => highlightChunk.SelectionDisplaced);
 
         private void Start()
         {
@@ -115,6 +118,7 @@ namespace src
                     done = true;
                     return;
                 }
+
                 highlightChunk.Add(vp.local, highlightedBlock);
                 if (TotalBlocksSelected == 1)
                     firstSelectedPosition = vp;
@@ -277,7 +281,7 @@ namespace src
                 highlightChunk == null) return null;
             var rotationOffset = highlightChunk.GetRotationOffset(firstSelectedPosition.local);
             if (!rotationOffset.HasValue) return null;
-            return firstSelectedPosition.ToWorld() + HighlightOffset + rotationOffset.Value  + 0.5f * Vector3.one;
+            return firstSelectedPosition.ToWorld() + HighlightOffset + rotationOffset.Value + 0.5f * Vector3.one;
         }
 
         public void RotateSelection(Vector3 axis)
