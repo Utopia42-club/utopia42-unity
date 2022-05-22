@@ -75,16 +75,21 @@ namespace src
 
         public void AddHighlights(List<VoxelPosition> vps, Action consumer = null)
         {
-            StartCoroutine(AddHighlights(vps, null, consumer));
+            AddHighlights(vps, Vector3Int.zero, consumer);
         }
 
-        private IEnumerator AddHighlights(List<VoxelPosition> vps, Vector3Int? offset, Action consumer)
+        private void AddHighlights(List<VoxelPosition> vps, Vector3Int offset, Action consumer)
         {
-            var offsetValue = offset ?? Vector3Int.zero;
-            foreach (var vp in vps)
-                yield return AddHighlight(vp, offsetValue, true);
-            RedrawChangedHighlightChunks();
-            consumer?.Invoke();
+            if (vps.Count == 0)
+            {
+                RedrawChangedHighlightChunks();
+                consumer?.Invoke();
+                return;
+            }
+
+            var vp = vps[0];
+            vps.RemoveAt(0);
+            StartCoroutine(AddHighlight(vp, offset, true, () => { AddHighlights(vps, offset, consumer); }));
         }
 
         public void AddHighlight(VoxelPosition vp, Action consumer = null)
@@ -116,12 +121,11 @@ namespace src
                 yield break;
             }
 
-            var done = false;
             GetHighlightedBlock(highlightChunk, vp, offset, highlightedBlock =>
             {
                 if (highlightedBlock == null)
                 {
-                    done = true;
+                    consumer?.Invoke();
                     return;
                 }
 
@@ -132,15 +136,12 @@ namespace src
                 highlightChunksToRedraw.Add(highlightChunk);
                 if (!delayedUpdate)
                     RedrawChangedHighlightChunks();
-                done = true;
                 consumer?.Invoke();
             });
-            if (!delayedUpdate) yield break;
-            while (!done) yield return null;
         }
 
         private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp, Vector3Int offset,
-            Action<HighlightedBlock> consumer)
+            Action<HighlightedBlock> consumer, bool ignoreAir = true)
         {
             if (!player.CanEdit(vp.ToWorld(), out var land))
             {
@@ -152,9 +153,9 @@ namespace src
             if (chunk != null)
             {
                 var blockType = chunk.GetBlock(vp.local);
-                if (!blockType.isSolid)
+                if (ignoreAir && !blockType.isSolid)
                 {
-                    consumer.Invoke(null); // air block is ignored
+                    consumer.Invoke(null);
                     return;
                 }
 
@@ -165,9 +166,9 @@ namespace src
 
             WorldService.INSTANCE.GetBlockType(vp, blockType =>
             {
-                if (blockType == null || !blockType.isSolid)
+                if (blockType == null || ignoreAir && !blockType.isSolid)
                 {
-                    consumer.Invoke(null); // air block is ignored
+                    consumer.Invoke(null);
                     return;
                 }
 
@@ -337,7 +338,7 @@ namespace src
         public void PasteClipboard(Vector3Int offset)
         {
             ClearHighlights();
-            StartCoroutine(AddHighlights(clipboard.ToList(), offset, null));
+            AddHighlights(clipboard.ToList(), offset, null);
         }
 
         private Chunk PopRequest()

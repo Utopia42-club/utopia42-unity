@@ -12,7 +12,8 @@ namespace src
         public object MetaProperties { get; private set; }
         public bool MetaAttached { get; private set; } = false;
         private GameObject metaBlockHighlight;
-        private Vector3 metaBlockHighlightPosition; // temp
+        private Vector3 metaBlockHighlightPosition;
+        private bool hasReference = true; // TODO: false if the HighlightedBlock has been created without an existing block to refer to 
 
         public Vector3Int Offset { get; private set; } // might change because of rotation only
         public Vector3Int Position { get; private set; } // original local position to highlight chunk
