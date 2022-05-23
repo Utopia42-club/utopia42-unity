@@ -15,6 +15,7 @@ namespace src.Canvas
         public static readonly Color MAP_GRID_LINES = new Color(41 / 255f, 128 / 255f, 185 / 255f, 0.2f);
         public static readonly Color MAP_GRID_ORIGIN_LINES = new Color(192 / 255f, 57 / 255f, 43 / 255f);
         public static readonly Color MAP_DEFAULT_LAND_COLOR = MAP_OTHERS_LAND;
+        public static readonly Color TRANSPARENT = new Color(0, 0, 0, 255);
 
         public static Color? ConvertHexToColor(string hex)
         {

@@ -29,7 +29,7 @@ namespace src
         private bool captureAllKeyboardInputOrig;
 
         public GameObject helpDialog;
-        
+
         private bool doubleCtrlTap = false;
         private double doubleCtrlTapTime;
 
@@ -97,6 +97,11 @@ namespace src
             return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl)
                                                          || Input.GetKeyDown(KeyCode.LeftCommand) ||
                                                          Input.GetKeyDown(KeyCode.RightCommand);
+        }
+
+        public bool IsWorldInited()
+        {
+            return worldInited;
         }
 
         private void InitPlayerForWallet(Vector3? startingPosition)
@@ -224,6 +229,16 @@ namespace src
             }
         }
 
+        public bool OpenMap()
+        {
+            return SetState(State.MAP);
+        }
+
+        public bool OpenSettings()
+        {
+            return SetState(State.SETTINGS);
+        }
+
         public void ReturnToGame()
         {
             if (!worldInited)
@@ -306,20 +321,22 @@ namespace src
                 GUIUtility.systemCopyBuffer = url;
         }
 
-        private void SetState(State state)
+        private bool SetState(State state)
         {
             if (state == this.state)
-                return; //Or should we throw an exception?
+                return false; //Or should we throw an exception?
 
             if (stateGuards.Any(guard => !guard.Invoke(this.state, state)))
             {
                 Debug.Log("State change prevented by guard : " + this.state + " -> " + state);
-                return;
+                return false;
             }
 
             previousState = this.state;
             this.state = state;
             stateChange.Invoke(state);
+
+            return true;
         }
 
         public State GetState()

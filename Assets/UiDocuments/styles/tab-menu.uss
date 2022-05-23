@@ -1,0 +1,15 @@
+.toolbar-button {
+    font-size: 13px;
+    -unity-font-style: bold;
+    width: 87px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.selected-tab {
+    background-color: rgb(52, 73, 94);
+}

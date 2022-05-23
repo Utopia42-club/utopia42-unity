@@ -48,7 +48,7 @@ namespace src.Canvas.Map
             instance = this;
             gameObject.SetActive(false);
             gameManager = GameManager.INSTANCE;
-            
+
             editButton.GetComponent<ActionButton>().AddListener(() => gameManager.EditProfile());
             closeButton.AddListener(CloseIfOpened);
             transferButton.onClick.AddListener(DoTransfer);
@@ -113,7 +113,7 @@ namespace src.Canvas.Map
 
         public void CloseIfOpened()
         {
-            if(!gameObject.activeSelf)
+            if (!gameObject.activeSelf)
                 return;
             nameLabel.SetText("");
             bioLabel.SetText("");
@@ -131,6 +131,10 @@ namespace src.Canvas.Map
             gameManager.SetProfileDialogState(false);
             onCloseActions.ForEach(action => action());
             onCloseActions.Clear();
+
+            var tabMenu = TabMenu.INSTANCE;
+            if (tabMenu != null)
+                tabMenu.SetActionsEnabled(true);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -145,6 +149,9 @@ namespace src.Canvas.Map
             SetLand(land);
             SetProfile(profile);
             gameManager.SetProfileDialogState(true);
+            var tabMenu = TabMenu.INSTANCE;
+            if (tabMenu != null)
+                tabMenu.SetActionsEnabled(false);
         }
 
         public void SetProfile(Profile profile)

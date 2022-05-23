@@ -25,12 +25,6 @@ namespace src.Canvas
                     shortcut.SetShortcut("F2");
                     textMesh.SetText("Settings");
                     break;
-                case (GameManager.State.MAP):
-                    gameObject.SetActive(true);
-                    shortcut.gameObject.SetActive(true);
-                    shortcut.SetShortcut("F2");
-                    textMesh.SetText("Toggle Side Panel");
-                    break;
                 default:
                     gameObject.SetActive(false);
                     shortcut.gameObject.SetActive(false);
