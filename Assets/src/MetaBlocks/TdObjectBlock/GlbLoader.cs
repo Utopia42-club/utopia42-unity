@@ -22,8 +22,18 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             try
             {
-                AnimationClip[] clips; // TODO: use glb animation
-                var go = Importer.LoadFromBytes(data, ImportSettings, out clips);
+                var go = Importer.LoadFromBytes(data, ImportSettings, out var clips);
+                
+                if (clips.Length > 0)
+                {
+                    var anim = go.AddComponent<Animation>();
+                    anim.playAutomatically = true;
+                    var clip = clips[0];
+                    anim.clip = clip;
+                    anim.AddClip(clip, clip.name);
+                    anim.Play(clip.name);
+                }
+                
                 onSuccess.Invoke(go);
             }
             catch
