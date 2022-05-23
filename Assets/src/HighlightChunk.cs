@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,9 +19,9 @@ namespace src
         // TODO: The parent of each selected block should be highlight chunk so that they would be destroyed with it   
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
-        private GameObject highlightChunkGameObject;
+        public GameObject HighlightChunkGameObject { get; private set; }
 
-        public Transform transform => highlightChunkGameObject.transform;
+        public Transform transform => HighlightChunkGameObject.transform;
         
         public int TotalBlocksHighlighted => highlightedBlocks.Count(pair => pair.Value != null);
         public List<HighlightedBlock> HighlightedBlocks => new List<HighlightedBlock>(highlightedBlocks.Values);
@@ -29,15 +30,15 @@ namespace src
             highlightedBlocks.Values.Any(highlightedBlock => highlightedBlock.Offset != Vector3Int.zero);
         private void Start()
         {
-            meshFilter = highlightChunkGameObject.AddComponent<MeshFilter>();
-            meshRenderer = highlightChunkGameObject.AddComponent<MeshRenderer>();
+            meshFilter = HighlightChunkGameObject.AddComponent<MeshFilter>();
+            meshRenderer = HighlightChunkGameObject.AddComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = World.INSTANCE.SelectedBlock;
         }
         
         public static HighlightChunk Create(GameObject parent, Vector3Int coordinate)
         {
             var highlightChunk = parent.AddComponent<HighlightChunk>(); // TODO: necessary?
-            highlightChunk.highlightChunkGameObject = new GameObject
+            highlightChunk.HighlightChunkGameObject = new GameObject
             {
                 name = "Highlight Chunk " + coordinate
             };
@@ -175,6 +176,12 @@ namespace src
             if (meshFilter.sharedMesh == null) return;
             Destroy(meshFilter.sharedMesh);
             meshFilter.sharedMesh = null;
+        }
+
+        private void OnDestroy()
+        {
+            DestroyMeshAndMaterial();
+            Destroy(HighlightChunkGameObject);
         }
     }
 }

@@ -102,5 +102,48 @@ namespace src.MetaBlocks
                 return null;
             }
         }
+
+        public void CreateSelectHighlight(Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad, out GameObject referenceGo)
+        {
+            referenceGo = null;
+            if (blockObject != null)
+            {
+                var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
+                if (go != null)
+                {
+                    onLoad(go);
+                    return;
+                }
+                blockObject.stateChange.AddListener(state =>
+                {
+                    if (state != StateMsg.Ok) return;
+                    var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
+                    if (go != null) onLoad(go);
+                });
+                return;
+            }
+
+            var gameObject = new GameObject
+            {
+                name = "Temp game object"
+            };
+            var tempBlockObject = (MetaBlockObject) gameObject.AddComponent(type.componentType);
+            gameObject.transform.parent = World.INSTANCE.transform;
+            gameObject.transform.localPosition = highlightChunkTransform.transform.localPosition + localPos;
+            tempBlockObject.Initialize(this, null);
+            // gameObject.SetActive(false); // TODO ?
+            tempBlockObject.stateChange.AddListener(state =>
+            {
+                if (state != StateMsg.Ok)
+                {
+                    if (state != StateMsg.Loading)
+                        Object.Destroy(gameObject);
+                    return;
+                }
+                var go = tempBlockObject.CreateSelectHighlight(highlightChunkTransform);
+                if (go != null) onLoad(go);
+            });
+            referenceGo = gameObject;
+        }
     }
 }

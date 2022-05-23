@@ -232,5 +232,10 @@ namespace src.MetaBlocks.VideoBlock
         {
             return null;
         }
+
+        protected override void UpdateState(StateMsg stateMsg)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

@@ -96,6 +96,11 @@ namespace src.MetaBlocks.MarkerBlock
             return null;
         }
 
+        protected override void UpdateState(StateMsg stateMsg)
+        {
+            throw new System.NotImplementedException();
+        }
+
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;

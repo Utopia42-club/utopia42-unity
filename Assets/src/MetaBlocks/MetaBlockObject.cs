@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace src.MetaBlocks
 {
@@ -9,6 +10,7 @@ namespace src.MetaBlocks
         private MetaBlock block;
         protected Chunk chunk;
         private GameObject iconObject;
+        public readonly UnityEvent<StateMsg> stateChange = new UnityEvent<StateMsg>();
 
         public void Initialize(MetaBlock block, Chunk chunk)
         {
@@ -122,5 +124,7 @@ namespace src.MetaBlocks
         public abstract void RemoveFocusHighlight();
 
         public abstract GameObject CreateSelectHighlight(Transform parent, bool show = true);
+
+        protected abstract void UpdateState(StateMsg stateMsg);
     }
 }

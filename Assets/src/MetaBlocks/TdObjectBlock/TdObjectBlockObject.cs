@@ -103,6 +103,12 @@ namespace src.MetaBlocks.TdObjectBlock
             return highlight.gameObject;
         }
 
+        protected override void UpdateState(StateMsg stateMsg)
+        {
+            this.stateMsg = stateMsg;
+            stateChange.Invoke(stateMsg);
+        }
+
         private void ChangeParent(Transform highlight, Transform parent)
         {
             highlight.SetParent(parent, true);
@@ -175,7 +181,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
                 if (Input.GetButtonDown("Delete"))
                 {
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                    GetChunk()?.DeleteMeta(new VoxelPosition(transform.localPosition));
                 }
             });
         }
@@ -247,7 +253,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face = null)
         {
-            stateMsg = msg;
+            UpdateState(msg);
             if (snackItem != null)
                 ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines());
             if (stateMsg != StateMsg.Ok && stateMsg != StateMsg.Loading)

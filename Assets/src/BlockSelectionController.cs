@@ -155,7 +155,7 @@ namespace src
                 }
 
                 vps.Add(new VoxelPosition(currentSelectedPosition));
-                World.INSTANCE.AddHighlights(vps, AfterAddHighlight);
+                AddHighlights(vps);
             }
             else if (selectVoxel)
             {
@@ -165,7 +165,7 @@ namespace src
                 if(!possibleCurrentSelectedPosition.HasValue) return;
                 var currentSelectedPosition =
                     Vectors.FloorToInt(possibleCurrentSelectedPosition.Value);
-                World.INSTANCE.AddHighlight(new VoxelPosition(currentSelectedPosition), AfterAddHighlight);
+                AddHighlight(new VoxelPosition(currentSelectedPosition));
             }
 
             if (ctrlHeld) return;
@@ -348,6 +348,16 @@ namespace src
 
             ClearSelection();
             movingSelectionAllowed = false;
+        }
+        
+        public void AddHighlights(List<VoxelPosition> vps)
+        {
+            World.INSTANCE.AddHighlights(vps, AfterAddHighlight);
+        }
+        
+        public void AddHighlight(VoxelPosition vp)
+        {
+            World.INSTANCE.AddHighlight(vp, AfterAddHighlight);
         }
 
         private void AfterAddHighlight()

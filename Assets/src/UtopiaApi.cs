@@ -143,7 +143,7 @@ namespace src
             return result;
         }
 
-        public static Dictionary<Vector3Int, bool> PutMetaBlocks(
+        private static Dictionary<Vector3Int, bool> PutMetaBlocks(
             Dictionary<VoxelPosition, Tuple<MetaBlockType, object>> metaBlocks)
         {
             var result = new Dictionary<Vector3Int, bool>();

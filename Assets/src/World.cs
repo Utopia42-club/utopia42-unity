@@ -84,20 +84,21 @@ namespace src
             {
                 RedrawChangedHighlightChunks();
                 consumer?.Invoke();
+                MoveSelection(offset);
                 return;
             }
 
             var vp = vps[0];
             vps.RemoveAt(0);
-            StartCoroutine(AddHighlight(vp, offset, true, () => { AddHighlights(vps, offset, consumer); }));
+            StartCoroutine(AddHighlight(vp, true, () => { AddHighlights(vps, offset, consumer); }));
         }
 
         public void AddHighlight(VoxelPosition vp, Action consumer = null)
         {
-            StartCoroutine(AddHighlight(vp, Vector3Int.zero, false, consumer));
+            StartCoroutine(AddHighlight(vp, false, consumer));
         }
 
-        private IEnumerator AddHighlight(VoxelPosition vp, Vector3Int offset, bool delayedUpdate,
+        private IEnumerator AddHighlight(VoxelPosition vp, bool delayedUpdate,
             Action consumer = null)
         {
             if (!player.CanEdit(vp.ToWorld(), out _)) yield break;
@@ -121,7 +122,7 @@ namespace src
                 yield break;
             }
 
-            GetHighlightedBlock(highlightChunk, vp, offset, highlightedBlock =>
+            GetHighlightedBlock(highlightChunk, vp, highlightedBlock =>
             {
                 if (highlightedBlock == null)
                 {
@@ -140,7 +141,7 @@ namespace src
             });
         }
 
-        private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp, Vector3Int offset,
+        private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp, 
             Action<HighlightedBlock> consumer, bool ignoreAir = true)
         {
             if (!player.CanEdit(vp.ToWorld(), out var land))
@@ -159,7 +160,7 @@ namespace src
                     return;
                 }
 
-                consumer.Invoke(HighlightedBlock.Create(vp.local, offset, highlightChunk, blockType.id,
+                consumer.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, blockType.id,
                     chunk.GetMetaAt(vp)));
                 return;
             }
@@ -175,7 +176,7 @@ namespace src
                 WorldService.INSTANCE.GetMetaBlock(vp,
                     meta =>
                     {
-                        consumer.Invoke(HighlightedBlock.Create(vp.local, offset, highlightChunk, blockType.id, meta));
+                        consumer.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, blockType.id, meta));
                     });
             });
         }

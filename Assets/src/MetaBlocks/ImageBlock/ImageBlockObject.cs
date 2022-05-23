@@ -211,5 +211,10 @@ namespace src.MetaBlocks.ImageBlock
         {
             return null;
         }
+
+        protected override void UpdateState(StateMsg stateMsg)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
