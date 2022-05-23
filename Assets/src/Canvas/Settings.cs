@@ -55,7 +55,7 @@ namespace src.Canvas
             var manager = GameManager.INSTANCE;
             saveGameButton.onClick.AddListener(() => manager.Save());
             editProfileButton.onClick.AddListener(() => manager.ShowUserProfile());
-            helpButton.onClick.AddListener(() => manager.Help());
+            helpButton.onClick.AddListener(() => manager.OpenHelpDialog());
             walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
             positionLinkButton.onClick.AddListener(() => manager.CopyPositionLink());
             pluginsButton.onClick.AddListener(() => manager.OpenPluginsDialog());

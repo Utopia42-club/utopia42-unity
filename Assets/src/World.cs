@@ -36,7 +36,6 @@ namespace src
         public GameObject debugScreen;
         public GameObject inventory;
         public GameObject cursorSlot;
-        public GameObject help;
         public Player player;
         private VoxelPosition firstSelectedPosition;
         public VoxelPosition lastSelectedPosition { get; private set; }
@@ -63,7 +62,6 @@ namespace src
             {
                 inventory.SetActive(state == GameManager.State.INVENTORY);
                 cursorSlot.SetActive(state == GameManager.State.INVENTORY);
-                help.SetActive(state == GameManager.State.HELP);
             });
         }
 

@@ -8,11 +8,11 @@ namespace src.Canvas
 
         void Start()
         {
-            closeButton.AddListener(() =>
-            {
-                if (GameManager.INSTANCE.GetState() == GameManager.State.HELP)
-                    GameManager.INSTANCE.ReturnToGame();
-            });
+            var gameManager = GameManager.INSTANCE;
+            closeButton.AddListener(() => { gameManager.ReturnToGame(); });
+            gameManager.stateGuards.Add(
+                (currentState, nextState) =>
+                    !(gameObject.activeSelf && currentState == GameManager.State.HELP));
         }
     }
 }

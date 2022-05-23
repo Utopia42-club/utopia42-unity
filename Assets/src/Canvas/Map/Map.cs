@@ -43,8 +43,7 @@ namespace src.Canvas.Map
         {
             var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
             mapInputManager.PrepareForScreenShot(land);
-            if (LandProfileDialog.INSTANCE.gameObject.activeInHierarchy)
-                LandProfileDialog.INSTANCE.Close();
+            LandProfileDialog.INSTANCE.CloseIfOpened();
             yield return new WaitForEndOfFrame();
 
             // var screenshot = ScreenCapture.CaptureScreenshotAsTexture();
@@ -82,17 +81,6 @@ namespace src.Canvas.Map
         {
             landBuyDialog.gameObject.SetActive(false);
             landBuyDialogDismissCallback?.Invoke();
-        }
-
-        public bool RequestClose()
-        {
-            if (IsLandProfileDialogOpen())
-            {
-                LandProfileDialog.INSTANCE.Close();
-                return false;
-            }
-
-            return true;
         }
     }
 }

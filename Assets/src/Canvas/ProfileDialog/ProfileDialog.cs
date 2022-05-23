@@ -19,31 +19,31 @@ public class ProfileDialog : MonoBehaviour
     public ActionButton closeButton;
     public GameObject editButton;
     private readonly List<GameObject> links = new List<GameObject>();
-    private GameManager manager;
+    private GameManager gameManager;
 
     void Start()
     {
         instance = this;
         gameObject.SetActive(false);
-        manager = GameManager.INSTANCE;
-        manager.stateChange.AddListener((state) =>
-        {
-            if (gameObject.activeSelf && state != GameManager.State.PROFILE_DIALOG)
-                Close();
-        });
-        closeButton.AddListener(Close);
-        editButton.GetComponent<ActionButton>().AddListener(() => manager.EditProfile());
+        gameManager = GameManager.INSTANCE;
+        gameManager.stateGuards.Add(
+            (currentState, nextState) =>
+                !(gameObject.activeSelf && currentState == GameManager.State.PROFILE_DIALOG));
+        closeButton.AddListener(CloseIfOpened);
+        editButton.GetComponent<ActionButton>().AddListener(() => gameManager.EditProfile());
     }
 
     public void Open(Profile profile)
     {
         gameObject.SetActive(true);
         SetProfile(profile);
-        manager.SetProfileDialogState(true);
+        gameManager.SetProfileDialogState(true);
     }
 
-    public void Close()
+    public void CloseIfOpened()
     {
+        if (!gameObject.activeSelf)
+            return;
         nameLabel.SetText("");
         bioLabel.SetText("");
         profileImage.SetUrl(null);
@@ -52,8 +52,9 @@ public class ProfileDialog : MonoBehaviour
             foreach (var link in links) DestroyImmediate(link);
             links.Clear();
         }
+
         gameObject.SetActive(false);
-        manager.SetProfileDialogState(false);
+        gameManager.SetProfileDialogState(false);
     }
 
     public void SetProfile(Profile profile)
@@ -85,5 +86,6 @@ public class ProfileDialog : MonoBehaviour
 
         editButton.SetActive(profile.walletId.Equals(Settings.WalletId()));
     }
+
     public static ProfileDialog INSTANCE => instance;
 }

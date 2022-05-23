@@ -24,12 +24,6 @@ namespace src.Canvas.Map
             GetComponent<Image>().color = Colors.GetLandColor(land);
         }
 
-        public void CloseLandDialog()
-        {
-            var landProfileDialog = LandProfileDialog.INSTANCE;
-            landProfileDialog.Close();
-        }
-
         public void OnPointerClick(PointerEventData eventData)
         {
             if (land == null

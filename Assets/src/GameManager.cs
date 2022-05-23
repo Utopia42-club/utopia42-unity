@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using src.Canvas;
 using src.Canvas.Map;
 using src.MetaBlocks.TdObjectBlock;
@@ -19,13 +20,16 @@ namespace src
         private bool worldInited = false;
 
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
+        public readonly List<Func<State, State, bool>> stateGuards = new List<Func<State, State, bool>>();
+
         private State state = State.LOADING;
         private State? previousState;
 
         private List<Dialog> dialogs = new List<Dialog>();
         private bool captureAllKeyboardInputOrig;
 
-        public Map map;
+        public GameObject helpDialog;
+        
         private bool doubleCtrlTap = false;
         private double doubleCtrlTapTime;
 
@@ -45,7 +49,6 @@ namespace src
                 if (Time.time - doubleCtrlTapTime < 0.4f)
                 {
                     OpenPluginsDialog();
-
                     doubleCtrlTapTime = 0f;
                 }
 
@@ -65,24 +68,18 @@ namespace src
                 else
                     ReturnToGame();
             }
+
             else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
                 SetState(State.SETTINGS);
+
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
                 SetState(State.PLAYING);
+
             else if (Input.GetButtonDown("Map"))
-            {
-                if (state == State.MAP && !LandProfileDialog.INSTANCE.gameObject.activeSelf)
-                    SetState(State.PLAYING);
-                else if (state == State.PLAYING)
-                    SetState(State.MAP);
-            }
+                SetState(state == State.MAP ? State.PLAYING : State.MAP);
+
             else if (Input.GetButtonDown("Inventory"))
-            {
-                if (state == State.INVENTORY)
-                    SetState(State.PLAYING);
-                else if (state == State.PLAYING)
-                    SetState(State.INVENTORY);
-            }
+                SetState(state == State.INVENTORY ? State.PLAYING : State.INVENTORY);
         }
 
         public void OpenPluginsDialog()
@@ -161,10 +158,13 @@ namespace src
             SetState(State.PLAYING);
         }
 
-        internal void Help()
+        internal void OpenHelpDialog()
         {
             if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
+            {
+                helpDialog.SetActive(true);
                 SetState(State.HELP);
+            }
         }
 
         public void MovePlayerTo(Vector3 pos)
@@ -226,17 +226,34 @@ namespace src
 
         public void ReturnToGame()
         {
-            if (worldInited &&
-                (state == State.SETTINGS || state == State.HELP || state == State.INVENTORY
-                 || state == State.PROFILE_DIALOG || state == State.FREEZE))
-                SetState(State.PLAYING);
-            else if (state == State.MAP)
+            if (!worldInited)
+                return; //FIXME
+
+            switch (state)
             {
-                if (map.RequestClose())
+                case State.PROFILE_DIALOG:
+                    LandProfileDialog.INSTANCE.CloseIfOpened();
+                    ProfileDialog.INSTANCE.CloseIfOpened();
+                    break;
+                case State.DIALOG when dialogs.Count > 0:
+                    CloseDialog(dialogs[dialogs.Count - 1]);
+                    break;
+                case State.MAP:
+                    if (LandProfileDialog.INSTANCE.gameObject.activeSelf)
+                        LandProfileDialog.INSTANCE.CloseIfOpened();
+                    else
+                        SetState(State.PLAYING);
+                    break;
+                case State.HELP:
+                    helpDialog.SetActive(false);
                     SetState(State.PLAYING);
+                    break;
+                case State.SETTINGS:
+                case State.INVENTORY:
+                case State.FREEZE:
+                    SetState(State.PLAYING);
+                    break;
             }
-            else if (state == State.DIALOG && dialogs.Count > 0)
-                CloseDialog(dialogs[dialogs.Count - 1]);
         }
 
         internal void ExitSettings(Vector3? startingPosition)
@@ -263,13 +280,10 @@ namespace src
 
         public void SetProfileDialogState(bool open)
         {
-            if (open)
-            {
-                if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
-                    SetState(State.PROFILE_DIALOG);
-            }
+            if (open && GetState() == State.PLAYING || GetState() == State.SETTINGS)
+                SetState(State.PROFILE_DIALOG);
             else if (GetState() == State.PROFILE_DIALOG)
-                ReturnToGame();
+                SetState(State.PLAYING);
         }
 
         public void ShowUserProfile()
@@ -294,6 +308,15 @@ namespace src
 
         private void SetState(State state)
         {
+            if (state == this.state)
+                return; //Or should we throw an exception?
+
+            if (stateGuards.Any(guard => !guard.Invoke(this.state, state)))
+            {
+                Debug.Log("State change prevented by guard : " + this.state + " -> " + state);
+                return;
+            }
+
             previousState = this.state;
             this.state = state;
             stateChange.Invoke(state);
@@ -460,16 +483,14 @@ namespace src
                 }
                 else
                 {
-                    var landProfileDialog = LandProfileDialog.INSTANCE;
-                    landProfileDialog.Open(currentLand, profile);
+                    LandProfileDialog.INSTANCE.Open(currentLand, profile);
                 }
             }
         }
 
         public void EditProfile()
         {
-            if (LandProfileDialog.INSTANCE.gameObject.activeSelf)
-                LandProfileDialog.INSTANCE.Close();
+            LandProfileDialog.INSTANCE.CloseIfOpened();
             BrowserConnector.INSTANCE.EditProfile(() =>
             {
                 SetState(State.PLAYING);

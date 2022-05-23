@@ -37,7 +37,7 @@ namespace src.Canvas.Map
         private bool isColorPickerOpen;
         private GameObject pickerInstance;
 
-        private GameManager manager;
+        private GameManager gameManager;
         private Image landColorButtonImage;
         private FlexibleColorPicker picker;
 
@@ -47,19 +47,19 @@ namespace src.Canvas.Map
         {
             instance = this;
             gameObject.SetActive(false);
-            manager = GameManager.INSTANCE;
-            manager.stateChange.AddListener((state) =>
-            {
-                if (gameObject.activeSelf && state != GameManager.State.PROFILE_DIALOG &&
-                    state != GameManager.State.MAP)
-                    Close();
-            });
-            editButton.GetComponent<ActionButton>().AddListener(() => manager.EditProfile());
-            closeButton.AddListener(Close);
+            gameManager = GameManager.INSTANCE;
+            
+            editButton.GetComponent<ActionButton>().AddListener(() => gameManager.EditProfile());
+            closeButton.AddListener(CloseIfOpened);
             transferButton.onClick.AddListener(DoTransfer);
             toggleNftButton.onClick.AddListener(DoToggleNft);
             landColorButton.onClick.AddListener(ToggleColorPicker);
             landColorButtonImage = landColorButton.GetComponent<Image>();
+
+            gameManager.stateGuards.Add(
+                (currentState, nextState) =>
+                    !(gameObject.activeSelf
+                      && (currentState == GameManager.State.PROFILE_DIALOG || currentState == GameManager.State.MAP)));
         }
 
         private void Update()
@@ -111,8 +111,10 @@ namespace src.Canvas.Map
             GameManager.INSTANCE.SetNFT(land, !land.isNft);
         }
 
-        public void Close()
+        public void CloseIfOpened()
         {
+            if(!gameObject.activeSelf)
+                return;
             nameLabel.SetText("");
             bioLabel.SetText("");
             profileImage.SetUrl(null);
@@ -126,7 +128,7 @@ namespace src.Canvas.Map
                 ToggleColorPicker();
 
             gameObject.SetActive(false);
-            manager.SetProfileDialogState(false);
+            gameManager.SetProfileDialogState(false);
             onCloseActions.ForEach(action => action());
             onCloseActions.Clear();
         }
@@ -142,7 +144,7 @@ namespace src.Canvas.Map
             gameObject.SetActive(true);
             SetLand(land);
             SetProfile(profile);
-            manager.SetProfileDialogState(true);
+            gameManager.SetProfileDialogState(true);
         }
 
         public void SetProfile(Profile profile)
