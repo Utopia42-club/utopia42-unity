@@ -135,7 +135,8 @@ namespace src
         {
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
-                if (hitCollider == raycastHit.collider && hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
+                if (hitCollider == raycastHit.collider &&
+                    hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
                 hitCollider = raycastHit.collider;
                 var focusable = hitCollider.GetComponent<Focusable>();
                 if (focusable != null)
@@ -304,7 +305,7 @@ namespace src
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
-            if (!isMeta && (playerPos.Equals(blockPos) || 
+            if (!isMeta && (playerPos.Equals(blockPos) ||
                             // playerPos.Equals(blockPos + Vector3Int.up) ||
                             playerPos.Equals(blockPos - Vector3Int.up)))
             {
