@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using src.Canvas;
+using src.MetaBlocks;
 using src.Model;
 using src.Utils;
 using TMPro;
@@ -26,7 +26,7 @@ namespace src
                 false; // whether we can move the selections using arrow keys and space (only mean sth when selectionActive = true) 
 
         private bool rotationMode = false;
-        private bool clipboardMovement = false;
+        private bool keepSourceAfterHighlightMovement = false;
 
         public bool PlayerMovementAllowed => !World.INSTANCE.SelectionActive || !movingSelectionAllowed;
 
@@ -120,7 +120,7 @@ namespace src
                            Input.GetKey(KeyCode.LeftCommand) ||
                            Input.GetKey(KeyCode.RightCommand);
 
-            var selectVoxel = !World.INSTANCE.SelectionDisplaced &&
+            var selectVoxel = !World.INSTANCE.SelectionDisplaced && !keepSourceAfterHighlightMovement &&
                               (player.HighlightBlock.gameObject.activeSelf || player.focused != null) &&
                               Input.GetMouseButtonDown(0) && ctrlHeld;
 
@@ -225,14 +225,15 @@ namespace src
             }
             else if (Input.GetButtonDown("Delete"))
             {
-                World.INSTANCE.RemoveSelectedBlocks();
+                if (!keepSourceAfterHighlightMovement)
+                    World.INSTANCE.RemoveSelectedBlocks();
                 ExitSelectionMode();
             }
             else if (player.PlaceBlock.gameObject.activeSelf && !World.INSTANCE.ClipboardEmpty &&
                      Input.GetKeyDown(KeyCode.V) &&
                      (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
-            {
+            {   
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();
                 var conflictWithPlayer = false;
                 var currVox = Vectors.TruncateFloor(transform.position);
@@ -251,17 +252,22 @@ namespace src
                 if (!conflictWithPlayer)
                 {
                     World.INSTANCE.PasteClipboard(player.PlaceBlockPosInt - minPoint);
-                    clipboardMovement = true;
-                    movingSelectionAllowed = true;
-                    SetBlockSelectionSnack();
+                    PrepareForClipboardMovement();
                 }
             }
+        }
+        
+        private void PrepareForClipboardMovement()
+        {
+            keepSourceAfterHighlightMovement = true;
+            movingSelectionAllowed = true;
+            SetBlockSelectionSnack();
         }
 
         private void ConfirmMove()
         {
             World.INSTANCE.DuplicateSelectedBlocks();
-            if (!clipboardMovement)
+            if (!keepSourceAfterHighlightMovement)
                 World.INSTANCE.RemoveSelectedBlocks(true);
         }
 
@@ -294,7 +300,6 @@ namespace src
                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
                 {
                     movingSelectionAllowed = !movingSelectionAllowed;
-                    clipboardMovement = false;
                     SetBlockSelectionSnack(help);
                 }
             });
@@ -348,11 +353,23 @@ namespace src
 
             ClearSelection();
             movingSelectionAllowed = false;
+            keepSourceAfterHighlightMovement = false;
         }
         
         public void AddHighlights(List<VoxelPosition> vps)
         {
+            if (vps.Count == 0) return;
             World.INSTANCE.AddHighlights(vps, AfterAddHighlight);
+        }
+        
+        public void AddPreviewHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights)
+        {
+            if (highlights.Count == 0 || !keepSourceAfterHighlightMovement && World.INSTANCE.SelectionActive) return; // do not add preview highlights after existing non-preview highlights
+            World.INSTANCE.AddHighlights(highlights, () =>
+            {
+                AfterAddHighlight();
+                PrepareForClipboardMovement();
+            });
         }
         
         public void AddHighlight(VoxelPosition vp)

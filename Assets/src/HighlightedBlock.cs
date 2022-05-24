@@ -15,10 +15,6 @@ namespace src
         private Vector3 metaBlockHighlightPosition;
         private GameObject referenceGo;
 
-        private bool
-            hasReference =
-                true; // TODO: false if the HighlightedBlock has been created without an existing block to refer to 
-
         public Vector3Int Offset { get; private set; } = Vector3Int.zero; // might change because of rotation only
         public Vector3Int Position { get; private set; } // original local position to highlight chunk
         public Vector3Int CurrentPosition => Position + Offset;

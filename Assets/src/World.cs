@@ -88,15 +88,30 @@ namespace src
 
             var vp = vps[0];
             vps.RemoveAt(0);
-            StartCoroutine(AddHighlight(vp, true, () => { AddHighlights(vps, offset, consumer); }));
+            StartCoroutine(AddHighlight(vp, null, true, () => { AddHighlights(vps, offset, consumer); }));
         }
+        
+        public void AddHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights, Action consumer = null)
+        {
+            if (highlights.Count == 0)
+            {
+                RedrawChangedHighlightChunks();
+                consumer?.Invoke();
+                return;
+            }
 
+            var vp = highlights.First().Key;
+            var highlightedBlock = highlights[vp];
+            highlights.Remove(vp);
+            StartCoroutine(AddHighlight(vp, highlightedBlock, true, () => { AddHighlights(highlights, consumer); }));
+        }
+        
         public void AddHighlight(VoxelPosition vp, Action consumer = null)
         {
-            StartCoroutine(AddHighlight(vp, false, consumer));
+            StartCoroutine(AddHighlight(vp, null, false, consumer));
         }
 
-        private IEnumerator AddHighlight(VoxelPosition vp, bool delayedUpdate,
+        private IEnumerator AddHighlight(VoxelPosition vp, Tuple<uint, MetaBlock> highlightedBlock, bool delayedUpdate,
             Action consumer = null)
         {
             if (!player.CanEdit(vp.ToWorld(), out _)) yield break;
@@ -120,15 +135,15 @@ namespace src
                 yield break;
             }
 
-            GetHighlightedBlock(highlightChunk, vp, highlightedBlock =>
+            Action<HighlightedBlock> highlightedBlockProcess = block =>
             {
-                if (highlightedBlock == null)
+                if (block == null)
                 {
                     consumer?.Invoke();
                     return;
                 }
 
-                highlightChunk.Add(vp.local, highlightedBlock);
+                highlightChunk.Add(vp.local, block);
                 if (TotalBlocksSelected == 1)
                     firstSelectedPosition = vp;
                 lastSelectedPosition = vp;
@@ -136,10 +151,17 @@ namespace src
                 if (!delayedUpdate)
                     RedrawChangedHighlightChunks();
                 consumer?.Invoke();
-            });
+            };
+
+            if (highlightedBlock == null)
+            {
+                GetHighlightedBlock(highlightChunk, vp, highlightedBlockProcess);
+                yield break;
+            }
+            highlightedBlockProcess.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, highlightedBlock.Item1, highlightedBlock.Item2));
         }
 
-        private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp, 
+        private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp,
             Action<HighlightedBlock> consumer, bool ignoreAir = true)
         {
             if (!player.CanEdit(vp.ToWorld(), out var land))
