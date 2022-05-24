@@ -24,19 +24,12 @@ namespace src
             {
                 if (state == GameManager.State.PLAYING || state == GameManager.State.MOVING_OBJECT)
                 {
-                    Cursor.lockState = CursorLockMode.Locked;
-                    // if (!cursorLocked)
-                    //     LockCursor();
-                    // else
-                    if (cursorLocked)
-                        Cursor.visible = false;
-                    this.onUpdate = DoUpdate;
+                    onUpdate = DoUpdate;
                 }
                 else
                 {
-                    Cursor.lockState = CursorLockMode.None;
-                    Cursor.visible = true;
-                    this.onUpdate = () => { };
+                    UnlockCursor();
+                    onUpdate = () => { };
                 }
             });
         }
@@ -45,17 +38,14 @@ namespace src
         {
             onUpdate.Invoke();
 
-            if (cursorLocked && (Input.GetButtonUp("Cancel")))
+            if (cursorLocked && Input.GetButtonDown("Cancel"))
                 UnlockCursor();
-            else if (!cursorLocked && (Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(0)) &&
-                     GameManager.INSTANCE.GetState() == GameManager.State.PLAYING && MouseInScreen())
-                LockCursor();
         }
 
         private void OnApplicationFocus(bool hasFocus)
         {
-            if (hasFocus) return;
-            UnlockCursor();
+            if (!hasFocus)
+                UnlockCursor();
         }
 
         public void UnlockCursor()
@@ -73,6 +63,7 @@ namespace src
             yield return null;
             cursorLocked = locked;
             Cursor.visible = !locked;
+            Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
         }
 
         private void DoUpdate()

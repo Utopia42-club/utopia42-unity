@@ -64,8 +64,8 @@ namespace src
 
             if (Input.GetButtonDown("Cancel"))
             {
-                if (state == State.PLAYING && !MouseLook.INSTANCE.cursorLocked)
-                    SetState(State.SETTINGS);
+                if (state == State.PLAYING && MouseLook.INSTANCE.cursorLocked)
+                    MouseLook.INSTANCE.UnlockCursor();
                 else
                     ReturnToGame();
             }
@@ -257,7 +257,7 @@ namespace src
                 case State.MAP:
                     if (LandProfileDialog.INSTANCE.gameObject.activeSelf)
                         LandProfileDialog.INSTANCE.CloseIfOpened();
-                    else if(map.IsLandBuyDialogOpen())
+                    else if (map.IsLandBuyDialogOpen())
                         map.CloseLandBuyDialogState();
                     else
                         SetState(State.PLAYING);
@@ -632,6 +632,12 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.ShowConnectionError();
+        }
+
+        public void OpenInventory()
+        {
+            if (state == State.PLAYING)
+                SetState(State.INVENTORY);
         }
     }
 }

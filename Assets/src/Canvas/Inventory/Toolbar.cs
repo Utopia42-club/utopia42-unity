@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
+using Button = UnityEngine.UI.Button;
 
 namespace src.Canvas
 {
@@ -8,6 +10,7 @@ namespace src.Canvas
         public Player player;
         public RectTransform highlight;
         public RectTransform hammerHighlight;
+        public Button inventoryButton;
 
         public GameObject slotPrefab;
 
@@ -16,6 +19,12 @@ namespace src.Canvas
 
         private void Start()
         {
+            inventoryButton.onClick.AddListener(() =>
+            {
+                Debug.Log("Inventory button clicked");
+                GameManager.INSTANCE.OpenInventory();
+            });
+            
             HorizontalLayoutGroup layout = GetComponentInChildren<HorizontalLayoutGroup>();
             for (int i = 1; i < 10; i++)
             {

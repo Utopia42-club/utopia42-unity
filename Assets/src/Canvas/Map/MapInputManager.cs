@@ -8,26 +8,19 @@ namespace src.Canvas.Map
 {
     public class MapInputManager : MonoBehaviour
     {
-        [SerializeField]
-        private RectTransform vertical;
+        [SerializeField] private RectTransform vertical;
 
-        [SerializeField]
-        private RectTransform horizontal;
+        [SerializeField] private RectTransform horizontal;
 
-        [SerializeField]
-        private RectPane landRect;
+        [SerializeField] private RectPane landRect;
 
-        [SerializeField]
-        private GameObject sidePanel;
+        [SerializeField] private GameObject sidePanel;
 
-        [SerializeField]
-        private GameObject overlayPrefab;
+        [SerializeField] private GameObject overlayPrefab;
 
-        [SerializeField]
-        private GameObject helpMessage;
+        [SerializeField] private GameObject helpMessage;
 
-        [SerializeField]
-        private GameObject positionBox;
+        [SerializeField] private GameObject positionBox;
 
         private bool dragging = false;
         private bool scrollLock = false;
@@ -70,7 +63,7 @@ namespace src.Canvas.Map
                 ToggleSidePanel();
             }
 
-            else if (IsInputEnabled())
+            else if (IsInputEnabled() && !TabMenu.INSTANCE.isMouseDown)
             {
                 if (!drawing && !dragging)
                 {

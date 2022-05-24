@@ -18,6 +18,8 @@ public class TabMenu : MonoBehaviour
     private Button closeButton;
     private Button sidePanelButton;
 
+    public bool isMouseDown;
+
     private void Start()
     {
         instance = this;
@@ -26,6 +28,16 @@ public class TabMenu : MonoBehaviour
     void OnEnable()
     {
         root = GetComponent<UIDocument>().rootVisualElement;
+        root.RegisterCallback<PointerDownEvent>(evt =>
+        {
+            isMouseDown = true;
+        });
+        
+        root.RegisterCallback<PointerUpEvent>(evt =>
+        {
+            isMouseDown = false;
+        });
+
         tabs = new List<Button>();
         _gameManager = GameManager.INSTANCE;
 
