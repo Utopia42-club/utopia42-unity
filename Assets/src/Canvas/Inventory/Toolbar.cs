@@ -21,7 +21,6 @@ namespace src.Canvas
         {
             inventoryButton.onClick.AddListener(() =>
             {
-                Debug.Log("Inventory button clicked");
                 GameManager.INSTANCE.OpenInventory();
             });
             
