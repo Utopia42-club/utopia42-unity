@@ -42,6 +42,8 @@ public class TabMenu : MonoBehaviour
 
         sidePanelButton = root.Q<Button>("side-panel-button");
         sidePanelButton.clicked += () => mapInputManager.ToggleSidePanel();
+        sidePanelButton.visible = _gameManager.GetState() == GameManager.State.MAP;
+            
         _gameManager.stateChange.AddListener(state =>
             sidePanelButton.SetEnabled(sidePanelButton.visible = state == GameManager.State.MAP));
     }
