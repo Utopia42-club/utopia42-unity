@@ -75,12 +75,16 @@ namespace src.Canvas.Map
             landBuyDialog.gameObject.SetActive(true);
             landBuyDialog.SetRect(rect);
             landBuyDialogDismissCallback = dismissCallback;
+            if (TabMenu.INSTANCE != null)
+                TabMenu.INSTANCE.SetActionsEnabled(false);
         }
 
         public void CloseLandBuyDialogState()
         {
             landBuyDialog.gameObject.SetActive(false);
             landBuyDialogDismissCallback?.Invoke();
+            if (TabMenu.INSTANCE != null)
+                TabMenu.INSTANCE.SetActionsEnabled(true);
         }
     }
 }
