@@ -29,6 +29,7 @@ namespace src
         private bool captureAllKeyboardInputOrig;
 
         public GameObject helpDialog;
+        public Map map;
 
         private bool doubleCtrlTap = false;
         private double doubleCtrlTapTime;
@@ -256,6 +257,8 @@ namespace src
                 case State.MAP:
                     if (LandProfileDialog.INSTANCE.gameObject.activeSelf)
                         LandProfileDialog.INSTANCE.CloseIfOpened();
+                    else if(map.IsLandBuyDialogOpen())
+                        map.CloseLandBuyDialogState();
                     else
                         SetState(State.PLAYING);
                     break;
