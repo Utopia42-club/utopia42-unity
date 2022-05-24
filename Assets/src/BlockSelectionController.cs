@@ -20,11 +20,7 @@ namespace src
         private SnackItem snackItem;
 
         private Vector3 rotationSum = Vector3.zero;
-
-        private bool
-            movingSelectionAllowed =
-                false; // whether we can move the selections using arrow keys and space (only mean sth when selectionActive = true) 
-
+        private bool movingSelectionAllowed = false; 
         private bool rotationMode = false;
         private bool keepSourceAfterHighlightMovement = false;
 
@@ -266,7 +262,7 @@ namespace src
 
         private void ConfirmMove()
         {
-            World.INSTANCE.DuplicateSelectedBlocks();
+            World.INSTANCE.DuplicateSelectedBlocks(!keepSourceAfterHighlightMovement);
             if (!keepSourceAfterHighlightMovement)
                 World.INSTANCE.RemoveSelectedBlocks(true);
         }
@@ -359,7 +355,7 @@ namespace src
         public void AddHighlights(List<VoxelPosition> vps)
         {
             if (vps.Count == 0) return;
-            World.INSTANCE.AddHighlights(vps, AfterAddHighlight);
+            World.INSTANCE.AddHighlights(vps, () => AfterAddHighlight());
         }
         
         public void AddPreviewHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights)
@@ -367,17 +363,17 @@ namespace src
             if (highlights.Count == 0 || !keepSourceAfterHighlightMovement && World.INSTANCE.SelectionActive) return; // do not add preview highlights after existing non-preview highlights
             World.INSTANCE.AddHighlights(highlights, () =>
             {
-                AfterAddHighlight();
+                AfterAddHighlight(false);
                 PrepareForClipboardMovement();
             });
         }
         
         public void AddHighlight(VoxelPosition vp)
         {
-            World.INSTANCE.AddHighlight(vp, AfterAddHighlight);
+            World.INSTANCE.AddHighlight(vp, () => AfterAddHighlight());
         }
 
-        private void AfterAddHighlight()
+        private void AfterAddHighlight(bool setSnack = true)
         {
             var total = World.INSTANCE.TotalBlocksSelected;
             switch (total)
@@ -386,8 +382,11 @@ namespace src
                     ExitSelectionMode();
                     break;
                 case 1:
-                    movingSelectionAllowed = false;
-                    SetBlockSelectionSnack();
+                    if (setSnack)
+                    {
+                        movingSelectionAllowed = false;
+                        SetBlockSelectionSnack();    
+                    }
                     selectedBlocksCountTextContainer.gameObject.SetActive(true);
                     break;
             }

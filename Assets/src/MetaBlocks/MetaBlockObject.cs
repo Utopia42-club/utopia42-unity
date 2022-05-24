@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
+using Object = UnityEngine.Object;
 
 namespace src.MetaBlocks
 {
@@ -38,7 +40,7 @@ namespace src.MetaBlocks
             UnFocus();
             if (iconObject != null)
                 Destroy(iconObject);
-            block.OnObjectDestroyed();
+            block?.OnObjectDestroyed();
         }
 
         protected MetaBlock GetBlock()
@@ -53,6 +55,7 @@ namespace src.MetaBlocks
 
         protected void CreateIcon(bool failed = false)
         {
+            if (chunk == null) return;
             if (iconObject != null)
                 Destroy(iconObject);
             iconObject = Instantiate(Resources.Load("MetaBlocks/MetaBlock") as GameObject, transform);
@@ -126,5 +129,7 @@ namespace src.MetaBlocks
         public abstract GameObject CreateSelectHighlight(Transform parent, bool show = true);
 
         protected abstract void UpdateState(StateMsg stateMsg);
+
+        public abstract void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad);
     }
 }

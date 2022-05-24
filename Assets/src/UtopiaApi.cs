@@ -32,7 +32,11 @@ namespace src
             return WorldService.INSTANCE.GetBlockTypeIfLoaded(vp)?.name;
         }
 
-        public Dictionary<Vector3Int, bool> PlaceMetaBlocks(string request, Vector3Int? offset = null)
+        public Dictionary<Vector3Int, bool> PlaceMetaBlocks(string request)
+        {
+            return PlaceMetaBlocksWithOffset(request, Vector3Int.zero);
+        }
+        public Dictionary<Vector3Int, bool> PlaceMetaBlocksWithOffset(string request, Vector3Int offset)
         {
             var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);
 
@@ -42,7 +46,7 @@ namespace src
 
             foreach (var req in reqs)
             {
-                var pos = new VoxelPosition(req.position.ToVector3() + offset ?? Vector3.zero);
+                var pos = new VoxelPosition(req.position.ToVector3() + offset );
                 var globalPos = pos.ToWorld();
                 if (placed.ContainsKey(globalPos))
                     continue;
@@ -74,14 +78,19 @@ namespace src
             return placed;
         }
 
-        public void PreviewMetaBlocks(string request, Vector3Int? offset = null)
+        public void PreviewMetaBlocks(string request)
+        {
+            PreviewMetaBlocksWithOffset(request, Vector3Int.zero);
+        }
+        
+        public void PreviewMetaBlocksWithOffset(string request, Vector3Int offset)
         {
             var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);
             var highlights = new Dictionary<VoxelPosition, Tuple<uint, MetaBlock>>();
 
             foreach (var req in reqs)
             {
-                var vp = new VoxelPosition(req.position.ToVector3() + offset ?? Vector3.zero);
+                var vp = new VoxelPosition(req.position.ToVector3() + offset);
                 if (highlights.ContainsKey(vp))
                     continue;
 

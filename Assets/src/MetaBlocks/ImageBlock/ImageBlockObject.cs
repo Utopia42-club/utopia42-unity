@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.Model;
@@ -215,6 +216,10 @@ namespace src.MetaBlocks.ImageBlock
         protected override void UpdateState(StateMsg stateMsg)
         {
             throw new System.NotImplementedException();
+        }
+
+        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        {
         }
     }
 }

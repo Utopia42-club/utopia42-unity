@@ -35,8 +35,15 @@ namespace src
 
             meta.CreateSelectHighlight(highlightChunk.transform, localPos, highlight =>
             {
+                if (highlightedBlock.metaBlockHighlight != null)
+                {
+                    DestroyImmediate(highlightedBlock.metaBlockHighlight);
+                    highlightedBlock.metaBlockHighlight = null;
+                }
+
                 highlightedBlock.metaBlockHighlight = highlight;
-                highlightedBlock.metaBlockHighlightPosition = highlight.transform.localPosition + World.INSTANCE.HighlightOffset; // TODO ?
+                highlightedBlock.metaBlockHighlightPosition =
+                    highlight.transform.localPosition + World.INSTANCE.HighlightOffset; // TODO ?
                 highlightedBlock.UpdateMetaBlockHighlightPosition();
             }, out highlightedBlock.referenceGo);
 

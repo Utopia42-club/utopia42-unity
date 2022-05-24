@@ -261,7 +261,7 @@ namespace src
             DeleteBlocks(blocks);
         }
 
-        public void DuplicateSelectedBlocks()
+        public void DuplicateSelectedBlocks(bool offsetCheck)
         {
             foreach (var highlightChunk in highlightChunks.Values)
             {
@@ -272,7 +272,7 @@ namespace src
                 foreach (var highlightedBlock in highlightedBlocks)
                 {
                     if (highlightedBlock == null) continue;
-                    if (HighlightOffset + highlightedBlock.Offset == Vector3Int.zero) continue;
+                    if (offsetCheck && HighlightOffset + highlightedBlock.Offset == Vector3Int.zero) continue;
 
                     var newPos = HighlightOffset + highlightChunk.Position + highlightedBlock.CurrentPosition;
                     if (!player.CanEdit(newPos, out var land)) continue;

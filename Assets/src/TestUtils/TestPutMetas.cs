@@ -19,11 +19,11 @@ namespace src.TestUtils
             }
 
             if (Input.GetKey(KeyCode.LeftShift))
-                UtopiaApi.INSTANCE.PreviewMetaBlocks(textAsset.text,
-                    Vectors.FloorToInt(Player.INSTANCE.transform.position));
+                UtopiaApi.INSTANCE.PreviewMetaBlocksWithOffset(textAsset.text,
+                    Vectors.FloorToInt(Player.INSTANCE.transform.position) + 5 * Vector3Int.up);
             else
-                UtopiaApi.INSTANCE.PlaceMetaBlocks(textAsset.text,
-                    Vectors.FloorToInt(Player.INSTANCE.transform.position));
+                UtopiaApi.INSTANCE.PlaceMetaBlocksWithOffset(textAsset.text,
+                    Vectors.FloorToInt(Player.INSTANCE.transform.position) + 5 * Vector3Int.up);
         }
     }
 }
