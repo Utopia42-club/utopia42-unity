@@ -254,7 +254,7 @@ RectTransform:
   m_GameObject: {fileID: 526928491231840395}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5877603, y: 0.5877603, z: 0.5877603}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_Children:
   - {fileID: 526928491888502671}
   m_Father: {fileID: 0}
@@ -280,7 +280,6 @@ MonoBehaviour:
   label: {fileID: 526928490662985610}
   openProfileButton: {fileID: 526928492063748384}
   view: {fileID: 526928491888502704}
-  shortchuts: {fileID: 526928491394451911}
   profileIcon: {fileID: 526928492063748415}
 --- !u!1 &526928491394451911
 GameObject:
