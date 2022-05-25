@@ -7,6 +7,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace src
 {
@@ -78,34 +79,45 @@ namespace src
 
         private void AddHighlights(List<VoxelPosition> vps, Vector3Int offset, Action consumer)
         {
-            if (vps.Count == 0)
+            var addHighlightDone = new UnityEvent();
+            addHighlightDone.AddListener(() =>
             {
-                RedrawChangedHighlightChunks();
-                consumer?.Invoke();
-                MoveSelection(offset);
-                return;
-            }
+                if (vps.Count == 0)
+                {
+                    RedrawChangedHighlightChunks();
+                    consumer?.Invoke();
+                    MoveSelection(offset);
+                    return;
+                }
 
-            var vp = vps[0];
-            vps.RemoveAt(0);
-            StartCoroutine(AddHighlight(vp, null, true, () => { AddHighlights(vps, offset, consumer); }));
+                var vp = vps[0];
+                vps.RemoveAt(0);
+                StartCoroutine(AddHighlight(vp, null, true, () => { addHighlightDone.Invoke(); }));
+            });
+            addHighlightDone.Invoke();
         }
-        
+
         public void AddHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights, Action consumer = null)
         {
-            if (highlights.Count == 0)
+            var addHighlightDone = new UnityEvent();
+            addHighlightDone.AddListener(() =>
             {
-                RedrawChangedHighlightChunks();
-                consumer?.Invoke();
-                return;
-            }
+                if (highlights.Count == 0)
+                {
+                    RedrawChangedHighlightChunks();
+                    consumer?.Invoke();
+                    return;
+                }
 
-            var vp = highlights.First().Key;
-            var highlightedBlock = highlights[vp];
-            highlights.Remove(vp);
-            StartCoroutine(AddHighlight(vp, highlightedBlock, true, () => { AddHighlights(highlights, consumer); }));
+                var vp = highlights.First().Key;
+                var highlightedBlock = highlights[vp];
+                highlights.Remove(vp);
+                StartCoroutine(AddHighlight(vp, highlightedBlock, true,
+                    () => { addHighlightDone.Invoke(); }));
+            });
+            addHighlightDone.Invoke();
         }
-        
+
         public void AddHighlight(VoxelPosition vp, Action consumer = null)
         {
             StartCoroutine(AddHighlight(vp, null, false, consumer));
@@ -158,7 +170,9 @@ namespace src
                 GetHighlightedBlock(highlightChunk, vp, highlightedBlockProcess);
                 yield break;
             }
-            highlightedBlockProcess.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, highlightedBlock.Item1, highlightedBlock.Item2));
+
+            highlightedBlockProcess.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, highlightedBlock.Item1,
+                highlightedBlock.Item2));
         }
 
         private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp,
