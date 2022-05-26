@@ -14,12 +14,11 @@
 //
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public unsafe class GLTFUtilityDracoLoader
 {
@@ -77,6 +76,9 @@ public unsafe class GLTFUtilityDracoLoader
 		public int numFaces;
 		public int numVertices;
 		public int numAttributes;
+
+		public bool isPointCloud;
+		public IndexFormat indexFormat => numVertices >= ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
 	}
 
 	public struct MeshAttributes
@@ -170,19 +172,33 @@ public unsafe class GLTFUtilityDracoLoader
 		GetAttributeByUniqueId(DracoMesh* mesh, int unique_id,
 			DracoAttribute** attr);
 
-	// Returns an array of indices as well as the type of data in data_type. On
-	// input, indices must be null. The returned indices must be released with
-	// ReleaseDracoData.
+
+	/// <summary>
+	/// Returns an array of indices as well as the type of data in data_type. On
+	/// input, indices must be null. The returned indices must be released with
+	/// ReleaseDracoData.
+	/// </summary>
+	/// <param name="mesh">DracoMesh to extract indices from</param>
+	/// <param name="dataType">Index data type (int or short) </param>
+	/// <param name="indices">Destination index buffer</param>
+	/// <param name="indicesCount">Number of indices (equals triangle count * 3)</param>
+	/// <param name="flip">If true, triangle vertex order is reverted</param>
+	/// <returns>True if extraction succeeded, false otherwise</returns>
 	[DllImport(DRACODEC_UNITY_LIB)]
-	private static extern bool GetMeshIndices(
-		DracoMesh* mesh, DracoData** indices);
+	static extern bool GetMeshIndices(
+		DracoMesh* mesh,
+		DataType dataType,
+		void* indices,
+		int indicesCount,
+		bool flip
+	); //FIXME
 
 	// Returns an array of attribute data as well as the type of data in
 	// data_type. On input, data must be null. The returned data must be
 	// released with ReleaseDracoData.
 	[DllImport(DRACODEC_UNITY_LIB)]
-	private static extern bool GetAttributeData(
-		DracoMesh* mesh, DracoAttribute* attr, DracoData** data);
+	unsafe static extern bool GetAttributeData(
+		DracoMesh* mesh, DracoAttribute* attr, DracoData** data, bool flip); //FIXME
 
 	// Decodes a Draco mesh, creates a Unity mesh from the decoded data and
 	// adds the Unity mesh to meshes. encodedData is the compressed Draco mesh.
@@ -221,14 +237,13 @@ public unsafe class GLTFUtilityDracoLoader
 		mesh.tris = new int[dracoMesh->numFaces * 3];
 		mesh.verts = new Vector3[dracoMesh->numVertices];
 
-		// Copy face indices.
-		DracoData* indicesData;
-		GetMeshIndices(dracoMesh, &indicesData);
-		int elementSize =
-			DataTypeSize((GLTFUtilityDracoLoader.DataType) indicesData->dataType);
-		int* indices = (int*) (indicesData->data);
+		var dataType = dracoMesh->indexFormat == IndexFormat.UInt16 ? DataType.DT_UINT16 : DataType.DT_UINT32;
 		var indicesPtr = UnsafeUtility.AddressOf(ref mesh.tris[0]);
-		UnsafeUtility.MemCpy(indicesPtr, indices,
+		DracoData* indicesData;
+		GetMeshIndices(dracoMesh, dataType, indicesPtr, mesh.tris.Length, false);
+		int elementSize =
+			DataTypeSize((DataType) dataType);
+		UnsafeUtility.MemCpy(indicesPtr, indicesPtr,
 			mesh.tris.Length * elementSize);
 		ReleaseDracoData(&indicesData);
 
@@ -238,8 +253,8 @@ public unsafe class GLTFUtilityDracoLoader
 		if (GetAttributeByUniqueId(dracoMesh, attributes.pos, &attr))
 		{
 			DracoData* posData = null;
-			GetAttributeData(dracoMesh, attr, &posData);
-			elementSize = DataTypeSize((GLTFUtilityDracoLoader.DataType) posData->dataType) *
+			GetAttributeData(dracoMesh, attr, &posData, false);
+			elementSize = DataTypeSize((DataType) posData->dataType) *
 			              attr->numComponents;
 			var newVerticesPtr = UnsafeUtility.AddressOf(ref mesh.verts[0]);
 			UnsafeUtility.MemCpy(newVerticesPtr, (void*) posData->data,
@@ -252,10 +267,10 @@ public unsafe class GLTFUtilityDracoLoader
 		if (GetAttributeByUniqueId(dracoMesh, attributes.norms, &attr))
 		{
 			DracoData* normData = null;
-			if (GetAttributeData(dracoMesh, attr, &normData))
+			if (GetAttributeData(dracoMesh, attr, &normData, false))
 			{
 				elementSize =
-					DataTypeSize((GLTFUtilityDracoLoader.DataType) normData->dataType) *
+					DataTypeSize((DataType) normData->dataType) *
 					attr->numComponents;
 				mesh.norms = new Vector3[dracoMesh->numVertices];
 				var newNormalsPtr = UnsafeUtility.AddressOf(ref mesh.norms[0]);
@@ -270,10 +285,10 @@ public unsafe class GLTFUtilityDracoLoader
 		if (GetAttributeByUniqueId(dracoMesh, attributes.uv, &attr))
 		{
 			DracoData* texData = null;
-			if (GetAttributeData(dracoMesh, attr, &texData))
+			if (GetAttributeData(dracoMesh, attr, &texData, false))
 			{
 				elementSize =
-					DataTypeSize((GLTFUtilityDracoLoader.DataType) texData->dataType) *
+					DataTypeSize((DataType) texData->dataType) *
 					attr->numComponents;
 				mesh.uv = new Vector2[dracoMesh->numVertices];
 				var newUVsPtr = UnsafeUtility.AddressOf(ref mesh.uv[0]);
@@ -288,10 +303,10 @@ public unsafe class GLTFUtilityDracoLoader
 		if (GetAttributeByUniqueId(dracoMesh, attributes.col, &attr))
 		{
 			DracoData* colorData = null;
-			if (GetAttributeData(dracoMesh, attr, &colorData))
+			if (GetAttributeData(dracoMesh, attr, &colorData, false))
 			{
 				elementSize =
-					DataTypeSize((GLTFUtilityDracoLoader.DataType) colorData->dataType) *
+					DataTypeSize((DataType) colorData->dataType) *
 					attr->numComponents;
 				mesh.colors = new Color[dracoMesh->numVertices];
 				var newColorsPtr = UnsafeUtility.AddressOf(ref mesh.colors[0]);
@@ -307,10 +322,10 @@ public unsafe class GLTFUtilityDracoLoader
 		if (GetAttributeByUniqueId(dracoMesh, attributes.weights, &attr))
 		{
 			DracoData* weightData = null;
-			if (GetAttributeData(dracoMesh, attr, &weightData))
+			if (GetAttributeData(dracoMesh, attr, &weightData, false))
 			{
 				elementSize =
-					DataTypeSize((GLTFUtilityDracoLoader.DataType) weightData->dataType) *
+					DataTypeSize((DataType) weightData->dataType) *
 					attr->numComponents;
 				if (attr->dataType == 9)
 				{
@@ -338,10 +353,10 @@ public unsafe class GLTFUtilityDracoLoader
 		if (GetAttributeByUniqueId(dracoMesh, attributes.joints, &attr))
 		{
 			DracoData* jointData = null;
-			if (GetAttributeData(dracoMesh, attr, &jointData))
+			if (GetAttributeData(dracoMesh, attr, &jointData, false))
 			{
 				elementSize =
-					DataTypeSize((GLTFUtilityDracoLoader.DataType) jointData->dataType) *
+					DataTypeSize((DataType) jointData->dataType) *
 					attr->numComponents;
 				if (attr->dataType == 9)
 				{
