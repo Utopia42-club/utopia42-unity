@@ -20,7 +20,7 @@ namespace src
         private SnackItem snackItem;
 
         private Vector3 rotationSum = Vector3.zero;
-        private bool movingSelectionAllowed = false; 
+        private bool movingSelectionAllowed = false;
         private bool rotationMode = false;
         private bool keepSourceAfterHighlightMovement = false;
 
@@ -129,7 +129,7 @@ namespace src
                 var possibleCurrentSelectedPosition = player.focused == null
                     ? player.HighlightBlock.position
                     : player.focused.GetBlockPosition();
-                if(!possibleCurrentSelectedPosition.HasValue) return;
+                if (!possibleCurrentSelectedPosition.HasValue) return;
                 var currentSelectedPosition =
                     Vectors.FloorToInt(possibleCurrentSelectedPosition.Value); // TODO: extract method
 
@@ -158,7 +158,7 @@ namespace src
                 var possibleCurrentSelectedPosition = player.focused == null
                     ? player.HighlightBlock.position
                     : player.focused.GetBlockPosition();
-                if(!possibleCurrentSelectedPosition.HasValue) return;
+                if (!possibleCurrentSelectedPosition.HasValue) return;
                 var currentSelectedPosition =
                     Vectors.FloorToInt(possibleCurrentSelectedPosition.Value);
                 AddHighlight(new VoxelPosition(currentSelectedPosition));
@@ -186,7 +186,7 @@ namespace src
             var possiblePosition = player.focused == null
                 ? player.HighlightBlock.position
                 : player.focused.GetBlockPosition();
-            if(!possiblePosition.HasValue) return;
+            if (!possiblePosition.HasValue) return;
             var position =
                 Vectors.FloorToInt(possiblePosition.Value);
             var vp = new VoxelPosition(position);
@@ -229,7 +229,7 @@ namespace src
                      Input.GetKeyDown(KeyCode.V) &&
                      (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
-            {   
+            {
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();
                 var conflictWithPlayer = false;
                 var currVox = Vectors.TruncateFloor(transform.position);
@@ -252,7 +252,7 @@ namespace src
                 }
             }
         }
-        
+
         private void PrepareForClipboardMovement()
         {
             keepSourceAfterHighlightMovement = true;
@@ -351,23 +351,24 @@ namespace src
             movingSelectionAllowed = false;
             keepSourceAfterHighlightMovement = false;
         }
-        
+
         public void AddHighlights(List<VoxelPosition> vps)
         {
             if (vps.Count == 0) return;
             World.INSTANCE.AddHighlights(vps, () => AfterAddHighlight());
         }
-        
+
         public void AddPreviewHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights)
         {
-            if (highlights.Count == 0 || !keepSourceAfterHighlightMovement && World.INSTANCE.SelectionActive) return; // do not add preview highlights after existing non-preview highlights
-            World.INSTANCE.AddHighlights(highlights, () =>
+            if (highlights.Count == 0 || !keepSourceAfterHighlightMovement && World.INSTANCE.SelectionActive)
+                return; // do not add preview highlights after existing non-preview highlights
+            StartCoroutine(World.INSTANCE.AddHighlights(highlights, () =>
             {
                 AfterAddHighlight(false);
                 PrepareForClipboardMovement();
-            });
+            }));
         }
-        
+
         public void AddHighlight(VoxelPosition vp)
         {
             World.INSTANCE.AddHighlight(vp, () => AfterAddHighlight());
@@ -385,8 +386,9 @@ namespace src
                     if (setSnack)
                     {
                         movingSelectionAllowed = false;
-                        SetBlockSelectionSnack();    
+                        SetBlockSelectionSnack();
                     }
+
                     selectedBlocksCountTextContainer.gameObject.SetActive(true);
                     break;
             }
