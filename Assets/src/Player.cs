@@ -28,6 +28,7 @@ namespace src
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
         [SerializeField] public Transform tdObjectHighlightBox;
+        [SerializeField] public Animator animator;
 
         [NonSerialized] public uint selectedBlockId = 1;
 
@@ -47,11 +48,15 @@ namespace src
         private BlockSelectionController blockSelectionController;
         private bool ctrlDown = false;
         private Vector3Int playerPos;
+
         public Transform tdObjectHighlightMesh;
+        private AvatarController avatarController;
 
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
+
+        public GameObject avatar;
 
         public Player(Transform tdObjectHighlightBox, Transform placeBlock, Transform highlightBlock)
         {
@@ -82,6 +87,8 @@ namespace src
 
             playerPos = Vectors.TruncateFloor(transform.position);
             StartCoroutine(SavePosition());
+            avatarController = new AvatarController(animator, controller, avatar.transform);
+            StartCoroutine(UpdateAnimation(avatarController));
         }
 
         public List<Land> GetOwnedLands()
@@ -99,7 +106,7 @@ namespace src
                 service.RefreshChangedLands(lands);
             }
 
-            this.ownedLands = lands != null ? lands : new List<Land>();
+            ownedLands = lands != null ? lands : new List<Land>();
         }
 
         private void FixedUpdate()
@@ -112,30 +119,54 @@ namespace src
         private void UpdatePlayerPosition()
         {
             if (!blockSelectionController.PlayerMovementAllowed) return;
-            var moveDirection = transform.forward * Vertical + transform.right * Horizontal;
-            controller.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
 
-            if (controller.isGrounded && velocity.y < 0 || floating)
+            var moveDirection = transform.forward * Vertical + transform.right * Horizontal;
+
+            var isGrounded = controller.isGrounded && velocity.y < 0 || floating;
+
+            avatarController.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
+
+            if (isGrounded)
                 velocity.y = 0f;
 
             if (jumpRequest)
+            {
+                if (!floating && isGrounded)
+                    avatarController.JumpAnimation();
                 velocity.y = Mathf.Sqrt((sprinting ? sprintJumpHeight : jumpHeight) * -2f * gravity);
+            }
 
             if (!floating && !controller.isGrounded)
                 velocity.y += gravity * Time.fixedDeltaTime;
 
-            controller.Move(velocity * Time.fixedDeltaTime);
+            avatarController.Move(velocity * Time.fixedDeltaTime);
+
             if ((controller.collisionFlags & CollisionFlags.Above) != 0)
                 velocity.y = 0;
 
             playerPos = Vectors.TruncateFloor(transform.position);
+
+            avatarController.SetPosition(transform.position);
+            avatarController.LookAt(cam.forward);
         }
+
+        IEnumerator UpdateAnimation(AvatarController avatarController)
+        {
+            while (true)
+            {
+                if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
+                    avatarController.UpdateAnimation(transform.position, cam.forward, floating, sprinting);
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+
 
         private void DetectFocus()
         {
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
-                if (hitCollider == raycastHit.collider && hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
+                if (hitCollider == raycastHit.collider &&
+                    hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
                 hitCollider = raycastHit.collider;
                 var focusable = hitCollider.GetComponent<Focusable>();
                 if (focusable != null)
@@ -194,11 +225,13 @@ namespace src
 
             if (Input.GetButtonDown("Sprint"))
                 sprinting = true;
+
             if (Input.GetButtonUp("Sprint"))
                 sprinting = false;
 
             if (Input.GetButtonDown("Jump"))
                 jumpRequest = true;
+
             if (Input.GetButtonUp("Jump"))
                 jumpRequest = false;
 
@@ -304,7 +337,7 @@ namespace src
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
-            if (!isMeta && (playerPos.Equals(blockPos) || 
+            if (!isMeta && (playerPos.Equals(blockPos) ||
                             // playerPos.Equals(blockPos + Vector3Int.up) ||
                             playerPos.Equals(blockPos - Vector3Int.up)))
             {
