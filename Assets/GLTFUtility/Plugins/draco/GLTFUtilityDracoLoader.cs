@@ -191,14 +191,14 @@ public unsafe class GLTFUtilityDracoLoader
 		void* indices,
 		int indicesCount,
 		bool flip
-	); //FIXME
+	);
 
 	// Returns an array of attribute data as well as the type of data in
 	// data_type. On input, data must be null. The returned data must be
 	// released with ReleaseDracoData.
 	[DllImport(DRACODEC_UNITY_LIB)]
 	unsafe static extern bool GetAttributeData(
-		DracoMesh* mesh, DracoAttribute* attr, DracoData** data, bool flip); //FIXME
+		DracoMesh* mesh, DracoAttribute* attr, DracoData** data, bool flip);
 
 	// Decodes a Draco mesh, creates a Unity mesh from the decoded data and
 	// adds the Unity mesh to meshes. encodedData is the compressed Draco mesh.
