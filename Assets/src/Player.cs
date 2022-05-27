@@ -50,7 +50,7 @@ namespace src
         private Vector3Int playerPos;
 
         public Transform tdObjectHighlightMesh;
-        private AvatarController avatarController;
+        public AvatarController avatarController;
 
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;

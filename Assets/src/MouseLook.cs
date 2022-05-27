@@ -7,7 +7,7 @@ namespace src
     public class MouseLook : MonoBehaviour
     {
         public float mouseSensitivity = 1;
-        public Transform playerBody;
+        public Player player;
         private float xRotation = 0f;
         private Action onUpdate = () => { };
         private Action<Vector3> rotationTarget = null;
@@ -81,7 +81,7 @@ namespace src
                 xRotation -= mouseY;
                 xRotation = Mathf.Clamp(xRotation, -90f, 90f);
                 transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
-                playerBody.Rotate(Vector3.up * mouseX);
+                player.transform.Rotate(Vector3.up * mouseX);
             }
             else
                 rotationTarget.Invoke(Vector3.up * mouseX + Vector3.right * mouseY);

@@ -25,20 +25,26 @@ namespace src
 
         public void LookAt(Vector3 cameraForward)
         {
-            Debug.Log(cameraForward);
-            transform.LookAt(cameraForward);
+            cameraForward.y = 0;
+            transform.rotation = Quaternion.LookRotation(cameraForward);
         }
-        
+
+        public void RotateTo(Vector3 rotation)
+        {
+            rotation.x = 0;
+            transform.Rotate(rotation);
+        }
+
         public void SetPosition(Vector3 pos)
         {
             transform.position = pos;
         }
-        
+
         public void UpdateAnimation(Vector3 position, Vector3 cameraForward, bool floating, bool sprint)
         {
             var velocity = (position - lastPosition) / (Time.time - lastTime);
             var movement = position - lastPosition;
-            
+
             lastPosition = position;
             lastTime = Time.time;
             if (floating || movement.y != 0 && movement.x == 0 && movement.z == 0)
@@ -53,7 +59,7 @@ namespace src
 
             var newX = Vector3.Dot(velocity, Quaternion.Euler(0, 90, 0) * cameraForward);
             var newY = Vector3.Dot(velocity, cameraForward);
-            
+
             animator.SetFloat("X", newX);
             animator.SetFloat("Z", newY);
 
