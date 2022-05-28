@@ -144,10 +144,12 @@ namespace src
             if ((controller.collisionFlags & CollisionFlags.Above) != 0)
                 velocity.y = 0;
 
-            playerPos = Vectors.TruncateFloor(transform.position);
+            var pos = transform.position;
 
-            avatarController.SetPosition(transform.position);
-            avatarController.LookAt(cam.forward);
+            playerPos = Vectors.TruncateFloor(pos);
+
+            avatarController.UpdatePlayerState(new AvatarController.PlayerState(pos, cam.forward, floating, sprinting),
+                false);
         }
 
         IEnumerator UpdateAnimation(AvatarController avatarController)
@@ -155,11 +157,11 @@ namespace src
             while (true)
             {
                 if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
-                    avatarController.UpdateAnimation(transform.position, cam.forward, floating, sprinting);
+                    avatarController.UpdatePlayerState(
+                        new AvatarController.PlayerState(transform.position, cam.forward, floating, sprinting), true);
                 yield return new WaitForSeconds(0.1f);
             }
         }
-
 
         private void DetectFocus()
         {

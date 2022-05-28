@@ -109,6 +109,8 @@ namespace src.Canvas
                 WebBridge.Call<object>("reportGameState", state.ToString());
             }
         }
+        
+        
 
         private void CallUrl(string method, string parameters, Action onDone, Action onCancel)
         {
