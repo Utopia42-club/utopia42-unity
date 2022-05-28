@@ -81,7 +81,7 @@ namespace src
                 xRotation -= mouseY;
                 xRotation = Mathf.Clamp(xRotation, -90f, 90f);
                 transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
-                player.transform.Rotate(Vector3.up * mouseX);
+                player.avatar.transform.Rotate(Vector3.up * mouseX);
             }
             else
                 rotationTarget.Invoke(Vector3.up * mouseX + Vector3.right * mouseY);

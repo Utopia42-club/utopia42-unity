@@ -18,7 +18,7 @@ namespace src.Canvas
 
         void Update()
         {
-            text.text = player.transform.position.ToString();
+            text.text = player.GetPosition().ToString();
         }
     }
 }

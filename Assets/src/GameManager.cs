@@ -184,7 +184,7 @@ namespace src
             Loading.INSTANCE.UpdateText("Positioning the player...");
             yield return FindStartingY(pos, result => pos = result);
 
-            Player.INSTANCE.transform.position = pos;
+            Player.INSTANCE.SetPosition(pos);
             yield return InitWorld(pos, clean);
         }
 
@@ -314,7 +314,7 @@ namespace src
 
         public void CopyPositionLink()
         {
-            var currentPosition = Player.INSTANCE.transform.position;
+            var currentPosition = Player.INSTANCE.GetPosition();
             var url = Constants.WebAppBaseURL +
                       $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}";
 
@@ -534,7 +534,7 @@ namespace src
             var player = Player.INSTANCE;
             player.ResetLands();
             if (reCreateWorld)
-                yield return InitWorld(player.transform.position, true);
+                yield return InitWorld(player.GetPosition(), true);
             else SetState(State.PLAYING);
         }
 
@@ -553,7 +553,7 @@ namespace src
 
             var player = Player.INSTANCE;
             player.ResetLands();
-            yield return InitWorld(player.transform.position, true);
+            yield return InitWorld(player.GetPosition(), true);
         }
 
         public Dialog OpenDialog(State targetState = State.DIALOG)

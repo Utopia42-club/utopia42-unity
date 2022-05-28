@@ -1,21 +1,26 @@
+using System.Collections;
 using UnityEngine;
 
 namespace src
 {
-    public class AvatarController
+    public class AvatarController : MonoBehaviour
     {
+        public GameObject avatarPrefab;
+
+        private Animator animator;
+        private CharacterController controller;
+        private GameObject avatar;
+
         private float updatedTime;
+        private PlayerState lastAnimationState;
+        private PlayerState state;
 
-        private readonly Animator animator;
-        private readonly CharacterController controller;
-        private readonly Transform transform;
-        private PlayerState lastState;
-
-        public AvatarController(Animator animator, CharacterController controller, Transform transform)
+        public void Start()
         {
-            this.animator = animator;
-            this.controller = controller;
-            this.transform = transform;
+            avatar = Instantiate(avatarPrefab, transform);
+            animator = avatar.GetComponent<Animator>();
+            controller = GetComponent<CharacterController>();
+            StartCoroutine(UpdateAnimationCoroutine());
         }
 
         public void Move(Vector3 motion)
@@ -34,21 +39,20 @@ namespace src
             transform.position = pos;
         }
 
-        public void UpdatePlayerState(PlayerState playerState, bool updateAnimation)
+        public void UpdatePlayerState(PlayerState playerState)
         {
             SetPosition(playerState.position);
-            LookAt(playerState.cameraForward);
-            if (updateAnimation)
-                UpdateAnimation(playerState);
+            LookAt(playerState.forward);
+            state = playerState;
         }
 
-        private void UpdateAnimation(PlayerState state)
+        private void UpdateAnimation()
         {
-            var movement = state.position - (lastState?.position ?? state.position);
+            var movement = state.position - (lastAnimationState?.position ?? state.position);
             var velocity = movement / (Time.time - updatedTime);
 
             updatedTime = Time.time;
-            lastState = state;
+            lastAnimationState = state;
 
             if (state.floating || movement.y != 0 && movement.x == 0 && movement.z == 0)
             {
@@ -60,8 +64,8 @@ namespace src
                 return;
             }
 
-            var newX = Vector3.Dot(velocity, Quaternion.Euler(0, 90, 0) * state.cameraForward);
-            var newY = Vector3.Dot(velocity, state.cameraForward);
+            var newX = Vector3.Dot(velocity, Quaternion.Euler(0, 90, 0) * state.forward);
+            var newY = Vector3.Dot(velocity, state.forward);
 
             animator.SetFloat("X", newX);
             animator.SetFloat("Z", newY);
@@ -74,6 +78,16 @@ namespace src
             animator.CrossFade("Jump", 0.01f);
         }
 
+        IEnumerator UpdateAnimationCoroutine()
+        {
+            while (true)
+            {
+                if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
+                    UpdateAnimation();
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+
         public void ReportToServer()
         {
         }
@@ -82,16 +96,16 @@ namespace src
         {
             public Vector3 position;
 
-            public Vector3 cameraForward;
+            public Vector3 forward;
 
             public bool floating;
 
             public bool sprint;
 
-            public PlayerState(Vector3 position, Vector3 cameraForward, bool floating, bool sprint)
+            public PlayerState(Vector3 position, Vector3 forward, bool floating, bool sprint)
             {
                 this.position = position;
-                this.cameraForward = cameraForward;
+                this.forward = forward;
                 this.floating = floating;
                 this.sprint = sprint;
             }

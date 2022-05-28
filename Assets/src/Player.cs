@@ -28,7 +28,7 @@ namespace src
         [SerializeField] private Transform highlightBlock;
         [SerializeField] private Transform placeBlock;
         [SerializeField] public Transform tdObjectHighlightBox;
-        [SerializeField] public Animator animator;
+        [SerializeField] public GameObject avatarPrefab;
 
         [NonSerialized] public uint selectedBlockId = 1;
 
@@ -44,19 +44,18 @@ namespace src
         private Voxels.Face focusedMetaFace;
         private RaycastHit raycastHit;
         private Collider hitCollider;
-        private CharacterController controller;
+        private CharacterController characterController;
         private BlockSelectionController blockSelectionController;
         private bool ctrlDown = false;
         private Vector3Int playerPos;
+        [NonSerialized] public GameObject avatar;
+        private AvatarController avatarController;
 
         public Transform tdObjectHighlightMesh;
-        public AvatarController avatarController;
-
+        
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
-
-        public GameObject avatar;
 
         public Player(Transform tdObjectHighlightBox, Transform placeBlock, Transform highlightBlock)
         {
@@ -74,7 +73,6 @@ namespace src
 
         private void Start()
         {
-            controller = GetComponent<CharacterController>();
             blockSelectionController = GetComponent<BlockSelectionController>();
 
             Snack.INSTANCE.ShowObject("Owner", null);
@@ -85,10 +83,13 @@ namespace src
                     hitCollider = null;
             });
 
-            playerPos = Vectors.TruncateFloor(transform.position);
+            avatar = Instantiate(avatarPrefab, transform);
+            avatarController = avatar.GetComponent<AvatarController>();
+            characterController = avatar.GetComponent<CharacterController>();
+            cam.SetParent(avatar.transform);
+            
+            playerPos = Vectors.TruncateFloor(GetPosition());
             StartCoroutine(SavePosition());
-            avatarController = new AvatarController(animator, controller, avatar.transform);
-            StartCoroutine(UpdateAnimation(avatarController));
         }
 
         public List<Land> GetOwnedLands()
@@ -120,9 +121,9 @@ namespace src
         {
             if (!blockSelectionController.PlayerMovementAllowed) return;
 
-            var moveDirection = transform.forward * Vertical + transform.right * Horizontal;
+            var moveDirection = avatar.transform.forward * Vertical + avatar.transform.right * Horizontal;
 
-            var isGrounded = controller.isGrounded && velocity.y < 0 || floating;
+            var isGrounded = characterController.isGrounded && velocity.y < 0 || floating;
 
             avatarController.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
 
@@ -136,32 +137,21 @@ namespace src
                 velocity.y = Mathf.Sqrt((sprinting ? sprintJumpHeight : jumpHeight) * -2f * gravity);
             }
 
-            if (!floating && !controller.isGrounded)
+            if (!floating && !characterController.isGrounded)
                 velocity.y += gravity * Time.fixedDeltaTime;
 
             avatarController.Move(velocity * Time.fixedDeltaTime);
 
-            if ((controller.collisionFlags & CollisionFlags.Above) != 0)
+            if ((characterController.collisionFlags & CollisionFlags.Above) != 0)
                 velocity.y = 0;
 
-            var pos = transform.position;
+            var pos = GetPosition();
 
             playerPos = Vectors.TruncateFloor(pos);
 
-            avatarController.UpdatePlayerState(new AvatarController.PlayerState(pos, cam.forward, floating, sprinting),
-                false);
+            avatarController.UpdatePlayerState(new AvatarController.PlayerState(pos, cam.forward, floating, sprinting));
         }
 
-        IEnumerator UpdateAnimation(AvatarController avatarController)
-        {
-            while (true)
-            {
-                if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
-                    avatarController.UpdatePlayerState(
-                        new AvatarController.PlayerState(transform.position, cam.forward, floating, sprinting), true);
-                yield return new WaitForSeconds(0.1f);
-            }
-        }
 
         private void DetectFocus()
         {
@@ -276,7 +266,7 @@ namespace src
                 }
                 else
                 {
-                    var currVox = Vectors.FloorToInt(transform.position);
+                    var currVox = Vectors.FloorToInt(GetPosition());
                     if (PlaceBlockPosInt != currVox && PlaceBlockPosInt != currVox + Vector3Int.up)
                     {
                         placeBlock.position = PlaceBlockPosInt;
@@ -376,7 +366,7 @@ namespace src
 
         public Vector3 GetCurrentPosition()
         {
-            return controller.center;
+            return characterController.center;
         }
 
         public static Vector3? GetSavedPosition()
@@ -394,14 +384,13 @@ namespace src
                 if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
                 {
                     PlayerPrefs.SetString(POSITION_KEY,
-                        JsonConvert.SerializeObject(new SerializableVector3(transform.position)));
+                        JsonConvert.SerializeObject(new SerializableVector3(GetPosition())));
                 }
 
                 yield return new WaitForSeconds(5);
             }
         }
 
-        public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
 
         public bool RemoveHighlightMesh()
         {
@@ -410,5 +399,17 @@ namespace src
             tdObjectHighlightMesh = null;
             return true;
         }
+
+        public void SetPosition(Vector3 pos)
+        {
+            avatar.transform.position = pos;
+        }
+
+        public Vector3 GetPosition()
+        {
+            return avatar.transform.position;
+        }
+        
+        public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
     }
 }

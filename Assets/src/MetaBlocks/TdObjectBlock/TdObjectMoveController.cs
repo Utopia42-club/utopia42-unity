@@ -50,7 +50,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 {
                     var rotateTargetTransform = rotateTarget.transform;
                     rotateTargetTransform.Rotate(rotateTargetTransform.InverseTransformVector(rotation.y * Vector3.up +
-                        rotation.x * player.transform.right));
+                        rotation.x * player.avatar.transform.right));
                 });
         }
 
@@ -58,7 +58,7 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             if (!IsAttached()) return;
 
-            var pivot = Player.INSTANCE.transform;
+            var pivot = Player.INSTANCE.avatar.transform;
             var velocity = (pivot.forward * forwardBackward + pivot.right * leftRight + pivot.up * upwardDownward) *
                            Time.fixedDeltaTime *
                            MoveSpeed;

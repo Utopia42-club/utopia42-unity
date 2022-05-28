@@ -39,7 +39,7 @@ namespace src.Canvas
             if (manager.GetState() == GameManager.State.PLAYING)
             {
                 var player = Player.INSTANCE;
-                var changed = IsLandChanged(player.transform.position);
+                var changed = IsLandChanged(player.GetPosition());
                 if (changed)
                     currentLandChanged.Invoke(currentLand);
                 if (changed || !view.activeSelf && currentWallet != null)

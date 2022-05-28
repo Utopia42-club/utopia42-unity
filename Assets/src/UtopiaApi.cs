@@ -92,7 +92,7 @@ namespace src
 
         public SerializableVector3 GetPlayerPosition()
         {
-            var pos = Player.INSTANCE.transform.position;
+            var pos = Player.INSTANCE.GetPosition();
             return new SerializableVector3(pos);
         }
 
@@ -108,7 +108,7 @@ namespace src
 
         public Land GetCurrentLand()
         {
-            return WorldService.INSTANCE.GetLandForPosition(Player.INSTANCE.transform.position);
+            return WorldService.INSTANCE.GetLandForPosition(Player.INSTANCE.GetPosition());
         }
 
         public List<string> GetBlockTypes()

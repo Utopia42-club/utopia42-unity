@@ -44,7 +44,7 @@ namespace src.Canvas.Map
 
             if (targetLand == null)
             {
-                var playerPos = Player.INSTANCE.transform.position;
+                var playerPos = Player.INSTANCE.GetPosition();
                 playerPosIndicator.localPosition = new Vector3(playerPos.x, playerPos.z, 0);
                 var rectTransform = GetComponent<RectTransform>();
                 rectTransform.anchoredPosition = new Vector3(-playerPos.x, -playerPos.z, 0);

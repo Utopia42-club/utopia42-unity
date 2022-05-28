@@ -35,7 +35,7 @@ namespace src.TestUtils
                 var result = Importer.LoadFromFile("Assets/Resources/Test/" + glbSampleName, importSettings,
                     out animations);
                 result.name = glbSampleName;
-                result.transform.position = Player.INSTANCE.transform.position + 10 * Vector3.up;
+                result.transform.position = Player.INSTANCE.GetPosition() + 10 * Vector3.up;
                 Debug.Log("Glb imported");
 
                 if (animations.Length > 0)
