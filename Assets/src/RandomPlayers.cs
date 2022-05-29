@@ -1,9 +1,7 @@
-using System;
 using System.Collections;
 using src;
 using src.Model;
 using UnityEngine;
-using Random = UnityEngine.Random;
 using SystemRandom = System.Random;
 
 public class RandomPlayers : MonoBehaviour
@@ -27,7 +25,7 @@ public class RandomPlayers : MonoBehaviour
                         new SerializableVector3(Player.INSTANCE.GetPosition() + (Vector3.one * i * 2)),
                         new SerializableVector3(Vector3.one),
                         false, false
-                    ));
+                    ), false);
                 }
 
                 StartCoroutine(MovePlayers());

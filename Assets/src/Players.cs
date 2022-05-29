@@ -8,20 +8,20 @@ namespace src
     {
         [SerializeField] public GameObject avatarPrefab;
 
-        public Dictionary<string, AvatarController> playersMap = new Dictionary<string, AvatarController>();
+        public readonly Dictionary<string, AvatarController> playersMap = new Dictionary<string, AvatarController>();
 
-        public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
+        public void ReportOtherPlayersState(AvatarController.PlayerState playerState, bool smooth = true)
         {
             if (playersMap.TryGetValue(playerState.walletId, out var controller))
             {
-                controller.UpdatePlayerState(playerState);
+                controller.UpdatePlayerState(playerState, smooth);
             }
             else
             {
                 var avatar = Instantiate(avatarPrefab, transform);
                 var c = avatar.GetComponent<AvatarController>();
                 c.SetIsAnotherPlayer(true);
-                c.UpdatePlayerState(playerState);
+                c.UpdatePlayerState(playerState, smooth);
                 playersMap.Add(playerState.walletId, c);
             }
         }

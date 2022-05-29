@@ -24,7 +24,7 @@ namespace src
 
         private bool isAnotherPlayer = false;
 
-        private Vector3 tartgetPosition;
+        private Vector3 targetPosition;
 
         public void Start()
         {
@@ -36,11 +36,11 @@ namespace src
 
         private void Update()
         {
-            // if (tartgetPosition != transform.position)
-            // {
-            //     var step = 0.2f * Time.deltaTime; // calculate distance to move
-            //     transform.position = Vector3.MoveTowards(transform.position, tartgetPosition, step);
-            // }
+            if (targetPosition != transform.position)
+            {
+                var step = Player.INSTANCE.walkSpeed * Time.deltaTime;
+                transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
+            }
         }
 
         public void SetIsAnotherPlayer(bool b)
@@ -60,15 +60,16 @@ namespace src
             transform.rotation = Quaternion.LookRotation(cameraForward);
         }
 
-        private void SetPosition(Vector3 pos)
+        private void SetPosition(Vector3 pos, bool smooth)
         {
-            // tartgetPosition = pos;
-            transform.position = pos;
+            targetPosition = pos;
+            if (!smooth)
+                transform.position = pos;
         }
 
-        public void UpdatePlayerState(PlayerState playerState)
+        public void UpdatePlayerState(PlayerState playerState, bool smooth = true)
         {
-            SetPosition(playerState.position.ToVector3());
+            SetPosition(playerState.position.ToVector3(), smooth);
             LookAt(playerState.forward.ToVector3());
             state = playerState;
         }

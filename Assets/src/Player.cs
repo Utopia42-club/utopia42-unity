@@ -21,8 +21,8 @@ namespace src
 
         [SerializeField] private Transform cam;
         [SerializeField] private World world;
-        [SerializeField] private float walkSpeed = 6f;
-        [SerializeField] private float sprintSpeed = 12f;
+        [SerializeField] public float walkSpeed = 6f;
+        [SerializeField] public float sprintSpeed = 12f;
         [SerializeField] private float jumpHeight = 2;
         [SerializeField] private float sprintJumpHeight = 2.5f;
         [SerializeField] private float gravity = -9.8f;
