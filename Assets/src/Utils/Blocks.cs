@@ -16,6 +16,7 @@ namespace src.Utils
     {
         private static readonly Dictionary<uint, BlockType> TYPES = new Dictionary<uint, BlockType>();
         public static readonly BlockType AIR;
+        public static MetaBlockType TdObjectBlockType => TYPES[34] as MetaBlockType; 
 
         static Blocks()
         {

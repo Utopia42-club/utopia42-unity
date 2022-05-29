@@ -108,9 +108,9 @@ namespace src
             consumer?.Invoke();
         }
 
-        public void AddHighlight(VoxelPosition vp, Action consumer = null)
+        public void AddHighlight(VoxelPosition vp, Action consumer = null, Tuple<uint, MetaBlock> highlightedBlock = null)
         {
-            StartCoroutine(AddHighlight(vp, null, false, consumer));
+            StartCoroutine(AddHighlight(vp, highlightedBlock, false, consumer));
         }
 
         private IEnumerator AddHighlight(VoxelPosition vp, Tuple<uint, MetaBlock> highlightedBlock, bool delayedUpdate,
@@ -297,10 +297,18 @@ namespace src
             }
         }
 
-        public void MoveSelection(Vector3Int delta)
+        public void MoveSelection(Vector3Int v, bool delta = true)
         {
-            HighlightOffset += delta;
-            highlight.transform.position += delta;
+            if (delta)
+            {
+                HighlightOffset += v;
+                highlight.transform.position += v;
+                return;
+            }
+
+            var oldOffset = HighlightOffset;
+            HighlightOffset = v - firstSelectedPosition.ToWorld();
+            highlight.transform.position = (highlight.transform.position - oldOffset) + HighlightOffset;
         }
 
         private Vector3? GetSelectionRotationCenter()

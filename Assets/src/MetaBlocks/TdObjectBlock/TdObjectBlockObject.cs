@@ -88,7 +88,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             Transform highlight;
 
-            if (!(TdObjectCollider is BoxCollider boxCollider))
+            if (TdObjectCollider is not BoxCollider boxCollider)
                 highlight = CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
             else
             {
@@ -109,7 +109,8 @@ namespace src.MetaBlocks.TdObjectBlock
             stateChange.Invoke(stateMsg);
         }
 
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
+            Vector3Int localPos, Action<GameObject> onLoad)
         {
             var goRef = gameObject;
             var gameObjectTransform = goRef.transform;
@@ -119,7 +120,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             stateChange.AddListener(state =>
             {
-                if(goRef == null) return;
+                if (goRef == null) return;
                 if (state != StateMsg.Ok)
                 {
                     if (state != StateMsg.Loading)
@@ -127,13 +128,13 @@ namespace src.MetaBlocks.TdObjectBlock
                         Destroy(goRef);
                         goRef = null;
                     }
-                    
+
                     return;
                 }
 
                 var go = CreateSelectHighlight(highlightChunkTransform);
                 if (go != null) onLoad(go);
-                
+
                 foreach (var meshRenderer in gameObject.GetComponentsInChildren<MeshRenderer>())
                     meshRenderer.enabled = false;
             });
@@ -355,8 +356,11 @@ namespace src.MetaBlocks.TdObjectBlock
             colliderRenderer.material = World.INSTANCE.HighlightBlock;
 
             TdObjectCollider = colliderTransform.gameObject.AddComponent<MeshCollider>();
-            tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
-            tdObjectFocusable.Initialize(this);
+            if (chunk != null)
+            {
+                tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
+                tdObjectFocusable.Initialize(this);       
+            }
         }
 
         private void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation, Vector3 initialPosition,
@@ -366,8 +370,11 @@ namespace src.MetaBlocks.TdObjectBlock
             if (TdObjectCollider == null)
             {
                 TdObjectCollider = tdObject.AddComponent<BoxCollider>();
-                tdObjectFocusable = tdObject.AddComponent<TdObjectFocusable>();
-                tdObjectFocusable.Initialize(this);
+                if (chunk != null)
+                {
+                    tdObjectFocusable = tdObject.AddComponent<TdObjectFocusable>();
+                    tdObjectFocusable.Initialize(this);
+                }
                 ((BoxCollider) TdObjectCollider).center = GetRendererCenter(tdObject);
                 ((BoxCollider) TdObjectCollider).size =
                     GetRendererSize(((BoxCollider) TdObjectCollider).center, tdObject);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.MetaBlocks;
+using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Utils;
 using TMPro;
@@ -22,7 +23,8 @@ namespace src
         private Vector3 rotationSum = Vector3.zero;
         private bool movingSelectionAllowed = false;
         private bool rotationMode = false;
-        private bool keepSourceAfterHighlightMovement = false;
+        public SelectionMode selectionMode { private set; get; } = SelectionMode.Default;
+        private bool KeepSourceAfterSelectionMovement => selectionMode != SelectionMode.Default;
 
         public bool PlayerMovementAllowed => !World.INSTANCE.SelectionActive || !movingSelectionAllowed;
 
@@ -116,7 +118,7 @@ namespace src
                            Input.GetKey(KeyCode.LeftCommand) ||
                            Input.GetKey(KeyCode.RightCommand);
 
-            var selectVoxel = !World.INSTANCE.SelectionDisplaced && !keepSourceAfterHighlightMovement &&
+            var selectVoxel = !World.INSTANCE.SelectionDisplaced && selectionMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.focused != null) &&
                               Input.GetMouseButtonDown(0) && ctrlHeld;
 
@@ -221,14 +223,15 @@ namespace src
             }
             else if (Input.GetButtonDown("Delete"))
             {
-                if (!keepSourceAfterHighlightMovement)
+                if (!KeepSourceAfterSelectionMovement)
                     World.INSTANCE.RemoveSelectedBlocks();
                 ExitSelectionMode();
             }
-            else if (player.PlaceBlock.gameObject.activeSelf && !World.INSTANCE.ClipboardEmpty &&
-                     Input.GetKeyDown(KeyCode.V) &&
+            else if (Input.GetKeyDown(KeyCode.V) &&
                      (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
+                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)) &&
+                     player.PlaceBlock.gameObject.activeSelf && !World.INSTANCE.ClipboardEmpty &&
+                     !World.INSTANCE.SelectionActive)
             {
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();
                 var conflictWithPlayer = false;
@@ -248,22 +251,22 @@ namespace src
                 if (!conflictWithPlayer)
                 {
                     World.INSTANCE.PasteClipboard(player.PlaceBlockPosInt - minPoint);
-                    PrepareForClipboardMovement();
+                    PrepareForClipboardMovement(SelectionMode.Clipboard);
                 }
             }
         }
 
-        private void PrepareForClipboardMovement()
+        private void PrepareForClipboardMovement(SelectionMode mode)
         {
-            keepSourceAfterHighlightMovement = true;
+            selectionMode = mode;
             movingSelectionAllowed = true;
             SetBlockSelectionSnack();
         }
 
         private void ConfirmMove()
         {
-            World.INSTANCE.DuplicateSelectedBlocks(!keepSourceAfterHighlightMovement);
-            if (!keepSourceAfterHighlightMovement)
+            World.INSTANCE.DuplicateSelectedBlocks(!KeepSourceAfterSelectionMovement);
+            if (!KeepSourceAfterSelectionMovement)
                 World.INSTANCE.RemoveSelectedBlocks(true);
         }
 
@@ -349,7 +352,7 @@ namespace src
 
             ClearSelection();
             movingSelectionAllowed = false;
-            keepSourceAfterHighlightMovement = false;
+            selectionMode = SelectionMode.Default;
         }
 
         public void AddHighlights(List<VoxelPosition> vps)
@@ -360,14 +363,27 @@ namespace src
 
         public void AddPreviewHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights)
         {
-            if (highlights.Count == 0 || !keepSourceAfterHighlightMovement && World.INSTANCE.SelectionActive)
+            if (highlights.Count == 0 || selectionMode != SelectionMode.Preview && World.INSTANCE.SelectionActive)
                 return; // do not add preview highlights after existing non-preview highlights
             StartCoroutine(World.INSTANCE.AddHighlights(highlights, () =>
             {
                 AfterAddHighlight(false);
-                PrepareForClipboardMovement();
+                PrepareForClipboardMovement(SelectionMode.Preview);
             }));
         }
+
+        public void AddDraggedGlbHighlight(string url)
+        {
+            var vp = new VoxelPosition(player.transform.position + 3 * Vector3.up);
+            World.INSTANCE.AddHighlight(vp, () =>
+                {
+                    selectionMode = SelectionMode.Dragged;
+                },
+                new Tuple<uint, MetaBlock>(Blocks.GetBlockType("#000000").id,
+                    Blocks.TdObjectBlockType.Instantiate(null,
+                        "{\"url\":\"" + url + "\", \"type\":\"GLB\"}")));
+        }
+
 
         public void AddHighlight(VoxelPosition vp)
         {
@@ -398,5 +414,13 @@ namespace src
 
         public static BlockSelectionController INSTANCE =>
             GameObject.Find("Player").GetComponent<BlockSelectionController>();
+
+        public enum SelectionMode
+        {
+            Default,
+            Clipboard,
+            Preview,
+            Dragged
+        }
     }
 }

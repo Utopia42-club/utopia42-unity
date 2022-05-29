@@ -7,6 +7,7 @@ using src.MetaBlocks;
 using src.Model;
 using src.Service;
 using src.Utils;
+using UnityEditor;
 using UnityEngine;
 
 namespace src
@@ -220,12 +221,18 @@ namespace src
             PlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
             var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
             var vp = new VoxelPosition(posInt);
-            // var chunk = world.GetChunkIfInited(vp.chunk);
-            // if (chunk == null) return;
             var metaToFocus = chunk.GetMetaAt(vp);
             var foundSolid = chunk.GetBlock(vp.local).isSolid;
 
-            if (foundSolid)
+            if (BlockSelectionController.INSTANCE.selectionMode == BlockSelectionController.SelectionMode.Dragged && World.INSTANCE.SelectionActive)
+            {
+                highlightBlock.gameObject.SetActive(false);
+                placeBlock.gameObject.SetActive(false);
+                
+                if(CanEdit(PlaceBlockPosInt, out _))
+                    World.INSTANCE.MoveSelection(PlaceBlockPosInt, false);
+            }
+            else if (foundSolid)
             {
                 highlightBlock.position = posInt;
                 highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
