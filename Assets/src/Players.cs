@@ -8,11 +8,10 @@ namespace src
     {
         [SerializeField] public GameObject avatarPrefab;
 
-        private Dictionary<string, AvatarController> playersMap = new Dictionary<string, AvatarController>();
+        public Dictionary<string, AvatarController> playersMap = new Dictionary<string, AvatarController>();
 
-        public void ReportOtherPlayersState(string state)
+        public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
         {
-            var playerState = JsonConvert.DeserializeObject<AvatarController.PlayerState>(state);
             if (playersMap.TryGetValue(playerState.walletId, out var controller))
             {
                 controller.UpdatePlayerState(playerState);
@@ -23,9 +22,13 @@ namespace src
                 var c = avatar.GetComponent<AvatarController>();
                 c.SetIsAnotherPlayer(true);
                 c.UpdatePlayerState(playerState);
-                Debug.Log("Updating Other Player State " + playerState);
                 playersMap.Add(playerState.walletId, c);
             }
+        }
+
+        public void ReportOtherPlayersState(string state)
+        {
+            ReportOtherPlayersState(JsonConvert.DeserializeObject<AvatarController.PlayerState>(state));
         }
     }
 }

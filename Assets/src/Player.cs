@@ -51,7 +51,12 @@ namespace src
         [NonSerialized] public GameObject avatar;
         private AvatarController avatarController;
 
+        private bool firstPersonView = false;
+
         public Transform tdObjectHighlightMesh;
+
+        public Vector3 firstPersonCameraPosition;
+        public Vector3 thirdPersonCameraPosition;
 
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
@@ -91,6 +96,7 @@ namespace src
             playerPos = Vectors.TruncateFloor(GetPosition());
             StartCoroutine(SavePosition());
         }
+
 
         public List<Land> GetOwnedLands()
         {
@@ -230,6 +236,15 @@ namespace src
 
             if (Input.GetButtonDown("Toggle Floating"))
                 floating = !floating;
+
+            if (Input.GetButtonDown("Toggle View"))
+                ToggleViewMode();
+        }
+
+        private void ToggleViewMode()
+        {
+            cam.localPosition = firstPersonView ? firstPersonCameraPosition : thirdPersonCameraPosition;
+            firstPersonView = !firstPersonView;
         }
 
         public void SetHammerActive(bool active)
@@ -369,7 +384,7 @@ namespace src
         {
             return characterController.center;
         }
-
+        
         public static Vector3? GetSavedPosition()
         {
             var str = PlayerPrefs.GetString(POSITION_KEY);

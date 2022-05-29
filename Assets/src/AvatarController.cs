@@ -18,8 +18,8 @@ namespace src
 
         private float updatedTime;
         private PlayerState lastAnimationState;
-        private PlayerState state;
         private PlayerState lastReportedState;
+        private PlayerState state;
 
         private bool isAnotherPlayer = false;
 
@@ -38,10 +38,11 @@ namespace src
 
         public void Move(Vector3 motion)
         {
-            controller.Move(motion);
+            if (controller != null)
+                controller.Move(motion);
         }
 
-        private void LookAt(Vector3 cameraForward)
+        public void LookAt(Vector3 cameraForward)
         {
             cameraForward.y = 0;
             transform.rotation = Quaternion.LookRotation(cameraForward);
@@ -129,6 +130,11 @@ namespace src
                    // || Vector3.Distance(s1.Forward(), s2.Forward()) > cameraRotationThreshold
                    || s1.sprint != s2.sprint
                    || s1.floating != s2.floating;
+        }
+
+        public PlayerState GetState()
+        {
+            return state;
         }
 
         public class PlayerState
