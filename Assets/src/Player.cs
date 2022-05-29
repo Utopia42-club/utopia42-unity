@@ -162,7 +162,7 @@ namespace src
 
         private void DetectFocus()
         {
-            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
+            if (firstPersonView && Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
                 if (hitCollider == raycastHit.collider &&
                     hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
@@ -197,7 +197,8 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetInputs();
-            blockSelectionController.DoUpdate();
+            if(firstPersonView)
+                blockSelectionController.DoUpdate();
 
             if (lastChunk == null)
             {
