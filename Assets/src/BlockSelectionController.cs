@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using src.Canvas;
+using src.MetaBlocks;
 using src.Model;
 using src.Utils;
 using TMPro;
@@ -20,13 +20,9 @@ namespace src
         private SnackItem snackItem;
 
         private Vector3 rotationSum = Vector3.zero;
-
-        private bool
-            movingSelectionAllowed =
-                false; // whether we can move the selections using arrow keys and space (only mean sth when selectionActive = true) 
-
+        private bool movingSelectionAllowed = false;
         private bool rotationMode = false;
-        private bool clipboardMovement = false;
+        private bool keepSourceAfterHighlightMovement = false;
 
         public bool PlayerMovementAllowed => !World.INSTANCE.SelectionActive || !movingSelectionAllowed;
 
@@ -120,7 +116,7 @@ namespace src
                            Input.GetKey(KeyCode.LeftCommand) ||
                            Input.GetKey(KeyCode.RightCommand);
 
-            var selectVoxel = !World.INSTANCE.SelectionDisplaced &&
+            var selectVoxel = !World.INSTANCE.SelectionDisplaced && !keepSourceAfterHighlightMovement &&
                               (player.HighlightBlock.gameObject.activeSelf || player.focused != null) &&
                               Input.GetMouseButtonDown(0) && ctrlHeld;
 
@@ -133,7 +129,7 @@ namespace src
                 var possibleCurrentSelectedPosition = player.focused == null
                     ? player.HighlightBlock.position
                     : player.focused.GetBlockPosition();
-                if(!possibleCurrentSelectedPosition.HasValue) return;
+                if (!possibleCurrentSelectedPosition.HasValue) return;
                 var currentSelectedPosition =
                     Vectors.FloorToInt(possibleCurrentSelectedPosition.Value); // TODO: extract method
 
@@ -162,7 +158,7 @@ namespace src
                 var possibleCurrentSelectedPosition = player.focused == null
                     ? player.HighlightBlock.position
                     : player.focused.GetBlockPosition();
-                if(!possibleCurrentSelectedPosition.HasValue) return;
+                if (!possibleCurrentSelectedPosition.HasValue) return;
                 var currentSelectedPosition =
                     Vectors.FloorToInt(possibleCurrentSelectedPosition.Value);
                 AddHighlight(new VoxelPosition(currentSelectedPosition));
@@ -190,7 +186,7 @@ namespace src
             var possiblePosition = player.focused == null
                 ? player.HighlightBlock.position
                 : player.focused.GetBlockPosition();
-            if(!possiblePosition.HasValue) return;
+            if (!possiblePosition.HasValue) return;
             var position =
                 Vectors.FloorToInt(possiblePosition.Value);
             var vp = new VoxelPosition(position);
@@ -225,7 +221,8 @@ namespace src
             }
             else if (Input.GetButtonDown("Delete"))
             {
-                World.INSTANCE.RemoveSelectedBlocks();
+                if (!keepSourceAfterHighlightMovement)
+                    World.INSTANCE.RemoveSelectedBlocks();
                 ExitSelectionMode();
             }
             else if (player.PlaceBlock.gameObject.activeSelf && !World.INSTANCE.ClipboardEmpty &&
@@ -251,17 +248,22 @@ namespace src
                 if (!conflictWithPlayer)
                 {
                     World.INSTANCE.PasteClipboard(player.PlaceBlockPosInt - minPoint);
-                    clipboardMovement = true;
-                    movingSelectionAllowed = true;
-                    SetBlockSelectionSnack();
+                    PrepareForClipboardMovement();
                 }
             }
         }
 
+        private void PrepareForClipboardMovement()
+        {
+            keepSourceAfterHighlightMovement = true;
+            movingSelectionAllowed = true;
+            SetBlockSelectionSnack();
+        }
+
         private void ConfirmMove()
         {
-            World.INSTANCE.DuplicateSelectedBlocks();
-            if (!clipboardMovement)
+            World.INSTANCE.DuplicateSelectedBlocks(!keepSourceAfterHighlightMovement);
+            if (!keepSourceAfterHighlightMovement)
                 World.INSTANCE.RemoveSelectedBlocks(true);
         }
 
@@ -294,7 +296,6 @@ namespace src
                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
                 {
                     movingSelectionAllowed = !movingSelectionAllowed;
-                    clipboardMovement = false;
                     SetBlockSelectionSnack(help);
                 }
             });
@@ -348,19 +349,32 @@ namespace src
 
             ClearSelection();
             movingSelectionAllowed = false;
-        }
-        
-        public void AddHighlights(List<VoxelPosition> vps)
-        {
-            World.INSTANCE.AddHighlights(vps, AfterAddHighlight);
-        }
-        
-        public void AddHighlight(VoxelPosition vp)
-        {
-            World.INSTANCE.AddHighlight(vp, AfterAddHighlight);
+            keepSourceAfterHighlightMovement = false;
         }
 
-        private void AfterAddHighlight()
+        public void AddHighlights(List<VoxelPosition> vps)
+        {
+            if (vps.Count == 0) return;
+            World.INSTANCE.AddHighlights(vps, () => AfterAddHighlight());
+        }
+
+        public void AddPreviewHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights)
+        {
+            if (highlights.Count == 0 || !keepSourceAfterHighlightMovement && World.INSTANCE.SelectionActive)
+                return; // do not add preview highlights after existing non-preview highlights
+            StartCoroutine(World.INSTANCE.AddHighlights(highlights, () =>
+            {
+                AfterAddHighlight(false);
+                PrepareForClipboardMovement();
+            }));
+        }
+
+        public void AddHighlight(VoxelPosition vp)
+        {
+            World.INSTANCE.AddHighlight(vp, () => AfterAddHighlight());
+        }
+
+        private void AfterAddHighlight(bool setSnack = true)
         {
             var total = World.INSTANCE.TotalBlocksSelected;
             switch (total)
@@ -369,8 +383,12 @@ namespace src
                     ExitSelectionMode();
                     break;
                 case 1:
-                    movingSelectionAllowed = false;
-                    SetBlockSelectionSnack();
+                    if (setSnack)
+                    {
+                        movingSelectionAllowed = false;
+                        SetBlockSelectionSnack();
+                    }
+
                     selectedBlocksCountTextContainer.gameObject.SetActive(true);
                     break;
             }

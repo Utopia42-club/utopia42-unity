@@ -8,7 +8,9 @@ namespace src.Canvas
     public class ImageLoader : MonoBehaviour
     {
         private string url = "";
-        [SerializeField] private Sprite emptySprite;
+
+        [SerializeField]
+        private Sprite emptySprite;
 
         public void SetUrl(string url)
         {
@@ -17,7 +19,8 @@ namespace src.Canvas
 
             this.url = url;
             GetComponent<Image>().overrideSprite = emptySprite;
-            StartCoroutine(LoadFromLikeCoroutine());
+            if (!string.IsNullOrWhiteSpace(url))
+                StartCoroutine(LoadFromLikeCoroutine());
         }
 
         // this section will be run independently
@@ -36,9 +39,12 @@ namespace src.Canvas
             {
                 // ImageComponent.texture = ((DownloadHandlerTexture) request.downloadHandler).texture;
                 Texture2D tex = ((DownloadHandlerTexture) request.downloadHandler).texture;
-                Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
-                    new Vector2(tex.width / 2, tex.height / 2));
-                GetComponent<Image>().overrideSprite = sprite;
+                if (tex != null)
+                {
+                    Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                        new Vector2(tex.width / 2, tex.height / 2));
+                    GetComponent<Image>().overrideSprite = sprite;
+                }
             }
         }
     }

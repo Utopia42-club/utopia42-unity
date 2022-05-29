@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using src.MetaBlocks;
@@ -7,6 +8,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace src
 {
@@ -21,11 +23,12 @@ namespace src
         private Dictionary<Vector3Int, Chunk> garbageChunks = new Dictionary<Vector3Int, Chunk>();
         private readonly Dictionary<Vector3Int, Chunk> chunks = new Dictionary<Vector3Int, Chunk>();
 
-        private readonly Dictionary<Vector3Int, HighlightChunk> highlightChunks =
-            new Dictionary<Vector3Int, HighlightChunk>(); // chunk coordinate -> highlight chunk
+        private readonly ConcurrentDictionary<Vector3Int, HighlightChunk> highlightChunks =
+            new ConcurrentDictionary<Vector3Int, HighlightChunk>(); // chunk coordinate -> highlight chunk
 
         private readonly HashSet<VoxelPosition> clipboard = new HashSet<VoxelPosition>();
-        private readonly HashSet<HighlightChunk> highlightChunksToRedraw = new HashSet<HighlightChunk>();
+        private ConcurrentQueue<HighlightChunk> highlightChunksToRedraw = new ConcurrentQueue<HighlightChunk>();
+
         public Vector3Int HighlightOffset { private set; get; } = Vector3Int.zero;
         private GameObject highlight;
 
@@ -73,30 +76,44 @@ namespace src
 
         public void AddHighlights(List<VoxelPosition> vps, Action consumer = null)
         {
-            AddHighlights(vps, Vector3Int.zero, consumer);
+            StartCoroutine(AddHighlights(vps, Vector3Int.zero, consumer));
         }
 
-        private void AddHighlights(List<VoxelPosition> vps, Vector3Int offset, Action consumer)
+        private IEnumerator AddHighlights(List<VoxelPosition> vps, Vector3Int offset, Action consumer)
         {
-            if (vps.Count == 0)
+            var done = new ConcurrentBag<VoxelPosition>();
+            
+            foreach (var vp in vps)
+                StartCoroutine(AddHighlight(vp, null, true, () => {done.Add(vp);}));
+
+            while (done.Count != vps.Count) yield return null;
+            RedrawChangedHighlightChunks();
+            consumer?.Invoke();
+            MoveSelection(offset);
+        }
+
+        public IEnumerator AddHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights, Action consumer = null)
+        {
+            var done = new ConcurrentBag<VoxelPosition>();
+
+            foreach (var vp in highlights.Keys)
             {
-                RedrawChangedHighlightChunks();
-                consumer?.Invoke();
-                MoveSelection(offset);
-                return;
+                var highlightedBlock = highlights[vp];
+                StartCoroutine(AddHighlight(vp, highlightedBlock, true,
+                    () => { done.Add(vp); }));
             }
 
-            var vp = vps[0];
-            vps.RemoveAt(0);
-            StartCoroutine(AddHighlight(vp, true, () => { AddHighlights(vps, offset, consumer); }));
+            while (done.Count != highlights.Count) yield return null;
+            RedrawChangedHighlightChunks();
+            consumer?.Invoke();
         }
 
         public void AddHighlight(VoxelPosition vp, Action consumer = null)
         {
-            StartCoroutine(AddHighlight(vp, false, consumer));
+            StartCoroutine(AddHighlight(vp, null, false, consumer));
         }
 
-        private IEnumerator AddHighlight(VoxelPosition vp, bool delayedUpdate,
+        private IEnumerator AddHighlight(VoxelPosition vp, Tuple<uint, MetaBlock> highlightedBlock, bool delayedUpdate,
             Action consumer = null)
         {
             if (!player.CanEdit(vp.ToWorld(), out _)) yield break;
@@ -106,12 +123,8 @@ namespace src
                 highlight.name = "World Highlight";
             }
 
-            if (!highlightChunks.TryGetValue(vp.chunk, out var highlightChunk))
-            {
-                highlightChunk = HighlightChunk.Create(highlight, vp.chunk);
-                yield return null;
-                highlightChunks[vp.chunk] = highlightChunk;
-            }
+            var highlightChunk = highlightChunks.GetOrAdd(vp.chunk, HighlightChunk.Create(highlight, vp.chunk));
+            yield return null;
 
             if (highlightChunk.Contains(vp.local))
             {
@@ -120,26 +133,35 @@ namespace src
                 yield break;
             }
 
-            GetHighlightedBlock(highlightChunk, vp, highlightedBlock =>
+            Action<HighlightedBlock> highlightedBlockProcess = block =>
             {
-                if (highlightedBlock == null)
+                if (block == null)
                 {
                     consumer?.Invoke();
                     return;
                 }
 
-                highlightChunk.Add(vp.local, highlightedBlock);
+                highlightChunk.Add(vp.local, block);
                 if (TotalBlocksSelected == 1)
                     firstSelectedPosition = vp;
                 lastSelectedPosition = vp;
-                highlightChunksToRedraw.Add(highlightChunk);
+                highlightChunksToRedraw.Enqueue(highlightChunk);
                 if (!delayedUpdate)
                     RedrawChangedHighlightChunks();
                 consumer?.Invoke();
-            });
+            };
+
+            if (highlightedBlock == null)
+            {
+                GetHighlightedBlock(highlightChunk, vp, highlightedBlockProcess);
+                yield break;
+            }
+
+            highlightedBlockProcess.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, highlightedBlock.Item1,
+                highlightedBlock.Item2));
         }
 
-        private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp, 
+        private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp,
             Action<HighlightedBlock> consumer, bool ignoreAir = true)
         {
             if (!player.CanEdit(vp.ToWorld(), out var land))
@@ -183,16 +205,18 @@ namespace src
         {
             if (highlightChunks.TryGetValue(vp.chunk, out var highlightChunk) && highlightChunk != null &&
                 highlightChunk.Remove(vp.local))
-                highlightChunksToRedraw.Add(highlightChunk);
+                highlightChunksToRedraw.Enqueue(highlightChunk);
             if (!delayedUpdate)
                 RedrawChangedHighlightChunks();
         }
 
         private void RedrawChangedHighlightChunks()
         {
-            foreach (var chunk in highlightChunksToRedraw.Where(chunk => chunk != null))
-                chunk.Redraw();
-            highlightChunksToRedraw.Clear();
+            while (highlightChunksToRedraw.Count > 0)
+            {
+                if (highlightChunksToRedraw.TryDequeue(out var highlightChunk) && highlightChunk != null)
+                    highlightChunk.Redraw();
+            }
         }
 
         public void ClearHighlights()
@@ -204,7 +228,7 @@ namespace src
             }
 
             highlightChunks.Clear();
-            highlightChunksToRedraw.Clear();
+            highlightChunksToRedraw = new ConcurrentQueue<HighlightChunk>();
             HighlightOffset = Vector3Int.zero;
         }
 
@@ -239,7 +263,7 @@ namespace src
             DeleteBlocks(blocks);
         }
 
-        public void DuplicateSelectedBlocks()
+        public void DuplicateSelectedBlocks(bool offsetCheck)
         {
             foreach (var highlightChunk in highlightChunks.Values)
             {
@@ -250,7 +274,7 @@ namespace src
                 foreach (var highlightedBlock in highlightedBlocks)
                 {
                     if (highlightedBlock == null) continue;
-                    if (HighlightOffset + highlightedBlock.Offset == Vector3Int.zero) continue;
+                    if (offsetCheck && HighlightOffset + highlightedBlock.Offset == Vector3Int.zero) continue;
 
                     var newPos = HighlightOffset + highlightChunk.Position + highlightedBlock.CurrentPosition;
                     if (!player.CanEdit(newPos, out var land)) continue;
@@ -296,7 +320,7 @@ namespace src
             foreach (var highlightChunk in highlightChunks.Values.Where(highlightChunk => highlightChunk != null))
             {
                 highlightChunk.Rotate(center.Value, axis);
-                highlightChunksToRedraw.Add(highlightChunk);
+                highlightChunksToRedraw.Enqueue(highlightChunk);
             }
 
             RedrawChangedHighlightChunks();
@@ -337,7 +361,7 @@ namespace src
         public void PasteClipboard(Vector3Int offset)
         {
             ClearHighlights();
-            AddHighlights(clipboard.ToList(), offset, null);
+            StartCoroutine(AddHighlights(clipboard.ToList(), offset, null));
         }
 
         private Chunk PopRequest()

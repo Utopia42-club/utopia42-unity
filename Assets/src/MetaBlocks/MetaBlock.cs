@@ -103,7 +103,8 @@ namespace src.MetaBlocks
             }
         }
 
-        public void CreateSelectHighlight(Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad, out GameObject referenceGo)
+        public void CreateSelectHighlight(Transform highlightChunkTransform, Vector3Int localPos,
+            Action<GameObject> onLoad, out GameObject referenceGo)
         {
             referenceGo = null;
             if (blockObject != null)
@@ -114,6 +115,7 @@ namespace src.MetaBlocks
                     onLoad(go);
                     return;
                 }
+
                 blockObject.stateChange.AddListener(state =>
                 {
                     if (state != StateMsg.Ok) return;
@@ -123,27 +125,12 @@ namespace src.MetaBlocks
                 return;
             }
 
-            var gameObject = new GameObject
+            var gameObject = referenceGo = new GameObject
             {
                 name = "Temp game object"
             };
-            var tempBlockObject = (MetaBlockObject) gameObject.AddComponent(type.componentType);
-            gameObject.transform.parent = World.INSTANCE.transform;
-            gameObject.transform.localPosition = highlightChunkTransform.transform.localPosition + localPos;
-            tempBlockObject.Initialize(this, null);
-            // gameObject.SetActive(false); // TODO ?
-            tempBlockObject.stateChange.AddListener(state =>
-            {
-                if (state != StateMsg.Ok)
-                {
-                    if (state != StateMsg.Loading)
-                        Object.Destroy(gameObject);
-                    return;
-                }
-                var go = tempBlockObject.CreateSelectHighlight(highlightChunkTransform);
-                if (go != null) onLoad(go);
-            });
-            referenceGo = gameObject;
+            blockObject = (MetaBlockObject) gameObject.AddComponent(type.componentType);
+            blockObject.LoadSelectHighlight(this, highlightChunkTransform, localPos, onLoad);
         }
     }
 }

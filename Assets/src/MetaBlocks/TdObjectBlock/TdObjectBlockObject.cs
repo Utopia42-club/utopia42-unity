@@ -109,6 +109,36 @@ namespace src.MetaBlocks.TdObjectBlock
             stateChange.Invoke(stateMsg);
         }
 
+        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        {
+            var goRef = gameObject;
+            var gameObjectTransform = goRef.transform;
+            gameObjectTransform.parent = World.INSTANCE.transform;
+            gameObjectTransform.localPosition = highlightChunkTransform.transform.localPosition + localPos;
+            Initialize(block, null);
+
+            stateChange.AddListener(state =>
+            {
+                if(goRef == null) return;
+                if (state != StateMsg.Ok)
+                {
+                    if (state != StateMsg.Loading)
+                    {
+                        Destroy(goRef);
+                        goRef = null;
+                    }
+                    
+                    return;
+                }
+
+                var go = CreateSelectHighlight(highlightChunkTransform);
+                if (go != null) onLoad(go);
+                
+                foreach (var meshRenderer in gameObject.GetComponentsInChildren<MeshRenderer>())
+                    meshRenderer.enabled = false;
+            });
+        }
+
         private void ChangeParent(Transform highlight, Transform parent)
         {
             highlight.SetParent(parent, true);

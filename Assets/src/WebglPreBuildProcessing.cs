@@ -9,8 +9,8 @@ public class WebglPreBuildProcessing : IPreprocessBuildWithReport
 
     public void OnPreprocessBuild(BuildReport report)
     {
-        // System.Environment.SetEnvironmentVariable("EMSDK_PYTHON",
-        //     "/Library/Frameworks/Python.framework/Versions/2.7/bin/python");
+        System.Environment.SetEnvironmentVariable("EMSDK_PYTHON",
+            "/opt/homebrew/bin/python3");
     }
 }
 #endif

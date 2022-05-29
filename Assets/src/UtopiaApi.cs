@@ -34,6 +34,10 @@ namespace src
 
         public Dictionary<Vector3Int, bool> PlaceMetaBlocks(string request)
         {
+            return PlaceMetaBlocksWithOffset(request, Vector3Int.zero);
+        }
+        public Dictionary<Vector3Int, bool> PlaceMetaBlocksWithOffset(string request, Vector3Int offset)
+        {
             var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);
 
             var blocks = new Dictionary<VoxelPosition, BlockType>();
@@ -42,20 +46,14 @@ namespace src
 
             foreach (var req in reqs)
             {
-                var pos = new VoxelPosition(req.position);
+                var pos = new VoxelPosition(req.position.ToVector3() + offset );
                 var globalPos = pos.ToWorld();
                 if (placed.ContainsKey(globalPos))
-                {
                     continue;
-                }
 
                 placed.Add(globalPos, false);
-
-                var metaType = (MetaBlockType) (req.type.metaBlock?.type == null
-                    ? null
-                    : Blocks.GetBlockType(req.type.metaBlock.type, false, true));
-
-                var type = req.type.blockType == null ? null : Blocks.GetBlockType(req.type.blockType, true);
+                var metaType = req.GetMetaType();
+                var type = req.GetBlockType();
                 //FIXME what if data was not loaded?
                 if ((type == null || type.id.Equals(Blocks.AIR.id)) && metaType != null &&
                     !WorldService.INSTANCE.IsSolidIfLoaded(pos))
@@ -63,10 +61,7 @@ namespace src
                 if (type != null) blocks.Add(pos, type);
 
                 if (metaType == null) continue;
-                var propsString = req.type.metaBlock.properties;
-                var props = metaType.DeserializeProps(propsString == null || propsString.Equals("")
-                    ? "{}"
-                    : req.type.metaBlock.properties);
+                var props = req.GetProps(metaType);
                 metaBlocks.Add(pos, new Tuple<MetaBlockType, object>(metaType, props));
             }
 
@@ -83,9 +78,47 @@ namespace src
             return placed;
         }
 
+        public void PreviewMetaBlocks(string request)
+        {
+            PreviewMetaBlocksWithOffset(request, Vector3Int.zero);
+        }
+        
+        public void PreviewMetaBlocksWithOffset(string request, Vector3Int offset)
+        {
+            var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);
+            var highlights = new Dictionary<VoxelPosition, Tuple<uint, MetaBlock>>();
+
+            foreach (var req in reqs)
+            {
+                var vp = new VoxelPosition(req.position.ToVector3() + offset);
+                if (highlights.ContainsKey(vp))
+                    continue;
+
+                var metaType = req.GetMetaType();
+                var type = req.GetBlockType();
+
+                if ((type == null || type.id.Equals(Blocks.AIR.id)) && metaType != null &&
+                    !WorldService.INSTANCE.IsSolidIfLoaded(vp))
+                    type = Blocks.GetBlockType("grass");
+
+                if (type == null) continue;
+
+                if (metaType == null)
+                {
+                    highlights.Add(vp, new Tuple<uint, MetaBlock>(type.id, null));
+                    continue;
+                }
+
+                highlights.Add(vp,
+                    new Tuple<uint, MetaBlock>(type.id, metaType.Instantiate(null, req.GetPropsString())));
+            }
+
+            BlockSelectionController.INSTANCE.AddPreviewHighlights(highlights);
+        }
+
         public void SelectBlocks(string request)
         {
-            World.INSTANCE.AddHighlights(JsonConvert
+            BlockSelectionController.INSTANCE.AddHighlights(JsonConvert
                 .DeserializeObject<List<SerializableVector3>>(request)
                 .Select(pos => new VoxelPosition(pos.ToVector3Int())).ToList());
         }
@@ -162,6 +195,31 @@ namespace src
         {
             public MetaBlockTypeData type;
             public SerializableVector3 position;
+
+            public BlockType GetBlockType()
+            {
+                return type?.blockType == null ? null : Blocks.GetBlockType(type.blockType, true);
+            }
+
+            public MetaBlockType GetMetaType()
+            {
+                return (MetaBlockType) (type?.metaBlock?.type == null
+                    ? null
+                    : Blocks.GetBlockType(type.metaBlock.type, false, true));
+            }
+
+            public object GetProps(MetaBlockType metaBlockType)
+            {
+                return metaBlockType.DeserializeProps(GetPropsString());
+            }
+
+            public string GetPropsString()
+            {
+                var propsString = type?.metaBlock?.properties;
+                return propsString == null || propsString.Equals("")
+                    ? "{}"
+                    : type.metaBlock.properties;
+            }
         }
 
         [Serializable]

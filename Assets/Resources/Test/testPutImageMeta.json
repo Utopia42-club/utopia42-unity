@@ -1,0 +1,16 @@
+[
+  {
+    "position": {
+      "x": 0,
+      "z": 0,
+      "y": 0
+    },
+    "type": {
+      "blockType": "cobblestone",
+      "metaBlock": {
+        "type": "image",
+        "properties": "{\"back\": {\"width\": 2,\"height\": 2,\"url\": \"https://dweb.link/ipfs/Qmci1pGaUmvb6StPxdGp1WqfK9QjPjdf43nCbY5LJ9y1MY\"}}"
+      }
+    }
+  }
+]

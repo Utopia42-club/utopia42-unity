@@ -107,15 +107,16 @@ namespace src.Canvas
                 }
             }
 
-            networkInput.interactable = !EthereumClientService.INSTANCE.IsInited();
+            bool serviceInitialized = EthereumClientService.INSTANCE.IsInited();
+            networkInput.interactable = !serviceInitialized;
             saveGameButton.interactable = !IsGuest() && WorldService.INSTANCE.HasChange();
             editProfileButton.interactable = !IsGuest();
 
-            saveGameButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
-            editProfileButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
-            helpButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
-            pluginsButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
-            positionLinkButton.gameObject.SetActive(EthereumClientService.INSTANCE.IsInited());
+            saveGameButton.gameObject.SetActive(serviceInitialized);
+            editProfileButton.gameObject.SetActive(serviceInitialized);
+            helpButton.gameObject.SetActive(serviceInitialized);
+            pluginsButton.gameObject.SetActive(serviceInitialized);
+            positionLinkButton.gameObject.SetActive(serviceInitialized);
         }
 
         private void ResetButtonsState()

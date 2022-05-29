@@ -1,3 +1,4 @@
+using src.Utils;
 using UnityEngine;
 
 namespace src.TestUtils
@@ -8,7 +9,8 @@ namespace src.TestUtils
 
         private void Update()
         {
-            if (putMetasSampleName == null || !Input.GetKeyDown(KeyCode.T) || !Input.GetKey(KeyCode.LeftShift)) return;
+            if (putMetasSampleName == null || !Input.GetKeyDown(KeyCode.T) ||
+                (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))) return;
             var textAsset = Resources.Load<TextAsset>("Test/" + putMetasSampleName);
             if (textAsset == null)
             {
@@ -16,7 +18,12 @@ namespace src.TestUtils
                 return;
             }
 
-            UtopiaApi.INSTANCE.PlaceMetaBlocks(textAsset.text);
+            if (Input.GetKey(KeyCode.LeftShift))
+                UtopiaApi.INSTANCE.PreviewMetaBlocksWithOffset(textAsset.text,
+                    Vectors.FloorToInt(Player.INSTANCE.transform.position) + 5 * Vector3Int.up);
+            else
+                UtopiaApi.INSTANCE.PlaceMetaBlocksWithOffset(textAsset.text,
+                    Vectors.FloorToInt(Player.INSTANCE.transform.position) + 5 * Vector3Int.up);
         }
     }
 }
