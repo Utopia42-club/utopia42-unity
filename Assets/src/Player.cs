@@ -8,6 +8,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace src
 {
@@ -51,16 +52,16 @@ namespace src
         [NonSerialized] public GameObject avatar;
         private AvatarController avatarController;
 
-        private bool firstPersonView = false;
-
         public Transform tdObjectHighlightMesh;
-
-        public Vector3 firstPersonCameraPosition;
-        public Vector3 thirdPersonCameraPosition;
 
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
+
+        public Vector3 firstPersonCameraPosition;
+        public Vector3 thirdPersonCameraPosition;
+        private ViewMode viewMode = ViewMode.FIRST_PERSON;
+        public UnityEvent<ViewMode> viewModeChanged;
 
         public Player(Transform tdObjectHighlightBox, Transform placeBlock, Transform highlightBlock)
         {
@@ -95,6 +96,9 @@ namespace src
 
             playerPos = Vectors.TruncateFloor(GetPosition());
             StartCoroutine(SavePosition());
+
+            viewModeChanged = new UnityEvent<ViewMode>();
+            ToggleViewMode();
         }
 
 
@@ -162,7 +166,8 @@ namespace src
 
         private void DetectFocus()
         {
-            if (firstPersonView && Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
+            if (viewMode == ViewMode.FIRST_PERSON
+                && Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
                 if (hitCollider == raycastHit.collider &&
                     hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
@@ -197,7 +202,7 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetInputs();
-            if(firstPersonView)
+            if (viewMode == ViewMode.FIRST_PERSON)
                 blockSelectionController.DoUpdate();
 
             if (lastChunk == null)
@@ -244,8 +249,12 @@ namespace src
 
         private void ToggleViewMode()
         {
-            cam.localPosition = firstPersonView ? firstPersonCameraPosition : thirdPersonCameraPosition;
-            firstPersonView = !firstPersonView;
+            viewMode = viewMode == ViewMode.FIRST_PERSON ? ViewMode.THIRD_PERSON : ViewMode.FIRST_PERSON;
+            cam.localPosition = viewMode == ViewMode.FIRST_PERSON
+                ? firstPersonCameraPosition
+                : thirdPersonCameraPosition;
+
+            viewModeChanged.Invoke(viewMode);
         }
 
         public void SetHammerActive(bool active)
@@ -385,7 +394,7 @@ namespace src
         {
             return characterController.center;
         }
-        
+
         public static Vector3? GetSavedPosition()
         {
             var str = PlayerPrefs.GetString(POSITION_KEY);
@@ -425,6 +434,12 @@ namespace src
         public Vector3 GetPosition()
         {
             return avatar.transform.position;
+        }
+
+        public enum ViewMode
+        {
+            FIRST_PERSON,
+            THIRD_PERSON,
         }
 
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();

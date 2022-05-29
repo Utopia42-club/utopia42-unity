@@ -19,11 +19,8 @@ namespace src.Canvas
 
         private void Start()
         {
-            inventoryButton.onClick.AddListener(() =>
-            {
-                GameManager.INSTANCE.OpenInventory();
-            });
-            
+            inventoryButton.onClick.AddListener(() => GameManager.INSTANCE.OpenInventory());
+
             HorizontalLayoutGroup layout = GetComponentInChildren<HorizontalLayoutGroup>();
             for (int i = 1; i < 10; i++)
             {
