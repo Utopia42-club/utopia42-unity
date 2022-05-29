@@ -52,7 +52,7 @@ namespace src
         private AvatarController avatarController;
 
         public Transform tdObjectHighlightMesh;
-        
+
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
@@ -87,7 +87,7 @@ namespace src
             avatarController = avatar.GetComponent<AvatarController>();
             characterController = avatar.GetComponent<CharacterController>();
             cam.SetParent(avatar.transform);
-            
+
             playerPos = Vectors.TruncateFloor(GetPosition());
             StartCoroutine(SavePosition());
         }
@@ -149,7 +149,8 @@ namespace src
 
             playerPos = Vectors.TruncateFloor(pos);
 
-            avatarController.UpdatePlayerState(new AvatarController.PlayerState(pos, cam.forward, floating, sprinting));
+            avatarController.UpdatePlayerState(new AvatarController.PlayerState(Settings.WalletId(),
+                new SerializableVector3(pos), new SerializableVector3(cam.forward), floating, sprinting));
         }
 
 
@@ -409,7 +410,7 @@ namespace src
         {
             return avatar.transform.position;
         }
-        
+
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using src.Model;
 using src.Service.Ethereum;
 using src.Utils;
@@ -97,20 +98,27 @@ namespace src.Canvas
             {
                 List<string> parameters = new List<string>();
                 foreach (var l in lands)
-                    parameters.Add(string.Join("_", new long[] {l.startCoordinate.x, l.startCoordinate.z, l.endCoordinate.x, l.endCoordinate.z}));
+                    parameters.Add(string.Join("_",
+                        new long[] {l.startCoordinate.x, l.startCoordinate.z, l.endCoordinate.x, l.endCoordinate.z}));
                 CallUrl("buy", string.Join(",", parameters), onDone, onCancel);
             }
         }
 
-        public void ReportGameState(GameManager.State state, Action onDone, Action onCancel)
+        public void ReportGameState(GameManager.State state)
         {
             if (WebBridge.IsPresent())
             {
                 WebBridge.Call<object>("reportGameState", state.ToString());
             }
         }
-        
-        
+
+        public void ReportPlayerState(AvatarController.PlayerState state)
+        {
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("reportPlayerState", JsonConvert.SerializeObject(state));
+            }
+        }
 
         private void CallUrl(string method, string parameters, Action onDone, Action onCancel)
         {

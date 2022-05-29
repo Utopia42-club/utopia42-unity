@@ -37,10 +37,7 @@ namespace src
         void Start()
         {
             SetState(State.SETTINGS);
-            stateChange.AddListener(newState =>
-            {
-                BrowserConnector.INSTANCE.ReportGameState(newState, () => { }, () => { });
-            });
+            stateChange.AddListener(newState => { BrowserConnector.INSTANCE.ReportGameState(newState); });
         }
 
         void Update()
