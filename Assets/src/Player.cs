@@ -102,22 +102,53 @@ namespace src
         }
 
 
-        public List<Land> GetOwnedLands()
+        private void Update()
         {
-            return ownedLands;
+            if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
+            GetInputs();
+            if (viewMode == ViewMode.FIRST_PERSON)
+                blockSelectionController.DoUpdate();
+
+            if (lastChunk == null)
+            {
+                lastChunk = ComputePosition().chunk;
+                world.OnPlayerChunkChanged(lastChunk.Value);
+            }
+            else
+            {
+                var currChunk = ComputePosition().chunk;
+                if (!lastChunk.Equals(currChunk))
+                {
+                    lastChunk = currChunk;
+                    world.OnPlayerChunkChanged(currChunk);
+                }
+            }
         }
 
-        public void ResetLands()
+        private void GetInputs()
         {
-            List<Land> lands = null;
-            if (Settings.WalletId() != null)
-            {
-                var service = WorldService.INSTANCE;
-                lands = service.GetPlayerLands();
-                service.RefreshChangedLands(lands);
-            }
+            ctrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
+            Horizontal = Input.GetAxis("Horizontal");
+            Vertical = Input.GetAxis("Vertical");
 
-            ownedLands = lands != null ? lands : new List<Land>();
+            if (Input.GetButtonDown("Sprint"))
+                sprinting = true;
+
+            if (Input.GetButtonUp("Sprint"))
+                sprinting = false;
+
+            if (Input.GetButtonDown("Jump"))
+                jumpRequest = true;
+
+            if (Input.GetButtonUp("Jump"))
+                jumpRequest = false;
+
+            if (Input.GetButtonDown("Toggle Floating"))
+                floating = !floating;
+
+            if (Input.GetButtonDown("Toggle View"))
+                ToggleViewMode();
         }
 
         private void FixedUpdate()
@@ -198,53 +229,22 @@ namespace src
             hitCollider = null;
         }
 
-        private void Update()
+        public List<Land> GetOwnedLands()
         {
-            if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
-            GetInputs();
-            if (viewMode == ViewMode.FIRST_PERSON)
-                blockSelectionController.DoUpdate();
-
-            if (lastChunk == null)
-            {
-                lastChunk = ComputePosition().chunk;
-                world.OnPlayerChunkChanged(lastChunk.Value);
-            }
-            else
-            {
-                var currChunk = ComputePosition().chunk;
-                if (!lastChunk.Equals(currChunk))
-                {
-                    lastChunk = currChunk;
-                    world.OnPlayerChunkChanged(currChunk);
-                }
-            }
+            return ownedLands;
         }
 
-        private void GetInputs()
+        public void ResetLands()
         {
-            ctrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
-            Horizontal = Input.GetAxis("Horizontal");
-            Vertical = Input.GetAxis("Vertical");
+            List<Land> lands = null;
+            if (Settings.WalletId() != null)
+            {
+                var service = WorldService.INSTANCE;
+                lands = service.GetPlayerLands();
+                service.RefreshChangedLands(lands);
+            }
 
-            if (Input.GetButtonDown("Sprint"))
-                sprinting = true;
-
-            if (Input.GetButtonUp("Sprint"))
-                sprinting = false;
-
-            if (Input.GetButtonDown("Jump"))
-                jumpRequest = true;
-
-            if (Input.GetButtonUp("Jump"))
-                jumpRequest = false;
-
-            if (Input.GetButtonDown("Toggle Floating"))
-                floating = !floating;
-
-            if (Input.GetButtonDown("Toggle View"))
-                ToggleViewMode();
+            ownedLands = lands != null ? lands : new List<Land>();
         }
 
         private void ToggleViewMode()

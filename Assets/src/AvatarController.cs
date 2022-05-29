@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using src.Canvas;
 using src.Model;
@@ -23,12 +24,23 @@ namespace src
 
         private bool isAnotherPlayer = false;
 
+        private Vector3 tartgetPosition;
+
         public void Start()
         {
             avatar = Instantiate(avatarPrefab, transform);
             animator = avatar.GetComponent<Animator>();
             controller = GetComponent<CharacterController>();
             StartCoroutine(UpdateAnimationCoroutine());
+        }
+
+        private void Update()
+        {
+            // if (tartgetPosition != transform.position)
+            // {
+            //     var step = 0.2f * Time.deltaTime; // calculate distance to move
+            //     transform.position = Vector3.MoveTowards(transform.position, tartgetPosition, step);
+            // }
         }
 
         public void SetIsAnotherPlayer(bool b)
@@ -50,6 +62,7 @@ namespace src
 
         private void SetPosition(Vector3 pos)
         {
+            // tartgetPosition = pos;
             transform.position = pos;
         }
 
