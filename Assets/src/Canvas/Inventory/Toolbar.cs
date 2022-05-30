@@ -21,13 +21,13 @@ namespace src.Canvas
         {
             inventoryButton.onClick.AddListener(() => GameManager.INSTANCE.OpenInventory());
 
-            HorizontalLayoutGroup layout = GetComponentInChildren<HorizontalLayoutGroup>();
-            for (int i = 1; i < 10; i++)
+            var layout = GetComponentInChildren<HorizontalLayoutGroup>();
+            for (var i = 1; i < 10; i++)
             {
-                GameObject newSlot = Instantiate(slotPrefab, layout.transform);
+                var newSlot = Instantiate(slotPrefab, layout.transform);
 
-                ItemStack stack = new ItemStack((byte) i, Random.Range(2, 65));
-                ItemSlot slot = new ItemSlot();
+                var stack = new ItemStack((byte) i, Random.Range(2, 65));
+                var slot = new ItemSlot();
                 slot.SetStack(stack);
                 var ui = newSlot.GetComponent<ItemSlotUI>();
                 slot.SetFromInventory(false);
@@ -35,11 +35,11 @@ namespace src.Canvas
                 slots[i - 1] = ui;
             }
 
-            SelectedChanged();
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING) SelectedChanged();
             });
+            SelectedChanged();
         }
 
         private void Update()
@@ -47,10 +47,15 @@ namespace src.Canvas
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
 
             var mouseDelta = Input.mouseScrollDelta.y;
-            var dec = (Input.GetButtonDown("Change Block") &&
-                       (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))) || mouseDelta <= -0.1;
+            var dec = Input.GetButtonDown("Change Block")
+                      && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                      || mouseDelta <= -0.1;
             var inc = !dec && (Input.GetButtonDown("Change Block") || mouseDelta >= 0.1);
-            if (!dec && !inc) return;
+            if (!dec && !inc)
+            {
+                SelectedChanged();
+                return;
+            }
             if (dec) selectedSlot--;
             if (inc) selectedSlot++;
             selectedSlot = (selectedSlot + slots.Length + 1) % (slots.Length + 1);
