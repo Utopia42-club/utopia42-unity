@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -21,9 +22,16 @@ namespace src
                 var avatar = Instantiate(avatarPrefab, transform);
                 var c = avatar.GetComponent<AvatarController>();
                 c.SetIsAnotherPlayer(true);
-                c.UpdatePlayerState(playerState, smooth);
+                StartCoroutine(UpdatePlayerState(c, playerState, smooth)); // apparently it needs a delay
                 playersMap.Add(playerState.walletId, c);
             }
+        }
+
+        private IEnumerator UpdatePlayerState(AvatarController controller, AvatarController.PlayerState playerState,
+            bool smooth)
+        {
+            yield return 0;
+            controller.UpdatePlayerState(playerState, smooth);
         }
 
         public void ReportOtherPlayersState(string state)

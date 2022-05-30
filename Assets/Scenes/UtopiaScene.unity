@@ -985,7 +985,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1050669706}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4400,12 +4400,12 @@ GameObject:
   - component: {fileID: 435662602}
   - component: {fileID: 435662601}
   m_Layer: 0
-  m_Name: random
+  m_Name: RandomPlayers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &435662601
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18222,7 +18222,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1925748158}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.9733669
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

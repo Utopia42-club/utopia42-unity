@@ -18,7 +18,7 @@ public class RandomPlayers : MonoBehaviour
         {
             if (state == GameManager.State.PLAYING && !done)
             {
-                for (int i = 0; i < numberOfPlayers; i++)
+                for (var i = 0; i < numberOfPlayers; i++)
                 {
                     players.ReportOtherPlayersState(new AvatarController.PlayerState(
                         i + "",
@@ -36,6 +36,7 @@ public class RandomPlayers : MonoBehaviour
 
     private IEnumerator MovePlayers()
     {
+        yield return 0;
         while (true)
         {
             if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)

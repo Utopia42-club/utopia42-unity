@@ -36,10 +36,12 @@ namespace src
 
         private void Update()
         {
-            if (targetPosition != transform.position)
+            var currentPosition = transform.position;
+            if (targetPosition != currentPosition)
             {
                 var step = Player.INSTANCE.walkSpeed * Time.deltaTime;
-                transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
+                var newPos = Vector3.MoveTowards(currentPosition, targetPosition, step);
+                Move(newPos - currentPosition);
             }
         }
 
@@ -50,8 +52,7 @@ namespace src
 
         public void Move(Vector3 motion)
         {
-            if (controller != null)
-                controller.Move(motion);
+            controller.Move(motion);
         }
 
         public void LookAt(Vector3 cameraForward)
@@ -64,7 +65,9 @@ namespace src
         {
             targetPosition = pos;
             if (!smooth)
-                transform.position = pos;
+            {
+                Move(pos - transform.position);
+            }
         }
 
         public void UpdatePlayerState(PlayerState playerState, bool smooth = true)
@@ -112,6 +115,7 @@ namespace src
 
         IEnumerator UpdateAnimationCoroutine()
         {
+            yield return 0;
             while (true)
             {
                 if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
