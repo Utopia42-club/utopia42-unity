@@ -12,10 +12,11 @@ public class Container : MonoBehaviour
         _gameManager = GameManager.INSTANCE;
         _gameManager.stateChange.AddListener(state =>
         {
-            if (_gameManager.IsWorldInited() && (state == GameManager.State.SETTINGS || state == GameManager.State.MAP))
-                tabMenu.gameObject.SetActive(true);
-            else
-                tabMenu.gameObject.SetActive(false);
+            // TODO: Uncomment after adapting to UI toolkit completely
+            // if (_gameManager.IsWorldInited() && (state == GameManager.State.SETTINGS || state == GameManager.State.MAP))
+            //     tabMenu.gameObject.SetActive(true);
+            // else
+            //     tabMenu.gameObject.SetActive(false);
 
             if (tabMenu.gameObject.activeSelf)
                 switch (state)

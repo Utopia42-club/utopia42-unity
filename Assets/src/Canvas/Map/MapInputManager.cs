@@ -63,7 +63,8 @@ namespace src.Canvas.Map
                 ToggleSidePanel();
             }
 
-            else if (IsInputEnabled() && !TabMenu.INSTANCE.isMouseDown)
+            // TODO: Remove the null checking after adapting to UI toolkit completely
+            else if (IsInputEnabled() && (TabMenu.INSTANCE == null || !TabMenu.INSTANCE.isMouseDown))
             {
                 if (!drawing && !dragging)
                 {
