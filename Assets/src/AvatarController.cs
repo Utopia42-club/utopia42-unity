@@ -79,7 +79,8 @@ namespace src
 
         private void UpdateAnimation()
         {
-            var movement = state.Position() - (lastAnimationState?.Position() ?? state.Position());
+            var lastPos = lastAnimationState?.Position() ?? state.Position();
+            var movement = state.Position() - lastPos;
             var velocity = movement / (Time.time - updatedTime);
 
             updatedTime = Time.time;
