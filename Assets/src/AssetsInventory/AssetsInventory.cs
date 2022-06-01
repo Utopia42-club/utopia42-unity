@@ -26,8 +26,8 @@ public class AssetsInventory : MonoBehaviour
         var assetsTabBt = root.Q<Button>("assetsTab");
         var inventoryTabBt = root.Q<Button>("inventoryTab");
 
-        tabs.Add(1, new Tuple<Button, string>(assetsTabBt, "Assets/UiDocuments/AssetsTab.uxml"));
-        tabs.Add(2, new Tuple<Button, string>(inventoryTabBt, "Assets/UiDocuments/InventoryTab.uxml"));
+        tabs.Add(1, new Tuple<Button, string>(assetsTabBt, "UiDocuments/AssetsTab"));
+        tabs.Add(2, new Tuple<Button, string>(inventoryTabBt, "UiDocuments/InventoryTab"));
 
         foreach (var tab in tabs)
             tab.Value.Item1.clicked += () => OpenTab(tab.Key);
@@ -36,7 +36,11 @@ public class AssetsInventory : MonoBehaviour
     private void OpenTab(int index)
     {
         var (button, uxmlPath) = tabs[index];
-        var tabBodyContent = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath).CloneTree();
+        Debug.Log("Loading " + uxmlPath);
+        Debug.Log(Resources.Load(uxmlPath));
+        Debug.Log(Resources.Load<VisualTreeAsset>(uxmlPath));
+        Debug.Log(Resources.LoadAll(uxmlPath));
+        var tabBodyContent = Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree();
         tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
         SetTabBodyContent(tabBodyContent, null);
         foreach (var t in tabs)
@@ -109,8 +113,7 @@ public class AssetsInventory : MonoBehaviour
         else
         {
             breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
-            var backButton = AssetDatabase
-                .LoadAssetAtPath<VisualTreeAsset>("Assets/UiDocuments/BackButton.uxml")
+            var backButton = Resources.Load<VisualTreeAsset>("UiDocuments/BackButton")
                 .CloneTree();
             backButton.Q<Label>("label").text = backButtonText;
             backButton.Q<Button>().clickable.clicked += onBack;
@@ -157,8 +160,7 @@ public class AssetsInventory : MonoBehaviour
     private static VisualElement CreateListViewItem()
     {
         var container = new VisualElement();
-        var button = AssetDatabase
-            .LoadAssetAtPath<VisualTreeAsset>("Assets/UiDocuments/CategoryButton.uxml")
+        var button = Resources.Load<VisualTreeAsset>("UiDocuments/CategoryButton")
             .CloneTree();
         container.style.paddingTop = container.style.paddingBottom = 3;
         container.Add(button);
@@ -168,8 +170,7 @@ public class AssetsInventory : MonoBehaviour
     private TemplateContainer CreateSlot(List<Asset> assets, int i, Sprite assetDefaultImage)
     {
         var asset = assets[i];
-        var slot = AssetDatabase
-            .LoadAssetAtPath<VisualTreeAsset>("Assets/UiDocuments/InventorySlot.uxml")
+        var slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot")
             .CloneTree();
         var slotIcon = slot.Q<VisualElement>("slotIcon");
         StartCoroutine(
