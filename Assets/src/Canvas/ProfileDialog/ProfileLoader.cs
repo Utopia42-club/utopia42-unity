@@ -42,7 +42,7 @@ namespace src
         {
             loadingWallets.Add(walletId);
             bool success = true;
-            yield return RestClient.INSATANCE.GetProfile(walletId, profile =>
+            yield return WorldRestClient.INSTANCE.GetProfile(walletId, profile =>
             {
                 loadingWallets.Remove(walletId);
                 if (profile == null)

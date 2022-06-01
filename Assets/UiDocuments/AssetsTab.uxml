@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <ui:VisualElement name="root" style="flex-grow: 1; align-items: center;">
+        <ui:VisualElement name="searchBar" style="align-items: center; margin-top: 5px; margin-bottom: 5px; height: 5%; width: 100%;">
+            <ui:TextField picking-mode="Ignore" label="Search&#x9;" value="Search" name="searchField" multiline="true" tooltip="Search" class="short-label-field no-label-field utopia-field" style="width: 90%; justify-content: flex-start;" />
+        </ui:VisualElement>
+        <ui:ListView focusable="true" name="categories" header-title="Categories" fixed-item-height="50" show-border="true" virtualization-method="DynamicHeight" style="flex-grow: 1; width: 90%; margin-top: 10px; margin-bottom: 10px;" />
+    </ui:VisualElement>
+</ui:UXML>

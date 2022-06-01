@@ -454,7 +454,7 @@ namespace src
 
         private void SetLandNftImage(string key, Land land)
         {
-            StartCoroutine(RestClient.INSATANCE.SetLandMetadata(new LandMetadata(land.id, key), () =>
+            StartCoroutine(WorldRestClient.INSTANCE.SetLandMetadata(new LandMetadata(land.id, key), () =>
             {
                 BrowserConnector.INSTANCE.SetNft(land.id, true,
                     () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
