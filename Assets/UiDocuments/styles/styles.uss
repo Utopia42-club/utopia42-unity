@@ -50,7 +50,7 @@
 }
 
 .utopia-foldout > .unity-foldout__content {
-    margin-left: 0px;
+    margin-left: 0;
     padding-right: 5px;
     padding-left: 5px;
     padding-bottom: 5px;

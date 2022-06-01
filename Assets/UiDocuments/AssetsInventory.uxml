@@ -8,7 +8,8 @@
                 <ui:Button text="Assets" display-tooltip-when-elided="true" name="assetsTab" class="toolbar-button utopia-button" />
                 <ui:Button text="Inventory" display-tooltip-when-elided="true" name="inventoryTab" class="toolbar-button utopia-button" />
             </ui:VisualElement>
-            <ui:VisualElement name="tabBody" class="tabBody" />
+            <ui:VisualElement name="breadcrumb" style="height: 6%; flex-direction: row; display: none;" />
+            <ui:VisualElement name="tabBody" class="tabBody" style="align-items: center;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
