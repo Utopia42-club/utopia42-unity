@@ -191,7 +191,7 @@ namespace src
             var checksPerFrame = 100;
             var todo = checksPerFrame;
 
-            var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, 0f, .5f);
+            var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, .5f, .5f);
             while (true)
             {
                 bool coll = false;
