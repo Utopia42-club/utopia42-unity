@@ -9,8 +9,7 @@ namespace src.Canvas
     {
         private string url = "";
 
-        [SerializeField]
-        private Sprite emptySprite;
+        [SerializeField] private Sprite emptySprite;
 
         public void SetUrl(string url)
         {
@@ -32,8 +31,8 @@ namespace src.Canvas
             yield return request.SendWebRequest();
             if (!Equals(this.url, url)) yield break;
 
-            if (request.result == UnityWebRequest.Result.ProtocolError ||
-                request.result == UnityWebRequest.Result.ConnectionError)
+            if (request.result == UnityWebRequest.Result.ProtocolError
+                || request.result == UnityWebRequest.Result.ConnectionError)
                 GetComponent<Image>().overrideSprite = emptySprite;
             else
             {

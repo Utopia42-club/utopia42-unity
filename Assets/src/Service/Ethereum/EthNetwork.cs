@@ -71,7 +71,7 @@ namespace src.Service.Ethereum
         {
             if (NETWORKS == null)
             {
-                yield return RestClient.INSATANCE.LoadNetworks(nets =>
+                yield return WorldRestClient.INSTANCE.LoadNetworks(nets =>
                 {
                     if (nets == null)
                         NETWORKS = new EthNetwork[0];
