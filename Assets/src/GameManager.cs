@@ -42,23 +42,6 @@ namespace src
 
         void Update()
         {
-            if (IsControlKeyDown() && doubleCtrlTap)
-            {
-                if (Time.time - doubleCtrlTapTime < 0.4f)
-                {
-                    OpenPluginsDialog();
-                    doubleCtrlTapTime = 0f;
-                }
-
-                doubleCtrlTap = false;
-            }
-
-            if (IsControlKeyDown() && !doubleCtrlTap)
-            {
-                doubleCtrlTap = true;
-                doubleCtrlTapTime = Time.time;
-            }
-
             if (Input.GetButtonDown("Cancel"))
             {
                 if (state == State.PLAYING && MouseLook.INSTANCE.cursorLocked)
@@ -66,18 +49,35 @@ namespace src
                 else
                     ReturnToGame();
             }
+            else if (state == State.PLAYING)
+            {
+                if (IsControlKeyDown() && doubleCtrlTap)
+                {
+                    if (Time.time - doubleCtrlTapTime < 0.4f)
+                    {
+                        OpenPluginsDialog();
+                        doubleCtrlTapTime = 0f;
+                    }
 
-            else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
-                SetState(State.SETTINGS);
-
-            else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
+                    doubleCtrlTap = false;
+                }
+                else if (IsControlKeyDown() && !doubleCtrlTap)
+                {
+                    doubleCtrlTap = true;
+                    doubleCtrlTapTime = Time.time;
+                }
+                else if (Input.GetButtonDown("Menu"))
+                    SetState(State.SETTINGS);
+                else if (Input.GetButtonDown("Map"))
+                    SetState(State.MAP);
+                else if (Input.GetButtonDown("Inventory"))
+                    SetState(State.INVENTORY);
+            }else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
                 SetState(State.PLAYING);
-
-            else if (Input.GetButtonDown("Map"))
-                SetState(state == State.MAP ? State.PLAYING : State.MAP);
-
-            else if (Input.GetButtonDown("Inventory"))
-                SetState(state == State.INVENTORY ? State.PLAYING : State.INVENTORY);
+            else if (Input.GetButtonDown("Map") && state == State.MAP)
+                SetState(State.PLAYING);
+            else if (Input.GetButtonDown("Inventory") && state == State.INVENTORY)
+                SetState(State.PLAYING);
         }
 
         public void OpenPluginsDialog()
