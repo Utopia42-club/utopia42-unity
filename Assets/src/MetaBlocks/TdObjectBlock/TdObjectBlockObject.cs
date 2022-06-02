@@ -535,7 +535,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 minZ = float.PositiveInfinity,
                 maxZ = float.NegativeInfinity;
 
-            foreach (var child in loadedObject.GetComponentsInChildren<MeshRenderer>())
+            foreach (var child in loadedObject.GetComponentsInChildren<Renderer>())
             {
                 var bounds = child.bounds;
                 var min = bounds.min;
@@ -556,7 +556,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private static Vector3 GetRendererSize(Vector3 center, GameObject loadedObject)
         {
             var bounds = new Bounds(center, Vector3.zero);
-            foreach (var child in loadedObject.GetComponentsInChildren<MeshRenderer>())
+            foreach (var child in loadedObject.GetComponentsInChildren<Renderer>())
             {
                 bounds.Encapsulate(child.bounds);
             }
