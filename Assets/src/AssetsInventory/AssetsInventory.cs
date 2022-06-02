@@ -36,10 +36,6 @@ public class AssetsInventory : MonoBehaviour
     private void OpenTab(int index)
     {
         var (button, uxmlPath) = tabs[index];
-        Debug.Log("Loading " + uxmlPath);
-        Debug.Log(Resources.Load(uxmlPath));
-        Debug.Log(Resources.Load<VisualTreeAsset>(uxmlPath));
-        Debug.Log(Resources.LoadAll(uxmlPath));
         var tabBodyContent = Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree();
         tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
         SetTabBodyContent(tabBodyContent, null);

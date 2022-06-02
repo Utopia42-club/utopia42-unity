@@ -11,32 +11,31 @@ namespace src
 
         public readonly Dictionary<string, AvatarController> playersMap = new Dictionary<string, AvatarController>();
 
-        public void ReportOtherPlayersState(AvatarController.PlayerState playerState, bool smooth = true)
+        public void ReportOtherPlayersStateFromWeb(string state)
+        {
+            ReportOtherPlayersState(JsonConvert.DeserializeObject<AvatarController.PlayerState>(state));
+        }
+        
+        public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
         {
             if (playersMap.TryGetValue(playerState.walletId, out var controller))
             {
-                controller.UpdatePlayerState(playerState, smooth);
+                controller.UpdatePlayerState(playerState);
             }
             else
             {
                 var avatar = Instantiate(avatarPrefab, transform);
                 var c = avatar.GetComponent<AvatarController>();
                 c.SetIsAnotherPlayer(true);
-                StartCoroutine(UpdatePlayerState(c, playerState, smooth)); // apparently it needs a delay
+                StartCoroutine(UpdatePlayerState(c, playerState));
                 playersMap.Add(playerState.walletId, c);
             }
         }
 
-        private IEnumerator UpdatePlayerState(AvatarController controller, AvatarController.PlayerState playerState,
-            bool smooth)
+        private IEnumerator UpdatePlayerState(AvatarController controller, AvatarController.PlayerState playerState)
         {
             yield return 0;
-            controller.UpdatePlayerState(playerState, smooth);
-        }
-
-        public void ReportOtherPlayersState(string state)
-        {
-            ReportOtherPlayersState(JsonConvert.DeserializeObject<AvatarController.PlayerState>(state));
+            controller.UpdatePlayerState(playerState);
         }
     }
 }

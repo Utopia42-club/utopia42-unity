@@ -61,18 +61,19 @@ namespace src
             transform.rotation = Quaternion.LookRotation(cameraForward);
         }
 
-        private void SetPosition(Vector3 pos, bool smooth)
+        private void SetPosition(Vector3 pos)
         {
+            var movement = transform.position - pos;
             targetPosition = pos;
-            if (!smooth)
+            if (movement.magnitude > 100)
             {
                 Move(pos - transform.position);
             }
         }
 
-        public void UpdatePlayerState(PlayerState playerState, bool smooth = true)
+        public void UpdatePlayerState(PlayerState playerState)
         {
-            SetPosition(playerState.position.ToVector3(), smooth);
+            SetPosition(playerState.position.ToVector3());
             LookAt(playerState.forward.ToVector3());
             state = playerState;
         }
