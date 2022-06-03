@@ -71,6 +71,12 @@ namespace src
             }
         }
 
+        public void SetAvatarBodyDisabled(bool disabled)
+        {
+            if (avatar != null)
+                avatar.SetActive(!disabled);
+        }
+
         public void UpdatePlayerState(PlayerState playerState)
         {
             SetPosition(playerState.position.ToVector3());

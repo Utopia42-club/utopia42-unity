@@ -195,6 +195,7 @@ namespace src
         }
 
 
+        // ReSharper disable Unity.PerformanceAnalysis
         private void DetectFocus()
         {
             if (viewMode == ViewMode.FIRST_PERSON
@@ -249,11 +250,10 @@ namespace src
 
         private void ToggleViewMode()
         {
-            viewMode = viewMode == ViewMode.FIRST_PERSON ? ViewMode.THIRD_PERSON : ViewMode.FIRST_PERSON;
-            cam.localPosition = viewMode == ViewMode.FIRST_PERSON
-                ? firstPersonCameraPosition
-                : thirdPersonCameraPosition;
-
+            var isNowFirstPerson = viewMode == ViewMode.FIRST_PERSON;
+            viewMode = isNowFirstPerson ? ViewMode.THIRD_PERSON : ViewMode.FIRST_PERSON;
+            cam.localPosition = isNowFirstPerson ? thirdPersonCameraPosition : firstPersonCameraPosition;
+            avatarController.SetAvatarBodyDisabled(!isNowFirstPerson);
             viewModeChanged.Invoke(viewMode);
         }
 
