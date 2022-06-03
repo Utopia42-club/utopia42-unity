@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Nethereum.Model;
 using src.AssetsInventory;
 using src.AssetsInventory.Models;
 using src.Canvas;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,6 +13,7 @@ public class AssetsInventory : MonoBehaviour
     private Dictionary<int, Tuple<Button, string>> tabs;
     private AssetsRestClient restClient = new AssetsRestClient();
     private int currentTab;
+    private Dictionary<int, Pack> packs = new Dictionary<int, Pack>();
 
     void Start()
     {
@@ -38,7 +36,7 @@ public class AssetsInventory : MonoBehaviour
         var (button, uxmlPath) = tabs[index];
         var tabBodyContent = Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree();
         tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
-        SetTabBodyContent(tabBodyContent, null);
+        SetBodyContent(tabBody, tabBodyContent, null);
         foreach (var t in tabs)
             t.Value.Item1.RemoveFromClassList("selected-tab");
         button.AddToClassList("selected-tab");
@@ -62,6 +60,13 @@ public class AssetsInventory : MonoBehaviour
     {
         var searchCriteria = new SearchCriteria();
         searchCriteria.limit = 100;
+
+        StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
+        {
+            foreach (var pack in packs)
+                this.packs[pack.id] = pack;
+        }, () => { }));
+
         StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
         {
             if (currentTab != 1)
@@ -76,6 +81,22 @@ public class AssetsInventory : MonoBehaviour
             listView.itemsSource = categories;
             listView.Rebuild();
         }, () => { }));
+        var searchField = tabBody.Q<TextField>("searchField");
+        searchField.RegisterCallback<FocusInEvent>(evt =>
+        {
+            if (searchField.text == "Search")
+            {
+                searchField.SetValueWithoutNotify("");
+            }
+        });
+        searchField.RegisterCallback<FocusOutEvent>(evt =>
+        {
+            if (searchField.text == "")
+            {
+                searchField.SetValueWithoutNotify("Search");
+            }
+        });
+        searchField.RegisterValueChangedCallback(evt => { Debug.Log(evt.newValue); });
     }
 
     private void ListViewBindItem(VisualElement item, List<Category> categories, int index, Sprite assetDefaultImage)
@@ -92,19 +113,25 @@ public class AssetsInventory : MonoBehaviour
         item.userData = category;
         button.clickable.clicked += () =>
         {
-            var scrollView = CreateAssetsScrollView(assetDefaultImage, label, category);
-            SetTabBodyContent(scrollView, () => OpenTab(1), "Categories");
+            var scrollView = CreateAssetsScrollView(assetDefaultImage, category);
+            var assetsTabBody = tabBody.Q<VisualElement>("content");
+            var listView = tabBody.Q<ListView>("categories");
+            assetsTabBody.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
+            listView.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+            SetBodyContent(assetsTabBody,
+                scrollView, () => OpenTab(1), "Categories");
         };
     }
 
-    private void SetTabBodyContent(VisualElement visualElement, Action onBack, string backButtonText = "Back")
+    private void SetBodyContent(VisualElement body, VisualElement visualElement, Action onBack,
+        string backButtonText = "Back")
     {
-        tabBody.Clear();
+        body.Clear();
         var breadcrumb = root.Q("breadcrumb");
         if (onBack == null)
         {
             breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
-            tabBody.Add(visualElement);
+            body.Add(visualElement);
         }
         else
         {
@@ -117,12 +144,10 @@ public class AssetsInventory : MonoBehaviour
             breadcrumb.Clear();
             breadcrumb.Add(backButton);
         }
-
-        tabBody.Add(visualElement);
+        body.Add(visualElement);
     }
 
-
-    private ScrollView CreateAssetsScrollView(Sprite assetDefaultImage, Label label, Category category)
+    private ScrollView CreateAssetsScrollView(Sprite assetDefaultImage, Category category)
     {
         var scrollView = new ScrollView(ScrollViewMode.Vertical);
         scrollView.scrollDecelerationRate = 0.135f;
@@ -133,24 +158,52 @@ public class AssetsInventory : MonoBehaviour
         var ss = scrollView.style;
         ss.height = new StyleLength(new Length(90, LengthUnit.Percent));
         ss.width = new StyleLength(new Length(90, LengthUnit.Percent));
-        label.contentContainer.Add(scrollView);
-        var searchCriteria = new SearchCriteria();
-        searchCriteria.limit = 100;
-        searchCriteria.searchTerms = new Dictionary<string, object>();
-        searchCriteria.searchTerms.Add("category", category.id);
+        ss.flexGrow = 1;
+        
+        var searchCriteria = new SearchCriteria
+        {
+            limit = 100,
+            searchTerms = new Dictionary<string, object> {{"category", category.id}}
+        };
         StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
         {
-            var visualElement = new VisualElement();
-            visualElement.style.height = 300;
-            for (var i = 0; i < assets.Count; i++)
+            var assetGroups = GroupAssetsByPack(assets);
+            foreach (var assetGroup in assetGroups)
             {
-                var slot = CreateSlot(assets, i, assetDefaultImage);
-                visualElement.Add(slot);
-            }
+                var foldout = new Foldout
+                {
+                    text = packs[assetGroup.Key].name
+                };
+                foldout.SetValueWithoutNotify(true);
+                foldout.AddToClassList("utopia-foldout");
+                var fs = foldout.style;
+                fs.marginRight = fs.marginLeft = fs.marginBottom = fs.marginTop = 5;
+                var size = assetGroup.Value.Count;
+                for (var i = 0; i < size; i++)
+                {
+                    var slot = CreateSlot(assetGroup.Value[i], i, assetDefaultImage);
+                    foldout.contentContainer.Add(slot);
+                }
 
-            scrollView.Add(visualElement);
+                foldout.contentContainer.style.height = 90 * (size / 3 + 1);
+                scrollView.Add(foldout);
+            }
         }, () => { }, this));
         return scrollView;
+    }
+
+    private Dictionary<int, List<Asset>> GroupAssetsByPack(List<Asset> assets)
+    {
+        var dictionary = new Dictionary<int, List<Asset>>();
+        foreach (var asset in assets)
+        {
+            var pack = packs[asset.pack.id];
+            if (!dictionary.ContainsKey(pack.id))
+                dictionary[pack.id] = new List<Asset>();
+            dictionary[pack.id].Add(asset);
+        }
+
+        return dictionary;
     }
 
     private static VisualElement CreateListViewItem()
@@ -163,9 +216,8 @@ public class AssetsInventory : MonoBehaviour
         return container;
     }
 
-    private TemplateContainer CreateSlot(List<Asset> assets, int i, Sprite assetDefaultImage)
+    private TemplateContainer CreateSlot(Asset asset, int i, Sprite assetDefaultImage)
     {
-        var asset = assets[i];
         var slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot")
             .CloneTree();
         var slotIcon = slot.Q<VisualElement>("slotIcon");

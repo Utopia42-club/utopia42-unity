@@ -18,6 +18,12 @@ namespace src.AssetsInventory
             var url = Constants.ApiURL + "/assets/categories";
             yield return RestClient.Post(url, searchCriteria, consumer, failed);
         }
+        
+        public IEnumerator GetPacks(SearchCriteria searchCriteria, Action<List<Pack>> consumer, Action failed)
+        {
+            var url = Constants.ApiURL + "/assets/packs";
+            yield return RestClient.Post(url, searchCriteria, consumer, failed);
+        }
 
         public IEnumerator GetAllAssets(SearchCriteria searchCriteria, Action<List<Asset>> consumer, Action failed,
             MonoBehaviour monoBehaviour)

@@ -8,6 +8,7 @@ namespace src.AssetsInventory.Models
         public string glbUrl { get; set; }
         public string thumbnailUrl { get; set; }
         public Category category { get; set; }
+        public Pack pack { get; set; }
         public State state { get; set; }
 
         public enum State

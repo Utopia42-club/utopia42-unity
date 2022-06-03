@@ -1,9 +1,10 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
     <ui:VisualElement name="root" style="flex-grow: 1; align-items: center;">
-        <ui:VisualElement name="searchBar" style="align-items: center; margin-top: 5px; margin-bottom: 5px; height: 5%; width: 100%;">
-            <ui:TextField picking-mode="Ignore" label="Search&#x9;" value="Search" name="searchField" multiline="true" tooltip="Search" class="short-label-field no-label-field utopia-field" style="width: 90%; justify-content: flex-start;" />
+        <ui:VisualElement name="searchBar" style="align-items: center; margin-top: 5px; margin-bottom: 5px; width: 100%; min-height: 40px; height: 40px;">
+            <ui:TextField picking-mode="Ignore" label="Search&#x9;" name="searchField" multiline="true" tooltip="Search" mask-character="SearchField" usage-hints="None" text="Search" class="short-label-field no-label-field utopia-field" style="width: 90%; justify-content: flex-start; color: rgb(255, 255, 255); -unity-text-align: upper-left;" />
         </ui:VisualElement>
         <ui:ListView focusable="true" name="categories" header-title="Categories" fixed-item-height="50" show-border="true" virtualization-method="DynamicHeight" style="flex-grow: 1; width: 90%; margin-top: 10px; margin-bottom: 10px;" />
+        <ui:VisualElement name="content" style="display: none; width: 100%; margin-top: 10px; margin-bottom: 10px; flex-grow: 1; align-items: center;" />
     </ui:VisualElement>
 </ui:UXML>
