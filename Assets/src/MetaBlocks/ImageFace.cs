@@ -12,7 +12,7 @@ namespace src
     {
         public void Init(MeshRenderer renderer, string url, ImageBlockObject block, Voxels.Face face)
         {
-            block.UpdateStateAndIcon(StateMsg.Loading, face);
+            block.UpdateStateAndView(StateMsg.Loading, face);
             StartCoroutine(LoadImage(renderer.sharedMaterial, url, block, face, 5));
         }
 
@@ -24,7 +24,7 @@ namespace src
 
             if (request.result == UnityWebRequest.Result.ConnectionError)
             {
-                block.UpdateStateAndIcon(StateMsg.ConnectionError, face);
+                block.UpdateStateAndView(StateMsg.ConnectionError, face);
                 yield break;
             }
 
@@ -33,12 +33,12 @@ namespace src
             {
                 if (retries > 0 && request.responseCode == 504)// && url.StartsWith(IpfsClient.SERVER_URL))
                     yield return LoadImage(material, url, block, face, retries - 1);
-                else block.UpdateStateAndIcon(StateMsg.InvalidUrlOrData, face);
+                else block.UpdateStateAndView(StateMsg.InvalidUrlOrData, face);
                 yield break;
             }
 
             material.mainTexture = ((DownloadHandlerTexture) request.downloadHandler).texture;
-            block.UpdateStateAndIcon(StateMsg.Ok, face);
+            block.UpdateStateAndView(StateMsg.Ok, face);
         }
     }
 }

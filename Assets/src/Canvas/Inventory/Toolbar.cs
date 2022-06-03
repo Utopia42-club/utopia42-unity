@@ -57,13 +57,15 @@ namespace src.Canvas
             var hammerSelected = selectedSlot == slots.Length;
             highlight.gameObject.SetActive(!hammerSelected);
             hammerHighlight.gameObject.SetActive(hammerSelected);
-            player.SetHammerActive(hammerSelected);
-            if (hammerSelected) return;
+            if (!hammerSelected)
+            {
+                highlight.position = slots[selectedSlot].transform.position;
+                if (slots[selectedSlot].GetItemSlot().GetStack() != null)
+                    player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
+                else player.selectedBlockId = 0;
+            }
 
-            highlight.position = slots[selectedSlot].transform.position;
-            if (slots[selectedSlot].GetItemSlot().GetStack() != null)
-                player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
-            else player.selectedBlockId = 0;
+            player.ToolbarSelectedChanged(hammerSelected);
         }
 
         public static Toolbar INSTANCE => GameObject.Find("Toolbar").GetComponent<Toolbar>();

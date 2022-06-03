@@ -24,7 +24,7 @@ namespace src.Service
         private readonly LandRegistry landRegistry = new LandRegistry();
         private HashSet<Land> changedLands = new HashSet<Land>();
         public readonly UnityEvent<object> blockPlaced = new UnityEvent<object>();
-        private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
+        private Dictionary<Vector3, MetaBlock> markerBlocks = new Dictionary<Vector3, MetaBlock>();
         private bool initialized = false;
 
         public void GetChunkData(Vector3Int coordinate, Action<ChunkData> consumer)
@@ -38,7 +38,7 @@ namespace src.Service
             });
         }
 
-        public void GetMetaBlock(VoxelPosition vp, Action<MetaBlock> consumer)
+        public void GetMetaBlock(MetaPosition vp, Action<MetaBlock> consumer)
         {
             if (changes.TryGetValue(vp.chunk, out var chunkData) && chunkData.metaBlocks != null &&
                 chunkData.metaBlocks.TryGetValue(vp.local, out var metaBlock))
@@ -143,7 +143,7 @@ namespace src.Service
                 {
                     var toClear = new List<string>(details.changes.Keys.Where(key =>
                     {
-                        var position = new VoxelPosition(LandDetails.ParseKey(key));
+                        var position = new VoxelPosition(LandDetails.ParseIntKey(key));
                         return ChunkInitializer.GetDefaultAt(position, true, true)
                             .name.Equals(details.changes[key].name);
                     }));
@@ -164,9 +164,24 @@ namespace src.Service
                 candidateLands = candidateLands.FindAll(l => detailsMap.ContainsKey(l.id));
                 if (candidateLands.Count == 0) continue;
 
-                var findDetails = new Func<Vector3Int, Tuple<LandDetails, string>>(changePos =>
+                // TODO [detach metablock]: refactor?
+                var findIntDetails = new Func<Vector3Int, Tuple<LandDetails, string>>(changePos =>
                 {
                     var pos = VoxelPosition.ToWorld(changeEntry.Key, changePos);
+                    var land = candidateLands.Find(l => l.Contains(pos));
+                    if (land != null && detailsMap.TryGetValue(land.id, out var details))
+                    {
+                        pos -= land.startCoordinate.ToVector3();
+                        var key = LandDetails.FormatIntKey(pos);
+                        return new Tuple<LandDetails, string>(details, key);
+                    }
+
+                    return null;
+                });
+                
+                var findDetails = new Func<MetaLocalPosition, Tuple<LandDetails, string>>(changePos =>
+                {
+                    var pos = MetaPosition.ToWorld(changeEntry.Key, changePos);
                     var land = candidateLands.Find(l => l.Contains(pos));
                     if (land != null && detailsMap.TryGetValue(land.id, out var details))
                     {
@@ -182,7 +197,7 @@ namespace src.Service
                     foreach (var blockEntry in changeEntry.Value.blocks)
                     {
                         //FIXME do not save redundant data
-                        var dt = findDetails(blockEntry.Key);
+                        var dt = findIntDetails(blockEntry.Key);
                         if (dt != null)
                         {
                             dt.Item1.changes[dt.Item2] =
@@ -252,7 +267,7 @@ namespace src.Service
                         {
                             if (land.Contains(worldPos))
                             {
-                                var key = LandDetails.FormatKey(worldPos - land.startCoordinate.ToVector3());
+                                var key = LandDetails.FormatIntKey(worldPos - land.startCoordinate.ToVector3());
                                 consumer(key, voxelEntry.Value, land);
                                 break;
                             }
@@ -268,14 +283,14 @@ namespace src.Service
             changedLands.Add(land);
         }
 
-        public void OnMetaRemoved(MetaBlock block, VoxelPosition position)
+        public void OnMetaRemoved(MetaBlock block, MetaPosition position)
         {
             if (block.type is MarkerBlockType)
                 markerBlocks.Remove(position.ToWorld());
             AddMetaBlock(position, null, block.land);
         }
 
-        public MetaBlock AddMetaBlock(VoxelPosition pos, MetaBlockType type, Land land)
+        public MetaBlock AddMetaBlock(MetaPosition pos, MetaBlockType type, Land land)
         {
             if (!changes.TryGetValue(pos.chunk, out var chunkChanges))
             {
@@ -284,7 +299,7 @@ namespace src.Service
             }
 
             if (chunkChanges.metaBlocks == null)
-                chunkChanges.metaBlocks = new Dictionary<Vector3Int, MetaBlock>();
+                chunkChanges.metaBlocks = new Dictionary<MetaLocalPosition, MetaBlock>();
 
             if (chunkChanges.metaBlocks.TryGetValue(pos.local, out var prev))
                 prev.DestroyView();
@@ -413,7 +428,7 @@ namespace src.Service
             public SerializableVector3 position;
             public string type;
 
-            public BlockPlaceEvent(Vector3Int position, string type)
+            public BlockPlaceEvent(Vector3 position, string type)
             {
                 this.position = new SerializableVector3(position);
                 this.type = type;

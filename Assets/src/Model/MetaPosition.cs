@@ -3,61 +3,46 @@ using UnityEngine;
 
 namespace src.Model
 {
-    public class VoxelPosition
+    public class MetaPosition
     {
         public readonly Vector3Int chunk;
-        public readonly Vector3Int local;
+        public readonly MetaLocalPosition local;
 
-        public VoxelPosition(SerializableVector3Int position)
+        public MetaPosition(SerializableVector3 position)
             : this(position.x, position.y, position.z)
         {
         }
 
-        public VoxelPosition(SerializableVector3 position)
+        public MetaPosition(Vector3 position)
             : this(position.x, position.y, position.z)
         {
         }
 
-        public VoxelPosition(Vector3 position)
-            : this(position.x, position.y, position.z)
-        {
-        }
-
-        public VoxelPosition(Vector3Int chunk, Vector3Int local)
+        public MetaPosition(Vector3Int chunk, MetaLocalPosition local)
         {
             this.chunk = chunk;
             this.local = local;
         }
 
-        public VoxelPosition(float x, float y, float z)
+        public MetaPosition(float x, float y, float z)
         {
             var chunkSize = Chunk.CHUNK_SIZE;
             chunk = Vectors.TruncateFloor(x / chunkSize.x, y / chunkSize.y, z / chunkSize.z);
-            local = Vectors.TruncateFloor(x, y, z);
-
-            local.x -= chunk.x * chunkSize.x;
-            local.y -= chunk.y * chunkSize.y;
-            local.z -= chunk.z * chunkSize.z;
+            local = new MetaLocalPosition(new Vector3(x, y, z), chunk);
         }
 
-        public Vector3Int ToWorld()
+        public Vector3 ToWorld()
         {
             return ToWorld(chunk, local);
         }
-
-        // TODO [detach metablock]: temp
-        // public MetaPosition ToMetaPosition()
-        // {
-        //     return new MetaPosition()
-        // }
-
-        public static Vector3Int ToWorld(Vector3Int chunk, Vector3Int local)
+        
+        public static Vector3 ToWorld(Vector3Int chunk, MetaLocalPosition local)
         {
             chunk.Scale(Chunk.CHUNK_SIZE);
-            return chunk + local;
+            return chunk + local.position;
         }
-        
-        protected bool Equals(VoxelPosition other)
+
+        protected bool Equals(MetaPosition other)
         {
             return chunk.Equals(other.chunk) && local.Equals(other.local);
         }
@@ -67,7 +52,7 @@ namespace src.Model
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((VoxelPosition) obj);
+            return Equals((MetaPosition) obj);
         }
 
         public override int GetHashCode()

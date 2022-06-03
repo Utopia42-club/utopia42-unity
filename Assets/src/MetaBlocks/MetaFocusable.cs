@@ -26,5 +26,10 @@ namespace src
             }
             metaBlockObject.Focus(face);
         }
+        
+        public override Vector3? GetBlockPosition()
+        {
+            return metaBlockObject.transform.position;
+        }
     }
 }

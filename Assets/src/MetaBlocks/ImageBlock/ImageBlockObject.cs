@@ -17,8 +17,7 @@ namespace src.MetaBlocks.ImageBlock
         protected bool canEdit;
         private bool ready = false;
 
-        protected readonly StateMsg[] stateMsg =
-            {StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok};
+        protected StateMsg stateMsg = StateMsg.Empty;
 
         protected void Start()
         {
@@ -51,9 +50,9 @@ namespace src.MetaBlocks.ImageBlock
             snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
-                    EditProps(face);
+                    EditProps();
                 if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                    GetChunk().DeleteMeta(new MetaPosition(transform.position));
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
             });
@@ -77,12 +76,7 @@ namespace src.MetaBlocks.ImageBlock
             MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
             if (properties != null)
             {
-                AddFace(Voxels.Face.BACK, properties.back);
-                AddFace(Voxels.Face.FRONT, properties.front);
-                AddFace(Voxels.Face.RIGHT, properties.right);
-                AddFace(Voxels.Face.LEFT, properties.left);
-                AddFace(Voxels.Face.TOP, properties.top);
-                AddFace(Voxels.Face.BOTTOM, properties.bottom);
+                AddFace(Voxels.Face.BACK, properties);
             }
         }
 
@@ -100,19 +94,23 @@ namespace src.MetaBlocks.ImageBlock
             }
         }
 
-        protected void AddFace(Voxels.Face face, MediaBlockProperties.FaceProps props)
+        protected void AddFace(Voxels.Face face, MediaBlockProperties props)
         {
             if (props == null) return;
 
+            var transform = gameObject.transform;
             var go = new GameObject();
+            go.name = "Image game object";
             go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero + ((Vector3) face.direction) * 0.2f;
+            go.transform.localPosition = Vector3.zero;
+            go.transform.eulerAngles = props.rotation.ToVector3();
+            
             var imgFace = go.AddComponent<ImageFace>();
             var meshRenderer = imgFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
             {
                 DestroyImmediate(go);
-                UpdateStateAndIcon(StateMsg.OutOfBound, face);
+                UpdateStateAndView(StateMsg.OutOfBound, face);
                 return;
             }
 
@@ -125,9 +123,9 @@ namespace src.MetaBlocks.ImageBlock
             faceSelectable.Initialize(this, face);
         }
 
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face)
+        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face)
         {
-            stateMsg[face.index] = msg;
+            stateMsg = msg;
             if (snackItem != null && lastFocusedFaceIndex == face.index)
             {
                 ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines(face));
@@ -144,8 +142,8 @@ namespace src.MetaBlocks.ImageBlock
                 "Press T to toggle preview",
                 "Press Del to delete"
             };
-            if (stateMsg[face.index] != StateMsg.Ok)
-                lines.Add($"\n{MetaBlockState.ToString(stateMsg[face.index], "image")}");
+            if (stateMsg != StateMsg.Ok)
+                lines.Add($"\n{MetaBlockState.ToString(stateMsg, "image")}");
             return lines;
         }
 
@@ -157,20 +155,20 @@ namespace src.MetaBlocks.ImageBlock
                 return;
             }
 
-            foreach (var msg in stateMsg)
-            {
-                if (message != StateMsg.LoadingMetadata && msg != StateMsg.Loading && msg != StateMsg.Ok)
+            // foreach (var stateMsg in stateMsg)
+            // {
+                if (message != StateMsg.LoadingMetadata && stateMsg != StateMsg.Loading && stateMsg != StateMsg.Ok)
                 {
                     CreateIcon(true);
                     return;
                 }
-            }
+            // }
 
             if (canEdit)
                 CreateIcon();
         }
 
-        private void EditProps(Voxels.Face face)
+        private void EditProps()
         {
             var manager = GameManager.INSTANCE;
             var dialog = manager.OpenDialog();
@@ -180,13 +178,13 @@ namespace src.MetaBlocks.ImageBlock
             var editor = dialog.GetContent().GetComponent<MediaBlockEditor>();
 
             var props = GetBlock().GetProps();
-            editor.SetValue(props == null ? null : (props as MediaBlockProperties).GetFaceProps(face));
+            editor.SetValue(props as MediaBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
                 var props = new MediaBlockProperties(GetBlock().GetProps() as MediaBlockProperties);
 
-                props.SetFaceProps(face, value);
+                props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
                 GetBlock().SetProps(props, land);

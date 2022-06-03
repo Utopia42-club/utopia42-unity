@@ -27,7 +27,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private bool ready = false;
         private string currentUrl = "";
 
-        private StateMsg stateMsg = StateMsg.Ok;
+        private StateMsg stateMsg = StateMsg.Empty;
 
         private TdObjectMoveController moveController;
         private Player player;
@@ -212,7 +212,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
                 if (Input.GetButtonDown("Delete"))
                 {
-                    GetChunk()?.DeleteMeta(new VoxelPosition(transform.localPosition));
+                    World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
                 }
             });
         }
@@ -282,15 +282,16 @@ namespace src.MetaBlocks.TdObjectBlock
             RemoveFocusHighlight();
         }
 
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face = null)
+        public override void
+            UpdateStateAndView(StateMsg msg,
+                Voxels.Face face = null) // TODO [detach metablock]: add error/warning view?
         {
             UpdateState(msg);
             if (snackItem != null)
                 ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines());
-            if (stateMsg != StateMsg.Ok && stateMsg != StateMsg.Loading)
-                CreateIcon(true);
-            else
-                CreateIcon();
+            if (msg == StateMsg.Ok) return;
+            DestroyObject();
+            SetPlaceHolder();
         }
 
         protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
@@ -301,15 +302,20 @@ namespace src.MetaBlocks.TdObjectBlock
             if (tdObjectContainer != null)
                 lines.Add("Press V to move object");
             lines.Add("Press DEL to delete object");
-            if (stateMsg != StateMsg.Ok)
-                lines.Add("\n" + MetaBlockState.ToString(stateMsg, "3D object"));
+            var line = MetaBlockState.ToString(stateMsg, "3D object");
+            if (line.Length > 0)
+                lines.Add("\n" + line);
             return lines;
         }
 
         private void LoadTdObject()
         {
-            TdObjectBlockProperties properties = (TdObjectBlockProperties) GetBlock().GetProps();
-            if (properties == null) return;
+            var properties = (TdObjectBlockProperties) GetBlock().GetProps();
+            if (properties == null)
+            {
+                UpdateStateAndView(StateMsg.Empty);
+                return;
+            }
 
             var scale = properties.scale?.ToVector3() ?? Vector3.one;
             var offset = properties.offset?.ToVector3() ?? Vector3.zero;
@@ -323,18 +329,14 @@ namespace src.MetaBlocks.TdObjectBlock
             }
             else
             {
-                DestroyObject();
-                UpdateStateAndIcon(StateMsg.Loading);
+                UpdateStateAndView(StateMsg.Loading);
                 var reinitialize = !currentUrl.Equals("") || properties.initialScale == 0;
                 currentUrl = properties.url;
                 StartCoroutine(LoadBytes(properties.url, properties.type, go =>
                 {
+                    DestroyObject();
                     TdObjectCollider = null;
-                    tdObjectContainer = new GameObject("3d object container");
-                    tdObjectContainer.transform.SetParent(transform, false);
-                    tdObjectContainer.transform.localPosition = Vector3.zero;
-                    tdObjectContainer.transform.localScale = Vector3.one;
-                    tdObjectContainer.transform.eulerAngles = Vector3.zero;
+                    ResetContainer();
                     tdObject = go;
                     tdObject.name = TdObjectBlockType.Name;
 
@@ -344,22 +346,41 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
+        private void SetPlaceHolder()
+        {
+            DestroyObject();
+            ResetContainer();
+            tdObject = GetBlock().type.CreatePlaceHolder();
+            tdObject.transform.SetParent(tdObjectContainer.transform, false);
+            tdObject.SetActive(true);
+            TdObjectCollider = tdObject.GetComponentInChildren<Collider>();
+            tdObject.name = TdObjectBlockType.Name + "(empty)";
+            tdObject.transform.SetParent(tdObjectContainer.transform, false);
+
+            if (chunk == null) return;
+            tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
+            tdObjectFocusable.Initialize(this);
+        }
+
+        private void ResetContainer()
+        {
+            tdObjectContainer = new GameObject("3d object container");
+            tdObjectContainer.transform.SetParent(transform, false);
+            tdObjectContainer.transform.localPosition = Vector3.zero;
+            tdObjectContainer.transform.localScale = Vector3.one;
+            tdObjectContainer.transform.eulerAngles = Vector3.zero;
+        }
+
         private void SetMeshCollider(Transform colliderTransform)
         {
             Destroy(tdObjectFocusable);
             Destroy(TdObjectCollider);
 
-            colliderTransform.localScale = 1.01f * colliderTransform.localScale;
-
-            var colliderRenderer = colliderTransform.gameObject.GetComponent<MeshRenderer>();
-            colliderRenderer.enabled = false;
-            colliderRenderer.material = World.INSTANCE.HighlightBlock;
-
-            TdObjectCollider = colliderTransform.gameObject.AddComponent<MeshCollider>();
+            TdObjectCollider = PrepareMeshCollider(colliderTransform);
             if (chunk != null)
             {
                 tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
-                tdObjectFocusable.Initialize(this);       
+                tdObjectFocusable.Initialize(this);
             }
         }
 
@@ -375,6 +396,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     tdObjectFocusable = tdObject.AddComponent<TdObjectFocusable>();
                     tdObjectFocusable.Initialize(this);
                 }
+
                 ((BoxCollider) TdObjectCollider).center = GetRendererCenter(tdObject);
                 ((BoxCollider) TdObjectCollider).size =
                     GetRendererSize(((BoxCollider) TdObjectCollider).center, tdObject);
@@ -408,8 +430,7 @@ namespace src.MetaBlocks.TdObjectBlock
             tdObjectContainer.transform.localPosition = offset;
             tdObjectContainer.transform.eulerAngles = rotation;
 
-            var colliderTransform = tdObject.GetComponentsInChildren<Transform>()
-                .FirstOrDefault(t => t.name.EndsWith("_collider"));
+            var colliderTransform = GetMeshColliderTransform(tdObject);
             if (colliderTransform != null && type == TdObjectBlockProperties.TdObjectType.GLB)
             {
                 // replace box collider with mesh collider if any colliders are defined in the glb object
@@ -418,22 +439,20 @@ namespace src.MetaBlocks.TdObjectBlock
 
                 if (GetBlock().land != null && !InLand(TdObjectCollider.GetComponent<MeshRenderer>()))
                 {
-                    DestroyObject();
-                    UpdateStateAndIcon(StateMsg.OutOfBound);
+                    UpdateStateAndView(StateMsg.OutOfBound);
                     return;
                 }
             }
             else if (GetBlock().land != null && !InLand((BoxCollider) TdObjectCollider))
             {
-                DestroyObject();
-                UpdateStateAndIcon(StateMsg.OutOfBound);
+                UpdateStateAndView(StateMsg.OutOfBound);
                 return;
             }
 
             TdObjectCollider.gameObject.layer =
                 detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
 
-            UpdateStateAndIcon(StateMsg.Ok);
+            UpdateStateAndView(StateMsg.Ok);
             // chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position))); // TODO: fix on focus
         }
 
@@ -454,7 +473,8 @@ namespace src.MetaBlocks.TdObjectBlock
                     if (immediate)
                     {
                         DestroyImmediate(mat.mainTexture);
-                        DestroyImmediate(mat);
+                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                            DestroyImmediate(mat);
                     }
                     else
                     {
@@ -490,15 +510,17 @@ namespace src.MetaBlocks.TdObjectBlock
             TdObjectCollider = null;
         }
 
-        public void InitializeProps(Vector3 initialPosition, float initialScale)
+        private void InitializeProps(Vector3 initialPosition, float initialScale)
         {
-            var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
-            props.initialPosition = new SerializableVector3(initialPosition);
-            props.initialScale = initialScale;
+            var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties)
+            {
+                initialPosition = new SerializableVector3(initialPosition),
+                initialScale = initialScale
+            };
             GetBlock().SetProps(props, land);
         }
 
-        public void UpdateProps()
+        private void UpdateProps()
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
             if (tdObjectContainer == null) return;
@@ -530,6 +552,53 @@ namespace src.MetaBlocks.TdObjectBlock
                 GetBlock().SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
+        }
+
+        private IEnumerator LoadBytes(string url, TdObjectBlockProperties.TdObjectType type,
+            Action<GameObject> onSuccess)
+        {
+            using var webRequest = UnityWebRequest.Get(url);
+            var op = webRequest.SendWebRequest();
+
+            while (!op.isDone)
+            {
+                if (webRequest.downloadedBytes > DownloadLimitMb * 1000000)
+                    break;
+                yield return null;
+            }
+
+            switch (webRequest.result)
+            {
+                case UnityWebRequest.Result.InProgress:
+                    UpdateStateAndView(StateMsg.SizeLimit);
+                    break;
+                case UnityWebRequest.Result.ConnectionError:
+                    Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
+                    UpdateStateAndView(StateMsg.ConnectionError);
+                    break;
+                case UnityWebRequest.Result.DataProcessingError:
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
+                    UpdateStateAndView(StateMsg.InvalidUrlOrData);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    Action onFailure = () => { UpdateStateAndView(StateMsg.InvalidData); };
+
+                    switch (type)
+                    {
+                        case TdObjectBlockProperties.TdObjectType.OBJ:
+                            ObjLoader.INSTANCE.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
+                            break;
+                        case TdObjectBlockProperties.TdObjectType.GLB:
+                            GlbLoader.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
+                            break;
+                        default:
+                            onFailure.Invoke();
+                            break;
+                    }
+
+                    break;
+            }
         }
 
         private static Vector3 GetRendererCenter(GameObject loadedObject)
@@ -571,58 +640,20 @@ namespace src.MetaBlocks.TdObjectBlock
             return bounds.size;
         }
 
-        private IEnumerator LoadBytes(string url, TdObjectBlockProperties.TdObjectType type,
-            Action<GameObject> onSuccess)
+        public static Transform GetMeshColliderTransform(GameObject tdObject)
         {
-            using var webRequest = UnityWebRequest.Get(url);
-            var op = webRequest.SendWebRequest();
+            return tdObject.GetComponentsInChildren<Transform>()
+                .FirstOrDefault(t => t.name.EndsWith("_collider"));
+        }
 
-            while (!op.isDone)
-            {
-                if (webRequest.downloadedBytes > DownloadLimitMb * 1000000)
-                    break;
-                yield return null;
-            }
+        public static MeshCollider PrepareMeshCollider(Transform colliderTransform)
+        {
+            colliderTransform.localScale = 1.01f * colliderTransform.localScale;
+            var colliderRenderer = colliderTransform.gameObject.GetComponent<MeshRenderer>();
+            colliderRenderer.enabled = false;
+            colliderRenderer.material = World.INSTANCE.HighlightBlock;
 
-            switch (webRequest.result)
-            {
-                case UnityWebRequest.Result.InProgress:
-                    DestroyObject();
-                    UpdateStateAndIcon(StateMsg.SizeLimit);
-                    break;
-                case UnityWebRequest.Result.ConnectionError:
-                    Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
-                    DestroyObject();
-                    UpdateStateAndIcon(StateMsg.ConnectionError);
-                    break;
-                case UnityWebRequest.Result.DataProcessingError:
-                case UnityWebRequest.Result.ProtocolError:
-                    Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
-                    DestroyObject();
-                    UpdateStateAndIcon(StateMsg.InvalidUrlOrData);
-                    break;
-                case UnityWebRequest.Result.Success:
-                    Action onFailure = () =>
-                    {
-                        DestroyObject();
-                        UpdateStateAndIcon(StateMsg.InvalidData);
-                    };
-
-                    switch (type)
-                    {
-                        case TdObjectBlockProperties.TdObjectType.OBJ:
-                            ObjLoader.INSTANCE.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
-                            break;
-                        case TdObjectBlockProperties.TdObjectType.GLB:
-                            GlbLoader.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
-                            break;
-                        default:
-                            onFailure.Invoke();
-                            break;
-                    }
-
-                    break;
-            }
+            return colliderTransform.gameObject.AddComponent<MeshCollider>();
         }
 
         private void OnDestroy()

@@ -125,15 +125,11 @@ namespace src
             var multipleSelect = selectVoxel && World.INSTANCE.SelectionActive &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
 
-            if (multipleSelect)
+            if (multipleSelect) // TODO [detach metablock]: add support for metablock multiselection
             {
                 var lastSelectedPosition = World.INSTANCE.lastSelectedPosition.ToWorld();
-                var possibleCurrentSelectedPosition = player.focused == null
-                    ? player.HighlightBlock.position
-                    : player.focused.GetBlockPosition();
-                if (!possibleCurrentSelectedPosition.HasValue) return;
-                var currentSelectedPosition =
-                    Vectors.FloorToInt(possibleCurrentSelectedPosition.Value); // TODO: extract method
+                if (!player.HighlightBlock.gameObject.activeSelf) return;
+                var currentSelectedPosition = Vectors.FloorToInt(player.HighlightBlock.position);
 
                 var from = new Vector3Int(Mathf.Min(lastSelectedPosition.x, currentSelectedPosition.x),
                     Mathf.Min(lastSelectedPosition.y, currentSelectedPosition.y),
@@ -155,14 +151,14 @@ namespace src
                 vps.Add(new VoxelPosition(currentSelectedPosition));
                 AddHighlights(vps);
             }
-            else if (selectVoxel)
+            else if (selectVoxel) // TODO [detach metablock]: add support for metablock multiselection
             {
-                var possibleCurrentSelectedPosition = player.focused == null
-                    ? player.HighlightBlock.position
-                    : player.focused.GetBlockPosition();
-                if (!possibleCurrentSelectedPosition.HasValue) return;
-                var currentSelectedPosition =
-                    Vectors.FloorToInt(possibleCurrentSelectedPosition.Value);
+                // var possibleCurrentSelectedPosition = player.focused == null
+                //     ? player.HighlightBlock.position
+                //     : player.focused.GetBlockPosition();
+                // if (!possibleCurrentSelectedPosition.HasValue) return;
+                if (!player.HighlightBlock.gameObject.activeSelf) return;
+                var currentSelectedPosition = Vectors.FloorToInt(player.HighlightBlock.position);
                 AddHighlight(new VoxelPosition(currentSelectedPosition));
             }
 
@@ -174,7 +170,12 @@ namespace src
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
-                    World.INSTANCE.PutBlock(new VoxelPosition(player.PlaceBlock.position),
+                    World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PlaceBlock.position),
+                        Blocks.GetBlockType(player.selectedBlockId));
+                }
+                else if (player.MetaBlockPlaceHolder != null && player.MetaBlockPlaceHolder.activeSelf)
+                {
+                    World.INSTANCE.TryPutMeta(new MetaPosition(player.MetaBlockPlaceHolder.transform.position),
                         Blocks.GetBlockType(player.selectedBlockId));
                 }
             }
@@ -183,22 +184,21 @@ namespace src
                 DeleteBlock();
         }
 
-        private void DeleteBlock()
+        private void DeleteBlock() // TODO [detach metablock]: add support for metablock removal
         {
-            var possiblePosition = player.focused == null
-                ? player.HighlightBlock.position
-                : player.focused.GetBlockPosition();
-            if (!possiblePosition.HasValue) return;
-            var position =
-                Vectors.FloorToInt(possiblePosition.Value);
-            var vp = new VoxelPosition(position);
-            var chunk = World.INSTANCE.GetChunkIfInited(vp.chunk);
-            if (chunk != null)
+            if (player.HighlightBlock.gameObject.activeSelf)
             {
-                if (player.focused == null || player.focused is ChunkFocusable)
-                    chunk.DeleteVoxel(vp, player.HighlightLand);
-                if (chunk.GetMetaAt(vp) != null)
-                    chunk.DeleteMeta(vp);
+                var position = Vectors.FloorToInt(player.HighlightBlock.position);
+                var vp = new VoxelPosition(position);
+                World.INSTANCE.TryDeleteVoxel(vp);
+                return;
+            }
+
+            if (player.focused != null && player.focused is MetaFocusable metaFocusable)
+            {
+                var position = metaFocusable.GetBlockPosition();
+                if (position != null)
+                    World.INSTANCE.TryDeleteMeta(new MetaPosition(position.Value));
             }
         }
 
@@ -375,10 +375,7 @@ namespace src
         public void AddDraggedGlbHighlight(string url)
         {
             var vp = new VoxelPosition(player.transform.position + 3 * Vector3.up);
-            World.INSTANCE.AddHighlight(vp, () =>
-                {
-                    selectionMode = SelectionMode.Dragged;
-                },
+            World.INSTANCE.AddHighlight(vp, () => { selectionMode = SelectionMode.Dragged; },
                 new Tuple<uint, MetaBlock>(Blocks.GetBlockType("#000000").id,
                     Blocks.TdObjectBlockType.Instantiate(null,
                         "{\"url\":\"" + url + "\", \"type\":\"GLB\"}")));

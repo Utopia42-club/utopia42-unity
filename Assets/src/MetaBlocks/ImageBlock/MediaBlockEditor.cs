@@ -12,11 +12,13 @@ namespace src.MetaBlocks.ImageBlock
         [SerializeField] public InputField height;
         [SerializeField] public Toggle detectCollision;
 
-        public MediaBlockProperties.FaceProps GetValue()
+        // TODO [detach metablock]: add rotation fields and adapt accordingly
+        
+        public MediaBlockProperties GetValue()
         {
             if (HasValue(url))
             {
-                var props = new MediaBlockProperties.FaceProps();
+                var props = new MediaBlockProperties();
                 props.url = url.text;
                 props.width = HasValue(width) ? int.Parse(width.text) : DEFAULT_DIMENSION;
                 props.height = HasValue(height) ? int.Parse(height.text) : DEFAULT_DIMENSION;
@@ -27,7 +29,7 @@ namespace src.MetaBlocks.ImageBlock
             return null;
         }
 
-        public void SetValue(MediaBlockProperties.FaceProps value)
+        public void SetValue(MediaBlockProperties value)
         {
             url.text = value == null ? "" : value.url;
             width.text = value == null ? DEFAULT_DIMENSION.ToString() : value.width.ToString();

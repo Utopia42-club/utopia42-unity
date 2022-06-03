@@ -65,7 +65,7 @@ namespace src.MetaBlocks.LinkBlock
                     if (Input.GetKeyDown(KeyCode.Z))
                         EditProps();
                     if (Input.GetButtonDown("Delete"))
-                        GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                        GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
                 }
                 if (props != null && !props.IsEmpty() && Input.GetKeyDown(KeyCode.O))
                     OpenLink();
@@ -95,7 +95,7 @@ namespace src.MetaBlocks.LinkBlock
             }
         }
 
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face) // TODO
+        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face) // TODO
         {
             throw new System.NotImplementedException();
         }

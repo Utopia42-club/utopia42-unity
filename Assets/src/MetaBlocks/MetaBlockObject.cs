@@ -31,7 +31,7 @@ namespace src.MetaBlocks
 
         public abstract void UnFocus();
 
-        public abstract void UpdateStateAndIcon(StateMsg msg, Voxels.Face face);
+        public abstract void UpdateStateAndView(StateMsg msg, Voxels.Face face); // TODO [detach metablock]: refactor?
 
         protected abstract List<string> GetFaceSnackLines(Voxels.Face face);
         
@@ -55,6 +55,7 @@ namespace src.MetaBlocks
 
         protected void CreateIcon(bool failed = false)
         {
+            return; // TODO [detach metablock]: remove/change function?
             if (chunk == null) return;
             if (iconObject != null)
                 Destroy(iconObject);

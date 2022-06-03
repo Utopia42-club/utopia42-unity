@@ -66,6 +66,7 @@ namespace src.MetaBlocks
         OutOfBound,
         ConnectionError,
         Ok,
+        Empty,
         SizeLimit
     }
 }

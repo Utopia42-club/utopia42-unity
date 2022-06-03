@@ -12,7 +12,7 @@ namespace src.MetaBlocks.NftBlock
 {
     public class NftBlockObject : ImageBlockObject
     {
-        private Dictionary<Voxels.Face, NftMetadata> metadata = new Dictionary<Voxels.Face, NftMetadata>();
+        private NftMetadata metadata = new NftMetadata();
 
         public override void OnDataUpdate()
         {
@@ -35,19 +35,19 @@ namespace src.MetaBlocks.NftBlock
                     if (Input.GetKeyDown(KeyCode.Z))
                         EditProps(face);
                     if (Input.GetButtonDown("Delete"))
-                        GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                        GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
                     if (Input.GetKeyDown(KeyCode.T))
                         GetIconObject().SetActive(!GetIconObject().activeSelf);
                 }
 
                 if (Input.GetKeyDown(KeyCode.O))
-                    OpenLink(face);
+                    OpenLink();
             });
 
             lastFocusedFaceIndex = face.index;
         }
 
-        protected override List<string> GetFaceSnackLines(Voxels.Face face)
+        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
         {
             var lines = new List<string>();
             if (canEdit)
@@ -61,21 +61,21 @@ namespace src.MetaBlocks.NftBlock
             }
 
             var props = GetBlock().GetProps();
-            var url = (props as NftBlockProperties)?.GetFaceProps(face)?.GetOpenseaUrl();
+            var url = (props as NftBlockProperties)?.GetOpenseaUrl();
             if (!string.IsNullOrEmpty(url))
                 lines.Add("Press O to open Opensea URL");
 
-            if (metadata.TryGetValue(face, out var faceMetadata))
+            if (metadata != null)
             {
-                if (!string.IsNullOrWhiteSpace(faceMetadata.name))
-                    lines.Add($"\nName: {faceMetadata.name.Trim()}");
-                if (!string.IsNullOrWhiteSpace(faceMetadata.description))
-                    lines.Add($"\nDescription: {faceMetadata.description.Trim()}");
+                if (!string.IsNullOrWhiteSpace(metadata.name))
+                    lines.Add($"\nName: {metadata.name.Trim()}");
+                if (!string.IsNullOrWhiteSpace(metadata.description))
+                    lines.Add($"\nDescription: {metadata.description.Trim()}");
             }
 
-            if (stateMsg[face.index] != StateMsg.Ok)
+            if (stateMsg != StateMsg.Ok)
                 lines.Add(
-                    $"\n{MetaBlockState.ToString(stateMsg[face.index], "image")}");
+                    $"\n{MetaBlockState.ToString(stateMsg, "image")}");
 
             return lines;
         }
@@ -84,29 +84,24 @@ namespace src.MetaBlocks.NftBlock
         {
             DestroyImages();
             images.Clear();
-            metadata.Clear();
+            metadata = null;
             var properties = (NftBlockProperties) GetBlock().GetProps();
             if (properties == null) return;
 
-            AddFaceProperties(Voxels.Face.BACK, properties.back);
-            AddFaceProperties(Voxels.Face.FRONT, properties.front);
-            AddFaceProperties(Voxels.Face.RIGHT, properties.right);
-            AddFaceProperties(Voxels.Face.LEFT, properties.left);
-            AddFaceProperties(Voxels.Face.TOP, properties.top);
-            AddFaceProperties(Voxels.Face.BOTTOM, properties.bottom);
+            AddFaceProperties(Voxels.Face.BACK, properties);
         }
 
-        private void AddFaceProperties(Voxels.Face face, NftBlockProperties.FaceProps props)
+        private void AddFaceProperties(Voxels.Face face, NftBlockProperties props)
         {
             if (props == null || string.IsNullOrWhiteSpace(props.collection)) return;
-            UpdateStateAndIcon(StateMsg.LoadingMetadata, face);
+            UpdateStateAndView(StateMsg.LoadingMetadata, face);
             StartCoroutine(GetMetadata(props.collection, props.tokenId, md =>
             {
-                metadata.Add(face, md);
+                metadata = md;
                 // var imageUrl = $"{Constants.ApiURL}/nft-metadata/image/{props.collection}/{props.tokenId}";
                 var imageUrl = string.IsNullOrWhiteSpace(md.image) ? md.imageUrl : md.image;
-                AddFace(face, props.ToImageFaceProp(imageUrl));
-            }, () => { UpdateStateAndIcon(StateMsg.ConnectionError, face); }));
+                AddFace(face, props.ToImageProp(imageUrl));
+            }, () => { UpdateStateAndView(StateMsg.ConnectionError, face); }));
         }
 
         private void EditProps(Voxels.Face face)
@@ -119,13 +114,13 @@ namespace src.MetaBlocks.NftBlock
             var editor = dialog.GetContent().GetComponent<NftBlockEditor>();
 
             var props = GetBlock().GetProps();
-            editor.SetValue((props as NftBlockProperties)?.GetFaceProps(face));
+            editor.SetValue(props as NftBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
                 var props = new NftBlockProperties(GetBlock().GetProps() as NftBlockProperties);
 
-                props.SetFaceProps(face, value);
+                props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
                 GetBlock().SetProps(props, land);
@@ -133,10 +128,10 @@ namespace src.MetaBlocks.NftBlock
             });
         }
 
-        private void OpenLink(Voxels.Face face)
+        private void OpenLink()
         {
             var props = GetBlock().GetProps();
-            var url = (props as NftBlockProperties)?.GetFaceProps(face)?.GetOpenseaUrl();
+            var url = (props as NftBlockProperties)?.GetOpenseaUrl();
             if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
         }
 

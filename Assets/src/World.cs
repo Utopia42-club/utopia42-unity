@@ -180,8 +180,9 @@ namespace src
                     return;
                 }
 
-                consumer.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, blockType.id,
-                    chunk.GetMetaAt(vp)));
+                // consumer.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, blockType.id,
+                //     chunk.GetMetaAt(vp)));
+                consumer.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, blockType.id)); // TODO [detach metablock] ?
                 return;
             }
 
@@ -193,10 +194,11 @@ namespace src
                     return;
                 }
 
-                WorldService.INSTANCE.GetMetaBlock(vp,
+                WorldService.INSTANCE.GetMetaBlock(new MetaPosition(vp.ToWorld()),
                     meta =>
                     {
-                        consumer.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, blockType.id, meta));
+                        // consumer.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, blockType.id, meta));
+                        consumer.Invoke(HighlightedBlock.Create(vp.local, highlightChunk, blockType.id)); // TODO [detach metablock] ?
                     });
             });
         }
@@ -250,13 +252,13 @@ namespace src
                     if (chunk != null)
                     {
                         blocks.Add(vp, land);
-                        if (chunk.GetMetaAt(vp) != null)
-                            chunk.DeleteMeta(vp);
+                        // if (chunk.GetMetaAt(vp) != null) // TODO [detach metablock] ?
+                        //     chunk.DeleteMeta(vp);
                         continue;
                     }
 
-                    WorldService.INSTANCE.GetMetaBlock(vp,
-                        meta => { WorldService.INSTANCE.OnMetaRemoved(meta, vp); });
+                    // WorldService.INSTANCE.GetMetaBlock(vp,
+                    //     meta => { WorldService.INSTANCE.OnMetaRemoved(meta, vp); }); // TODO [detach metablock] ?
                 }
             }
 
@@ -541,14 +543,34 @@ namespace src
             return null;
         }
 
-        public void PutBlock(VoxelPosition vp, BlockType type)
+        public void TryPutVoxel(VoxelPosition vp, BlockType type)
         {
             var chunk = GetChunkIfInited(vp.chunk);
             if (chunk == null) return;
-            if (type is MetaBlockType blockType)
-                chunk.PutMeta(vp, blockType, player.placeLand);
-            else
+            if (type is not MetaBlockType)
                 chunk.PutVoxel(vp, type, player.placeLand);
+        }
+
+        public void TryDeleteVoxel(VoxelPosition vp)
+        {
+            var chunk = GetChunkIfInited(vp.chunk);
+            if (chunk == null) return;
+            chunk.DeleteVoxel(vp, player.HighlightLand);
+        }
+        
+        public void TryDeleteMeta(MetaPosition mp)
+        {
+            var chunk = GetChunkIfInited(mp.chunk);
+            if (chunk == null) return;
+            chunk.DeleteMeta(mp);
+        }
+        
+        public void TryPutMeta(MetaPosition mp, BlockType type)
+        {
+            var chunk = GetChunkIfInited(mp.chunk);
+            if (chunk == null) return;
+            if (type is MetaBlockType blockType)
+                chunk.PutMeta(mp, blockType, player.placeLand);
         }
 
         public bool PutMetaWithProps(VoxelPosition vp, MetaBlockType type, object props, Land ownerLand = null)
@@ -560,13 +582,13 @@ namespace src
             var chunk = GetChunkIfInited(vp.chunk);
             if (chunk != null)
             {
-                chunk.PutMeta(vp, type, ownerLand);
-                chunk.GetMetaAt(vp).SetProps(props, ownerLand);
+                // chunk.PutMeta(vp, type, ownerLand); // TODO [detach metablock] ?
+                // chunk.GetMetaAt(vp).SetProps(props, ownerLand);
             }
             else
             {
-                DestroyGarbageChunkIfExists(vp.chunk);
-                WorldService.INSTANCE.AddMetaBlock(vp, type, ownerLand).SetProps(props, ownerLand);
+                // DestroyGarbageChunkIfExists(vp.chunk); // TODO [detach metablock] ?
+                // WorldService.INSTANCE.AddMetaBlock(vp, type, ownerLand).SetProps(props, ownerLand);
             }
 
             return true;

@@ -23,13 +23,28 @@ namespace src.Utils
             return TruncateFloor(new Vector3(x, y, z), truncatePrecision);
         }
 
-        public static Vector3Int TruncateFloor(Vector3 vector, int truncatePrecision = 3)
+        public static Vector3Int TruncateFloor(Vector3 vector, int truncatePrecision = 3, int multiplyPower = 0)
+        {
+            var constant = Mathf.Pow(10, truncatePrecision);
+            var multiply = Mathf.Pow(10, multiplyPower - truncatePrecision);
+            vector.x = Mathf.Round(vector.x * constant) * multiply;
+            vector.y = Mathf.Round(vector.y * constant) * multiply;
+            vector.z = Mathf.Round(vector.z * constant) * multiply;
+            return FloorToInt(vector);
+        }
+        
+        public static Vector3 Truncate(float x, float y, float z, int truncatePrecision = 3)
+        {
+            return Truncate(new Vector3(x, y, z), truncatePrecision);
+        }
+
+        public static Vector3 Truncate(Vector3 vector, int truncatePrecision = 3)
         {
             var constant = Mathf.Pow(10, truncatePrecision);
             vector.x = Mathf.Round(vector.x * constant) / constant;
             vector.y = Mathf.Round(vector.y * constant) / constant;
             vector.z = Mathf.Round(vector.z * constant) / constant;
-            return FloorToInt(vector);
+            return vector;
         }
 
         public static Vector3Int ParseKey(string key)

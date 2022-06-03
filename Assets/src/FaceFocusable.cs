@@ -13,10 +13,5 @@ namespace src
             this.face = face;
             initialized = true;
         }
-
-        public override Vector3? GetBlockPosition()
-        {
-            return Vectors.TruncateFloor(transform.parent.position);
-        }
     }
 }

@@ -51,7 +51,7 @@ namespace src.MetaBlocks.MarkerBlock
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
         }
 
@@ -69,7 +69,7 @@ namespace src.MetaBlocks.MarkerBlock
             }
         }
 
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face) // TODO
+        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face) // TODO
         {
             throw new System.NotImplementedException();
         }

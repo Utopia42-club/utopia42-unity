@@ -13,29 +13,26 @@ namespace src.MetaBlocks.NftBlock
         [SerializeField] public InputField height;
         [SerializeField] public Toggle detectCollision;
 
-        public NftBlockProperties.FaceProps GetValue()
+        public NftBlockProperties GetValue()
         {
-            if (HasValue(collection) && HasValue(tokenId))
+            if (!HasValue(collection) || !HasValue(tokenId)) return null;
+            return new NftBlockProperties
             {
-                var props = new NftBlockProperties.FaceProps();
-                props.collection = collection.text;
-                props.tokenId = long.Parse(tokenId.text);
-                props.width = HasValue(width) ? int.Parse(width.text) : DEFAULT_DIMENSION;
-                props.height = HasValue(height) ? int.Parse(height.text) : DEFAULT_DIMENSION;
-                props.detectCollision = detectCollision.isOn;
-                return props;
-            }
-
-            return null;
+                collection = collection.text,
+                tokenId = long.Parse(tokenId.text),
+                width = HasValue(width) ? int.Parse(width.text) : DEFAULT_DIMENSION,
+                height = HasValue(height) ? int.Parse(height.text) : DEFAULT_DIMENSION,
+                detectCollision = detectCollision.isOn
+            };
         }
 
-        public void SetValue(NftBlockProperties.FaceProps value)
+        public void SetValue(NftBlockProperties value)
         {
             collection.text = value == null ? "" : value.collection;
             tokenId.text = value == null ? "" : value.tokenId.ToString();
             width.text = value == null ? DEFAULT_DIMENSION.ToString() : value.width.ToString();
             height.text = value == null ? DEFAULT_DIMENSION.ToString() : value.height.ToString();
-            detectCollision.isOn = value == null ? true : value.detectCollision;
+            detectCollision.isOn = value?.detectCollision ?? true;
         }
 
         private bool HasValue(InputField f)

@@ -99,9 +99,9 @@ namespace src.MetaBlocks.VideoBlock
                 snackItem = Snack.INSTANCE.ShowLines(lines, () =>
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
-                        EditProps(face);
+                        EditProps();
                     if (Input.GetButtonDown("Delete"))
-                        GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                        GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
                     if (Input.GetKeyDown(KeyCode.T))
                         GetIconObject().SetActive(!GetIconObject().activeSelf);
                     if (Input.GetKeyDown(KeyCode.P))
@@ -120,7 +120,7 @@ namespace src.MetaBlocks.VideoBlock
             }
         }
 
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face) // TODO
+        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face) // TODO
         {
             throw new System.NotImplementedException();
         }
@@ -138,12 +138,7 @@ namespace src.MetaBlocks.VideoBlock
             VideoBlockProperties properties = (VideoBlockProperties) GetBlock().GetProps();
             if (properties != null)
             {
-                AddFace(Voxels.Face.BACK, properties.back);
-                AddFace(Voxels.Face.FRONT, properties.front);
-                AddFace(Voxels.Face.RIGHT, properties.right);
-                AddFace(Voxels.Face.LEFT, properties.left);
-                AddFace(Voxels.Face.TOP, properties.top);
-                AddFace(Voxels.Face.BOTTOM, properties.bottom);
+                AddFace(Voxels.Face.BACK, properties);
             }
         }
 
@@ -161,13 +156,17 @@ namespace src.MetaBlocks.VideoBlock
             }
         }
 
-        private void AddFace(Voxels.Face face, VideoBlockProperties.FaceProps props)
+        private void AddFace(Voxels.Face face, VideoBlockProperties props)
         {
             if (props == null) return;
 
+            var transform = gameObject.transform;
             var go = new GameObject();
+            go.name = "Video game object";
             go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero + ((Vector3) face.direction) * 0.1f;
+            go.transform.localPosition = Vector3.zero;
+            go.transform.eulerAngles = props.rotation.ToVector3();
+            
             var vidFace = go.AddComponent<VideoFace>();
             var meshRenderer = vidFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
@@ -191,7 +190,7 @@ namespace src.MetaBlocks.VideoBlock
             faceSelectable.Initialize(this, face);
         }
 
-        private void EditProps(Voxels.Face face)
+        private void EditProps()
         {
             var manager = GameManager.INSTANCE;
             var dialog = manager.OpenDialog();
@@ -201,13 +200,13 @@ namespace src.MetaBlocks.VideoBlock
             var editor = dialog.GetContent().GetComponent<VideoBlockEditor>();
 
             var props = GetBlock().GetProps();
-            editor.SetValue(props == null ? null : (props as VideoBlockProperties).GetFaceProps(face));
+            editor.SetValue(props as VideoBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
                 var props = new VideoBlockProperties(GetBlock().GetProps() as VideoBlockProperties);
 
-                props.SetFaceProps(face, value);
+                props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
                 GetBlock().SetProps(props, land);

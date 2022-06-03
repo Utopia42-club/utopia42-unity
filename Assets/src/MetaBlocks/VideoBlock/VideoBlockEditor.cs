@@ -12,29 +12,31 @@ namespace src.MetaBlocks.VideoBlock
         [SerializeField] private InputField previewTime;
         [SerializeField] public Toggle detectCollision;
 
-        public VideoBlockProperties.FaceProps GetValue()
+        public VideoBlockProperties GetValue()
         {
             if (HasValue(url) && HasValue(width) && HasValue(height))
             {
-                var props = new VideoBlockProperties.FaceProps();
-                props.url = url.text;
-                props.width = int.Parse(width.text);
-                props.height = int.Parse(height.text);
-                props.previewTime = HasValue(previewTime) ? float.Parse(previewTime.text) : 0f;
-                props.detectCollision = detectCollision.isOn;
+                var props = new VideoBlockProperties
+                {
+                    url = url.text,
+                    width = int.Parse(width.text),
+                    height = int.Parse(height.text),
+                    previewTime = HasValue(previewTime) ? float.Parse(previewTime.text) : 0f,
+                    detectCollision = detectCollision.isOn
+                };
                 return props;
             }
 
             return null;
         }
 
-        public void SetValue(VideoBlockProperties.FaceProps value)
+        public void SetValue(VideoBlockProperties value)
         {
             url.text = value == null ? "" : value.url;
             width.text = value == null ? "" : value.width.ToString();
             height.text = value == null ? "" : value.height.ToString();
             previewTime.text = value == null ? "0" : value.previewTime.ToString();
-            detectCollision.isOn = value == null ? true : value.detectCollision;
+            detectCollision.isOn = value?.detectCollision ?? true;
         }
 
         private bool HasValue(InputField f)

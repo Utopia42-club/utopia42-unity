@@ -21,7 +21,7 @@ namespace src
 
         public static HighlightedBlock Create(Vector3Int localPos, HighlightChunk highlightChunk,
             uint blockTypeId,
-            MetaBlock meta = null)
+            MetaBlock meta = null) // TODO [detach metablock]: separate the support for meta highlight?
         {
             var highlightedBlock = highlightChunk.gameObject.AddComponent<HighlightedBlock>();
             highlightedBlock.Position = localPos;

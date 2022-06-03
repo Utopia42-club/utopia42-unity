@@ -50,6 +50,7 @@ namespace src
         private Vector3Int playerPos;
         public Transform tdObjectHighlightMesh;
 
+        public GameObject MetaBlockPlaceHolder { private set; get; }
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
@@ -136,10 +137,10 @@ namespace src
         {
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
+                var focusable = raycastHit.collider.GetComponent<Focusable>();
                 if (hitCollider == raycastHit.collider &&
-                    hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
+                    focusable != null && focusable is MetaFocusable) return;
                 hitCollider = raycastHit.collider;
-                var focusable = hitCollider.GetComponent<Focusable>();
                 if (focusable != null)
                 {
                     focusedMetaFace = null;
@@ -147,13 +148,15 @@ namespace src
                         focused.UnFocus();
                     focusable.Focus(raycastHit.point);
                     focused = focusable;
+                    if (focusable is MetaFocusable)
+                        HideCursorBlocksAndPlaceHolder();
+
                     return;
                 }
             }
             else
             {
-                highlightBlock.gameObject.SetActive(false);
-                placeBlock.gameObject.SetActive(false);
+                HideCursorBlocksAndPlaceHolder();
                 if (focusedMetaBlock != null)
                     focusedMetaBlock.UnFocus();
             }
@@ -163,6 +166,14 @@ namespace src
             focusedMetaFace = null;
             focused = null;
             hitCollider = null;
+        }
+
+        private void HideCursorBlocksAndPlaceHolder()
+        {
+            highlightBlock.gameObject.SetActive(false);
+            placeBlock.gameObject.SetActive(false);
+            if (MetaBlockPlaceHolder != null)
+                MetaBlockPlaceHolder.gameObject.SetActive(false);
         }
 
         private void Update()
@@ -208,91 +219,122 @@ namespace src
                 floating = !floating;
         }
 
-        public void SetHammerActive(bool active)
+        public void ToolbarSelectedChanged(bool hammerSelected)
         {
-            if (HammerMode == active) return;
-            HammerMode = active;
-            placeBlock.gameObject.SetActive(!active);
+            if (HammerMode == false && hammerSelected)
+            {
+                HammerMode = true;
+                placeBlock.gameObject.SetActive(false);
+                if (MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.gameObject.SetActive(false);
+                return;
+            }
+
+            HammerMode = hammerSelected;
+
+            if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType type)
+            {
+                HideCursorBlocksAndPlaceHolder();
+                MetaBlockPlaceHolder = type.GetPlaceHolder();
+                if (MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.SetActive(true);
+                return;
+            }
+
+            if (MetaBlockPlaceHolder != null)
+                MetaBlockPlaceHolder.SetActive(false);
+            placeBlock.gameObject.SetActive(true);
         }
 
-        public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk)
+        public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk) // TODO [detach metablock]: better name?
         {
             var epsilon = cam.forward * CastStep;
             PlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
             var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
             var vp = new VoxelPosition(posInt);
-            var metaToFocus = chunk.GetMetaAt(vp);
-            var foundSolid = chunk.GetBlock(vp.local).isSolid;
+            // var metaToFocus = chunk.GetMetaAt(vp);
+            // var foundSolid = chunk.GetBlock(vp.local).isSolid;
 
-            if (BlockSelectionController.INSTANCE.selectionMode == BlockSelectionController.SelectionMode.Dragged && World.INSTANCE.SelectionActive)
+            if (BlockSelectionController.INSTANCE.selectionMode == BlockSelectionController.SelectionMode.Dragged &&
+                World.INSTANCE.SelectionActive)
             {
-                highlightBlock.gameObject.SetActive(false);
-                placeBlock.gameObject.SetActive(false);
-                
-                if(CanEdit(PlaceBlockPosInt, out _))
+                HideCursorBlocksAndPlaceHolder();
+
+                if (CanEdit(PlaceBlockPosInt, out _))
                     World.INSTANCE.MoveSelection(PlaceBlockPosInt, false);
             }
-            else if (foundSolid)
+            else if (HammerMode)
             {
                 highlightBlock.position = posInt;
-                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
+                highlightBlock.gameObject.SetActive(true);
+                placeBlock.gameObject.SetActive(false);
+                if (MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.SetActive(false);
+            }
+            else if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType)
+            {
+                // TODO [detach metablock]: if the focus is not already on a metablock, display the placeholder for the selected(Meta)BlockId
 
-                if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType && !HammerMode)
+                placeBlock.gameObject.SetActive(false);
+                highlightBlock.gameObject.SetActive(false);
+
+
+                if (MetaBlockPlaceHolder != null)
                 {
-                    if (chunk.GetMetaAt(vp) == null)
+                    var mp = new MetaPosition(blockHitPoint);
+                    if (chunk.GetMetaAt(mp) == null && CanEdit(posInt, out placeLand))
                     {
-                        placeBlock.position = posInt;
-                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) && CanEdit(posInt, out placeLand));
+                        MetaBlockPlaceHolder.transform.position = mp.ToWorld();
+                        MetaBlockPlaceHolder.gameObject.SetActive(true);
                     }
                     else
-                        placeBlock.gameObject.SetActive(false);
+                        MetaBlockPlaceHolder.gameObject.SetActive(false);
                 }
                 else
-                {
-                    var currVox = Vectors.FloorToInt(transform.position);
-                    if (PlaceBlockPosInt != currVox && PlaceBlockPosInt != currVox + Vector3Int.up)
-                    {
-                        placeBlock.position = PlaceBlockPosInt;
-                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) &&
-                                                        CanEdit(PlaceBlockPosInt, out placeLand));
-                    }
-                    else
-                        placeBlock.gameObject.SetActive(false);
-                }
+                    Debug.LogWarning("Null place holder!"); // TODO [detach metablock]: possible?
             }
             else
             {
-                highlightBlock.gameObject.SetActive(false);
-                placeBlock.gameObject.SetActive(false);
-            }
-
-            Voxels.Face faceToFocus = null;
-            if (metaToFocus != null)
-            {
-                if (!metaToFocus.IsPositioned()) metaToFocus = null;
+                highlightBlock.position = posInt;
+                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
+                var currVox = Vectors.FloorToInt(transform.position);
+                if (PlaceBlockPosInt != currVox && PlaceBlockPosInt != currVox + Vector3Int.up)
+                {
+                    placeBlock.position = PlaceBlockPosInt;
+                    placeBlock.gameObject.SetActive(CanEdit(PlaceBlockPosInt, out placeLand));
+                }
                 else
-                {
-                    faceToFocus = FindFocusedFace(blockHitPoint - posInt);
-                    if (faceToFocus == null) metaToFocus = null;
-                }
+                    placeBlock.gameObject.SetActive(false);
             }
 
-            if (focusedMetaBlock != metaToFocus || faceToFocus != focusedMetaFace)
-            {
-                if (focusedMetaBlock != null)
-                    focusedMetaBlock.UnFocus();
-                focusedMetaBlock = metaToFocus;
-                focusedMetaFace = faceToFocus;
+            // TODO [detach metablock] ?
+            // Voxels.Face faceToFocus = null;
+            // if (metaToFocus != null)
+            // {
+            //     if (!metaToFocus.IsPositioned()) metaToFocus = null;
+            //     else
+            //     {
+            //         faceToFocus = FindFocusedFace(blockHitPoint - posInt);
+            //         if (faceToFocus == null) metaToFocus = null;
+            //     }
+            // }
 
-                if (focusedMetaBlock != null && !World.INSTANCE.SelectionActive)
-                {
-                    if (!focusedMetaBlock.Focus(focusedMetaFace))
-                    {
-                        focusedMetaBlock = null;
-                        focusedMetaFace = null;
-                    }
-                }
-            }
+            // if (focusedMetaBlock != metaToFocus || faceToFocus != focusedMetaFace)
+            // {
+            //     if (focusedMetaBlock != null)
+            //         focusedMetaBlock.UnFocus();
+            //     focusedMetaBlock = metaToFocus;
+            //     focusedMetaFace = faceToFocus;
+            //
+            //     if (focusedMetaBlock != null && !World.INSTANCE.SelectionActive)
+            //     {
+            //         if (!focusedMetaBlock.Focus(focusedMetaFace))
+            //         {
+            //             focusedMetaBlock = null;
+            //             focusedMetaFace = null;
+            //         }
+            //     }
+            // }
         }
 
 

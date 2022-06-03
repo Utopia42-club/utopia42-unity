@@ -118,7 +118,7 @@ namespace src.MetaBlocks.LightBlock
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
         }
 
@@ -136,7 +136,7 @@ namespace src.MetaBlocks.LightBlock
             }
         }
 
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face)
+        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face)
         {
             throw new System.NotImplementedException();
         }

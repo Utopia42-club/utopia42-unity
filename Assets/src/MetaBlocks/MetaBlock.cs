@@ -23,7 +23,7 @@ namespace src.MetaBlocks
             this.properties = properties;
         }
 
-        public void RenderAt(Transform parent, Vector3Int position, Chunk chunk)
+        public void RenderAt(Transform parent, Vector3 position, Chunk chunk)
         {
             if (blockObject != null) throw new Exception("Already rendered.");
             GameObject go = new GameObject("MetaBlock");
@@ -43,7 +43,7 @@ namespace src.MetaBlocks
             return blockObject.transform.position;
         }
 
-        public bool Focus(Voxels.Face face)
+        public bool Focus(Voxels.Face face) 
         {
             if (blockObject != null && blockObject.IsReady())
             {
