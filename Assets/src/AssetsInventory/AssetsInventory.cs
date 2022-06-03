@@ -14,10 +14,12 @@ public class AssetsInventory : MonoBehaviour
     private AssetsRestClient restClient = new AssetsRestClient();
     private int currentTab;
     private Dictionary<int, Pack> packs = new Dictionary<int, Pack>();
+    private VisualElement loadingLayer;
 
     void Start()
     {
         root = GetComponent<UIDocument>().rootVisualElement;
+        loadingLayer = root.Q<VisualElement>("loadingLayer");
         tabs = new Dictionary<int, Tuple<Button, string>>();
 
         tabBody = root.Q<VisualElement>("tabBody");
@@ -29,6 +31,12 @@ public class AssetsInventory : MonoBehaviour
 
         foreach (var tab in tabs)
             tab.Value.Item1.clicked += () => OpenTab(tab.Key);
+    }
+
+    private void ShowLoadingLayer(bool show)
+    {
+        loadingLayer.style.display =
+            show ? new StyleEnum<DisplayStyle>(DisplayStyle.Flex) : new StyleEnum<DisplayStyle>(DisplayStyle.None);
     }
 
     private void OpenTab(int index)
@@ -60,7 +68,7 @@ public class AssetsInventory : MonoBehaviour
     {
         var searchCriteria = new SearchCriteria();
         searchCriteria.limit = 100;
-
+        ShowLoadingLayer(true);
         StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
         {
             foreach (var pack in packs)
@@ -80,6 +88,7 @@ public class AssetsInventory : MonoBehaviour
             listView.bindItem = (item, index) => ListViewBindItem(item, categories, index, assetDefaultImage);
             listView.itemsSource = categories;
             listView.Rebuild();
+            ShowLoadingLayer(false);
         }, () => { }));
         var searchField = tabBody.Q<TextField>("searchField");
         searchField.RegisterCallback<FocusInEvent>(evt =>
@@ -144,6 +153,7 @@ public class AssetsInventory : MonoBehaviour
             breadcrumb.Clear();
             breadcrumb.Add(backButton);
         }
+
         body.Add(visualElement);
     }
 
@@ -159,12 +169,13 @@ public class AssetsInventory : MonoBehaviour
         ss.height = new StyleLength(new Length(90, LengthUnit.Percent));
         ss.width = new StyleLength(new Length(90, LengthUnit.Percent));
         ss.flexGrow = 1;
-        
+
         var searchCriteria = new SearchCriteria
         {
             limit = 100,
             searchTerms = new Dictionary<string, object> {{"category", category.id}}
         };
+        ShowLoadingLayer(true);
         StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
         {
             var assetGroups = GroupAssetsByPack(assets);
@@ -188,6 +199,7 @@ public class AssetsInventory : MonoBehaviour
                 foldout.contentContainer.style.height = 90 * (size / 3 + 1);
                 scrollView.Add(foldout);
             }
+            ShowLoadingLayer(false);
         }, () => { }, this));
         return scrollView;
     }
