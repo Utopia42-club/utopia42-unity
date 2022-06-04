@@ -4,8 +4,6 @@ using src.AssetsInventory;
 using src.AssetsInventory.Models;
 using src.Canvas;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.PlayerLoop;
 using UnityEngine.UIElements;
 
 public class AssetsInventory : MonoBehaviour
@@ -13,9 +11,9 @@ public class AssetsInventory : MonoBehaviour
     private VisualElement root;
     private VisualElement tabBody;
     private Dictionary<int, Tuple<Button, string>> tabs;
-    private AssetsRestClient restClient = new AssetsRestClient();
+    private readonly AssetsRestClient restClient = new AssetsRestClient();
     private int currentTab;
-    private Dictionary<int, Pack> packs = new Dictionary<int, Pack>();
+    private readonly Dictionary<int, Pack> packs = new Dictionary<int, Pack>();
     private VisualElement loadingLayer;
     private Category selectedCategory;
     private Sprite assetDefaultImage;
@@ -90,9 +88,10 @@ public class AssetsInventory : MonoBehaviour
         {
             foreach (var pack in packs)
                 this.packs[pack.id] = pack;
-        }, () => { }));
+        }, () => { ShowLoadingLayer(false); }));
 
         assetDefaultImage = Resources.Load<Sprite>("Icons/loading");
+        ShowLoadingLayer(true);
         StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
         {
             if (currentTab != 1)
@@ -106,7 +105,7 @@ public class AssetsInventory : MonoBehaviour
             listView.itemsSource = categories;
             listView.Rebuild();
             ShowLoadingLayer(false);
-        }, () => { }));
+        }, () => { ShowLoadingLayer(false); }));
 
         // Setup searchField
         var searchField = tabBody.Q<TextField>("searchField");
@@ -224,7 +223,7 @@ public class AssetsInventory : MonoBehaviour
             }
 
             ShowLoadingLayer(false);
-        }, () => { }, this));
+        }, () => { ShowLoadingLayer(false); }, this));
         return scrollView;
     }
 
@@ -267,10 +266,11 @@ public class AssetsInventory : MonoBehaviour
         return dictionary;
     }
 
-    private TemplateContainer CreateSlot(Asset asset, int i)
+    private VisualElement CreateSlot(Asset asset, int i)
     {
         var slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot").CloneTree();
         var slotIcon = slot.Q<VisualElement>("slotIcon");
+        slotIcon.tooltip = asset.name; //FIXME not working
         StartCoroutine(
             UiImageLoader.SetBackGroundImageFromUrl(asset.thumbnailUrl,
                 assetDefaultImage, slotIcon)
