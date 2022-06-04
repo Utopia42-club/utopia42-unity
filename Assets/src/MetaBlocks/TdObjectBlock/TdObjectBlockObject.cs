@@ -318,13 +318,12 @@ namespace src.MetaBlocks.TdObjectBlock
             }
 
             var scale = properties.scale?.ToVector3() ?? Vector3.one;
-            var offset = properties.offset?.ToVector3() ?? Vector3.zero;
             var rotation = properties.rotation?.ToVector3() ?? Vector3.zero;
             var initialPosition = properties.initialPosition?.ToVector3() ?? Vector3.zero;
 
             if (currentUrl.Equals(properties.url) && tdObjectContainer != null)
             {
-                LoadGameObject(scale, offset, rotation, initialPosition, properties.initialScale,
+                LoadGameObject(scale, rotation, initialPosition, properties.initialScale,
                     properties.detectCollision, properties.type);
             }
             else
@@ -340,7 +339,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     tdObject = go;
                     tdObject.name = TdObjectBlockType.Name;
 
-                    LoadGameObject(scale, offset, rotation, initialPosition, properties.initialScale,
+                    LoadGameObject(scale, rotation, initialPosition, properties.initialScale,
                         properties.detectCollision, properties.type, reinitialize);
                 }));
             }
@@ -384,7 +383,7 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        private void LoadGameObject(Vector3 scale, Vector3 offset, Vector3 rotation, Vector3 initialPosition,
+        private void LoadGameObject(Vector3 scale, Vector3 rotation, Vector3 initialPosition,
             float initialScale, bool detectCollision, TdObjectBlockProperties.TdObjectType type,
             bool reinitialize = false)
         {
@@ -427,7 +426,6 @@ namespace src.MetaBlocks.TdObjectBlock
             tdObject.transform.localPosition = initialPosition;
 
             tdObjectContainer.transform.localScale = scale;
-            tdObjectContainer.transform.localPosition = offset;
             tdObjectContainer.transform.eulerAngles = rotation;
 
             var colliderTransform = GetMeshColliderTransform(tdObject);
@@ -524,7 +522,6 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
             if (tdObjectContainer == null) return;
-            props.offset = new SerializableVector3(tdObjectContainer.transform.localPosition);
             props.rotation = new SerializableVector3(tdObjectContainer.transform.eulerAngles);
             props.scale = new SerializableVector3(tdObjectContainer.transform.localScale);
             GetBlock().SetProps(props, land);

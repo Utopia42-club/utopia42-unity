@@ -155,15 +155,6 @@ namespace src.MetaBlocks.ImageBlock
                 return;
             }
 
-            // foreach (var stateMsg in stateMsg)
-            // {
-                if (message != StateMsg.LoadingMetadata && stateMsg != StateMsg.Loading && stateMsg != StateMsg.Ok)
-                {
-                    CreateIcon(true);
-                    return;
-                }
-            // }
-
             if (canEdit)
                 CreateIcon();
         }
