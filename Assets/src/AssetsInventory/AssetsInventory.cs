@@ -4,6 +4,8 @@ using src.AssetsInventory;
 using src.AssetsInventory.Models;
 using src.Canvas;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.PlayerLoop;
 using UnityEngine.UIElements;
 
 public class AssetsInventory : MonoBehaviour
@@ -15,6 +17,9 @@ public class AssetsInventory : MonoBehaviour
     private int currentTab;
     private Dictionary<int, Pack> packs = new Dictionary<int, Pack>();
     private VisualElement loadingLayer;
+    private Category selectedCategory;
+    private Sprite assetDefaultImage;
+    private string filterText = "";
 
     void Start()
     {
@@ -31,6 +36,15 @@ public class AssetsInventory : MonoBehaviour
 
         foreach (var tab in tabs)
             tab.Value.Item1.clicked += () => OpenTab(tab.Key);
+    }
+
+    private void Update()
+    {
+        if (filterText.Length > 0)
+        {
+            FilterAssets(filterText);
+            filterText = "";
+        }
     }
 
     private void ShowLoadingLayer(bool show)
@@ -51,7 +65,7 @@ public class AssetsInventory : MonoBehaviour
         OnTabChanged(index);
     }
 
-    void OnTabChanged(int tabIndex)
+    private void OnTabChanged(int tabIndex)
     {
         currentTab = tabIndex;
         switch (tabIndex)
@@ -66,8 +80,11 @@ public class AssetsInventory : MonoBehaviour
 
     private void ShowAssetsTab()
     {
-        var searchCriteria = new SearchCriteria();
-        searchCriteria.limit = 100;
+        selectedCategory = null;
+        var searchCriteria = new SearchCriteria
+        {
+            limit = 100
+        };
         ShowLoadingLayer(true);
         StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
         {
@@ -75,40 +92,66 @@ public class AssetsInventory : MonoBehaviour
                 this.packs[pack.id] = pack;
         }, () => { }));
 
+        assetDefaultImage = Resources.Load<Sprite>("Icons/loading");
         StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
         {
             if (currentTab != 1)
                 return;
-            var assetDefaultImage = Resources.Load<Sprite>("Icons/loading");
             var listView = tabBody.Q<ListView>("categories");
             var scrollView = listView.Q<ScrollView>();
             scrollView.mode = ScrollViewMode.Vertical;
             scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
-            listView.makeItem = CreateListViewItem;
-            listView.bindItem = (item, index) => ListViewBindItem(item, categories, index, assetDefaultImage);
+            listView.makeItem = CreateCategoriesListViewItem;
+            listView.bindItem = (item, index) => CategoriesListViewBindItem(item, categories, index);
             listView.itemsSource = categories;
             listView.Rebuild();
             ShowLoadingLayer(false);
         }, () => { }));
+
+        // Setup searchField
         var searchField = tabBody.Q<TextField>("searchField");
         searchField.RegisterCallback<FocusInEvent>(evt =>
         {
             if (searchField.text == "Search")
-            {
                 searchField.SetValueWithoutNotify("");
-            }
         });
         searchField.RegisterCallback<FocusOutEvent>(evt =>
         {
             if (searchField.text == "")
-            {
                 searchField.SetValueWithoutNotify("Search");
-            }
         });
-        searchField.RegisterValueChangedCallback(evt => { Debug.Log(evt.newValue); });
+        var debounce = Utils.Debounce<string>(arg => filterText = arg);
+        searchField.RegisterValueChangedCallback(evt => { debounce(evt.newValue); });
     }
 
-    private void ListViewBindItem(VisualElement item, List<Category> categories, int index, Sprite assetDefaultImage)
+    private void FilterAssets(string filter)
+    {
+        var sc = new SearchCriteria
+        {
+            limit = 100
+        };
+        if (selectedCategory != null)
+            sc.searchTerms = new Dictionary<string, object>
+            {
+                {"category", selectedCategory.id},
+                {"generalSearch", filter},
+            };
+        var scrollView = CreateAssetsScrollView(sc);
+        SetBodyContent(selectedCategory == null ? tabBody : tabBody.Q<VisualElement>("content")
+            , scrollView, () => OpenTab(1), "Categories");
+    }
+
+    private static VisualElement CreateCategoriesListViewItem()
+    {
+        var container = new VisualElement();
+        var button = Resources.Load<VisualTreeAsset>("UiDocuments/CategoryButton")
+            .CloneTree();
+        container.style.paddingTop = container.style.paddingBottom = 3;
+        container.Add(button);
+        return container;
+    }
+
+    private void CategoriesListViewBindItem(VisualElement item, List<Category> categories, int index)
     {
         var button = item.Q<Button>();
         var label = item.Q<Label>("label");
@@ -119,17 +162,70 @@ public class AssetsInventory : MonoBehaviour
         StartCoroutine(UiImageLoader.SetBackGroundImageFromUrl(category.thumbnailUrl,
             Resources.Load<Sprite>("Icons/loading"), image));
 
-        item.userData = category;
         button.clickable.clicked += () =>
         {
-            var scrollView = CreateAssetsScrollView(assetDefaultImage, category);
-            var assetsTabBody = tabBody.Q<VisualElement>("content");
+            selectedCategory = category;
+            var searchCriteria = new SearchCriteria
+            {
+                limit = 100,
+                searchTerms = new Dictionary<string, object> {{"category", category.id}}
+            };
+            var scrollView = CreateAssetsScrollView(searchCriteria);
+
+            var assetsTabContent = tabBody.Q<VisualElement>("content");
             var listView = tabBody.Q<ListView>("categories");
-            assetsTabBody.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
+            assetsTabContent.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
             listView.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
-            SetBodyContent(assetsTabBody,
+
+            SetBodyContent(assetsTabContent,
                 scrollView, () => OpenTab(1), "Categories");
         };
+    }
+
+
+    private ScrollView CreateAssetsScrollView(SearchCriteria searchCriteria)
+    {
+        var scrollView = new ScrollView(ScrollViewMode.Vertical)
+        {
+            scrollDecelerationRate = 0.135f,
+            verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible
+        };
+        scrollView.RegisterCallback<WheelEvent>(evt => { evt.StopPropagation(); });
+        Utils.IncreaseScrollSpeed(scrollView, 600);
+        scrollView.AddToClassList("utopia-scrollView");
+        var ss = scrollView.style;
+        ss.height = new StyleLength(new Length(90, LengthUnit.Percent));
+        ss.width = new StyleLength(new Length(90, LengthUnit.Percent));
+        ss.flexGrow = 1;
+
+        ShowLoadingLayer(true);
+        StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
+        {
+            var assetGroups = GroupAssetsByPack(assets);
+            foreach (var assetGroup in assetGroups)
+            {
+                var foldout = new Foldout
+                {
+                    text = packs[assetGroup.Key].name
+                };
+                foldout.SetValueWithoutNotify(true);
+                foldout.AddToClassList("utopia-foldout");
+                var fs = foldout.style;
+                fs.marginRight = fs.marginLeft = fs.marginBottom = fs.marginTop = 5;
+                var size = assetGroup.Value.Count;
+                for (var i = 0; i < size; i++)
+                {
+                    var slot = CreateSlot(assetGroup.Value[i], i);
+                    foldout.contentContainer.Add(slot);
+                }
+
+                foldout.contentContainer.style.height = 90 * (size / 3 + 1);
+                scrollView.Add(foldout);
+            }
+
+            ShowLoadingLayer(false);
+        }, () => { }, this));
+        return scrollView;
     }
 
     private void SetBodyContent(VisualElement body, VisualElement visualElement, Action onBack,
@@ -157,53 +253,6 @@ public class AssetsInventory : MonoBehaviour
         body.Add(visualElement);
     }
 
-    private ScrollView CreateAssetsScrollView(Sprite assetDefaultImage, Category category)
-    {
-        var scrollView = new ScrollView(ScrollViewMode.Vertical);
-        scrollView.scrollDecelerationRate = 0.135f;
-        scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
-        scrollView.RegisterCallback<WheelEvent>(evt => { evt.StopPropagation(); });
-        IncreaseScrollSpeed(scrollView, 600);
-        scrollView.AddToClassList("utopia-scrollView");
-        var ss = scrollView.style;
-        ss.height = new StyleLength(new Length(90, LengthUnit.Percent));
-        ss.width = new StyleLength(new Length(90, LengthUnit.Percent));
-        ss.flexGrow = 1;
-
-        var searchCriteria = new SearchCriteria
-        {
-            limit = 100,
-            searchTerms = new Dictionary<string, object> {{"category", category.id}}
-        };
-        ShowLoadingLayer(true);
-        StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
-        {
-            var assetGroups = GroupAssetsByPack(assets);
-            foreach (var assetGroup in assetGroups)
-            {
-                var foldout = new Foldout
-                {
-                    text = packs[assetGroup.Key].name
-                };
-                foldout.SetValueWithoutNotify(true);
-                foldout.AddToClassList("utopia-foldout");
-                var fs = foldout.style;
-                fs.marginRight = fs.marginLeft = fs.marginBottom = fs.marginTop = 5;
-                var size = assetGroup.Value.Count;
-                for (var i = 0; i < size; i++)
-                {
-                    var slot = CreateSlot(assetGroup.Value[i], i, assetDefaultImage);
-                    foldout.contentContainer.Add(slot);
-                }
-
-                foldout.contentContainer.style.height = 90 * (size / 3 + 1);
-                scrollView.Add(foldout);
-            }
-            ShowLoadingLayer(false);
-        }, () => { }, this));
-        return scrollView;
-    }
-
     private Dictionary<int, List<Asset>> GroupAssetsByPack(List<Asset> assets)
     {
         var dictionary = new Dictionary<int, List<Asset>>();
@@ -218,20 +267,9 @@ public class AssetsInventory : MonoBehaviour
         return dictionary;
     }
 
-    private static VisualElement CreateListViewItem()
+    private TemplateContainer CreateSlot(Asset asset, int i)
     {
-        var container = new VisualElement();
-        var button = Resources.Load<VisualTreeAsset>("UiDocuments/CategoryButton")
-            .CloneTree();
-        container.style.paddingTop = container.style.paddingBottom = 3;
-        container.Add(button);
-        return container;
-    }
-
-    private TemplateContainer CreateSlot(Asset asset, int i, Sprite assetDefaultImage)
-    {
-        var slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot")
-            .CloneTree();
+        var slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot").CloneTree();
         var slotIcon = slot.Q<VisualElement>("slotIcon");
         StartCoroutine(
             UiImageLoader.SetBackGroundImageFromUrl(asset.thumbnailUrl,
@@ -247,17 +285,5 @@ public class AssetsInventory : MonoBehaviour
         s.left = rem * 90;
         s.top = div * 90;
         return slot;
-    }
-
-    private static void IncreaseScrollSpeed(ScrollView scrollView, float factor)
-    {
-        //Workaround to increase scroll speed...
-        //There is this issue that verticalPageSize has no effect on speed
-        scrollView.RegisterCallback<WheelEvent>((evt) =>
-        {
-            scrollView.scrollOffset = new Vector2(0,
-                scrollView.scrollOffset.y + factor * evt.delta.y);
-            evt.StopPropagation();
-        });
     }
 }

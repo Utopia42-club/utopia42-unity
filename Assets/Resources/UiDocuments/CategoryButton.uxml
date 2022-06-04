@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
     <ui:Button display-tooltip-when-elided="true" class="utopia-button right-align-text-button" style="flex-grow: 1; flex-shrink: 1; -unity-text-align: middle-center; flex-direction: row; justify-content: flex-start; align-items: center;">
-        <ui:VisualElement name="image" style="width: 30%; height: 100%; background-color: rgba(0, 0, 0, 0.96); min-width: 30%;" />
+        <ui:VisualElement name="image" style="width: 30%; height: 100%; background-color: rgba(255, 255, 255, 0); min-width: 30%;" />
         <ui:Label text="Label" display-tooltip-when-elided="true" name="label" style="flex-grow: 1;" />
         <ui:VisualElement name="arrow" style="width: 10%; height: 30px; background-image: url(&apos;project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=-1087164816274819069&amp;guid=a80665435d1ae52f687d90cdd44fb201&amp;type=3#arrow-right@2x&apos;); min-width: 10%;" />
     </ui:Button>
