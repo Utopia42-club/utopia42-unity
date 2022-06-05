@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 452258355}
-  m_IndirectSpecularColor: {r: 0.43668708, g: 0.48427868, b: 0.5645302, a: 1}
+  m_IndirectSpecularColor: {r: 0.43667576, g: 0.484272, b: 0.5645239, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -984,8 +984,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1050669707}
   m_HandleRect: {fileID: 1050669706}
   m_Direction: 2
-  m_Value: 0
-  m_Size: 1
+  m_Value: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1285,7 +1285,7 @@ MonoBehaviour:
     owner: 
     ownerIndex: 0
   tdObjectHighlightMesh: {fileID: 0}
-  firstPersonCameraPosition: {x: 0, y: 1.74, z: 0.5}
+  firstPersonCameraPosition: {x: 0, y: 1.74, z: 0}
   thirdPersonCameraPosition: {x: 0, y: 1.74, z: -3.5}
   viewModeChanged:
     m_PersistentCalls:
@@ -4526,7 +4526,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 236.65498, y: -77.62999}
+  m_AnchoredPosition: {x: 236.65498, y: -77.62997}
   m_SizeDelta: {x: 368.81, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &442934151

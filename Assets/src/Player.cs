@@ -58,8 +58,8 @@ namespace src
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
 
-        public Vector3 firstPersonCameraPosition;
-        public Vector3 thirdPersonCameraPosition;
+        [SerializeField] private Vector3 firstPersonCameraPosition;
+        [SerializeField] private Vector3 thirdPersonCameraPosition;
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
         public UnityEvent<ViewMode> viewModeChanged;
 
