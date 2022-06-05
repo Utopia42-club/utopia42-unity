@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using src.Canvas;
 using src.Model;
 using src.Service;
-using src.Utils;
 using UnityEngine;
 
 namespace src.MetaBlocks.ImageBlock
 {
     public class ImageBlockObject : MetaBlockObject
     {
-        private GameObject image;
+        protected GameObject image;
+        protected GameObject imageContainer;
         protected SnackItem snackItem;
+        protected ObjectScaleRotationController scaleRotationController;
 
         protected override void Start()
         {
@@ -26,28 +27,50 @@ namespace src.MetaBlocks.ImageBlock
 
         public override void OnDataUpdate()
         {
-            RenderFaces();
+            RenderFace();
         }
 
         protected override void DoInitialize()
         {
             base.DoInitialize();
-            RenderFaces();
+            RenderFace();
         }
 
         public override void Focus()
         {
-            if (!canEdit) return;
             if (snackItem != null) snackItem.Remove();
+            SetupDefaultSnack();
+            if (!canEdit) return;
+            // TODO [detach metablock]: show highlight
+        }
+
+        protected virtual void SetupDefaultSnack()
+        {
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
+                if (!canEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
+                {
+                    RemoveFocusHighlight();
                     EditProps();
+                }
+
+                if (Input.GetKeyDown(KeyCode.V))
+                {
+                    RemoveFocusHighlight();
+                    GameManager.INSTANCE.ToggleMovingObjectState(this);
+                }
+
                 if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new MetaPosition(transform.position));
-                if (Input.GetKeyDown(KeyCode.T))
-                    GetIconObject().SetActive(!GetIconObject().activeSelf);
+                {
+                    World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
+                }
             });
         }
 
@@ -60,59 +83,81 @@ namespace src.MetaBlocks.ImageBlock
             }
         }
 
-        private void RenderFaces()
+        protected virtual void RenderFace()
         {
             DestroyImage();
-            MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
-            if (properties != null)
-            {
-                AddFace(Voxels.Face.BACK, properties);
-            }
+            AddFace((MediaBlockProperties) GetBlock().GetProps());
         }
 
         protected void DestroyImage(bool immediate = true)
         {
-            if (image == null) return;
-            var selectable = image.GetComponent<MetaFocusable>();
-            if (selectable != null)
-                selectable.UnFocus();
-            if (immediate)
-                DestroyImmediate(image);
-            else
-                Destroy(image);
-            image = null;
+            if (image != null)
+            {
+                var selectable = image.GetComponent<MetaFocusable>();
+                if (selectable != null)
+                    selectable.UnFocus();
+                if (immediate)
+                    DestroyImmediate(image);
+                else
+                    Destroy(image);
+                image = null;
+            }
+
+            if (imageContainer != null)
+            {
+                if (immediate)
+                    DestroyImmediate(imageContainer);
+                else
+                    Destroy(imageContainer);
+                imageContainer = null;
+            }
         }
 
-        protected void AddFace(Voxels.Face face, MediaBlockProperties props)
+        protected void AddFace(MediaBlockProperties props)
         {
-            if (props == null) return;
+            if (props == null)
+            {
+                UpdateState(State.Empty);
+                return;
+            }
 
             var transform = gameObject.transform;
-            var go = new GameObject();
-            go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero;
-            go.transform.eulerAngles = props.rotation.ToVector3();
 
-            var imgFace = go.AddComponent<ImageFace>();
-            var meshRenderer = imgFace.Initialize(face, props.width, props.height);
+            imageContainer = new GameObject
+            {
+                name = "image container"
+            };
+            imageContainer.transform.SetParent(transform, false);
+            imageContainer.transform.localPosition = Vector3.zero;
+            imageContainer.transform.localScale = new Vector3(props.width, props.height, 1);
+
+            image = new GameObject();
+            image.transform.SetParent(imageContainer.transform, false);
+            image.transform.localPosition = new Vector3(-0.5f, -0.5f, 0);
+
+            imageContainer.transform.eulerAngles = props.rotation.ToVector3();
+
+            var imgFace = image.AddComponent<ImageFace>();
+            var meshRenderer = imgFace.Initialize();
             if (!InLand(meshRenderer))
             {
-                DestroyImmediate(go);
                 UpdateState(State.OutOfBound);
                 return;
             }
 
-            imgFace.Init(meshRenderer, FileService.ResolveUrl(props.url), this, face);
-            go.layer = props.detectCollision
+            imgFace.Init(meshRenderer, FileService.ResolveUrl(props.url), this);
+            image.layer = props.detectCollision
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
-            image = go;
-            var faceSelectable = go.AddComponent<MetaFocusable>();
+            var faceSelectable = image.AddComponent<MetaFocusable>();
             faceSelectable.Initialize(this);
         }
 
         protected override void OnStateChanged(State state)
         {
+            if (MetaBlockState.IsErrorState(state))
+                DestroyImage();
+
             if (snackItem != null) // TODO [detach metablock]: && focused?
             {
                 ((SnackItem.Text) snackItem).UpdateLines(GetSnackLines());
@@ -123,14 +168,18 @@ namespace src.MetaBlocks.ImageBlock
 
         protected override List<string> GetSnackLines()
         {
-            var lines = new List<string>
+            var lines = new List<string>();
+            if (canEdit)
             {
-                "Press Z for details",
-                "Press T to toggle preview",
-                "Press Del to delete"
-            };
-            if (state != State.Ok)
-                lines.Add($"\n{MetaBlockState.ToString(state, "image")}");
+                lines.Add("Press Z for details");
+                // if (state == State.Ok)
+                lines.Add("Press V to edit rotation");
+                lines.Add("Press DEL to delete object");
+            }
+
+            var line = MetaBlockState.ToString(state, "image");
+            if (line.Length > 0)
+                lines.Add("\n" + line);
             return lines;
         }
 
@@ -180,6 +229,43 @@ namespace src.MetaBlocks.ImageBlock
         public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
             Vector3Int localPos, Action<GameObject> onLoad)
         {
+        }
+
+        public override void SetToMovingState()
+        {
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            if (scaleRotationController == null)
+            {
+                scaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
+                scaleRotationController.Attach(null, imageContainer.transform);
+            }
+
+            snackItem = Snack.INSTANCE.ShowLines(scaleRotationController.EditModeSnackLines, () =>
+            {
+                if (Input.GetKeyDown(KeyCode.X))
+                {
+                    GameManager.INSTANCE.ToggleMovingObjectState(this);
+                }
+            });
+        }
+
+        public override void ExitMovingState()
+        {
+            var props = new MediaBlockProperties(GetBlock().GetProps() as MediaBlockProperties);
+            if (image == null || state != State.Ok) return;
+            props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
+            GetBlock().SetProps(props, land);
+
+            SetupDefaultSnack();
+            if (scaleRotationController == null) return;
+            scaleRotationController.Detach();
+            DestroyImmediate(scaleRotationController);
+            scaleRotationController = null;
         }
     }
 }

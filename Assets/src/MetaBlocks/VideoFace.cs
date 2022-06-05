@@ -36,12 +36,7 @@ namespace src
 
         private void PrepareCompeleted(VideoPlayer vp)
         {
-            //videoPlayer.Pause();
-
-            //if (previewing)
-            // {
             StartCoroutine(Seek());
-            // }
             videoPlayer.prepareCompleted -= PrepareCompeleted;
         }
 
@@ -49,7 +44,6 @@ namespace src
         {
             Mute(true);
             yield return null;
-            //prevTime = Mathf.Min(Mathf.Max(0, prevTime), (float)videoPlayer.length);
             videoPlayer.time = prevTime;
             videoPlayer.Play();
             yield return null;
@@ -61,11 +55,6 @@ namespace src
             Mute(false);
             prepared = true;
             loading.Invoke(false);
-
-            //videoPlayer.seekCompleted += SeekCompeleted;
-            //        videoPlayer.frameReady += FrameReady;
-            //    videoPlayer.frame = (long)(prevTime * videoPlayer.frameRate);//Mathf.Min(Mathf.Max(0, ), (float)videoPlayer.length);
-            //      videoPlayer.Prepare();
         }
 
 
@@ -73,27 +62,6 @@ namespace src
         {
             yield return null;
             a.Invoke();
-        }
-
-        private void FrameReady(VideoPlayer vp, long frameIdx)
-        {
-        }
-
-        private void SeekCompeleted(VideoPlayer vp)
-        {
-            if (previewing)
-            {
-                videoPlayer.seekCompleted -= SeekCompeleted;
-
-                videoPlayer.Play();
-                StartCoroutine(DoOnNext(() =>
-                {
-                    videoPlayer.Pause();
-
-                    prepared = true;
-                    loading.Invoke(false);
-                }));
-            }
         }
 
         public void TogglePlaying()

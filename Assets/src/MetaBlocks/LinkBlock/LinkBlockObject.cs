@@ -118,6 +118,16 @@ namespace src.MetaBlocks.LinkBlock
         {
         }
 
+        public override void SetToMovingState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ExitMovingState()
+        {
+            throw new NotImplementedException();
+        }
+
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;

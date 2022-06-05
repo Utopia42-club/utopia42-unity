@@ -1,4 +1,5 @@
 using Siccity.GLTFUtility;
+using src.Utils;
 using UnityEngine;
 
 namespace src.MetaBlocks.TdObjectBlock
@@ -14,14 +15,14 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             var go = Importer.LoadFromFile($"Assets/Resources/PlaceHolder/" +
                                            (!error ? "3d_object.glb" : "3d_object_error.glb"));
-            var colliderTransform = TdObjectBlockObject.GetMeshColliderTransform(go);
+            var colliderTransform = TdObjectTools.GetMeshColliderTransform(go);
             if (colliderTransform == null)
                 go.AddComponent<BoxCollider>();
             else
-                TdObjectBlockObject.PrepareMeshCollider(colliderTransform);
+                TdObjectTools.PrepareMeshCollider(colliderTransform);
             go.SetActive(false);
             go.name = "3d object placeholder";
-            go.transform.localScale = 2 * Vector3.one; 
+            go.transform.localScale = 2 * Vector3.one;
             return go;
         }
     }

@@ -2,7 +2,6 @@ using System.Collections;
 using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
 using src.Service;
-using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -10,7 +9,7 @@ namespace src
 {
     public class ImageFace : MetaFace
     {
-        public void Init(MeshRenderer renderer, string url, ImageBlockObject block, Voxels.Face face)
+        public void Init(MeshRenderer renderer, string url, ImageBlockObject block)
         {
             block.UpdateState(State.Loading);
             StartCoroutine(LoadImage(renderer.sharedMaterial, url, block, 5));

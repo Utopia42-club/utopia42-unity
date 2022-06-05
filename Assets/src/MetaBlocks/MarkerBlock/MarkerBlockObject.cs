@@ -45,8 +45,6 @@ namespace src.MetaBlocks.MarkerBlock
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
-                if (Input.GetKeyDown(KeyCode.T))
-                    GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetButtonDown("Delete"))
                     GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
@@ -76,7 +74,6 @@ namespace src.MetaBlocks.MarkerBlock
             return new List<string>
             {
                 "Press Z for details",
-                "Press T to toggle preview",
                 "Press DEL to delete object"
             };
         }
@@ -96,6 +93,16 @@ namespace src.MetaBlocks.MarkerBlock
 
         public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
         {
+        }
+
+        public override void SetToMovingState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ExitMovingState()
+        {
+            throw new NotImplementedException();
         }
 
         private void EditProps()

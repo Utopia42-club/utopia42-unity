@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using src.Canvas;
 using src.Canvas.Map;
+using src.MetaBlocks;
 using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
@@ -458,17 +459,17 @@ namespace src
             }));
         }
 
-        public void ToggleMovingObjectState(TdObjectBlockObject tdObjectBlockObject)
+        public void ToggleMovingObjectState(MetaBlockObject metaBlockObject)
         {
             if (GetState() == State.PLAYING)
             {
                 SetState(State.MOVING_OBJECT);
-                tdObjectBlockObject.SetToMovingState();
+                metaBlockObject.SetToMovingState();
             }
             else if (GetState() == State.MOVING_OBJECT)
             {
                 SetState(State.PLAYING);
-                tdObjectBlockObject.ExitMovingState();
+                metaBlockObject.ExitMovingState();
             }
         }
 

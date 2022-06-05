@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using src.Canvas;
 using src.Model;
+using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -23,7 +24,7 @@ namespace src.MetaBlocks.TdObjectBlock
         private SnackItem snackItem;
         private string currentUrl = "";
 
-        private TdObjectMoveController moveController;
+        private ObjectScaleRotationController scaleRotationController;
         private Transform selectHighlight;
 
         protected override void Start()
@@ -50,8 +51,8 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public override void Focus()
         {
-            if (!canEdit) return;
             SetupDefaultSnack();
+            if (!canEdit) return;
             if (TdObjectCollider != null)
                 ShowFocusHighlight();
         }
@@ -159,16 +160,19 @@ namespace src.MetaBlocks.TdObjectBlock
             highlightBox.gameObject.SetActive(active);
         }
 
-        public void ExitMovingState()
+        public override void ExitMovingState()
         {
-            UpdateProps();
+            var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
+            if (tdObjectContainer == null || state != State.Ok) return;
+            props.rotation = new SerializableVector3(tdObjectContainer.transform.eulerAngles);
+            props.scale = new SerializableVector3(tdObjectContainer.transform.localScale);
+            GetBlock().SetProps(props, land);
+
             SetupDefaultSnack();
-            if (moveController != null)
-            {
-                moveController.Detach();
-                DestroyImmediate(moveController);
-                moveController = null;
-            }
+            if (scaleRotationController == null) return;
+            scaleRotationController.Detach();
+            DestroyImmediate(scaleRotationController);
+            scaleRotationController = null;
         }
 
 
@@ -182,14 +186,13 @@ namespace src.MetaBlocks.TdObjectBlock
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
+                if (!canEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
                     RemoveFocusHighlight();
                     EditProps();
                 }
 
-                if (Input.GetKeyDown(KeyCode.T))
-                    GetIconObject().SetActive(!GetIconObject().activeSelf);
                 if (Input.GetKeyDown(KeyCode.V) && state == State.Ok)
                 {
                     RemoveFocusHighlight();
@@ -203,7 +206,7 @@ namespace src.MetaBlocks.TdObjectBlock
             });
         }
 
-        public void SetToMovingState(bool helpMode = false)
+        public override void SetToMovingState()
         {
             if (snackItem != null)
             {
@@ -211,50 +214,19 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem = null;
             }
 
-            if (moveController == null)
+            if (scaleRotationController == null)
             {
-                moveController = gameObject.AddComponent<TdObjectMoveController>();
-                moveController.Attach(tdObjectContainer.transform, tdObjectContainer.transform,
-                    tdObjectContainer.transform);
+                scaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
+                scaleRotationController.Attach(tdObjectContainer.transform, tdObjectContainer.transform);
             }
 
-            var lines = GetMovingSnackLines(helpMode);
-            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
+            snackItem = Snack.INSTANCE.ShowLines(scaleRotationController.EditModeSnackLines, () =>
             {
                 if (Input.GetKeyDown(KeyCode.X))
                 {
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
                 }
-
-                if (Input.GetKeyDown(KeyCode.H))
-                    SetToMovingState(!helpMode);
             });
-        }
-
-        private static List<string> GetMovingSnackLines(bool helpMode)
-        {
-            var lines = new List<string>();
-            if (helpMode)
-            {
-                lines.Add("H : exit help");
-                lines.Add("W : forward");
-                lines.Add("S : backward");
-                lines.Add("SPACE : up");
-                lines.Add("SHIFT+SPACE : down");
-                lines.Add("A : left");
-                lines.Add("D : right");
-                lines.Add("] : scale up");
-                lines.Add("[ : scale down");
-                lines.Add("R + horizontal mouse movement : rotate around y axis");
-                lines.Add("R + vertical mouse movement : rotate around player right axis");
-            }
-            else
-            {
-                lines.Add("H : help");
-            }
-
-            lines.Add("X : exit moving object mode");
-            return lines;
         }
 
         public override void UnFocus()
@@ -279,11 +251,14 @@ namespace src.MetaBlocks.TdObjectBlock
         protected override List<string> GetSnackLines()
         {
             var lines = new List<string>();
-            lines.Add("Press Z for details");
-            lines.Add("Press T to toggle preview");
-            if (state == State.Ok)
-                lines.Add("Press V to move object");
-            lines.Add("Press DEL to delete object");
+            if (canEdit)
+            {
+                lines.Add("Press Z for details");
+                if (state == State.Ok)
+                    lines.Add("Press V to move object");
+                lines.Add("Press DEL to delete object");
+            }
+
             var line = MetaBlockState.ToString(state, "3D object");
             if (line.Length > 0)
                 lines.Add("\n" + line);
@@ -355,7 +330,7 @@ namespace src.MetaBlocks.TdObjectBlock
             Destroy(tdObjectFocusable);
             Destroy(TdObjectCollider);
 
-            TdObjectCollider = PrepareMeshCollider(colliderTransform);
+            TdObjectCollider = TdObjectTools.PrepareMeshCollider(colliderTransform);
             if (chunk != null)
             {
                 tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
@@ -376,9 +351,9 @@ namespace src.MetaBlocks.TdObjectBlock
                     tdObjectFocusable.Initialize(this);
                 }
 
-                ((BoxCollider) TdObjectCollider).center = GetRendererCenter(tdObject);
+                ((BoxCollider) TdObjectCollider).center = TdObjectTools.GetRendererCenter(tdObject);
                 ((BoxCollider) TdObjectCollider).size =
-                    GetRendererSize(((BoxCollider) TdObjectCollider).center, tdObject);
+                    TdObjectTools.GetRendererSize(((BoxCollider) TdObjectCollider).center, tdObject);
                 tdObject.transform.SetParent(tdObjectContainer.transform, false);
             }
 
@@ -408,7 +383,7 @@ namespace src.MetaBlocks.TdObjectBlock
             tdObjectContainer.transform.localScale = scale;
             tdObjectContainer.transform.eulerAngles = rotation;
 
-            var colliderTransform = GetMeshColliderTransform(tdObject);
+            var colliderTransform = TdObjectTools.GetMeshColliderTransform(tdObject);
             if (colliderTransform != null && type == TdObjectBlockProperties.TdObjectType.GLB)
             {
                 // replace box collider with mesh collider if any colliders are defined in the glb object
@@ -498,15 +473,6 @@ namespace src.MetaBlocks.TdObjectBlock
             GetBlock().SetProps(props, land);
         }
 
-        private void UpdateProps()
-        {
-            var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
-            if (tdObjectContainer == null || state != State.Ok) return;
-            props.rotation = new SerializableVector3(tdObjectContainer.transform.eulerAngles);
-            props.scale = new SerializableVector3(tdObjectContainer.transform.localScale);
-            GetBlock().SetProps(props, land);
-        }
-        
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;
@@ -576,61 +542,6 @@ namespace src.MetaBlocks.TdObjectBlock
 
                     break;
             }
-        }
-
-        private static Vector3 GetRendererCenter(GameObject loadedObject)
-        {
-            float
-                minX = float.PositiveInfinity,
-                maxX = float.NegativeInfinity,
-                minY = float.PositiveInfinity,
-                maxY = float.NegativeInfinity,
-                minZ = float.PositiveInfinity,
-                maxZ = float.NegativeInfinity;
-
-            foreach (var child in loadedObject.GetComponentsInChildren<MeshRenderer>())
-            {
-                var bounds = child.bounds;
-                var min = bounds.min;
-                var max = bounds.max;
-
-                if (min.x < minX) minX = min.x;
-                if (min.y < minY) minY = min.y;
-                if (min.z < minZ) minZ = min.z;
-
-                if (max.x > maxX) maxX = max.x;
-                if (max.y > maxY) maxY = max.y;
-                if (max.z > maxZ) maxZ = max.z;
-            }
-
-            return new Vector3((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
-        }
-
-        private static Vector3 GetRendererSize(Vector3 center, GameObject loadedObject)
-        {
-            var bounds = new Bounds(center, Vector3.zero);
-            foreach (var child in loadedObject.GetComponentsInChildren<MeshRenderer>())
-            {
-                bounds.Encapsulate(child.bounds);
-            }
-
-            return bounds.size;
-        }
-
-        public static Transform GetMeshColliderTransform(GameObject tdObject)
-        {
-            return tdObject.GetComponentsInChildren<Transform>()
-                .FirstOrDefault(t => t.name.EndsWith("_collider"));
-        }
-
-        public static MeshCollider PrepareMeshCollider(Transform colliderTransform)
-        {
-            colliderTransform.localScale = 1.01f * colliderTransform.localScale;
-            var colliderRenderer = colliderTransform.gameObject.GetComponent<MeshRenderer>();
-            colliderRenderer.enabled = false;
-            colliderRenderer.material = World.INSTANCE.HighlightBlock;
-
-            return colliderTransform.gameObject.AddComponent<MeshCollider>();
         }
 
         private void OnDestroy()

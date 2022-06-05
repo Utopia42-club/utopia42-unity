@@ -12,7 +12,6 @@ namespace src.MetaBlocks
     {
         private MetaBlock block;
         protected Chunk chunk;
-        private GameObject iconObject;
         protected bool ready = false;
         protected Land land;
         protected bool canEdit;
@@ -53,8 +52,6 @@ namespace src.MetaBlocks
         protected void OnDestroy()
         {
             UnFocus();
-            if (iconObject != null)
-                Destroy(iconObject);
             block?.OnObjectDestroyed();
             stateChange.RemoveAllListeners();
         }
@@ -67,11 +64,6 @@ namespace src.MetaBlocks
         protected Chunk GetChunk()
         {
             return chunk;
-        }
-
-        protected GameObject GetIconObject()
-        {
-            return iconObject;
         }
 
         protected bool InLand(BoxCollider bc) //FIXME rename
@@ -142,5 +134,8 @@ namespace src.MetaBlocks
 
         public abstract void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
             Vector3Int localPos, Action<GameObject> onLoad);
+
+        public abstract void SetToMovingState();
+        public abstract void ExitMovingState();
     }
 }

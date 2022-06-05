@@ -76,6 +76,7 @@ namespace src.MetaBlocks.NftBlock
             return new MediaBlockProperties()
             {
                 url = imageUrl,
+                rotation = rotation.Clone(),
                 width = width,
                 height = height,
                 detectCollision = detectCollision,
