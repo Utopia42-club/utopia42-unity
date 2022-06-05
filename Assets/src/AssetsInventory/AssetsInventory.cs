@@ -4,6 +4,7 @@ using src.AssetsInventory;
 using src.AssetsInventory.Models;
 using src.Canvas;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UIElements;
 
 public class AssetsInventory : MonoBehaviour
@@ -34,6 +35,8 @@ public class AssetsInventory : MonoBehaviour
 
         foreach (var tab in tabs)
             tab.Value.Item1.clicked += () => OpenTab(tab.Key);
+        
+        OpenTab(1);
     }
 
     private void Update()
@@ -127,17 +130,16 @@ public class AssetsInventory : MonoBehaviour
     {
         var sc = new SearchCriteria
         {
-            limit = 100
+            limit = 100,
+            searchTerms = new Dictionary<string, object>
+            {
+                {"generalSearch", filter},
+            }
         };
         if (selectedCategory != null)
-            sc.searchTerms = new Dictionary<string, object>
-            {
-                {"category", selectedCategory.id},
-                {"generalSearch", filter},
-            };
+            sc.searchTerms.Add("category", selectedCategory.id);
         var scrollView = CreateAssetsScrollView(sc);
-        SetBodyContent(selectedCategory == null ? tabBody : tabBody.Q<VisualElement>("content")
-            , scrollView, () => OpenTab(1), "Categories");
+        SetAssetsTabContent(scrollView, () => OpenTab(1), "Categories");
     }
 
     private static VisualElement CreateCategoriesListViewItem()
@@ -158,6 +160,7 @@ public class AssetsInventory : MonoBehaviour
         label.text = category.name;
 
         var image = item.Q("image");
+
         StartCoroutine(UiImageLoader.SetBackGroundImageFromUrl(category.thumbnailUrl,
             Resources.Load<Sprite>("Icons/loading"), image));
 
@@ -170,15 +173,17 @@ public class AssetsInventory : MonoBehaviour
                 searchTerms = new Dictionary<string, object> {{"category", category.id}}
             };
             var scrollView = CreateAssetsScrollView(searchCriteria);
-
-            var assetsTabContent = tabBody.Q<VisualElement>("content");
-            var listView = tabBody.Q<ListView>("categories");
-            assetsTabContent.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
-            listView.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
-
-            SetBodyContent(assetsTabContent,
-                scrollView, () => OpenTab(1), "Categories");
+            SetAssetsTabContent(scrollView, () => OpenTab(1), "Categories");
         };
+    }
+
+    private void SetAssetsTabContent(VisualElement visualElement, Action onBack, string backButtonText = "Back")
+    {
+        var assetsTabContent = tabBody.Q<VisualElement>("content");
+        var listView = tabBody.Q<ListView>("categories");
+        assetsTabContent.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
+        listView.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+        SetBodyContent(assetsTabContent, visualElement, onBack, backButtonText);
     }
 
 
@@ -270,11 +275,14 @@ public class AssetsInventory : MonoBehaviour
     {
         var slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot").CloneTree();
         var slotIcon = slot.Q<VisualElement>("slotIcon");
-        slotIcon.tooltip = asset.name; //FIXME not working
-        StartCoroutine(
-            UiImageLoader.SetBackGroundImageFromUrl(asset.thumbnailUrl,
-                assetDefaultImage, slotIcon)
-        );
+        slotIcon.tooltip = asset.name;
+        slotIcon.AddManipulator(new ToolTipManipulator(root));
+        var imageCoroutine = UiImageLoader.SetBackGroundImageFromUrl(asset.thumbnailUrl, assetDefaultImage, slotIcon);
+        StartCoroutine(imageCoroutine);
+        slotIcon.RegisterCallback<DetachFromPanelEvent>(evt =>
+        {
+            StopCoroutine(imageCoroutine);
+        });
         var s = slot.style;
         s.width = 80;
         s.height = 80;

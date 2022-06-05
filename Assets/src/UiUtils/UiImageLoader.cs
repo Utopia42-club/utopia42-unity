@@ -14,7 +14,7 @@ namespace src.Canvas
             if (string.IsNullOrWhiteSpace(url)) yield break;
 
             var request = UnityWebRequestTexture.GetTexture(url);
-
+            
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.ProtocolError
