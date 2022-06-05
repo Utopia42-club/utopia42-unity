@@ -43,11 +43,11 @@ namespace src.MetaBlocks
             return blockObject.transform.position;
         }
 
-        public bool Focus(Voxels.Face face) 
+        public bool Focus() 
         {
             if (blockObject != null && blockObject.IsReady())
             {
-                blockObject.Focus(face);
+                blockObject.Focus();
                 return true;
             }
 
@@ -104,7 +104,7 @@ namespace src.MetaBlocks
         }
 
         public void CreateSelectHighlight(Transform highlightChunkTransform, Vector3Int localPos,
-            Action<GameObject> onLoad, out GameObject referenceGo)
+            Action<GameObject> onLoad, out GameObject referenceGo) // TODO [detach metablock] ?
         {
             referenceGo = null;
             if (blockObject != null)
@@ -118,7 +118,7 @@ namespace src.MetaBlocks
 
                 blockObject.stateChange.AddListener(state =>
                 {
-                    if (state != StateMsg.Ok) return;
+                    if (state != State.Ok) return;
                     var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
                     if (go != null) onLoad(go);
                 });

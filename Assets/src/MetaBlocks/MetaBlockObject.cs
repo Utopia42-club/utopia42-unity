@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using src.Model;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -12,7 +13,18 @@ namespace src.MetaBlocks
         private MetaBlock block;
         protected Chunk chunk;
         private GameObject iconObject;
-        public readonly UnityEvent<StateMsg> stateChange = new UnityEvent<StateMsg>();
+        protected bool ready = false;
+        protected Land land;
+        protected bool canEdit;
+        protected State state;
+        public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
+
+        protected virtual void Start()
+        {
+            canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
+            ready = true;
+            stateChange.AddListener(state => OnStateChanged(state));
+        }
 
         public void Initialize(MetaBlock block, Chunk chunk)
         {
@@ -23,24 +35,28 @@ namespace src.MetaBlocks
 
         public abstract bool IsReady();
 
-        protected abstract void DoInitialize();
+        protected virtual void DoInitialize()
+        {
+            Start(); // Needs to be called manually to be executed before DoInitialize
+        }
 
         public abstract void OnDataUpdate();
 
-        public abstract void Focus(Voxels.Face face);
+        public abstract void Focus();
 
         public abstract void UnFocus();
 
-        public abstract void UpdateStateAndView(StateMsg msg, Voxels.Face face); // TODO [detach metablock]: refactor?
+        protected abstract void OnStateChanged(State state); // TODO [detach metablock]: refactor?
 
-        protected abstract List<string> GetFaceSnackLines(Voxels.Face face);
-        
+        protected abstract List<string> GetSnackLines();
+
         protected void OnDestroy()
         {
             UnFocus();
             if (iconObject != null)
                 Destroy(iconObject);
             block?.OnObjectDestroyed();
+            stateChange.RemoveAllListeners();
         }
 
         protected MetaBlock GetBlock()
@@ -53,23 +69,12 @@ namespace src.MetaBlocks
             return chunk;
         }
 
-        protected void CreateIcon(bool failed = false)
-        {
-            return; // TODO [detach metablock]: remove/change function?
-            if (chunk == null) return;
-            if (iconObject != null)
-                Destroy(iconObject);
-            iconObject = Instantiate(Resources.Load("MetaBlocks/MetaBlock") as GameObject, transform);
-            foreach (var r in iconObject.GetComponentsInChildren<Renderer>())
-                r.material.mainTexture = block.type.GetIcon(failed).texture;
-        }
-
         protected GameObject GetIconObject()
         {
             return iconObject;
         }
 
-        protected bool InLand(BoxCollider bc)//FIXME rename
+        protected bool InLand(BoxCollider bc) //FIXME rename
         {
             if (block.land == null)
                 return true;
@@ -127,10 +132,15 @@ namespace src.MetaBlocks
 
         public abstract void RemoveFocusHighlight();
 
-        public abstract GameObject CreateSelectHighlight(Transform parent, bool show = true);
+        public abstract GameObject CreateSelectHighlight(Transform parent, bool show = true); // TODO [detach metablock] ?
 
-        protected abstract void UpdateState(StateMsg stateMsg);
+        protected internal void UpdateState(State state)
+        {
+            this.state = state;
+            stateChange.Invoke(state);
+        }
 
-        public abstract void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad);
+        public abstract void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
+            Vector3Int localPos, Action<GameObject> onLoad);
     }
 }

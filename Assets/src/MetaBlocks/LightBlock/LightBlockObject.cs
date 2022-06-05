@@ -25,18 +25,13 @@ namespace src.MetaBlocks.LightBlock
         };
 
         private SnackItem snackItem;
-        private Land land;
-        private bool canEdit;
-        private bool ready = false;
         
         private List<Light> sideLights = new List<Light>();
 
-        private void Start()
+        protected override void Start()
         {
-            if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-                CreateIcon();
-            ready = true;
-            gameObject.name = "light metablock";
+            base.Start();
+            gameObject.name = "light block object";
         }
 
         public override bool IsReady()
@@ -51,6 +46,7 @@ namespace src.MetaBlocks.LightBlock
 
         protected override void DoInitialize()
         {
+            base.DoInitialize();
             ResetLights();
         }
 
@@ -102,7 +98,7 @@ namespace src.MetaBlocks.LightBlock
             sideLights.Clear();
         }
 
-        public override void Focus(Voxels.Face face)
+        public override void Focus()
         {
             if (!canEdit) return;
             if (snackItem != null)
@@ -111,7 +107,7 @@ namespace src.MetaBlocks.LightBlock
                 snackItem = null;
             }
 
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
@@ -136,12 +132,11 @@ namespace src.MetaBlocks.LightBlock
             }
         }
 
-        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face)
+        protected override void OnStateChanged(State state)
         {
-            throw new System.NotImplementedException();
         }
 
-        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
+        protected override List<string> GetSnackLines()
         {
             return new List<string>
             {
@@ -162,11 +157,6 @@ namespace src.MetaBlocks.LightBlock
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
             return null;
-        }
-
-        protected override void UpdateState(StateMsg stateMsg)
-        {
-            throw new System.NotImplementedException();
         }
 
         public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)

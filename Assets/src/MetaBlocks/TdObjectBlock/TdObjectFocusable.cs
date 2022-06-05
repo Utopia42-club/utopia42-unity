@@ -8,7 +8,7 @@ namespace src.MetaBlocks.TdObjectBlock
         public void Initialize(MetaBlockObject metaBlockObject)
         {
             if (initialized) return;
-            this.metaBlockObject = metaBlockObject;
+            this.MetaBlockObject = metaBlockObject;
             initialized = true;
         }
     }

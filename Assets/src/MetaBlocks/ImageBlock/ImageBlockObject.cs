@@ -10,21 +10,13 @@ namespace src.MetaBlocks.ImageBlock
 {
     public class ImageBlockObject : MetaBlockObject
     {
-        protected readonly List<GameObject> images = new List<GameObject>();
+        private GameObject image;
         protected SnackItem snackItem;
-        protected int lastFocusedFaceIndex = -1;
-        protected Land land;
-        protected bool canEdit;
-        private bool ready = false;
 
-        protected StateMsg stateMsg = StateMsg.Empty;
-
-        protected void Start()
+        protected override void Start()
         {
-            canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
-            if (canEdit)
-                CreateIcon();
-            ready = true;
+            base.Start();
+            gameObject.name = "image block object";
         }
 
         public override bool IsReady()
@@ -39,15 +31,16 @@ namespace src.MetaBlocks.ImageBlock
 
         protected override void DoInitialize()
         {
+            base.DoInitialize();
             RenderFaces();
         }
 
-        public override void Focus(Voxels.Face face)
+        public override void Focus()
         {
             if (!canEdit) return;
             if (snackItem != null) snackItem.Remove();
 
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
@@ -56,8 +49,6 @@ namespace src.MetaBlocks.ImageBlock
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
             });
-
-            lastFocusedFaceIndex = face.index;
         }
 
         public override void UnFocus()
@@ -71,8 +62,7 @@ namespace src.MetaBlocks.ImageBlock
 
         private void RenderFaces()
         {
-            DestroyImages();
-            images.Clear();
+            DestroyImage();
             MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
             if (properties != null)
             {
@@ -80,18 +70,17 @@ namespace src.MetaBlocks.ImageBlock
             }
         }
 
-        protected void DestroyImages(bool immediate = true)
+        protected void DestroyImage(bool immediate = true)
         {
-            foreach (var img in images)
-            {
-                var selectable = img.GetComponent<MetaFocusable>();
-                if (selectable != null)
-                    selectable.UnFocus();
-                if (immediate)
-                    DestroyImmediate(img);
-                else
-                    Destroy(img);
-            }
+            if (image == null) return;
+            var selectable = image.GetComponent<MetaFocusable>();
+            if (selectable != null)
+                selectable.UnFocus();
+            if (immediate)
+                DestroyImmediate(image);
+            else
+                Destroy(image);
+            image = null;
         }
 
         protected void AddFace(Voxels.Face face, MediaBlockProperties props)
@@ -100,17 +89,16 @@ namespace src.MetaBlocks.ImageBlock
 
             var transform = gameObject.transform;
             var go = new GameObject();
-            go.name = "Image game object";
             go.transform.parent = transform;
             go.transform.localPosition = Vector3.zero;
             go.transform.eulerAngles = props.rotation.ToVector3();
-            
+
             var imgFace = go.AddComponent<ImageFace>();
             var meshRenderer = imgFace.Initialize(face, props.width, props.height);
             if (!InLand(meshRenderer))
             {
                 DestroyImmediate(go);
-                UpdateStateAndView(StateMsg.OutOfBound, face);
+                UpdateState(State.OutOfBound);
                 return;
             }
 
@@ -118,23 +106,22 @@ namespace src.MetaBlocks.ImageBlock
             go.layer = props.detectCollision
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
-            images.Add(go);
-            var faceSelectable = go.AddComponent<FaceFocusable>();
-            faceSelectable.Initialize(this, face);
+            image = go;
+            var faceSelectable = go.AddComponent<MetaFocusable>();
+            faceSelectable.Initialize(this);
         }
 
-        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face)
+        protected override void OnStateChanged(State state)
         {
-            stateMsg = msg;
-            if (snackItem != null && lastFocusedFaceIndex == face.index)
+            if (snackItem != null) // TODO [detach metablock]: && focused?
             {
-                ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines(face));
+                ((SnackItem.Text) snackItem).UpdateLines(GetSnackLines());
             }
 
-            UpdateIcon(msg);
+            // TODO [detach metablock]: update view! (show the green placeholder if the state is ok or loading (metadata)
         }
 
-        protected override List<string> GetFaceSnackLines(Voxels.Face face)
+        protected override List<string> GetSnackLines()
         {
             var lines = new List<string>
             {
@@ -142,21 +129,9 @@ namespace src.MetaBlocks.ImageBlock
                 "Press T to toggle preview",
                 "Press Del to delete"
             };
-            if (stateMsg != StateMsg.Ok)
-                lines.Add($"\n{MetaBlockState.ToString(stateMsg, "image")}");
+            if (state != State.Ok)
+                lines.Add($"\n{MetaBlockState.ToString(state, "image")}");
             return lines;
-        }
-
-        private void UpdateIcon(StateMsg message) 
-        {
-            if (message != StateMsg.LoadingMetadata && message != StateMsg.Loading && message != StateMsg.Ok)
-            {
-                CreateIcon(true);
-                return;
-            }
-
-            if (canEdit)
-                CreateIcon();
         }
 
         private void EditProps()
@@ -185,7 +160,7 @@ namespace src.MetaBlocks.ImageBlock
 
         private void OnDestroy()
         {
-            DestroyImages(false);
+            DestroyImage(false);
             base.OnDestroy();
         }
 
@@ -202,12 +177,8 @@ namespace src.MetaBlocks.ImageBlock
             return null;
         }
 
-        protected override void UpdateState(StateMsg stateMsg)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
+            Vector3Int localPos, Action<GameObject> onLoad)
         {
         }
     }

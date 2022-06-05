@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using src.Canvas;
 using src.Model;
-using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -22,23 +21,15 @@ namespace src.MetaBlocks.TdObjectBlock
         private TdObjectFocusable tdObjectFocusable;
 
         private SnackItem snackItem;
-        private Land land;
-        private bool canEdit;
-        private bool ready = false;
         private string currentUrl = "";
 
-        private StateMsg stateMsg = StateMsg.Empty;
-
         private TdObjectMoveController moveController;
-        private Player player;
         private Transform selectHighlight;
 
-        private void Start()
+        protected override void Start()
         {
-            if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-                CreateIcon();
-            ready = true;
-            player = Player.INSTANCE;
+            base.Start();
+            gameObject.name = "3d block object";
         }
 
         public override bool IsReady()
@@ -53,10 +44,11 @@ namespace src.MetaBlocks.TdObjectBlock
 
         protected override void DoInitialize()
         {
+            base.DoInitialize();
             LoadTdObject();
         }
 
-        public override void Focus(Voxels.Face face)
+        public override void Focus()
         {
             if (!canEdit) return;
             SetupDefaultSnack();
@@ -68,18 +60,18 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             if (TdObjectCollider == null) return;
             if (TdObjectCollider is BoxCollider boxCollider)
-                AdjustHighlightBox(player.tdObjectHighlightBox, boxCollider, true);
+                AdjustHighlightBox(Player.INSTANCE.tdObjectHighlightBox, boxCollider, true);
             else
             {
-                player.RemoveHighlightMesh();
-                player.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
+                Player.INSTANCE.RemoveHighlightMesh();
+                Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
             }
         }
 
         public override void RemoveFocusHighlight()
         {
-            if (player.RemoveHighlightMesh()) return;
-            player.tdObjectHighlightBox.gameObject.SetActive(false);
+            if (Player.INSTANCE.RemoveHighlightMesh()) return;
+            Player.INSTANCE.tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
@@ -92,7 +84,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 highlight = CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
             else
             {
-                highlight = Instantiate(player.tdObjectHighlightBox, default, Quaternion.identity);
+                highlight = Instantiate(Player.INSTANCE.tdObjectHighlightBox, default, Quaternion.identity);
                 highlight.GetComponentInChildren<MeshRenderer>().material = World.INSTANCE.SelectedBlock;
                 AdjustHighlightBox(highlight, boxCollider, show);
             }
@@ -101,12 +93,6 @@ namespace src.MetaBlocks.TdObjectBlock
             highlight.gameObject.name = "3d_object_highlight";
 
             return highlight.gameObject;
-        }
-
-        protected override void UpdateState(StateMsg stateMsg)
-        {
-            this.stateMsg = stateMsg;
-            stateChange.Invoke(stateMsg);
         }
 
         public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
@@ -121,9 +107,9 @@ namespace src.MetaBlocks.TdObjectBlock
             stateChange.AddListener(state =>
             {
                 if (goRef == null) return;
-                if (state != StateMsg.Ok)
+                if (state != State.Ok)
                 {
-                    if (state != StateMsg.Loading)
+                    if (state != State.Loading)
                     {
                         Destroy(goRef);
                         goRef = null;
@@ -194,7 +180,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 snackItem = null;
             }
 
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
@@ -204,7 +190,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
                 if (Input.GetKeyDown(KeyCode.T))
                     GetIconObject().SetActive(!GetIconObject().activeSelf);
-                if (Input.GetKeyDown(KeyCode.V) && tdObjectContainer != null)
+                if (Input.GetKeyDown(KeyCode.V) && state == State.Ok)
                 {
                     RemoveFocusHighlight();
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
@@ -282,27 +268,23 @@ namespace src.MetaBlocks.TdObjectBlock
             RemoveFocusHighlight();
         }
 
-        public override void
-            UpdateStateAndView(StateMsg msg,
-                Voxels.Face face = null) // TODO [detach metablock]: add error/warning view?
+        protected override void OnStateChanged(State state)
         {
-            UpdateState(msg);
-            if (snackItem != null)
-                ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines());
-            if (msg == StateMsg.Ok) return;
+            ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
+            if (state == State.Ok) return;
             DestroyObject();
-            SetPlaceHolder();
+            SetPlaceHolder(MetaBlockState.IsErrorState(state));
         }
 
-        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
+        protected override List<string> GetSnackLines()
         {
             var lines = new List<string>();
             lines.Add("Press Z for details");
             lines.Add("Press T to toggle preview");
-            if (tdObjectContainer != null)
+            if (state == State.Ok)
                 lines.Add("Press V to move object");
             lines.Add("Press DEL to delete object");
-            var line = MetaBlockState.ToString(stateMsg, "3D object");
+            var line = MetaBlockState.ToString(state, "3D object");
             if (line.Length > 0)
                 lines.Add("\n" + line);
             return lines;
@@ -313,7 +295,7 @@ namespace src.MetaBlocks.TdObjectBlock
             var properties = (TdObjectBlockProperties) GetBlock().GetProps();
             if (properties == null)
             {
-                UpdateStateAndView(StateMsg.Empty);
+                UpdateState(State.Empty);
                 return;
             }
 
@@ -321,14 +303,14 @@ namespace src.MetaBlocks.TdObjectBlock
             var rotation = properties.rotation?.ToVector3() ?? Vector3.zero;
             var initialPosition = properties.initialPosition?.ToVector3() ?? Vector3.zero;
 
-            if (currentUrl.Equals(properties.url) && tdObjectContainer != null)
+            if (currentUrl.Equals(properties.url) && state == State.Ok)
             {
                 LoadGameObject(scale, rotation, initialPosition, properties.initialScale,
                     properties.detectCollision, properties.type);
             }
             else
             {
-                UpdateStateAndView(StateMsg.Loading);
+                UpdateState(State.Loading);
                 var reinitialize = !currentUrl.Equals("") || properties.initialScale == 0;
                 currentUrl = properties.url;
                 StartCoroutine(LoadBytes(properties.url, properties.type, go =>
@@ -337,7 +319,6 @@ namespace src.MetaBlocks.TdObjectBlock
                     TdObjectCollider = null;
                     ResetContainer();
                     tdObject = go;
-                    tdObject.name = TdObjectBlockType.Name;
 
                     LoadGameObject(scale, rotation, initialPosition, properties.initialScale,
                         properties.detectCollision, properties.type, reinitialize);
@@ -345,15 +326,14 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        private void SetPlaceHolder()
+        private void SetPlaceHolder(bool error)
         {
             DestroyObject();
             ResetContainer();
-            tdObject = GetBlock().type.CreatePlaceHolder();
+            tdObject = GetBlock().type.CreatePlaceHolder(error);
             tdObject.transform.SetParent(tdObjectContainer.transform, false);
             tdObject.SetActive(true);
             TdObjectCollider = tdObject.GetComponentInChildren<Collider>();
-            tdObject.name = TdObjectBlockType.Name + "(empty)";
             tdObject.transform.SetParent(tdObjectContainer.transform, false);
 
             if (chunk == null) return;
@@ -437,20 +417,20 @@ namespace src.MetaBlocks.TdObjectBlock
 
                 if (GetBlock().land != null && !InLand(TdObjectCollider.GetComponent<MeshRenderer>()))
                 {
-                    UpdateStateAndView(StateMsg.OutOfBound);
+                    UpdateState(State.OutOfBound);
                     return;
                 }
             }
             else if (GetBlock().land != null && !InLand((BoxCollider) TdObjectCollider))
             {
-                UpdateStateAndView(StateMsg.OutOfBound);
+                UpdateState(State.OutOfBound);
                 return;
             }
 
             TdObjectCollider.gameObject.layer =
                 detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
 
-            UpdateStateAndView(StateMsg.Ok);
+            UpdateState(State.Ok);
             // chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position))); // TODO: fix on focus
         }
 
@@ -567,19 +547,19 @@ namespace src.MetaBlocks.TdObjectBlock
             switch (webRequest.result)
             {
                 case UnityWebRequest.Result.InProgress:
-                    UpdateStateAndView(StateMsg.SizeLimit);
+                    UpdateState(State.SizeLimit);
                     break;
                 case UnityWebRequest.Result.ConnectionError:
                     Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
-                    UpdateStateAndView(StateMsg.ConnectionError);
+                    UpdateState(State.ConnectionError);
                     break;
                 case UnityWebRequest.Result.DataProcessingError:
                 case UnityWebRequest.Result.ProtocolError:
                     Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
-                    UpdateStateAndView(StateMsg.InvalidUrlOrData);
+                    UpdateState(State.InvalidUrlOrData);
                     break;
                 case UnityWebRequest.Result.Success:
-                    Action onFailure = () => { UpdateStateAndView(StateMsg.InvalidData); };
+                    Action onFailure = () => { UpdateState(State.InvalidData); };
 
                     switch (type)
                     {

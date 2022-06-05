@@ -10,15 +10,11 @@ namespace src.MetaBlocks.MarkerBlock
     public class MarkerBlockObject : MetaBlockObject
     {
         private SnackItem snackItem;
-        private Land land;
-        private bool canEdit;
-        private bool ready = false;
 
-        private void Start()
+        protected override void Start()
         {
-            if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-                CreateIcon();
-            ready = true;
+            base.Start();
+            gameObject.name = "marker block object";
         }
 
         public override bool IsReady()
@@ -32,10 +28,11 @@ namespace src.MetaBlocks.MarkerBlock
 
         protected override void DoInitialize()
         {
+            base.DoInitialize();
         }
 
 
-        public override void Focus(Voxels.Face face)
+        public override void Focus()
         {
             if (!canEdit) return;
             if (snackItem != null)
@@ -44,7 +41,7 @@ namespace src.MetaBlocks.MarkerBlock
                 snackItem = null;
             }
 
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
@@ -69,12 +66,12 @@ namespace src.MetaBlocks.MarkerBlock
             }
         }
 
-        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face) // TODO
+        protected override void OnStateChanged(State state) // TODO [detach metablock]
         {
             throw new System.NotImplementedException();
         }
 
-        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
+        protected override List<string> GetSnackLines()
         {
             return new List<string>
             {
@@ -95,11 +92,6 @@ namespace src.MetaBlocks.MarkerBlock
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
             return null;
-        }
-
-        protected override void UpdateState(StateMsg stateMsg)
-        {
-            throw new System.NotImplementedException();
         }
 
         public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)

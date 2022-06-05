@@ -8,7 +8,7 @@ namespace src.MetaBlocks.NftBlock
         {
         }
 
-        public override GameObject CreatePlaceHolder()
+        public override GameObject CreatePlaceHolder(bool error)
         {
             return null;
         }

@@ -10,15 +10,11 @@ namespace src.MetaBlocks.LinkBlock
     public class LinkBlockObject : MetaBlockObject
     {
         private SnackItem snackItem;
-        private Land land;
-        private bool canEdit;
-        private bool ready = false;
 
-        private void Start()
+        protected override void Start()
         {
-            canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
-            CreateIcon();
-            ready = true;
+            base.Start();
+            gameObject.name = "link block object";
         }
 
         public override bool IsReady()
@@ -32,10 +28,11 @@ namespace src.MetaBlocks.LinkBlock
 
         protected override void DoInitialize()
         {
+            base.DoInitialize();
         }
 
 
-        public override void Focus(Voxels.Face face)
+        public override void Focus()
         {
             UpdateSnacks();
         }
@@ -95,14 +92,13 @@ namespace src.MetaBlocks.LinkBlock
             }
         }
 
-        public override void UpdateStateAndView(StateMsg msg, Voxels.Face face) // TODO
+        protected override void OnStateChanged(State state) // TODO [detach metablock]
         {
-            throw new System.NotImplementedException();
         }
 
-        protected override List<string> GetFaceSnackLines(Voxels.Face face) // TODO
+        protected override List<string> GetSnackLines() // TODO [detach metablock]
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public override void ShowFocusHighlight()
@@ -116,11 +112,6 @@ namespace src.MetaBlocks.LinkBlock
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
             return null;
-        }
-
-        protected override void UpdateState(StateMsg stateMsg)
-        {
-            throw new System.NotImplementedException();
         }
 
         public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)

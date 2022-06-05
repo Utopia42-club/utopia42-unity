@@ -12,19 +12,18 @@ namespace src
     {
         public void Init(MeshRenderer renderer, string url, ImageBlockObject block, Voxels.Face face)
         {
-            block.UpdateStateAndView(StateMsg.Loading, face);
-            StartCoroutine(LoadImage(renderer.sharedMaterial, url, block, face, 5));
+            block.UpdateState(State.Loading);
+            StartCoroutine(LoadImage(renderer.sharedMaterial, url, block, 5));
         }
 
-        private IEnumerator LoadImage(Material material, string url, ImageBlockObject block, Voxels.Face face,
-            int retries)
+        private IEnumerator LoadImage(Material material, string url, ImageBlockObject block, int retries)
         {
             using var request = UnityWebRequestTexture.GetTexture(url);
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.ConnectionError)
             {
-                block.UpdateStateAndView(StateMsg.ConnectionError, face);
+                block.UpdateState(State.ConnectionError);
                 yield break;
             }
 
@@ -32,13 +31,13 @@ namespace src
                 request.result == UnityWebRequest.Result.DataProcessingError)
             {
                 if (retries > 0 && request.responseCode == 504)// && url.StartsWith(IpfsClient.SERVER_URL))
-                    yield return LoadImage(material, url, block, face, retries - 1);
-                else block.UpdateStateAndView(StateMsg.InvalidUrlOrData, face);
+                    yield return LoadImage(material, url, block, retries - 1);
+                else block.UpdateState(State.InvalidUrlOrData);
                 yield break;
             }
 
             material.mainTexture = ((DownloadHandlerTexture) request.downloadHandler).texture;
-            block.UpdateStateAndView(StateMsg.Ok, face);
+            block.UpdateState(State.Ok);
         }
     }
 }

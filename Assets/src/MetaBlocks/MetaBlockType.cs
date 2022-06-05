@@ -32,12 +32,12 @@ namespace src.MetaBlocks
             return JsonConvert.DeserializeObject(props, propertiesType);
         }
 
-        public abstract GameObject CreatePlaceHolder();
+        public abstract GameObject CreatePlaceHolder(bool error);
 
         public GameObject GetPlaceHolder()
         {
             if (placeHolder != null) return placeHolder;
-            return placeHolder = CreatePlaceHolder();
+            return placeHolder = CreatePlaceHolder(false);
         }
     }
 }
