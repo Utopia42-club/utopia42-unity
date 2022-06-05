@@ -1,22 +1,30 @@
-.toolbar-button {
-    font-size: 13px;
-    -unity-font-style: bold;
-    width: 87px;
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 0;
-    padding-right: 0;
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-
-.selected-tab {
-    background-color: rgb(52, 73, 94);
-}
 
 .tabBody {
     flex-grow: 1;
     position: relative;
     width: 100%;
     height: 100%;
+}
+
+.tab-button {
+    background-color: rgba(0, 0, 0, 0);
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+}
+
+.tab-button:hover {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    background-color: rgb(52, 73, 94);
+}
+
+.selected-tab {
+    border-bottom-color: rgba(220, 119, 119, 255);
+    border-bottom-width: 4px;
 }

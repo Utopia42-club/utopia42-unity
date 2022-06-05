@@ -1,8 +1,8 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/UiDocuments/styles/AssetsInventory.uss?fileID=7433441132597879392&amp;guid=cb2dc14ae923fe41b9bb557470ffb356&amp;type=3#AssetsInventory" />
+    <Style src="project://database/Assets/Resources/UiDocuments/styles/AssetsInventory.uss?fileID=7433441132597879392&amp;guid=cb2dc14ae923fe41b9bb557470ffb356&amp;type=3#AssetsInventory" />
     <AspectRatioPanel aspect-ratio-x="1" aspect-ratio-y="1">
-        <ui:VisualElement name="slotContainer" class="slotContainer" style="flex-grow: 1;">
-            <ui:VisualElement name="slotIcon" style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px; flex-grow: 1;" />
+        <ui:VisualElement name="slotContainer" class="slot-container" style="flex-grow: 1;">
+            <ui:VisualElement name="slotIcon" style="flex-grow: 1;" />
         </ui:VisualElement>
     </AspectRatioPanel>
 </ui:UXML>
