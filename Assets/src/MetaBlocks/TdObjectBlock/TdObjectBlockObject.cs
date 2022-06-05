@@ -501,12 +501,12 @@ namespace src.MetaBlocks.TdObjectBlock
         private void UpdateProps()
         {
             var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
-            if (tdObjectContainer == null) return;
+            if (tdObjectContainer == null || state != State.Ok) return;
             props.rotation = new SerializableVector3(tdObjectContainer.transform.eulerAngles);
             props.scale = new SerializableVector3(tdObjectContainer.transform.localScale);
             GetBlock().SetProps(props, land);
         }
-
+        
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;
