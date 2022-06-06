@@ -1,3 +1,4 @@
+using System.Collections;
 using src.AssetsInventory.Models;
 using src.Canvas;
 using UnityEngine;
@@ -13,10 +14,11 @@ namespace src.AssetsInventory
         private Asset asset;
         private readonly global::AssetsInventory assetsInventory;
         private readonly VisualElement tooltipRoot;
+        private IEnumerator imageCoroutine;
+        private bool isLoadingImage = false;
 
         public InventorySlot(Asset asset, global::AssetsInventory assetsInventory, VisualElement tooltipRoot,
-            int size = 80)
-            : this(assetsInventory, tooltipRoot, asset.name, size)
+            int size = 80) : this(assetsInventory, tooltipRoot, asset.name, size)
         {
             SetAsset(asset);
         }
@@ -54,26 +56,24 @@ namespace src.AssetsInventory
             }
         }
 
-        public void SetAsset(Asset asset)
+        public void SetAsset(Asset asset, bool updateImage = true)
         {
             this.asset = asset;
-            var slotIcon = slot.Q<VisualElement>("slotIcon");
-            var imageCoroutine =
-                UiImageLoader.SetBackGroundImageFromUrl(asset.thumbnailUrl, assetDefaultImage, slotIcon);
-            assetsInventory.StartCoroutine(imageCoroutine);
-            slotIcon.RegisterCallback<DetachFromPanelEvent>(evt => { assetsInventory.StopCoroutine(imageCoroutine); });
             SetTooltip(asset.name);
+            if (updateImage)
+            {
+                imageCoroutine = UiImageLoader.SetBackGroundImageFromUrl(asset.thumbnailUrl, assetDefaultImage,
+                    slotIcon, () => isLoadingImage = false);
+                isLoadingImage = true;
+                assetsInventory.StartCoroutine(imageCoroutine);
+                slotIcon.RegisterCallback<DetachFromPanelEvent>(evt =>
+                {
+                    assetsInventory.StopCoroutine(imageCoroutine);
+                    isLoadingImage = false;
+                });
+            }
         }
 
-        public void SetBackground(Sprite sprite)
-        {
-            UiImageLoader.SetBackground(slotIcon, sprite);
-        }
-
-        public void SetBackground(string url)
-        {
-            assetsInventory.StartCoroutine(UiImageLoader.SetBackGroundImageFromUrl(url, assetDefaultImage, slotIcon));
-        }
 
         public void SetGridPosition(int index, int itemsInARow)
         {
@@ -83,6 +83,29 @@ namespace src.AssetsInventory
             var rem = index % itemsInARow;
             s.left = rem * 90;
             s.top = div * 90;
+        }
+
+        public void SetBackground(Sprite sprite)
+        {
+            UiImageLoader.SetBackground(slotIcon, sprite);
+        }
+
+        public void UpdateSlot(InventorySlot inventorySlot)
+        {
+            if (inventorySlot.IsLoadingImage())
+            {
+                SetAsset(inventorySlot.GetAsset());
+            }
+            else
+            {
+                SetAsset(inventorySlot.GetAsset(), false);
+                SetBackground(inventorySlot.GetBackground());
+            }
+        }
+
+        private bool IsLoadingImage()
+        {
+            return isLoadingImage;
         }
 
         public void HideSlotBackground()
@@ -98,6 +121,11 @@ namespace src.AssetsInventory
         public Asset GetAsset()
         {
             return asset;
+        }
+
+        private Sprite GetBackground()
+        {
+            return slotIcon.style.backgroundImage.value.sprite;
         }
     }
 }

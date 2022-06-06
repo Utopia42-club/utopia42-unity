@@ -12,9 +12,9 @@ public class AssetsInventory : MonoBehaviour
     private VisualElement root;
     private VisualElement tabBody;
     private Dictionary<int, Tuple<Button, string>> tabs;
-    private readonly AssetsRestClient restClient = new AssetsRestClient();
+    private readonly AssetsRestClient restClient = new();
     private int currentTab;
-    private readonly Dictionary<int, Pack> packs = new Dictionary<int, Pack>();
+    private readonly Dictionary<int, Pack> packs = new();
     private VisualElement loadingLayer;
     private Category selectedCategory;
     private string filterText = "";
@@ -25,7 +25,7 @@ public class AssetsInventory : MonoBehaviour
     private Sprite closeImage;
     private Sprite openImage;
     private ScrollView favBar;
-    private List<InventorySlot> favBarSlots = new List<InventorySlot>();
+    private List<InventorySlot> favBarSlots = new();
     private InventorySlot addSlot;
     private InventorySlot ghostSlot;
 
@@ -58,7 +58,6 @@ public class AssetsInventory : MonoBehaviour
         foreach (var tab in tabs)
             tab.Value.Item1.clicked += () => OpenTab(tab.Key);
 
-        ghostSlot.VisualElement().RegisterCallback<PointerMoveEvent>(GhostSlotOnMouseMove);
         ghostSlot.VisualElement().RegisterCallback<PointerUpEvent>(GhostSlotOnMouseUp);
 
         StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
@@ -89,33 +88,21 @@ public class AssetsInventory : MonoBehaviour
         if (!isDragging)
             return;
 
-        var slots
-            = favBarSlots.Where(favBarSlot =>
-                    favBarSlot.VisualElement().worldBound.Overlaps(ghostSlot.VisualElement().worldBound))
-                .ToList();
+        var slots = favBarSlots
+            .Where(favBarSlot =>
+                favBarSlot.VisualElement().worldBound.Overlaps(ghostSlot.VisualElement().worldBound))
+            .ToList();
 
-
-        //Found at least one
         if (slots.Count != 0)
         {
-            InventorySlot closestSlot = slots.OrderBy(x => Vector2.Distance
+            var closestSlot = slots.OrderBy(x => Vector2.Distance
                 (x.VisualElement().worldBound.position, ghostSlot.VisualElement().worldBound.position)).First();
-
-            //Set the new inventory slot with the data
-            closestSlot.SetAsset(ghostSlot.GetAsset());
+            closestSlot.UpdateSlot(ghostSlot);
         }
 
         //Clear dragging related visuals and data
         isDragging = false;
         ghostSlot.VisualElement().style.visibility = Visibility.Hidden;
-    }
-
-    private void GhostSlotOnMouseMove(PointerMoveEvent evt)
-    {
-        if (!isDragging)
-            return;
-        ghostSlot.VisualElement().style.top = evt.position.y - ghostSlot.VisualElement().layout.height / 2;
-        ghostSlot.VisualElement().style.left = evt.position.x - ghostSlot.VisualElement().layout.width / 2;
     }
 
     private void ToggleInventory()
@@ -138,6 +125,14 @@ public class AssetsInventory : MonoBehaviour
         {
             FilterAssets(filterText);
             filterText = "";
+        }
+
+        if (isDragging)
+        {
+            var pos = Input.mousePosition;
+            ghostSlot.VisualElement().style.top =
+                root.worldBound.height - pos.y - ghostSlot.VisualElement().layout.height / 2;
+            ghostSlot.VisualElement().style.left = pos.x - ghostSlot.VisualElement().layout.width / 2;
         }
     }
 
@@ -362,17 +357,13 @@ public class AssetsInventory : MonoBehaviour
 
     public void StartDrag(Vector2 position, InventorySlot slot)
     {
-        //Set tracking variables
         isDragging = true;
 
-        //Set the new position
         ghostSlot.VisualElement().style.top = position.y - ghostSlot.VisualElement().layout.height / 2;
         ghostSlot.VisualElement().style.left = position.x - ghostSlot.VisualElement().layout.width / 2;
 
-        //Set the image
-        ghostSlot.SetBackground(slot.GetAsset().thumbnailUrl);
+        ghostSlot.UpdateSlot(slot);
 
-        //Flip the visibility on
         ghostSlot.VisualElement().style.visibility = Visibility.Visible;
     }
 }

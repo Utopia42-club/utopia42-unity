@@ -29,11 +29,20 @@ namespace src.Canvas
             }
         }
 
-        public static IEnumerator SetBackGroundImageFromUrl(string url, Sprite emptySprite, VisualElement visualElement)
+        public static IEnumerator SetBackGroundImageFromUrl(string url, Sprite emptySprite, VisualElement visualElement,
+            Action onDone = null, Action onFail = null)
         {
             SetBackground(visualElement, emptySprite);
-            yield return LoadImage(url, sprite => SetBackground(visualElement, sprite),
-                () => { SetBackground(visualElement, Resources.Load<Sprite>("Icons/error")); });
+            yield return LoadImage(url, sprite =>
+                {
+                    SetBackground(visualElement, sprite);
+                    onDone?.Invoke();
+                },  
+                () =>
+                {
+                    SetBackground(visualElement, Resources.Load<Sprite>("Icons/error"));
+                    onFail?.Invoke();
+                });
         }
 
         public static void SetBackground(VisualElement visualElement, Sprite sprite)
