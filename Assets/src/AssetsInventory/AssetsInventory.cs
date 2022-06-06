@@ -11,23 +11,26 @@ public class AssetsInventory : MonoBehaviour
 {
     private VisualElement root;
     private VisualElement tabBody;
+    private VisualElement loadingLayer;
+    private VisualElement inventory;
+    private VisualElement favPanel;
+    private Button openCloseInvButton;
+    private ScrollView favBar;
+
+    private Sprite closeImage;
+    private Sprite openImage;
+
     private Dictionary<int, Tuple<Button, string>> tabs;
     private readonly AssetsRestClient restClient = new();
     private int currentTab;
     private readonly Dictionary<int, Pack> packs = new();
-    private VisualElement loadingLayer;
     private Category selectedCategory;
     private string filterText = "";
     private static bool isDragging;
-    private VisualElement inventory;
-    private VisualElement favPanel;
-    private Button openCloseInvButton;
-    private Sprite closeImage;
-    private Sprite openImage;
-    private ScrollView favBar;
-    private List<InventorySlot> favBarSlots = new();
-    private InventorySlot addSlot;
-    private InventorySlot ghostSlot;
+
+    private List<FavoriteItemInventorySlot> favBarSlots = new();
+    private FavoriteItemInventorySlot addSlot;
+    private AssetBlockInventorySlot ghostSlot;
 
     void Start()
     {
@@ -39,7 +42,7 @@ public class AssetsInventory : MonoBehaviour
         openCloseInvButton = favPanel.Q<Button>("openCloseInvButton");
         openCloseInvButton.clickable.clicked += ToggleInventory;
         loadingLayer = root.Q<VisualElement>("loadingLayer");
-        ghostSlot = new InventorySlot(this, null, null, 60);
+        ghostSlot = new AssetBlockInventorySlot(this, null, null, 60);
         root.Add(ghostSlot.VisualElement());
         ghostSlot.VisualElement().visible = false;
         ghostSlot.HideSlotBackground();
@@ -64,45 +67,21 @@ public class AssetsInventory : MonoBehaviour
         {
             foreach (var favoriteItem in favItems)
             {
-                if (favoriteItem.asset != null)
-                {
-                    var slot = new InventorySlot(favoriteItem.asset, this, root, 70);
-                    favBarSlots.Add(slot);
-                    favBar.Add(slot.VisualElement());
-                }
-                else
-                {
-                    //TODO: implement
-                }
+                AddToFavoritePanel(favoriteItem);
             }
 
-            addSlot = new InventorySlot(this, root, "Add", 80, 10);
+            addSlot = new FavoriteItemInventorySlot(null, this, root, "Add", 70, 10);
             addSlot.SetBackground(Resources.Load<Sprite>("Icons/add"));
             favBarSlots.Add(addSlot);
             favBar.Add(addSlot.VisualElement());
         }, () => { }, this));
     }
 
-    private void GhostSlotOnMouseUp(PointerUpEvent evt)
+    private void AddToFavoritePanel(FavoriteItem favoriteItem)
     {
-        if (!isDragging)
-            return;
-
-        var slots = favBarSlots
-            .Where(favBarSlot =>
-                favBarSlot.VisualElement().worldBound.Overlaps(ghostSlot.VisualElement().worldBound))
-            .ToList();
-
-        if (slots.Count != 0)
-        {
-            var closestSlot = slots.OrderBy(x => Vector2.Distance
-                (x.VisualElement().worldBound.position, ghostSlot.VisualElement().worldBound.position)).First();
-            closestSlot.UpdateSlot(ghostSlot);
-        }
-
-        //Clear dragging related visuals and data
-        isDragging = false;
-        ghostSlot.VisualElement().style.visibility = Visibility.Hidden;
+        var slot = new FavoriteItemInventorySlot(favoriteItem, this, size: 70);
+        favBarSlots.Add(slot);
+        favBar.Add(slot.VisualElement());
     }
 
     private void ToggleInventory()
@@ -181,15 +160,14 @@ public class AssetsInventory : MonoBehaviour
         {
             if (currentTab != 1)
                 return;
-            var listView = tabBody.Q<ListView>("categories");
-            var scrollView = listView.Q<ScrollView>();
+            var scrollView = tabBody.Q<ScrollView>("categories");
+            scrollView.Clear();
             Utils.IncreaseScrollSpeed(scrollView, 600);
             scrollView.mode = ScrollViewMode.Vertical;
             scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
-            listView.makeItem = CreateCategoriesListViewItem;
-            listView.bindItem = (item, index) => CategoriesListViewBindItem(item, categories, index);
-            listView.itemsSource = categories;
-            listView.Rebuild();
+            foreach (var category in categories)
+                scrollView.Add(CreateCategoriesListItem(category));
+
             ShowLoadingLayer(false);
         }, () => { ShowLoadingLayer(false); }));
 
@@ -225,29 +203,22 @@ public class AssetsInventory : MonoBehaviour
         SetAssetsTabContent(scrollView, () => OpenTab(1), "Categories");
     }
 
-    private static VisualElement CreateCategoriesListViewItem()
+    private VisualElement CreateCategoriesListItem(Category category)
     {
         var container = new VisualElement();
-        var button = Resources.Load<VisualTreeAsset>("UiDocuments/CategoryButton")
-            .CloneTree();
+        var categoryButton = Resources.Load<VisualTreeAsset>("UiDocuments/CategoryButton").CloneTree();
         container.style.paddingTop = container.style.paddingBottom = 3;
-        container.Add(button);
-        return container;
-    }
+        container.Add(categoryButton);
 
-    private void CategoriesListViewBindItem(VisualElement item, List<Category> categories, int index)
-    {
-        var button = item.Q<Button>();
-        var label = item.Q<Label>("label");
-        var category = categories[index];
+        var label = categoryButton.Q<Label>("label");
         label.text = category.name;
 
-        var image = item.Q("image");
+        var image = categoryButton.Q("image");
 
         StartCoroutine(UiImageLoader.SetBackGroundImageFromUrl(category.thumbnailUrl,
             Resources.Load<Sprite>("Icons/loading"), image));
 
-        button.clickable.clicked += () =>
+        categoryButton.Q<Button>().clickable.clicked += () =>
         {
             selectedCategory = category;
             var searchCriteria = new SearchCriteria
@@ -258,14 +229,15 @@ public class AssetsInventory : MonoBehaviour
             var scrollView = CreateAssetsScrollView(searchCriteria);
             SetAssetsTabContent(scrollView, () => OpenTab(1), "Categories");
         };
+        return container;
     }
 
     private void SetAssetsTabContent(VisualElement visualElement, Action onBack, string backButtonText = "Back")
     {
         var assetsTabContent = tabBody.Q<VisualElement>("content");
-        var listView = tabBody.Q<ListView>("categories");
+        var categoriesView = tabBody.Q<ScrollView>("categories");
         assetsTabContent.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
-        listView.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+        categoriesView.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
         SetBodyContent(assetsTabContent, visualElement, onBack, backButtonText);
     }
 
@@ -302,7 +274,7 @@ public class AssetsInventory : MonoBehaviour
                 var size = assetGroup.Value.Count;
                 for (var i = 0; i < size; i++)
                 {
-                    var slot = new InventorySlot(assetGroup.Value[i], this, root);
+                    var slot = new AssetInventorySlot(assetGroup.Value[i], this, root);
                     slot.SetGridPosition(i, 3);
                     foldout.contentContainer.Add(slot.VisualElement());
                 }
@@ -365,5 +337,44 @@ public class AssetsInventory : MonoBehaviour
         ghostSlot.UpdateSlot(slot);
 
         ghostSlot.VisualElement().style.visibility = Visibility.Visible;
+    }
+
+    private void GhostSlotOnMouseUp(PointerUpEvent evt)
+    {
+        if (!isDragging)
+            return;
+
+        var slots = favBarSlots
+            .Where(favBarSlot =>
+                favBarSlot.VisualElement().worldBound.Overlaps(ghostSlot.VisualElement().worldBound))
+            .ToList();
+
+        if (slots.Count != 0)
+        {
+            var closestSlot = slots.OrderBy(x => Vector2.Distance
+                (x.VisualElement().worldBound.position, ghostSlot.VisualElement().worldBound.position)).First();
+            if (closestSlot == addSlot)
+            {
+                var favoriteItem = new FavoriteItem
+                {
+                    asset = new Asset
+                    {
+                        id = ghostSlot.GetAsset().id
+                    }
+                    //TODO: block
+                };
+                StartCoroutine(restClient.CreateFavoriteItem(favoriteItem, AddToFavoritePanel, () => { }));
+            }
+            else
+            {
+                closestSlot.UpdateSlot(ghostSlot);
+                closestSlot.favoriteItem.asset = ghostSlot.GetAsset();
+                //TODO: block
+                StartCoroutine(restClient.UpdateFavoriteItem(closestSlot.favoriteItem, () => { }, () => { }));
+            }
+        }
+
+        isDragging = false;
+        ghostSlot.VisualElement().style.visibility = Visibility.Hidden;
     }
 }

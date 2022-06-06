@@ -38,6 +38,15 @@ namespace src.Service
             }
         }
         
+        internal static IEnumerator Delete(string url, Action success, Action failure)
+        {
+            using (var webRequest = UnityWebRequest.Delete(url))
+            {
+                webRequest.SetRequestHeader("Accept", "*/*");
+                yield return ExecuteRequest(webRequest, success, failure);
+            }
+        }
+        
         internal static IEnumerator ExecuteRequest<TB, TR>(UnityWebRequest webRequest, TB body, Action<TR> success,
             Action failure)
         {
@@ -50,6 +59,7 @@ namespace src.Service
             var settings = new JsonSerializerSettings();
             settings.NullValueHandling = NullValueHandling.Ignore;
             var data = JsonConvert.SerializeObject(body, null, settings);
+            Debug.Log(data);
             var bodyRaw = Encoding.UTF8.GetBytes(data);
             webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
             webRequest.downloadHandler = new DownloadHandlerBuffer();

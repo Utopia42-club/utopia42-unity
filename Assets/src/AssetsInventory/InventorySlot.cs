@@ -6,24 +6,19 @@ using UnityEngine.UIElements;
 
 namespace src.AssetsInventory
 {
-    public class InventorySlot
+    public abstract class InventorySlot
     {
-        private Sprite assetDefaultImage = Resources.Load<Sprite>("Icons/loading");
-        private VisualElement slot;
-        private VisualElement slotIcon;
-        private Asset asset;
+        private static readonly Sprite assetDefaultImage = Resources.Load<Sprite>("Icons/loading");
+
+        private readonly VisualElement slot;
+        private readonly VisualElement slotIcon;
+
         private readonly global::AssetsInventory assetsInventory;
         private readonly VisualElement tooltipRoot;
         private IEnumerator imageCoroutine;
         private bool isLoadingImage = false;
 
-        public InventorySlot(Asset asset, global::AssetsInventory assetsInventory, VisualElement tooltipRoot,
-            int size = 80) : this(assetsInventory, tooltipRoot, asset.name, size)
-        {
-            SetAsset(asset);
-        }
-
-        public InventorySlot(global::AssetsInventory assetsInventory, VisualElement tooltipRoot = null,
+        protected InventorySlot(global::AssetsInventory assetsInventory, VisualElement tooltipRoot = null,
             string tooltip = null, int size = 80, int iconMargin = 0)
         {
             this.assetsInventory = assetsInventory;
@@ -47,7 +42,7 @@ namespace src.AssetsInventory
             });
         }
 
-        private void SetTooltip(string tooltip)
+        protected void SetTooltip(string tooltip)
         {
             if (tooltipRoot != null)
             {
@@ -55,25 +50,6 @@ namespace src.AssetsInventory
                 slotIcon.AddManipulator(new ToolTipManipulator(tooltipRoot));
             }
         }
-
-        public void SetAsset(Asset asset, bool updateImage = true)
-        {
-            this.asset = asset;
-            SetTooltip(asset.name);
-            if (updateImage)
-            {
-                imageCoroutine = UiImageLoader.SetBackGroundImageFromUrl(asset.thumbnailUrl, assetDefaultImage,
-                    slotIcon, () => isLoadingImage = false);
-                isLoadingImage = true;
-                assetsInventory.StartCoroutine(imageCoroutine);
-                slotIcon.RegisterCallback<DetachFromPanelEvent>(evt =>
-                {
-                    assetsInventory.StopCoroutine(imageCoroutine);
-                    isLoadingImage = false;
-                });
-            }
-        }
-
 
         public void SetGridPosition(int index, int itemsInARow)
         {
@@ -85,25 +61,25 @@ namespace src.AssetsInventory
             s.top = div * 90;
         }
 
+        protected void LoadImage(string url)
+        {
+            imageCoroutine = UiImageLoader.SetBackGroundImageFromUrl(url, assetDefaultImage,
+                slotIcon, () => isLoadingImage = false);
+            isLoadingImage = true;
+            assetsInventory.StartCoroutine(imageCoroutine);
+            slotIcon.RegisterCallback<DetachFromPanelEvent>(evt =>
+            {
+                assetsInventory.StopCoroutine(imageCoroutine);
+                isLoadingImage = false;
+            });
+        }
+
         public void SetBackground(Sprite sprite)
         {
             UiImageLoader.SetBackground(slotIcon, sprite);
         }
 
-        public void UpdateSlot(InventorySlot inventorySlot)
-        {
-            if (inventorySlot.IsLoadingImage())
-            {
-                SetAsset(inventorySlot.GetAsset());
-            }
-            else
-            {
-                SetAsset(inventorySlot.GetAsset(), false);
-                SetBackground(inventorySlot.GetBackground());
-            }
-        }
-
-        private bool IsLoadingImage()
+        public bool IsLoadingImage()
         {
             return isLoadingImage;
         }
@@ -118,14 +94,109 @@ namespace src.AssetsInventory
             return slot;
         }
 
+        public Sprite GetBackground()
+        {
+            return slotIcon.style.backgroundImage.value.sprite;
+        }
+    }
+
+    public class AssetInventorySlot : InventorySlot
+    {
+        private Asset asset;
+
+        public AssetInventorySlot(Asset asset, global::AssetsInventory assetsInventory,
+            VisualElement tooltipRoot = null, int size = 80, int iconMargin = 0)
+            : base(assetsInventory, tooltipRoot, asset.name, size, iconMargin)
+        {
+            SetAsset(asset);
+        }
+
+        public void SetAsset(Asset asset, bool updateImage = true)
+        {
+            this.asset = asset;
+            SetTooltip(asset.name);
+            if (updateImage)
+                LoadImage(asset.thumbnailUrl);
+        }
+
+        public Asset GetAsset()
+        {
+            return asset;
+        }
+    }
+
+    public class AssetBlockInventorySlot : InventorySlot
+    {
+        private Asset asset;
+
+        public AssetBlockInventorySlot(global::AssetsInventory assetsInventory, VisualElement tooltipRoot = null,
+            string tooltip = null, int size = 80, int iconMargin = 0)
+            : base(assetsInventory, tooltipRoot, tooltip, size, iconMargin)
+        {
+        }
+
+        public void SetAsset(Asset asset, bool updateImage = true)
+        {
+            this.asset = asset;
+            SetTooltip(asset.name);
+            if (updateImage)
+                LoadImage(asset.thumbnailUrl);
+        }
+
         public Asset GetAsset()
         {
             return asset;
         }
 
-        private Sprite GetBackground()
+        public void UpdateSlot(InventorySlot inventorySlot)
         {
-            return slotIcon.style.backgroundImage.value.sprite;
+            switch (inventorySlot)
+            {
+                case AssetInventorySlot assetInventorySlot:
+                    UpdateAssetSlot(assetInventorySlot, assetInventorySlot.GetAsset());
+                    break;
+                case AssetBlockInventorySlot assetBlockSlot:
+                {
+                    var asset = assetBlockSlot.GetAsset();
+                    if (asset != null)
+                    {
+                        UpdateAssetSlot(inventorySlot, asset);
+                    }
+
+                    //TODO: else block
+                    break;
+                }
+            }
+        }
+
+        private void UpdateAssetSlot(InventorySlot inventorySlot, Asset asset)
+        {
+            if (inventorySlot.IsLoadingImage())
+            {
+                SetAsset(asset);
+            }
+            else
+            {
+                SetAsset(asset, false);
+                SetBackground(inventorySlot.GetBackground());
+            }
+        }
+    }
+
+    public class FavoriteItemInventorySlot : AssetBlockInventorySlot
+    {
+        public readonly FavoriteItem favoriteItem;
+
+        public FavoriteItemInventorySlot(FavoriteItem favoriteItem, global::AssetsInventory assetsInventory,
+            VisualElement tooltipRoot = null, string tooltip = null, int size = 80, int iconMargin = 0)
+            : base(assetsInventory, tooltipRoot, tooltip, size, iconMargin)
+        {
+            this.favoriteItem = favoriteItem;
+            if (favoriteItem?.asset != null)
+            {
+                SetAsset(favoriteItem.asset);
+            }
+            //TODO: else block
         }
     }
 }

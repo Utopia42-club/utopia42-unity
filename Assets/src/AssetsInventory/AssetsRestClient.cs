@@ -87,5 +87,23 @@ namespace src.AssetsInventory
             var url = Constants.ApiURL + "/assets/favorite-items";
             yield return RestClient.Post(url, searchCriteria, consumer, failed);
         }
+
+        public IEnumerator CreateFavoriteItem(FavoriteItem favoriteItem, Action<FavoriteItem> consumer, Action failed)
+        {
+            var url = Constants.ApiURL + "/assets/favorite-items/create";
+            yield return RestClient.Post(url, favoriteItem, consumer, failed);
+        }
+        
+        public IEnumerator UpdateFavoriteItem(FavoriteItem favoriteItem, Action success, Action failed)
+        {
+            var url = Constants.ApiURL + "/assets/favorite-items/update";
+            yield return RestClient.Post(url, favoriteItem, success, failed);
+        }
+
+        public IEnumerator DeleteFavoriteItem(FavoriteItem favoriteItem, Action success, Action failed)
+        {
+            var url = Constants.ApiURL + "/assets/favorite-items/" + favoriteItem.id;
+            yield return RestClient.Delete(url, success, failed);
+        }
     }
 }
