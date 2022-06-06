@@ -271,7 +271,7 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.SetActive(false);
             }
-            else if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType)
+            else if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType metaBlockType)
             {
                 // TODO [detach metablock]: if the focus is not already on a metablock, display the placeholder for the selected(Meta)BlockId
 
@@ -281,7 +281,7 @@ namespace src
 
                 if (MetaBlockPlaceHolder != null)
                 {
-                    var mp = new MetaPosition(transform.forward.z > 0 ? blockHitPoint - 0.2f * Vector3.forward : blockHitPoint + 0.2f * Vector3.forward); // 0.2 is the gap needed for image/video faces
+                    var mp = metaBlockType.GetPutPosition(blockHitPoint, transform.forward);
                     if (chunk.GetMetaAt(mp) == null && CanEdit(posInt, out placeLand))
                     {
                         MetaBlockPlaceHolder.transform.position = mp.ToWorld();

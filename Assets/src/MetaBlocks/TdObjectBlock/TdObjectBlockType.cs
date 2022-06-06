@@ -1,4 +1,6 @@
 using Siccity.GLTFUtility;
+using src.MetaBlocks.ImageBlock;
+using src.Model;
 using src.Utils;
 using UnityEngine;
 
@@ -27,10 +29,16 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 colliderTransform.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
+
             go.SetActive(false);
             go.name = "3d object placeholder";
-            go.transform.localScale = 2 * Vector3.one;
+            go.transform.localScale = 0.6f * Vector3.one;
             return go;
+        }
+
+        public override MetaPosition GetPutPosition(Vector3 purePosition, Vector3 playerForward)
+        {
+            return new MetaPosition(purePosition + 0.6f * Vector3.up);
         }
     }
 }

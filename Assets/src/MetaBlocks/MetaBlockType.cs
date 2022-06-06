@@ -39,5 +39,10 @@ namespace src.MetaBlocks
             if (placeHolder != null) return placeHolder;
             return placeHolder = CreatePlaceHolder(false, false);
         }
+
+        public virtual MetaPosition GetPutPosition(Vector3 purePosition, Vector3 playerForward)
+        {
+            return new MetaPosition(purePosition);
+        }
     }
 }

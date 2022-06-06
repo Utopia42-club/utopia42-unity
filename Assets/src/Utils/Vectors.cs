@@ -26,10 +26,10 @@ namespace src.Utils
         public static Vector3Int TruncateFloor(Vector3 vector, int truncatePrecision = 3, int multiplyPower = 0)
         {
             var constant = Mathf.Pow(10, truncatePrecision);
-            var multiply = Mathf.Pow(10, multiplyPower - truncatePrecision);
-            vector.x = Mathf.Round(vector.x * constant) * multiply;
-            vector.y = Mathf.Round(vector.y * constant) * multiply;
-            vector.z = Mathf.Round(vector.z * constant) * multiply;
+            var multiply = Mathf.Pow(10, multiplyPower);
+            vector.x = Mathf.Round(vector.x * constant) * multiply / constant;
+            vector.y = Mathf.Round(vector.y * constant) * multiply / constant;
+            vector.z = Mathf.Round(vector.z * constant) * multiply / constant;
             return FloorToInt(vector);
         }
         
