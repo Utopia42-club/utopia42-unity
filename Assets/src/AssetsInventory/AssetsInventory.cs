@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using src.AssetsInventory;
 using src.AssetsInventory.Models;
 using src.Canvas;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.UIElements;
 
 public class AssetsInventory : MonoBehaviour
@@ -17,26 +17,119 @@ public class AssetsInventory : MonoBehaviour
     private readonly Dictionary<int, Pack> packs = new Dictionary<int, Pack>();
     private VisualElement loadingLayer;
     private Category selectedCategory;
-    private Sprite assetDefaultImage;
     private string filterText = "";
+    private static bool isDragging;
+    private VisualElement inventory;
+    private VisualElement favPanel;
+    private Button openCloseInvButton;
+    private Sprite closeImage;
+    private Sprite openImage;
+    private ScrollView favBar;
+    private List<InventorySlot> favBarSlots = new List<InventorySlot>();
+    private InventorySlot addSlot;
+    private InventorySlot ghostSlot;
 
     void Start()
     {
         root = GetComponent<UIDocument>().rootVisualElement;
+        inventory = root.Q<VisualElement>("inventory");
+        favPanel = root.Q<VisualElement>("favPanel");
+        favBar = favPanel.Q<ScrollView>("favBar");
+        Utils.IncreaseScrollSpeed(favBar, 600);
+        openCloseInvButton = favPanel.Q<Button>("openCloseInvButton");
+        openCloseInvButton.clickable.clicked += ToggleInventory;
         loadingLayer = root.Q<VisualElement>("loadingLayer");
-        tabs = new Dictionary<int, Tuple<Button, string>>();
+        ghostSlot = new InventorySlot(this, null, null, 60);
+        root.Add(ghostSlot.VisualElement());
+        ghostSlot.VisualElement().visible = false;
+        ghostSlot.HideSlotBackground();
 
+        openImage = Resources.Load<Sprite>("Icons/openPane");
+        closeImage = Resources.Load<Sprite>("Icons/closePane");
+
+        tabs = new Dictionary<int, Tuple<Button, string>>();
         tabBody = root.Q<VisualElement>("tabBody");
         var assetsTabBt = root.Q<Button>("assetsTab");
-        var inventoryTabBt = root.Q<Button>("inventoryTab");
+        var blocksTabBt = root.Q<Button>("blocksTab");
 
         tabs.Add(1, new Tuple<Button, string>(assetsTabBt, "UiDocuments/AssetsTab"));
-        tabs.Add(2, new Tuple<Button, string>(inventoryTabBt, "UiDocuments/InventoryTab"));
+        tabs.Add(2, new Tuple<Button, string>(blocksTabBt, "UiDocuments/BlocksTab"));
 
         foreach (var tab in tabs)
             tab.Value.Item1.clicked += () => OpenTab(tab.Key);
-        
-        OpenTab(1);
+
+        ghostSlot.VisualElement().RegisterCallback<PointerMoveEvent>(GhostSlotOnMouseMove);
+        ghostSlot.VisualElement().RegisterCallback<PointerUpEvent>(GhostSlotOnMouseUp);
+
+        StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
+        {
+            foreach (var favoriteItem in favItems)
+            {
+                if (favoriteItem.asset != null)
+                {
+                    var slot = new InventorySlot(favoriteItem.asset, this, root, 70);
+                    favBarSlots.Add(slot);
+                    favBar.Add(slot.VisualElement());
+                }
+                else
+                {
+                    //TODO: implement
+                }
+            }
+
+            addSlot = new InventorySlot(this, root, "Add", 80, 10);
+            addSlot.SetBackground(Resources.Load<Sprite>("Icons/add"));
+            favBarSlots.Add(addSlot);
+            favBar.Add(addSlot.VisualElement());
+        }, () => { }, this));
+    }
+
+    private void GhostSlotOnMouseUp(PointerUpEvent evt)
+    {
+        if (!isDragging)
+            return;
+
+        var slots
+            = favBarSlots.Where(favBarSlot =>
+                    favBarSlot.VisualElement().worldBound.Overlaps(ghostSlot.VisualElement().worldBound))
+                .ToList();
+
+
+        //Found at least one
+        if (slots.Count != 0)
+        {
+            InventorySlot closestSlot = slots.OrderBy(x => Vector2.Distance
+                (x.VisualElement().worldBound.position, ghostSlot.VisualElement().worldBound.position)).First();
+
+            //Set the new inventory slot with the data
+            closestSlot.SetAsset(ghostSlot.GetAsset());
+        }
+
+        //Clear dragging related visuals and data
+        isDragging = false;
+        ghostSlot.VisualElement().style.visibility = Visibility.Hidden;
+    }
+
+    private void GhostSlotOnMouseMove(PointerMoveEvent evt)
+    {
+        if (!isDragging)
+            return;
+        ghostSlot.VisualElement().style.top = evt.position.y - ghostSlot.VisualElement().layout.height / 2;
+        ghostSlot.VisualElement().style.left = evt.position.x - ghostSlot.VisualElement().layout.width / 2;
+    }
+
+    private void ToggleInventory()
+    {
+        var isVisible = inventory.style.visibility == Visibility.Visible;
+        inventory.style.visibility = isVisible ? Visibility.Hidden : Visibility.Visible;
+        favPanel.style.right = isVisible ? 5 : 362;
+        var background = new StyleBackground
+        {
+            value = Background.FromSprite(isVisible ? openImage : closeImage)
+        };
+        openCloseInvButton.style.backgroundImage = background;
+        if (!isVisible)
+            OpenTab(1);
     }
 
     private void Update()
@@ -63,13 +156,8 @@ public class AssetsInventory : MonoBehaviour
         foreach (var t in tabs)
             t.Value.Item1.RemoveFromClassList("selected-tab");
         button.AddToClassList("selected-tab");
-        OnTabChanged(index);
-    }
-
-    private void OnTabChanged(int tabIndex)
-    {
-        currentTab = tabIndex;
-        switch (tabIndex)
+        currentTab = index;
+        switch (index)
         {
             case 1:
                 ShowAssetsTab();
@@ -93,7 +181,6 @@ public class AssetsInventory : MonoBehaviour
                 this.packs[pack.id] = pack;
         }, () => { ShowLoadingLayer(false); }));
 
-        assetDefaultImage = Resources.Load<Sprite>("Icons/loading");
         ShowLoadingLayer(true);
         StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
         {
@@ -101,6 +188,7 @@ public class AssetsInventory : MonoBehaviour
                 return;
             var listView = tabBody.Q<ListView>("categories");
             var scrollView = listView.Q<ScrollView>();
+            Utils.IncreaseScrollSpeed(scrollView, 600);
             scrollView.mode = ScrollViewMode.Vertical;
             scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
             listView.makeItem = CreateCategoriesListViewItem;
@@ -219,8 +307,9 @@ public class AssetsInventory : MonoBehaviour
                 var size = assetGroup.Value.Count;
                 for (var i = 0; i < size; i++)
                 {
-                    var slot = CreateSlot(assetGroup.Value[i], i);
-                    foldout.contentContainer.Add(slot);
+                    var slot = new InventorySlot(assetGroup.Value[i], this, root);
+                    slot.SetGridPosition(i, 3);
+                    foldout.contentContainer.Add(slot.VisualElement());
                 }
 
                 foldout.contentContainer.style.height = 90 * (size / 3 + 1);
@@ -271,27 +360,19 @@ public class AssetsInventory : MonoBehaviour
         return dictionary;
     }
 
-    private VisualElement CreateSlot(Asset asset, int i)
+    public void StartDrag(Vector2 position, InventorySlot slot)
     {
-        var slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot").CloneTree();
-        var slotIcon = slot.Q<VisualElement>("slotIcon");
-        slotIcon.tooltip = asset.name;
-        slotIcon.AddManipulator(new ToolTipManipulator(root));
-        var imageCoroutine = UiImageLoader.SetBackGroundImageFromUrl(asset.thumbnailUrl, assetDefaultImage, slotIcon);
-        StartCoroutine(imageCoroutine);
-        slotIcon.RegisterCallback<DetachFromPanelEvent>(evt =>
-        {
-            StopCoroutine(imageCoroutine);
-        });
-        var s = slot.style;
-        s.width = 80;
-        s.height = 80;
-        s.marginBottom = s.marginTop = s.marginLeft = s.marginRight = 3;
-        s.position = new StyleEnum<Position>(Position.Absolute);
-        var div = i / 3;
-        var rem = i % 3;
-        s.left = rem * 90;
-        s.top = div * 90;
-        return slot;
+        //Set tracking variables
+        isDragging = true;
+
+        //Set the new position
+        ghostSlot.VisualElement().style.top = position.y - ghostSlot.VisualElement().layout.height / 2;
+        ghostSlot.VisualElement().style.left = position.x - ghostSlot.VisualElement().layout.width / 2;
+
+        //Set the image
+        ghostSlot.SetBackground(slot.GetAsset().thumbnailUrl);
+
+        //Flip the visibility on
+        ghostSlot.VisualElement().style.visibility = Visibility.Visible;
     }
 }
