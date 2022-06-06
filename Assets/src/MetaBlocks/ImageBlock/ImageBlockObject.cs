@@ -40,8 +40,7 @@ namespace src.MetaBlocks.ImageBlock
         {
             if (snackItem != null) snackItem.Remove();
             SetupDefaultSnack();
-            if (!canEdit) return;
-            // TODO [detach metablock]: show highlight
+            base.Focus();
         }
 
         protected virtual void SetupDefaultSnack()
@@ -121,24 +120,9 @@ namespace src.MetaBlocks.ImageBlock
                 return;
             }
 
-            var transform = gameObject.transform;
+            var imgFace = CreateImageFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(),
+                out imageContainer, out image, out var meshRenderer, true);
 
-            imageContainer = new GameObject
-            {
-                name = "image container"
-            };
-            imageContainer.transform.SetParent(transform, false);
-            imageContainer.transform.localPosition = Vector3.zero;
-            imageContainer.transform.localScale = new Vector3(props.width, props.height, 1);
-
-            image = new GameObject();
-            image.transform.SetParent(imageContainer.transform, false);
-            image.transform.localPosition = new Vector3(-0.5f, -0.5f, 0);
-
-            imageContainer.transform.eulerAngles = props.rotation.ToVector3();
-
-            var imgFace = image.AddComponent<ImageFace>();
-            var meshRenderer = imgFace.Initialize();
             if (!InLand(meshRenderer))
             {
                 UpdateState(State.OutOfBound);
@@ -149,21 +133,41 @@ namespace src.MetaBlocks.ImageBlock
             image.layer = props.detectCollision
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
-            var faceSelectable = image.AddComponent<MetaFocusable>();
-            faceSelectable.Initialize(this);
+            image.AddComponent<MetaFocusable>().Initialize(this);
+        }
+
+        public static ImageFace CreateImageFace(Transform transform, int width, int height, Vector3 rotation,
+            out GameObject container, out GameObject image, out MeshRenderer meshRenderer, bool withCollider)
+        {
+            container = new GameObject
+            {
+                name = "image container"
+            };
+            container.transform.SetParent(transform, false);
+            container.transform.localPosition = Vector3.zero;
+            container.transform.localScale = new Vector3(width, height, 1);
+
+            image = new GameObject();
+            image.transform.SetParent(container.transform, false);
+            image.transform.localPosition = new Vector3(-0.5f, -0.5f, 0);
+
+            container.transform.eulerAngles = rotation;
+
+            var imgFace = image.AddComponent<ImageFace>();
+            meshRenderer = imgFace.Initialize(withCollider);
+            return imgFace;
         }
 
         protected override void OnStateChanged(State state)
         {
-            if (MetaBlockState.IsErrorState(state))
-                DestroyImage();
-
-            if (snackItem != null) // TODO [detach metablock]: && focused?
-            {
-                ((SnackItem.Text) snackItem).UpdateLines(GetSnackLines());
-            }
-
-            // TODO [detach metablock]: update view! (show the green placeholder if the state is ok or loading (metadata)
+            ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
+            var error = MetaBlockState.IsErrorState(state);
+            if (!error && state != State.Empty) return;
+            
+            DestroyImage();
+            CreateImageFace(gameObject.transform, MediaBlockEditor.DEFAULT_DIMENSION, MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero, 
+                out imageContainer, out image, out var renderer, true).PlaceHolderInit(renderer, block.type, error);
+            image.AddComponent<MetaFocusable>().Initialize(this);
         }
 
         protected override List<string> GetSnackLines()

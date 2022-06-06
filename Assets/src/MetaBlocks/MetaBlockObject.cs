@@ -10,7 +10,7 @@ namespace src.MetaBlocks
 {
     public abstract class MetaBlockObject : MonoBehaviour
     {
-        private MetaBlock block;
+        public MetaBlock block { get; private set; }
         protected Chunk chunk;
         protected bool ready = false;
         protected Land land;
@@ -41,7 +41,11 @@ namespace src.MetaBlocks
 
         public abstract void OnDataUpdate();
 
-        public abstract void Focus();
+        public virtual void Focus()
+        {
+            if (!canEdit) return;
+            ShowFocusHighlight();
+        }
 
         public abstract void UnFocus();
 

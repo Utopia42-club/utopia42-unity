@@ -8,9 +8,12 @@ namespace src.MetaBlocks.VideoBlock
         {
         }
 
-        public override GameObject CreatePlaceHolder(bool error)
+        public override GameObject CreatePlaceHolder(bool error, bool withCollider)
         {
-            return null;
+            VideoBlockObject.CreateVideoFace(World.INSTANCE.transform, VideoBlockEditor.DEFAULT_DIMENSION,
+                    VideoBlockEditor.DEFAULT_DIMENSION, Vector3.zero, out var container, out _, out var renderer, false)
+                .PlaceHolderInit(renderer, error);
+            return container;
         }
     }
 }

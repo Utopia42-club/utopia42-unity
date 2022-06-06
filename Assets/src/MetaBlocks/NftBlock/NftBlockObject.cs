@@ -24,8 +24,7 @@ namespace src.MetaBlocks.NftBlock
         {
             if (snackItem != null) snackItem.Remove();
             SetupDefaultSnack();
-            if (!canEdit) return;
-            // TODO [detach metablock]: show highlight
+            base.Focus();
         }
 
         public override void OnDataUpdate()

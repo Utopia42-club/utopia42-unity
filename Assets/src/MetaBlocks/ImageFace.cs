@@ -1,7 +1,6 @@
 using System.Collections;
 using src.MetaBlocks;
 using src.MetaBlocks.ImageBlock;
-using src.Service;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -13,6 +12,11 @@ namespace src
         {
             block.UpdateState(State.Loading);
             StartCoroutine(LoadImage(renderer.sharedMaterial, url, block, 5));
+        }
+
+        public void PlaceHolderInit(MeshRenderer renderer, MetaBlockType type, bool error)
+        {
+            renderer.sharedMaterial.mainTexture = type.GetIcon(error).texture;
         }
 
         private IEnumerator LoadImage(Material material, string url, ImageBlockObject block, int retries)

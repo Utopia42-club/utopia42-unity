@@ -52,9 +52,7 @@ namespace src.MetaBlocks.TdObjectBlock
         public override void Focus()
         {
             SetupDefaultSnack();
-            if (!canEdit) return;
-            if (TdObjectCollider != null)
-                ShowFocusHighlight();
+            base.Focus();
         }
 
         public override void ShowFocusHighlight()
@@ -244,8 +242,19 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
             if (state == State.Ok) return;
+            
+            // setting place holder
             DestroyObject();
-            SetPlaceHolder(MetaBlockState.IsErrorState(state));
+            ResetContainer();
+            tdObject = GetBlock().type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), true);
+            tdObject.transform.SetParent(tdObjectContainer.transform, false);
+            tdObject.SetActive(true);
+            TdObjectCollider = tdObject.GetComponentInChildren<Collider>();
+            tdObject.transform.SetParent(tdObjectContainer.transform, false);
+
+            if (chunk == null) return;
+            tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
+            tdObjectFocusable.Initialize(this);
         }
 
         protected override List<string> GetSnackLines()
@@ -303,17 +312,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void SetPlaceHolder(bool error)
         {
-            DestroyObject();
-            ResetContainer();
-            tdObject = GetBlock().type.CreatePlaceHolder(error);
-            tdObject.transform.SetParent(tdObjectContainer.transform, false);
-            tdObject.SetActive(true);
-            TdObjectCollider = tdObject.GetComponentInChildren<Collider>();
-            tdObject.transform.SetParent(tdObjectContainer.transform, false);
-
-            if (chunk == null) return;
-            tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
-            tdObjectFocusable.Initialize(this);
+            
         }
 
         private void ResetContainer()

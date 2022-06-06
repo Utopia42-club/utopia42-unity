@@ -8,9 +8,13 @@ namespace src.MetaBlocks.ImageBlock
         {
         }
 
-        public override GameObject CreatePlaceHolder(bool error)
+        public override GameObject CreatePlaceHolder(bool error, bool withCollider)
         {
-            return null;
+            ImageBlockObject
+                .CreateImageFace(World.INSTANCE.transform, MediaBlockEditor.DEFAULT_DIMENSION,
+                    MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero, out var container, out _, out var renderer, false)
+                .PlaceHolderInit(renderer, this, error);
+            return container;
         }
     }
 }

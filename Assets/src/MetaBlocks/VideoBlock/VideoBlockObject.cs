@@ -37,10 +37,9 @@ namespace src.MetaBlocks.VideoBlock
 
         public override void Focus()
         {
-            if (!canEdit) return;
             if (snackItem != null) snackItem.Remove();
-
             SetupDefaultSnack();
+            base.Focus();
         }
 
         private void SetupDefaultSnack()
@@ -92,15 +91,14 @@ namespace src.MetaBlocks.VideoBlock
 
         protected override void OnStateChanged(State state)
         {
-            if (MetaBlockState.IsErrorState(state))
-                DestroyVideo();
-
-            // if (snackItem != null) // TODO [detach metablock]: && focused?
-            // {
-            //     ((SnackItem.Text) snackItem).UpdateLines(GetSnackLines());
-            // }
-
-            // TODO [detach metablock]: update view! (show the green placeholder if the state is ok or loading (metadata)
+            ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
+            var error = MetaBlockState.IsErrorState(state);
+            if (!error && state != State.Empty) return;
+            
+            DestroyVideo();
+            CreateVideoFace(gameObject.transform, VideoBlockEditor.DEFAULT_DIMENSION, VideoBlockEditor.DEFAULT_DIMENSION, Vector3.zero, 
+                out videoContainer, out var go, out var renderer, true).PlaceHolderInit(renderer, error);
+            go.AddComponent<MetaFocusable>().Initialize(this);
         }
 
         protected override List<string> GetSnackLines()
@@ -161,32 +159,15 @@ namespace src.MetaBlocks.VideoBlock
                 return;
             }
 
-            var transform = gameObject.transform;
-
-            videoContainer = new GameObject
-            {
-                name = "video container"
-            };
-            videoContainer.transform.SetParent(transform, false);
-            videoContainer.transform.localPosition = Vector3.zero;
-            videoContainer.transform.localScale = new Vector3(props.width, props.height, 1);
-
-            var go = new GameObject();
-            go.transform.SetParent(videoContainer.transform, false);
-            go.transform.localPosition = new Vector3(-0.5f, -0.5f, 0);
-
-            videoContainer.transform.eulerAngles = props.rotation.ToVector3();
-
-
-            video = go.AddComponent<VideoFace>();
-            var meshRenderer = video.Initialize();
+            video = CreateVideoFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(), out videoContainer, out var go, out var meshRenderer, true);
+            
             if (!InLand(meshRenderer))
             {
                 UpdateState(State.OutOfBound);
                 return;
             }
 
-            video.Init(meshRenderer, props.url, props.previewTime);
+            video.Init(meshRenderer, props.url, props.previewTime, this);
             go.layer = props.detectCollision
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
@@ -195,9 +176,29 @@ namespace src.MetaBlocks.VideoBlock
                 // if (focused) // TODO [detach metablock] ? 
                 // SetupDefaultSnack();
             });
+            go.AddComponent<MetaFocusable>().Initialize(this);
+        }
 
-            var faceSelectable = go.AddComponent<MetaFocusable>();
-            faceSelectable.Initialize(this);
+        public static VideoFace CreateVideoFace(Transform transform, int width, int height, Vector3 rotation, out GameObject container, out GameObject videoGo, out MeshRenderer renderer, bool withCollider)
+        {
+            container = new GameObject
+            {
+                name = "video container"
+            };
+            container.transform.SetParent(transform, false);
+            container.transform.localPosition = Vector3.zero;
+            container.transform.localScale = new Vector3(width, height, 1);
+
+            videoGo = new GameObject();
+            videoGo.transform.SetParent(container.transform, false);
+            videoGo.transform.localPosition = new Vector3(-0.5f, -0.5f, 0);
+
+            container.transform.eulerAngles = rotation;
+
+
+            var face = videoGo.AddComponent<VideoFace>();
+            renderer = face.Initialize(withCollider);
+            return face;
         }
 
         private void EditProps()

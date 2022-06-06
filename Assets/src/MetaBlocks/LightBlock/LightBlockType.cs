@@ -8,7 +8,7 @@ namespace src.MetaBlocks.LightBlock
         {
         }
 
-        public override GameObject CreatePlaceHolder(bool error)
+        public override GameObject CreatePlaceHolder(bool error, bool withCollider)
         {
             return null;
         }

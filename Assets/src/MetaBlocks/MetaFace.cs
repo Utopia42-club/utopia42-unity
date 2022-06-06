@@ -10,10 +10,11 @@ namespace src
         private MeshCollider meshCollider;
         private MeshRenderer meshRenderer;
 
-        public MeshRenderer Initialize()
+        public MeshRenderer Initialize(bool withCollider)
         {
             meshFilter = gameObject.AddComponent<MeshFilter>();
-            meshCollider = gameObject.AddComponent<MeshCollider>();
+            if (withCollider)
+                meshCollider = gameObject.AddComponent<MeshCollider>();
 
             meshRenderer = gameObject.AddComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = new Material(Shader.Find("Unlit/Texture"));
@@ -45,8 +46,12 @@ namespace src
             };
 
             meshFilter.sharedMesh = mesh;
-            meshCollider.sharedMesh = mesh;
-            meshCollider.convex = true;
+            if (withCollider)
+            {
+                meshCollider.sharedMesh = mesh;
+                meshCollider.convex = true;
+            }
+
             return meshRenderer;
         }
 

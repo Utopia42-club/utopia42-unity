@@ -1,4 +1,7 @@
 using System.Collections;
+using src.MetaBlocks;
+using src.MetaBlocks.VideoBlock;
+using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Video;
@@ -12,9 +15,12 @@ namespace src
         private float prevTime;
         private bool previewing = true;
         private bool prepared = false;
+        private VideoBlockObject block;
 
-        public void Init(MeshRenderer meshRenderer, string url, float prevTime)
+        public void Init(MeshRenderer meshRenderer, string url, float prevTime, VideoBlockObject block)
         {
+            this.block = block;
+            block.UpdateState(State.Loading);
             previewing = true;
             prepared = false;
             loading.Invoke(true);
@@ -26,6 +32,11 @@ namespace src
             videoPlayer.Prepare();
             videoPlayer.prepareCompleted += PrepareCompeleted;
             meshRenderer.sharedMaterial.mainTexture = videoPlayer.texture;
+        }
+
+        public void PlaceHolderInit(MeshRenderer renderer, bool error)
+        {
+            renderer.sharedMaterial.mainTexture = Blocks.VideoBlockType.GetIcon(error).texture;
         }
 
         private void Mute(bool m)
@@ -54,6 +65,7 @@ namespace src
             yield return null;
             Mute(false);
             prepared = true;
+            block.UpdateState(State.Ok);
             loading.Invoke(false);
         }
 
@@ -94,8 +106,13 @@ namespace src
 
         private void OnDestroy()
         {
-            videoPlayer.Stop();
-            Destroy(videoPlayer.texture);
+            if (videoPlayer != null)
+            {
+                videoPlayer.Stop();
+                Destroy(videoPlayer.texture);
+                videoPlayer = null;
+            }
+
             base.OnDestroy();
         }
     }

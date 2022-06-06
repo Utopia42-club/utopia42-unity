@@ -1,3 +1,4 @@
+using src.MetaBlocks.ImageBlock;
 using src.Model;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,14 +8,13 @@ namespace src.MetaBlocks.NftBlock
     public class NftBlockEditor : MonoBehaviour
     {
         public static readonly string PREFAB = "MetaBlocks/NftBlockEditor";
-        public static readonly int DEFAULT_DIMENSION = 3;
         [SerializeField] public InputField collection;
         [SerializeField] public InputField tokenId;
-        
+
         [SerializeField] public InputField rotationX;
         [SerializeField] public InputField rotationY;
         [SerializeField] public InputField rotationZ;
-        
+
         [SerializeField] public InputField width;
         [SerializeField] public InputField height;
         [SerializeField] public Toggle detectCollision;
@@ -29,8 +29,8 @@ namespace src.MetaBlocks.NftBlock
                 tokenId = long.Parse(tokenId.text),
                 rotation = new SerializableVector3(float.Parse(rotationX.text), float.Parse(rotationY.text),
                     float.Parse(rotationZ.text)),
-                width = HasValue(width) ? int.Parse(width.text) : DEFAULT_DIMENSION,
-                height = HasValue(height) ? int.Parse(height.text) : DEFAULT_DIMENSION,
+                width = HasValue(width) ? int.Parse(width.text) : MediaBlockEditor.DEFAULT_DIMENSION,
+                height = HasValue(height) ? int.Parse(height.text) : MediaBlockEditor.DEFAULT_DIMENSION,
                 detectCollision = detectCollision.isOn
             };
         }
@@ -54,8 +54,8 @@ namespace src.MetaBlocks.NftBlock
             {
                 collection.text = "";
                 tokenId.text = "";
-                width.text = DEFAULT_DIMENSION.ToString();
-                height.text = DEFAULT_DIMENSION.ToString();
+                width.text = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
+                height.text = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
                 detectCollision.isOn = true;
                 return;
             }
