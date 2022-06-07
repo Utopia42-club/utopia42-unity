@@ -1,5 +1,6 @@
 using System;
 using Newtonsoft.Json;
+using Siccity.GLTFUtility;
 using src.Model;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -40,9 +41,20 @@ namespace src.MetaBlocks
             return placeHolder = CreatePlaceHolder(false, false);
         }
 
-        public virtual MetaPosition GetPutPosition(Vector3 purePosition, Vector3 playerForward)
+        public virtual MetaPosition GetPutPosition(Vector3 purePosition)
         {
             return new MetaPosition(purePosition);
+        }
+        
+        protected static GameObject Create3dPlaceHolder(string glbName, string objName, bool withCollider, float localScale)
+        {
+            var go = Importer.LoadFromFile($"Assets/Resources/PlaceHolder/{glbName}.glb");
+            if (withCollider)
+                go.AddComponent<BoxCollider>();
+            go.SetActive(false);
+            go.name = "marker placeholder";
+            go.transform.localScale = localScale * Vector3.one;
+            return go;
         }
     }
 }

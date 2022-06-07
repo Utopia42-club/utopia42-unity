@@ -14,19 +14,6 @@ namespace src.MetaBlocks.NftBlock
     {
         private NftMetadata metadata = new NftMetadata();
 
-        protected override void Start()
-        {
-            base.Start();
-            gameObject.name = "nft block object";
-        }
-
-        public override void Focus()
-        {
-            if (snackItem != null) snackItem.Remove();
-            SetupDefaultSnack();
-            base.Focus();
-        }
-
         public override void OnDataUpdate()
         {
             RenderFace();
@@ -34,11 +21,7 @@ namespace src.MetaBlocks.NftBlock
 
         protected override void SetupDefaultSnack()
         {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
+            if (snackItem != null) snackItem.Remove();
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
@@ -75,7 +58,7 @@ namespace src.MetaBlocks.NftBlock
                 });
             }
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             var url = (props as NftBlockProperties)?.GetOpenseaUrl();
             if (!string.IsNullOrEmpty(url))
                 lines.Add("Press O to open Opensea URL");
@@ -99,7 +82,7 @@ namespace src.MetaBlocks.NftBlock
         {
             DestroyImage();
             metadata = null;
-            var props = (NftBlockProperties) GetBlock().GetProps();
+            var props = (NftBlockProperties) Block.GetProps();
             if (props == null || string.IsNullOrWhiteSpace(props.collection))
             {
                 UpdateState(State.Empty);
@@ -124,24 +107,24 @@ namespace src.MetaBlocks.NftBlock
                 .WithContent(NftBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<NftBlockEditor>();
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             editor.SetValue(props as NftBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new NftBlockProperties(GetBlock().GetProps() as NftBlockProperties);
+                var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
 
                 props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
         }
 
         private void OpenLink()
         {
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             var url = (props as NftBlockProperties)?.GetOpenseaUrl();
             if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
         }
@@ -155,12 +138,12 @@ namespace src.MetaBlocks.NftBlock
         
         public override void ExitMovingState()
         {
-            var props = new NftBlockProperties(GetBlock().GetProps() as NftBlockProperties);
+            var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
             if (image == null || state != State.Ok) return;
             props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
-            GetBlock().SetProps(props, land);
+            Block.SetProps(props, land);
             
-            SetupDefaultSnack();
+            if (snackItem != null) SetupDefaultSnack();
             if (scaleRotationController == null) return;
             scaleRotationController.Detach();
             DestroyImmediate(scaleRotationController);

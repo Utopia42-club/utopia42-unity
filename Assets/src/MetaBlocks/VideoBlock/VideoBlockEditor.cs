@@ -1,3 +1,4 @@
+using src.MetaBlocks.ImageBlock;
 using src.Model;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,7 +8,6 @@ namespace src.MetaBlocks.VideoBlock
     public class VideoBlockEditor : MonoBehaviour
     {
         public static readonly string PREFAB = "MetaBlocks/VideoBlockEditor";
-        public static readonly int DEFAULT_DIMENSION = 3;
         [SerializeField] private InputField url;
 
         [SerializeField] public InputField rotationX;
@@ -28,8 +28,8 @@ namespace src.MetaBlocks.VideoBlock
                 url = url.text,
                 rotation = new SerializableVector3(float.Parse(rotationX.text), float.Parse(rotationY.text),
                     float.Parse(rotationZ.text)),
-                width = HasValue(width) ? int.Parse(width.text) : DEFAULT_DIMENSION,
-                height = HasValue(height) ? int.Parse(height.text) : DEFAULT_DIMENSION,
+                width = HasValue(width) ? int.Parse(width.text) : MediaBlockEditor.DEFAULT_DIMENSION,
+                height = HasValue(height) ? int.Parse(height.text) : MediaBlockEditor.DEFAULT_DIMENSION,
                 previewTime = HasValue(previewTime) ? float.Parse(previewTime.text) : 0f,
                 detectCollision = detectCollision.isOn
             };
@@ -53,8 +53,8 @@ namespace src.MetaBlocks.VideoBlock
             if (value == null)
             {
                 url.text = "";
-                width.text = DEFAULT_DIMENSION.ToString();
-                height.text = DEFAULT_DIMENSION.ToString();
+                width.text = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
+                height.text = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
                 previewTime.text = "0";
                 detectCollision.isOn = true;
                 return;

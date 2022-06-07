@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.Model;
-using src.Utils;
 using UnityEngine;
 using LightType = UnityEngine.LightType;
 
@@ -24,20 +23,7 @@ namespace src.MetaBlocks.LightBlock
             (LightDistance + 1) * Vector3.up + 0.5f * (Vector3.right + Vector3.forward)
         };
 
-        private SnackItem snackItem;
-        
         private List<Light> sideLights = new List<Light>();
-
-        protected override void Start()
-        {
-            base.Start();
-            gameObject.name = "light block object";
-        }
-
-        public override bool IsReady()
-        {
-            return ready;
-        }
 
         public override void OnDataUpdate()
         {
@@ -46,7 +32,6 @@ namespace src.MetaBlocks.LightBlock
 
         protected override void DoInitialize()
         {
-            base.DoInitialize();
             ResetLights();
         }
 
@@ -98,43 +83,16 @@ namespace src.MetaBlocks.LightBlock
             sideLights.Clear();
         }
 
-        public override void Focus()
-        {
-            if (!canEdit) return;
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
-
-            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
-            {
-                if (Input.GetKeyDown(KeyCode.Z))
-                    EditProps();
-                if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
-            });
-        }
-
         private LightBlockProperties GetProps()
         {
-            return (LightBlockProperties) GetBlock().GetProps();
-        }
-
-        public override void UnFocus()
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
+            return (LightBlockProperties) Block.GetProps();
         }
 
         protected override void OnStateChanged(State state)
         {
         }
 
-        protected override List<string> GetSnackLines()
+        protected virtual List<string> GetSnackLines()
         {
             return new List<string>
             {
@@ -156,7 +114,8 @@ namespace src.MetaBlocks.LightBlock
             return null;
         }
 
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
+            Vector3Int localPos, Action<GameObject> onLoad)
         {
         }
 
@@ -170,6 +129,24 @@ namespace src.MetaBlocks.LightBlock
             throw new NotImplementedException();
         }
 
+        protected override void SetupDefaultSnack()
+        {
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            if (!canEdit) return;
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
+            {
+                if (Input.GetKeyDown(KeyCode.Z))
+                    EditProps();
+                if (Input.GetButtonDown("Delete"))
+                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
+            });
+        }
+
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;
@@ -179,12 +156,12 @@ namespace src.MetaBlocks.LightBlock
                 .WithContent(LightBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<LightBlockEditor>();
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             editor.SetValue(props == null ? null : props as LightBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new LightBlockProperties(GetBlock().GetProps() as LightBlockProperties);
+                var props = new LightBlockProperties(Block.GetProps() as LightBlockProperties);
                 if (value != null)
                 {
                     props.intensity = value.intensity;
@@ -192,7 +169,7 @@ namespace src.MetaBlocks.LightBlock
                     props.hexColor = value.hexColor;
                 }
 
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
         }

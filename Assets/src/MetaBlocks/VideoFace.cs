@@ -11,7 +11,6 @@ namespace src
     public class VideoFace : MetaFace
     {
         private VideoPlayer videoPlayer;
-        public readonly UnityEvent<bool> loading = new UnityEvent<bool>();
         private float prevTime;
         private bool previewing = true;
         private bool prepared = false;
@@ -20,16 +19,16 @@ namespace src
         public void Init(MeshRenderer meshRenderer, string url, float prevTime, VideoBlockObject block)
         {
             this.block = block;
-            block.UpdateState(State.Loading);
             previewing = true;
             prepared = false;
-            loading.Invoke(true);
+            block.UpdateState(State.Loading);
             this.prevTime = prevTime;
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
             videoPlayer.url = url;
             videoPlayer.playOnAwake = false;
             videoPlayer.Pause();
             videoPlayer.Prepare();
+            // videoPlayer.errorReceived += OnError; // Editor crashes here
             videoPlayer.prepareCompleted += PrepareCompeleted;
             meshRenderer.sharedMaterial.mainTexture = videoPlayer.texture;
         }
@@ -50,6 +49,11 @@ namespace src
             StartCoroutine(Seek());
             videoPlayer.prepareCompleted -= PrepareCompeleted;
         }
+        
+        private void OnError(VideoPlayer vp, string msg)
+        {
+            block.UpdateState(State.InvalidUrlOrData);
+        }
 
         private IEnumerator Seek()
         {
@@ -66,7 +70,6 @@ namespace src
             Mute(false);
             prepared = true;
             block.UpdateState(State.Ok);
-            loading.Invoke(false);
         }
 
 

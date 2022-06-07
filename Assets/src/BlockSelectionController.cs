@@ -119,7 +119,7 @@ namespace src
                            Input.GetKey(KeyCode.RightCommand);
 
             var selectVoxel = !World.INSTANCE.SelectionDisplaced && selectionMode == SelectionMode.Default &&
-                              (player.HighlightBlock.gameObject.activeSelf || player.focused != null) &&
+                              (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
                               Input.GetMouseButtonDown(0) && ctrlHeld;
 
             var multipleSelect = selectVoxel && World.INSTANCE.SelectionActive &&
@@ -129,7 +129,7 @@ namespace src
             {
                 var lastSelectedPosition = World.INSTANCE.lastSelectedPosition.ToWorld();
                 if (!player.HighlightBlock.gameObject.activeSelf) return;
-                var currentSelectedPosition = Vectors.FloorToInt(player.HighlightBlock.position);
+                var currentSelectedPosition = player.PossibleHighlightBlockPosInt;
 
                 var from = new Vector3Int(Mathf.Min(lastSelectedPosition.x, currentSelectedPosition.x),
                     Mathf.Min(lastSelectedPosition.y, currentSelectedPosition.y),
@@ -154,11 +154,11 @@ namespace src
             else if (selectVoxel) // TODO [detach metablock]: add support for metablock multiselection
             {
                 // var possibleCurrentSelectedPosition = player.focused == null
-                //     ? player.HighlightBlock.position
+                //     ? player.PossibleHighlightBlockPosInt
                 //     : player.focused.GetBlockPosition();
                 // if (!possibleCurrentSelectedPosition.HasValue) return;
                 if (!player.HighlightBlock.gameObject.activeSelf) return;
-                var currentSelectedPosition = Vectors.FloorToInt(player.HighlightBlock.position);
+                var currentSelectedPosition = player.PossibleHighlightBlockPosInt;
                 AddHighlight(new VoxelPosition(currentSelectedPosition));
             }
 
@@ -166,11 +166,11 @@ namespace src
 
             if (Input.GetMouseButtonDown(0))
             {
-                if (player.HammerMode && (player.HighlightBlock.gameObject.activeSelf || player.focused != null))
+                if (player.HammerMode && (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null))
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
-                    World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PlaceBlock.position),
+                    World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PossiblePlaceBlockPosInt),
                         Blocks.GetBlockType(player.selectedBlockId));
                 }
                 else if (player.MetaBlockPlaceHolder != null && player.MetaBlockPlaceHolder.activeSelf)
@@ -180,7 +180,7 @@ namespace src
                 }
             }
             else if (Input.GetMouseButtonDown(1) &&
-                     (player.HighlightBlock.gameObject.activeSelf || player.focused != null))
+                     (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null))
                 DeleteBlock();
         }
 
@@ -188,13 +188,13 @@ namespace src
         {
             if (player.HighlightBlock.gameObject.activeSelf)
             {
-                var position = Vectors.FloorToInt(player.HighlightBlock.position);
+                var position = Vectors.FloorToInt(player.PossibleHighlightBlockPosInt);
                 var vp = new VoxelPosition(position);
                 World.INSTANCE.TryDeleteVoxel(vp);
                 return;
             }
 
-            if (player.focused != null && player.focused is MetaFocusable metaFocusable)
+            if (player.FocusedFocusable != null && player.FocusedFocusable is MetaFocusable metaFocusable)
             {
                 var position = metaFocusable.GetBlockPosition();
                 if (position != null)
@@ -239,7 +239,7 @@ namespace src
                 ClearSelection();
                 foreach (var pos in World.INSTANCE.ClipboardWorldPositions)
                 {
-                    var newPosition = pos - minPoint + player.PlaceBlockPosInt;
+                    var newPosition = pos - minPoint + player.PossiblePlaceBlockPosInt;
                     if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
                         currVox.Equals(newPosition - Vector3Int.up))
                     {
@@ -250,7 +250,7 @@ namespace src
 
                 if (!conflictWithPlayer)
                 {
-                    World.INSTANCE.PasteClipboard(player.PlaceBlockPosInt - minPoint);
+                    World.INSTANCE.PasteClipboard(player.PossiblePlaceBlockPosInt - minPoint);
                     PrepareForClipboardMovement(SelectionMode.Clipboard);
                 }
             }

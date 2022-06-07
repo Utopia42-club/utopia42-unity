@@ -11,19 +11,7 @@ namespace src.MetaBlocks.ImageBlock
     {
         protected GameObject image;
         protected GameObject imageContainer;
-        protected SnackItem snackItem;
         protected ObjectScaleRotationController scaleRotationController;
-
-        protected override void Start()
-        {
-            base.Start();
-            gameObject.name = "image block object";
-        }
-
-        public override bool IsReady()
-        {
-            return ready;
-        }
 
         public override void OnDataUpdate()
         {
@@ -32,24 +20,12 @@ namespace src.MetaBlocks.ImageBlock
 
         protected override void DoInitialize()
         {
-            base.DoInitialize();
             RenderFace();
         }
 
-        public override void Focus()
+        protected override void SetupDefaultSnack()
         {
             if (snackItem != null) snackItem.Remove();
-            SetupDefaultSnack();
-            base.Focus();
-        }
-
-        protected virtual void SetupDefaultSnack()
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
@@ -73,19 +49,10 @@ namespace src.MetaBlocks.ImageBlock
             });
         }
 
-        public override void UnFocus()
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
-        }
-
         protected virtual void RenderFace()
         {
             DestroyImage();
-            AddFace((MediaBlockProperties) GetBlock().GetProps());
+            AddFace((MediaBlockProperties) Block.GetProps());
         }
 
         protected void DestroyImage(bool immediate = true)
@@ -163,14 +130,15 @@ namespace src.MetaBlocks.ImageBlock
             ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
             var error = MetaBlockState.IsErrorState(state);
             if (!error && state != State.Empty) return;
-            
+
             DestroyImage();
-            CreateImageFace(gameObject.transform, MediaBlockEditor.DEFAULT_DIMENSION, MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero, 
-                out imageContainer, out image, out var renderer, true).PlaceHolderInit(renderer, block.type, error);
+            CreateImageFace(gameObject.transform, MediaBlockEditor.DEFAULT_DIMENSION,
+                MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero,
+                out imageContainer, out image, out var renderer, true).PlaceHolderInit(renderer, Block.type, error);
             image.AddComponent<MetaFocusable>().Initialize(this);
         }
 
-        protected override List<string> GetSnackLines()
+        protected virtual List<string> GetSnackLines()
         {
             var lines = new List<string>();
             if (canEdit)
@@ -183,7 +151,7 @@ namespace src.MetaBlocks.ImageBlock
 
             var line = MetaBlockState.ToString(state, "image");
             if (line.Length > 0)
-                lines.Add("\n" + line);
+                lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
         }
 
@@ -196,22 +164,22 @@ namespace src.MetaBlocks.ImageBlock
                 .WithContent(MediaBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<MediaBlockEditor>();
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             editor.SetValue(props as MediaBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new MediaBlockProperties(GetBlock().GetProps() as MediaBlockProperties);
+                var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
 
                 props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             DestroyImage(false);
             base.OnDestroy();
@@ -260,12 +228,12 @@ namespace src.MetaBlocks.ImageBlock
 
         public override void ExitMovingState()
         {
-            var props = new MediaBlockProperties(GetBlock().GetProps() as MediaBlockProperties);
+            var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
             if (image == null || state != State.Ok) return;
             props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
-            GetBlock().SetProps(props, land);
+            Block.SetProps(props, land);
 
-            SetupDefaultSnack();
+            if (snackItem != null) SetupDefaultSnack();
             if (scaleRotationController == null) return;
             scaleRotationController.Detach();
             DestroyImmediate(scaleRotationController);

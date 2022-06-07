@@ -33,32 +33,6 @@ namespace src.MetaBlocks
             blockObject.Initialize(this, chunk);
         }
 
-        public bool IsPositioned()
-        {
-            return blockObject != null;
-        }
-
-        public Vector3 GetPosition()
-        {
-            return blockObject.transform.position;
-        }
-
-        public bool Focus() 
-        {
-            if (blockObject != null && blockObject.IsReady())
-            {
-                blockObject.Focus();
-                return true;
-            }
-
-            return false;
-        }
-
-        public void UnFocus()
-        {
-            if (blockObject != null) blockObject.UnFocus();
-        }
-
         internal void OnObjectDestroyed()
         {
             blockObject = null;

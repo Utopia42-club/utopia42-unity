@@ -36,5 +36,11 @@ namespace src
         {
             return MetaBlockObject.transform.position;
         }
+
+        public MetaBlock GetBlock()
+        {
+            return MetaBlockObject.Block;
+        }
+        
     }
 }

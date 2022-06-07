@@ -1,69 +1,58 @@
 using System;
-using System.Collections.Generic;
+using src.Canvas;
 using src.Model;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
-using Object = UnityEngine.Object;
 
 namespace src.MetaBlocks
 {
     public abstract class MetaBlockObject : MonoBehaviour
     {
-        public MetaBlock block { get; private set; }
+        public MetaBlock Block { get; private set; }
+        public bool Started { get; private set; } = false;
         protected Chunk chunk;
-        protected bool ready = false;
         protected Land land;
         protected bool canEdit;
         protected State state;
+        protected SnackItem snackItem;
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
 
-        protected virtual void Start()
+        protected void Start()
         {
             canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
-            ready = true;
-            stateChange.AddListener(state => OnStateChanged(state));
+            stateChange.AddListener(OnStateChanged);
+            gameObject.name = Block.type.name + " block object";
+            Started = true;
         }
 
         public void Initialize(MetaBlock block, Chunk chunk)
         {
-            this.block = block;
+            this.Block = block;
             this.chunk = chunk;
+            Start();
             DoInitialize();
         }
 
-        public abstract bool IsReady();
-
-        protected virtual void DoInitialize()
+        public void Focus()
         {
-            Start(); // Needs to be called manually to be executed before DoInitialize
-        }
-
-        public abstract void OnDataUpdate();
-
-        public virtual void Focus()
-        {
+            SetupDefaultSnack();
             if (!canEdit) return;
             ShowFocusHighlight();
         }
 
-        public abstract void UnFocus();
-
-        protected abstract void OnStateChanged(State state); // TODO [detach metablock]: refactor?
-
-        protected abstract List<string> GetSnackLines();
-
-        protected void OnDestroy()
+        public void UnFocus()
         {
-            UnFocus();
-            block?.OnObjectDestroyed();
-            stateChange.RemoveAllListeners();
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            RemoveFocusHighlight();
         }
 
-        protected MetaBlock GetBlock()
-        {
-            return block;
-        }
+        protected abstract void OnStateChanged(State state);
 
         protected Chunk GetChunk()
         {
@@ -72,7 +61,7 @@ namespace src.MetaBlocks
 
         protected bool InLand(BoxCollider bc) //FIXME rename
         {
-            if (block.land == null)
+            if (Block.land == null)
                 return true;
 
             var bcTransform = bc.transform;
@@ -96,7 +85,7 @@ namespace src.MetaBlocks
 
         protected bool InLand(MeshRenderer meshRenderer)
         {
-            if (block.land == null)
+            if (Block.land == null)
                 return true;
 
             var bounds = meshRenderer.bounds;
@@ -119,16 +108,13 @@ namespace src.MetaBlocks
 
         private bool InLand(Vector3 p)
         {
-            if (block.land == null)
+            if (Block.land == null)
                 return true;
-            return block.land.Contains(p);
+            return Block.land.Contains(p);
         }
 
-        public abstract void ShowFocusHighlight();
-
-        public abstract void RemoveFocusHighlight();
-
-        public abstract GameObject CreateSelectHighlight(Transform parent, bool show = true); // TODO [detach metablock] ?
+        public abstract GameObject
+            CreateSelectHighlight(Transform parent, bool show = true); // TODO [detach metablock] ?
 
         protected internal void UpdateState(State state)
         {
@@ -139,7 +125,24 @@ namespace src.MetaBlocks
         public abstract void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
             Vector3Int localPos, Action<GameObject> onLoad);
 
+        protected abstract void DoInitialize();
+
+        public abstract void OnDataUpdate();
+
         public abstract void SetToMovingState();
         public abstract void ExitMovingState();
+
+        protected abstract void SetupDefaultSnack();
+
+        public abstract void ShowFocusHighlight();
+
+        public abstract void RemoveFocusHighlight();
+
+        protected virtual void OnDestroy()
+        {
+            UnFocus();
+            Block?.OnObjectDestroyed();
+            stateChange.RemoveAllListeners();
+        }
     }
 }

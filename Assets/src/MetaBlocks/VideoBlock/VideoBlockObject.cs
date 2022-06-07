@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using src.Canvas;
+using src.MetaBlocks.ImageBlock;
 using src.Model;
 using UnityEngine;
 
@@ -10,19 +11,7 @@ namespace src.MetaBlocks.VideoBlock
     {
         private VideoFace video;
         private GameObject videoContainer;
-        private SnackItem snackItem;
         private ObjectScaleRotationController scaleRotationController;
-
-        protected override void Start()
-        {
-            base.Start();
-            gameObject.name = "video block object";
-        }
-
-        public override bool IsReady()
-        {
-            return ready;
-        }
 
         public override void OnDataUpdate()
         {
@@ -31,24 +20,12 @@ namespace src.MetaBlocks.VideoBlock
 
         protected override void DoInitialize()
         {
-            base.DoInitialize();
             RenderFace();
         }
 
-        public override void Focus()
+        protected override void SetupDefaultSnack()
         {
             if (snackItem != null) snackItem.Remove();
-            SetupDefaultSnack();
-            base.Focus();
-        }
-
-        private void SetupDefaultSnack()
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
@@ -77,54 +54,50 @@ namespace src.MetaBlocks.VideoBlock
         {
             if (video != null && video.IsPrepared())
                 video.TogglePlaying();
-            SetupDefaultSnack();
-        }
-
-        public override void UnFocus()
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
+            if (snackItem != null) SetupDefaultSnack();
         }
 
         protected override void OnStateChanged(State state)
         {
-            ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
+            if (snackItem != null) SetupDefaultSnack();
             var error = MetaBlockState.IsErrorState(state);
             if (!error && state != State.Empty) return;
-            
+
             DestroyVideo();
-            CreateVideoFace(gameObject.transform, VideoBlockEditor.DEFAULT_DIMENSION, VideoBlockEditor.DEFAULT_DIMENSION, Vector3.zero, 
+            CreateVideoFace(gameObject.transform, MediaBlockEditor.DEFAULT_DIMENSION,
+                MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero,
                 out videoContainer, out var go, out var renderer, true).PlaceHolderInit(renderer, error);
             go.AddComponent<MetaFocusable>().Initialize(this);
         }
 
-        protected override List<string> GetSnackLines()
+        protected virtual List<string> GetSnackLines()
         {
             var lines = new List<string>();
-            if (video != null)
+            if (video != null && video.IsPrepared())
             {
-                if (!video.IsPrepared())
-                    lines.Add("Loading Video...");
-                else if (video.IsPlaying())
+                if (video.IsPlaying())
                     lines.Add("Press P to pause");
                 else
                     lines.Add("Press P to play");
             }
 
-            if (!canEdit) return lines;
-            lines.Add("Press Z for details");
-            lines.Add("Press V to edit rotation");
-            lines.Add("Press Del to delete");
+            if (canEdit)
+            {
+                lines.Add("Press Z for details");
+                lines.Add("Press V to edit rotation");
+                lines.Add("Press Del to delete");
+            }
+
+            var line = MetaBlockState.ToString(state, "video");
+            if (line.Length > 0 && state != State.Empty && state != State.Ok)
+                lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
         }
 
         private void RenderFace()
         {
             DestroyVideo();
-            AddFace((VideoBlockProperties) GetBlock().GetProps());
+            AddFace((VideoBlockProperties) Block.GetProps());
         }
 
         private void DestroyVideo(bool immediate = true)
@@ -159,8 +132,9 @@ namespace src.MetaBlocks.VideoBlock
                 return;
             }
 
-            video = CreateVideoFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(), out videoContainer, out var go, out var meshRenderer, true);
-            
+            video = CreateVideoFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(),
+                out videoContainer, out var go, out var meshRenderer, true);
+
             if (!InLand(meshRenderer))
             {
                 UpdateState(State.OutOfBound);
@@ -171,15 +145,11 @@ namespace src.MetaBlocks.VideoBlock
             go.layer = props.detectCollision
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
-            video.loading.AddListener(l =>
-            {
-                // if (focused) // TODO [detach metablock] ? 
-                // SetupDefaultSnack();
-            });
             go.AddComponent<MetaFocusable>().Initialize(this);
         }
 
-        public static VideoFace CreateVideoFace(Transform transform, int width, int height, Vector3 rotation, out GameObject container, out GameObject videoGo, out MeshRenderer renderer, bool withCollider)
+        public static VideoFace CreateVideoFace(Transform transform, int width, int height, Vector3 rotation,
+            out GameObject container, out GameObject videoGo, out MeshRenderer renderer, bool withCollider)
         {
             container = new GameObject
             {
@@ -210,22 +180,22 @@ namespace src.MetaBlocks.VideoBlock
                 .WithContent(VideoBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<VideoBlockEditor>();
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             editor.SetValue(props as VideoBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new VideoBlockProperties(GetBlock().GetProps() as VideoBlockProperties);
+                var props = new VideoBlockProperties(Block.GetProps() as VideoBlockProperties);
 
                 props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             DestroyVideo(false);
             base.OnDestroy();
@@ -274,12 +244,12 @@ namespace src.MetaBlocks.VideoBlock
 
         public override void ExitMovingState()
         {
-            var props = new VideoBlockProperties(GetBlock().GetProps() as VideoBlockProperties);
+            var props = new VideoBlockProperties(Block.GetProps() as VideoBlockProperties);
             if (video == null || state != State.Ok) return;
             props.rotation = new SerializableVector3(videoContainer.transform.eulerAngles);
-            GetBlock().SetProps(props, land);
+            Block.SetProps(props, land);
 
-            SetupDefaultSnack();
+            if (snackItem != null) SetupDefaultSnack();
             if (scaleRotationController == null) return;
             scaleRotationController.Detach();
             DestroyImmediate(scaleRotationController);

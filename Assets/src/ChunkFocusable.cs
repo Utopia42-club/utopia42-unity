@@ -28,7 +28,7 @@ namespace src
         public override Vector3? GetBlockPosition()
         {
             if (!Player.INSTANCE.HighlightBlock.gameObject.activeSelf) return null;
-            return Player.INSTANCE.HighlightBlock.position;
+            return Player.INSTANCE.PossibleHighlightBlockPosInt;
         }
     }
 }

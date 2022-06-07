@@ -21,22 +21,10 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private TdObjectFocusable tdObjectFocusable;
 
-        private SnackItem snackItem;
         private string currentUrl = "";
 
         private ObjectScaleRotationController scaleRotationController;
         private Transform selectHighlight;
-
-        protected override void Start()
-        {
-            base.Start();
-            gameObject.name = "3d block object";
-        }
-
-        public override bool IsReady()
-        {
-            return ready;
-        }
 
         public override void OnDataUpdate()
         {
@@ -45,14 +33,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         protected override void DoInitialize()
         {
-            base.DoInitialize();
             LoadTdObject();
-        }
-
-        public override void Focus()
-        {
-            SetupDefaultSnack();
-            base.Focus();
         }
 
         public override void ShowFocusHighlight()
@@ -160,13 +141,13 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public override void ExitMovingState()
         {
-            var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
+            var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
             if (tdObjectContainer == null || state != State.Ok) return;
             props.rotation = new SerializableVector3(tdObjectContainer.transform.eulerAngles);
             props.scale = new SerializableVector3(tdObjectContainer.transform.localScale);
-            GetBlock().SetProps(props, land);
+            Block.SetProps(props, land);
 
-            SetupDefaultSnack();
+            if (snackItem != null) SetupDefaultSnack();
             if (scaleRotationController == null) return;
             scaleRotationController.Detach();
             DestroyImmediate(scaleRotationController);
@@ -174,13 +155,9 @@ namespace src.MetaBlocks.TdObjectBlock
         }
 
 
-        private void SetupDefaultSnack()
+        protected override void SetupDefaultSnack()
         {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
+            if (snackItem != null) snackItem.Remove();
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
@@ -227,26 +204,15 @@ namespace src.MetaBlocks.TdObjectBlock
             });
         }
 
-        public override void UnFocus()
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
-
-            RemoveFocusHighlight();
-        }
-
         protected override void OnStateChanged(State state)
         {
             ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
             if (state == State.Ok) return;
-            
+
             // setting place holder
             DestroyObject();
             ResetContainer();
-            tdObject = GetBlock().type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), true);
+            tdObject = Block.type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), true);
             tdObject.transform.SetParent(tdObjectContainer.transform, false);
             tdObject.SetActive(true);
             TdObjectCollider = tdObject.GetComponentInChildren<Collider>();
@@ -257,7 +223,7 @@ namespace src.MetaBlocks.TdObjectBlock
             tdObjectFocusable.Initialize(this);
         }
 
-        protected override List<string> GetSnackLines()
+        protected virtual List<string> GetSnackLines()
         {
             var lines = new List<string>();
             if (canEdit)
@@ -270,13 +236,13 @@ namespace src.MetaBlocks.TdObjectBlock
 
             var line = MetaBlockState.ToString(state, "3D object");
             if (line.Length > 0)
-                lines.Add("\n" + line);
+                lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
         }
 
         private void LoadTdObject()
         {
-            var properties = (TdObjectBlockProperties) GetBlock().GetProps();
+            var properties = (TdObjectBlockProperties) Block.GetProps();
             if (properties == null)
             {
                 UpdateState(State.Empty);
@@ -312,7 +278,6 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void SetPlaceHolder(bool error)
         {
-            
         }
 
         private void ResetContainer()
@@ -389,13 +354,13 @@ namespace src.MetaBlocks.TdObjectBlock
                 if (TdObjectCollider is BoxCollider)
                     SetMeshCollider(colliderTransform);
 
-                if (GetBlock().land != null && !InLand(TdObjectCollider.GetComponent<MeshRenderer>()))
+                if (Block.land != null && !InLand(TdObjectCollider.GetComponent<MeshRenderer>()))
                 {
                     UpdateState(State.OutOfBound);
                     return;
                 }
             }
-            else if (GetBlock().land != null && !InLand((BoxCollider) TdObjectCollider))
+            else if (Block.land != null && !InLand((BoxCollider) TdObjectCollider))
             {
                 UpdateState(State.OutOfBound);
                 return;
@@ -418,8 +383,8 @@ namespace src.MetaBlocks.TdObjectBlock
 
             if (tdObject != null)
             {
-                foreach (var meshRenderer in tdObject.GetComponentsInChildren<MeshRenderer>())
-                foreach (var mat in meshRenderer.sharedMaterials)
+                foreach (var renderer in tdObject.GetComponentsInChildren<Renderer>())
+                foreach (var mat in renderer.sharedMaterials)
                 {
                     if (mat == null) continue;
                     if (immediate)
@@ -464,12 +429,12 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void InitializeProps(Vector3 initialPosition, float initialScale)
         {
-            var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties)
+            var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties)
             {
                 initialPosition = new SerializableVector3(initialPosition),
                 initialScale = initialScale
             };
-            GetBlock().SetProps(props, land);
+            Block.SetProps(props, land);
         }
 
         private void EditProps()
@@ -481,17 +446,17 @@ namespace src.MetaBlocks.TdObjectBlock
                 .WithContent(TdObjectBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<TdObjectBlockEditor>();
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             editor.SetValue(props == null ? null : props as TdObjectBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new TdObjectBlockProperties(GetBlock().GetProps() as TdObjectBlockProperties);
+                var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
                 props.UpdateProps(value);
 
                 if (props.IsEmpty()) props = null;
 
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
         }
@@ -543,7 +508,7 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             DestroyObject(false);
             base.OnDestroy();

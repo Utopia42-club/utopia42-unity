@@ -19,11 +19,11 @@ namespace src.MetaBlocks.NftBlock
             return container;
         }
         
-        public override MetaPosition GetPutPosition(Vector3 purePosition, Vector3 playerForward)
+        public override MetaPosition GetPutPosition(Vector3 purePosition)
         {
-            var pos = playerForward.z > 0
-                ? purePosition - 0.2f * Vector3.forward
-                : purePosition + 0.2f * Vector3.forward;
+            var pos = Player.INSTANCE.transform.forward.z > 0
+                ? purePosition - ImageBlockType.Gap * Vector3.forward
+                : purePosition + ImageBlockType.Gap * Vector3.forward;
             pos += 0.5f * MediaBlockEditor.DEFAULT_DIMENSION * Vector3.up;
             return new MetaPosition(pos);
         }

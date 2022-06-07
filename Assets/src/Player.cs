@@ -40,8 +40,6 @@ namespace src
         private bool floating = false;
         private Vector3Int? lastChunk;
         private List<Land> ownedLands = new List<Land>();
-        private MetaBlock focusedMetaBlock;
-        private Voxels.Face focusedMetaFace;
         private RaycastHit raycastHit;
         private Collider hitCollider;
         private CharacterController controller;
@@ -64,8 +62,9 @@ namespace src
 
         public float Horizontal { get; private set; }
         public float Vertical { get; private set; }
-        public Focusable focused { get; private set; }
-        public Vector3Int PlaceBlockPosInt { get; private set; }
+        public Focusable FocusedFocusable { get; private set; }
+        public Vector3Int PossiblePlaceBlockPosInt { get; private set; }
+        public Vector3Int PossibleHighlightBlockPosInt { get; set; }
 
         public Land HighlightLand => highlightLand;
 
@@ -143,28 +142,21 @@ namespace src
                 hitCollider = raycastHit.collider;
                 if (focusable != null)
                 {
-                    focusedMetaFace = null;
-                    if (focused != null)
-                        focused.UnFocus();
+                    if (FocusedFocusable != null)
+                        FocusedFocusable.UnFocus();
                     focusable.Focus(raycastHit.point);
-                    focused = focusable;
-                    if (focusable is MetaFocusable)
+                    FocusedFocusable = focusable;
+                    if (focusable is MetaFocusable metaFocusable)
                         HideCursorBlocksAndPlaceHolder();
-
                     return;
                 }
             }
             else
-            {
                 HideCursorBlocksAndPlaceHolder();
-                if (focusedMetaBlock != null)
-                    focusedMetaBlock.UnFocus();
-            }
 
-            if (focused != null)
-                focused.UnFocus();
-            focusedMetaFace = null;
-            focused = null;
+            if (FocusedFocusable != null)
+                FocusedFocusable.UnFocus();
+            FocusedFocusable = null;
             hitCollider = null;
         }
 
@@ -249,23 +241,20 @@ namespace src
         public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk) // TODO [detach metablock]: better name?
         {
             var epsilon = cam.forward * CastStep;
-            PlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
-            var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
-            var vp = new VoxelPosition(posInt);
-            // var metaToFocus = chunk.GetMetaAt(vp);
-            // var foundSolid = chunk.GetBlock(vp.local).isSolid;
+            PossiblePlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
+            PossibleHighlightBlockPosInt = Vectors.FloorToInt(blockHitPoint + epsilon);
 
             if (BlockSelectionController.INSTANCE.selectionMode == BlockSelectionController.SelectionMode.Dragged &&
                 World.INSTANCE.SelectionActive)
             {
                 HideCursorBlocksAndPlaceHolder();
 
-                if (CanEdit(PlaceBlockPosInt, out _))
-                    World.INSTANCE.MoveSelection(PlaceBlockPosInt, false);
+                if (CanEdit(PossiblePlaceBlockPosInt, out _))
+                    World.INSTANCE.MoveSelection(PossiblePlaceBlockPosInt, false);
             }
             else if (HammerMode)
             {
-                highlightBlock.position = posInt;
+                highlightBlock.position = PossibleHighlightBlockPosInt;
                 highlightBlock.gameObject.SetActive(true);
                 placeBlock.gameObject.SetActive(false);
                 if (MetaBlockPlaceHolder != null)
@@ -273,16 +262,13 @@ namespace src
             }
             else if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType metaBlockType)
             {
-                // TODO [detach metablock]: if the focus is not already on a metablock, display the placeholder for the selected(Meta)BlockId
-
                 placeBlock.gameObject.SetActive(false);
                 highlightBlock.gameObject.SetActive(false);
 
-
                 if (MetaBlockPlaceHolder != null)
                 {
-                    var mp = metaBlockType.GetPutPosition(blockHitPoint, transform.forward);
-                    if (chunk.GetMetaAt(mp) == null && CanEdit(posInt, out placeLand))
+                    var mp = metaBlockType.GetPutPosition(blockHitPoint);
+                    if (chunk.GetMetaAt(mp) == null && CanEdit(PossibleHighlightBlockPosInt, out placeLand))
                     {
                         MetaBlockPlaceHolder.transform.position = mp.ToWorld();
                         MetaBlockPlaceHolder.gameObject.SetActive(true);
@@ -291,65 +277,21 @@ namespace src
                         MetaBlockPlaceHolder.gameObject.SetActive(false);
                 }
                 else
-                    Debug.LogWarning("Null place holder!"); // TODO [detach metablock]: possible?
+                    Debug.LogWarning("Null place holder!"); // should not happen
             }
             else
             {
-                highlightBlock.position = posInt;
-                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
+                highlightBlock.position = PossibleHighlightBlockPosInt;
+                highlightBlock.gameObject.SetActive(CanEdit(PossibleHighlightBlockPosInt, out highlightLand));
                 var currVox = Vectors.FloorToInt(transform.position);
-                if (PlaceBlockPosInt != currVox && PlaceBlockPosInt != currVox + Vector3Int.up)
+                if (PossiblePlaceBlockPosInt != currVox && PossiblePlaceBlockPosInt != currVox + Vector3Int.up)
                 {
-                    placeBlock.position = PlaceBlockPosInt;
-                    placeBlock.gameObject.SetActive(CanEdit(PlaceBlockPosInt, out placeLand));
+                    placeBlock.position = PossiblePlaceBlockPosInt;
+                    placeBlock.gameObject.SetActive(CanEdit(PossiblePlaceBlockPosInt, out placeLand));
                 }
                 else
                     placeBlock.gameObject.SetActive(false);
             }
-
-            // TODO [detach metablock] ?
-            // Voxels.Face faceToFocus = null;
-            // if (metaToFocus != null)
-            // {
-            //     if (!metaToFocus.IsPositioned()) metaToFocus = null;
-            //     else
-            //     {
-            //         faceToFocus = FindFocusedFace(blockHitPoint - posInt);
-            //         if (faceToFocus == null) metaToFocus = null;
-            //     }
-            // }
-
-            // if (focusedMetaBlock != metaToFocus || faceToFocus != focusedMetaFace)
-            // {
-            //     if (focusedMetaBlock != null)
-            //         focusedMetaBlock.UnFocus();
-            //     focusedMetaBlock = metaToFocus;
-            //     focusedMetaFace = faceToFocus;
-            //
-            //     if (focusedMetaBlock != null && !World.INSTANCE.SelectionActive)
-            //     {
-            //         if (!focusedMetaBlock.Focus(focusedMetaFace))
-            //         {
-            //             focusedMetaBlock = null;
-            //             focusedMetaFace = null;
-            //         }
-            //     }
-            // }
-        }
-
-
-        private Voxels.Face FindFocusedFace(Vector3 blockLocalHitPoint)
-        {
-            if (blockLocalHitPoint.x < CastStep) return Voxels.Face.LEFT;
-            if (Math.Abs(blockLocalHitPoint.x - 1) < CastStep) return Voxels.Face.RIGHT;
-
-            if (blockLocalHitPoint.z < CastStep) return Voxels.Face.BACK;
-            if (Math.Abs(blockLocalHitPoint.z - 1) < CastStep) return Voxels.Face.FRONT;
-
-            if (blockLocalHitPoint.y < CastStep) return Voxels.Face.BOTTOM;
-            if (Math.Abs(blockLocalHitPoint.y - 1) < CastStep) return Voxels.Face.TOP;
-
-            return null;
         }
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
