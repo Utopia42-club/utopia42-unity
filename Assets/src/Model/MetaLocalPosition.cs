@@ -12,14 +12,19 @@ namespace src.Model
         {
             this.position = Vectors.Truncate(x, y, z, Precision);
         } 
-        public MetaLocalPosition(Vector3 position, Vector3Int chunk)
+        
+        public MetaLocalPosition(Vector3 localPosition)
+        {
+            position = Vectors.Truncate(localPosition, Precision);
+        }
+        public MetaLocalPosition(Vector3 localPosition, Vector3Int chunk)
         {
             var chunkSize = Chunk.CHUNK_SIZE;
-            this.position = Vectors.Truncate(position, Precision);
+            position = Vectors.Truncate(localPosition, Precision);
             
-            this.position.x -= chunk.x * chunkSize.x;
-            this.position.y -= chunk.y * chunkSize.y;
-            this.position.z -= chunk.z * chunkSize.z;
+            position.x -= chunk.x * chunkSize.x;
+            position.y -= chunk.y * chunkSize.y;
+            position.z -= chunk.z * chunkSize.z;
         }
 
         private bool Equals(MetaLocalPosition other)

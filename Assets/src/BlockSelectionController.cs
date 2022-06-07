@@ -125,7 +125,7 @@ namespace src
             var multipleSelect = selectVoxel && World.INSTANCE.SelectionActive &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
 
-            if (multipleSelect) // TODO [detach metablock]: add support for metablock multiselection
+            if (multipleSelect) // TODO: add support for metablock multiselection?
             {
                 var lastSelectedPosition = World.INSTANCE.lastSelectedPosition.ToWorld();
                 if (!player.HighlightBlock.gameObject.activeSelf) return;
@@ -151,22 +151,33 @@ namespace src
                 vps.Add(new VoxelPosition(currentSelectedPosition));
                 AddHighlights(vps);
             }
-            else if (selectVoxel) // TODO [detach metablock]: add support for metablock multiselection
+            else if (selectVoxel)
             {
-                // var possibleCurrentSelectedPosition = player.focused == null
-                //     ? player.PossibleHighlightBlockPosInt
-                //     : player.focused.GetBlockPosition();
-                // if (!possibleCurrentSelectedPosition.HasValue) return;
-                if (!player.HighlightBlock.gameObject.activeSelf) return;
-                var currentSelectedPosition = player.PossibleHighlightBlockPosInt;
-                AddHighlight(new VoxelPosition(currentSelectedPosition));
+                if (player.FocusedFocusable == null) // should never happen
+                {
+                    if (player.HighlightBlock.gameObject.activeSelf)
+                        AddHighlight(new VoxelPosition(player.PossibleHighlightBlockPosInt));
+                }
+                else if (player.FocusedFocusable is ChunkFocusable chunkFocusable)
+                {
+                    var pos = chunkFocusable.GetBlockPosition();
+                    if (pos.HasValue)
+                        AddHighlight(new VoxelPosition(pos.Value));
+                }
+                else
+                {
+                    var pos = player.FocusedFocusable.GetBlockPosition();
+                    if (pos.HasValue)
+                        AddHighlight(new MetaPosition(pos.Value));
+                }
             }
 
             if (ctrlHeld) return;
 
             if (Input.GetMouseButtonDown(0))
             {
-                if (player.HammerMode && (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null))
+                if (player.HammerMode &&
+                    (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null))
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
@@ -184,7 +195,7 @@ namespace src
                 DeleteBlock();
         }
 
-        private void DeleteBlock() // TODO [detach metablock]: add support for metablock removal
+        private void DeleteBlock()
         {
             if (player.HighlightBlock.gameObject.activeSelf)
             {
@@ -237,7 +248,7 @@ namespace src
                 var conflictWithPlayer = false;
                 var currVox = Vectors.TruncateFloor(transform.position);
                 ClearSelection();
-                foreach (var pos in World.INSTANCE.ClipboardWorldPositions)
+                foreach (var pos in World.INSTANCE.GetClipboardWorldPositions())
                 {
                     var newPosition = pos - minPoint + player.PossiblePlaceBlockPosInt;
                     if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
@@ -361,7 +372,7 @@ namespace src
             World.INSTANCE.AddHighlights(vps, () => AfterAddHighlight());
         }
 
-        public void AddPreviewHighlights(Dictionary<VoxelPosition, Tuple<uint, MetaBlock>> highlights)
+        public void AddPreviewHighlights(Dictionary<VoxelPosition, uint> highlights)
         {
             if (highlights.Count == 0 || selectionMode != SelectionMode.Preview && World.INSTANCE.SelectionActive)
                 return; // do not add preview highlights after existing non-preview highlights
@@ -372,19 +383,24 @@ namespace src
             }));
         }
 
-        public void AddDraggedGlbHighlight(string url)
-        {
-            var vp = new VoxelPosition(player.transform.position + 3 * Vector3.up);
-            World.INSTANCE.AddHighlight(vp, () => { selectionMode = SelectionMode.Dragged; },
-                new Tuple<uint, MetaBlock>(Blocks.GetBlockType("#000000").id,
-                    Blocks.TdObjectBlockType.Instantiate(null,
-                        "{\"url\":\"" + url + "\", \"type\":\"GLB\"}")));
-        }
+        // public void AddDraggedGlbHighlight(string url)
+        // {
+        //     var vp = new VoxelPosition(player.transform.position + 3 * Vector3.up);
+        //     World.INSTANCE.AddHighlight(vp, () => { selectionMode = SelectionMode.Dragged; },
+        //         new Tuple<uint, MetaBlock>(Blocks.GetBlockType("#000000").id,
+        //             Blocks.TdObjectBlockType.Instantiate(null,
+        //                 "{\"url\":\"" + url + "\", \"type\":\"GLB\"}")));
+        // }
 
 
         public void AddHighlight(VoxelPosition vp)
         {
             World.INSTANCE.AddHighlight(vp, () => AfterAddHighlight());
+        }
+
+        public void AddHighlight(MetaPosition mp)
+        {
+            World.INSTANCE.AddHighlight(mp, () => AfterAddHighlight());
         }
 
         private void AfterAddHighlight(bool setSnack = true)

@@ -18,12 +18,13 @@ namespace src.TestUtils
                 return;
             }
 
-            if (Input.GetKey(KeyCode.LeftShift))
-                UtopiaApi.INSTANCE.PreviewMetaBlocksWithOffset(textAsset.text,
-                    Vectors.FloorToInt(Player.INSTANCE.transform.position) + 5 * Vector3Int.up);
-            else
-                UtopiaApi.INSTANCE.PlaceMetaBlocksWithOffset(textAsset.text,
-                    Vectors.FloorToInt(Player.INSTANCE.transform.position) + 5 * Vector3Int.up);
+            // TODO [detach metablock] ?
+            // if (Input.GetKey(KeyCode.LeftShift))
+            //     UtopiaApi.INSTANCE.PreviewMetaBlocksWithOffset(textAsset.text,
+            //         Vectors.FloorToInt(Player.INSTANCE.transform.position) + 5 * Vector3Int.up);
+            // else
+            //     UtopiaApi.INSTANCE.PlaceMetaBlocksWithOffset(textAsset.text,
+            //         Vectors.FloorToInt(Player.INSTANCE.transform.position) + 5 * Vector3Int.up);
         }
     }
 }

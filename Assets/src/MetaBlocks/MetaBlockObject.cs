@@ -123,7 +123,7 @@ namespace src.MetaBlocks
         }
 
         public abstract void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            Vector3Int localPos, Action<GameObject> onLoad);
+            MetaLocalPosition localPos, Action<GameObject> onLoad);
 
         protected abstract void DoInitialize();
 

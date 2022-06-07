@@ -75,7 +75,7 @@ namespace src.MetaBlocks.MarkerBlock
         }
 
         public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            Vector3Int localPos, Action<GameObject> onLoad)
+            MetaLocalPosition localPos, Action<GameObject> onLoad)
         {
         }
 

@@ -11,8 +11,11 @@ namespace src
 {
     public class HighlightChunk : MonoBehaviour
     {
-        private readonly Dictionary<Vector3Int, HighlightedBlock> highlightedBlocks =
-            new Dictionary<Vector3Int, HighlightedBlock>(); // local coordinate -> selected block
+        private readonly Dictionary<Vector3Int, HighlightedBlock>
+            highlightedBlocks = new(); // local coordinate -> selected block
+
+        private readonly Dictionary<MetaLocalPosition, HighlightedMetaBlock>
+            highlightedMetaBlocks = new();
 
         public Vector3Int Position { get; private set; }
 
@@ -22,19 +25,26 @@ namespace src
         public GameObject HighlightChunkGameObject { get; private set; }
 
         public Transform transform => HighlightChunkGameObject.transform;
-        
-        public int TotalBlocksHighlighted => highlightedBlocks.Count(pair => pair.Value != null);
+
+        public int TotalBlocksHighlighted => highlightedBlocks.Count(pair => pair.Value != null) +
+                                             highlightedMetaBlocks.Count(pair => pair.Value != null);
+
         public List<HighlightedBlock> HighlightedBlocks => new List<HighlightedBlock>(highlightedBlocks.Values);
+        public List<HighlightedMetaBlock> HighlightedMetaBlocks => new List<HighlightedMetaBlock>(highlightedMetaBlocks.Values);
         public HashSet<Vector3Int> HighlightedLocalPositions => new HashSet<Vector3Int>(highlightedBlocks.Keys);
+        public HashSet<MetaLocalPosition> HighlightedMetaLocalPositions => new HashSet<MetaLocalPosition>(highlightedMetaBlocks.Keys);
+
         public bool SelectionDisplaced =>
-            highlightedBlocks.Values.Any(highlightedBlock => highlightedBlock.Offset != Vector3Int.zero);
+            highlightedBlocks.Values.Any(highlightedBlock => highlightedBlock.Offset != Vector3Int.zero) ||
+            highlightedMetaBlocks.Values.Any(highlightedMetaBlock => highlightedMetaBlock.Offset != Vector3Int.zero);
+
         private void Start()
         {
             meshFilter = HighlightChunkGameObject.AddComponent<MeshFilter>();
             meshRenderer = HighlightChunkGameObject.AddComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = World.INSTANCE.SelectedBlock;
         }
-        
+
         public static HighlightChunk Create(GameObject parent, Vector3Int coordinate)
         {
             var highlightChunk = parent.AddComponent<HighlightChunk>(); // TODO: necessary?
@@ -50,10 +60,15 @@ namespace src
             highlightChunk.Position = position;
             return highlightChunk;
         }
-        
+
         public bool Contains(Vector3Int localPos)
         {
             return highlightedBlocks.ContainsKey(localPos);
+        }
+        
+        public bool Contains(MetaLocalPosition localPos)
+        {
+            return highlightedMetaBlocks.ContainsKey(localPos);
         }
 
         public void Add(Vector3Int localPos, HighlightedBlock highlightedBlock)
@@ -67,6 +82,17 @@ namespace src
             highlightedBlocks.Add(localPos, highlightedBlock);
         }
 
+        public void Add(MetaLocalPosition localPos, HighlightedMetaBlock highlightedMetaBlock)
+        {
+            if (highlightedMetaBlocks.ContainsKey(localPos))
+            {
+                Debug.LogError("HighlightChunk already contains given selected meta position");
+                return;
+            }
+
+            highlightedMetaBlocks.Add(localPos, highlightedMetaBlock);
+        }
+
         public bool Remove(Vector3Int localPos)
         {
             if (highlightedBlocks.TryGetValue(localPos, out var highlightedBlock) && highlightedBlock != null)
@@ -74,9 +100,19 @@ namespace src
             return highlightedBlocks.Remove(localPos);
         }
 
+        public bool Remove(MetaLocalPosition localPos)
+        {
+            if (highlightedMetaBlocks.TryGetValue(localPos, out var highlightedMetaBlock) &&
+                highlightedMetaBlock != null)
+                DestroyImmediate(highlightedMetaBlock);
+            return highlightedMetaBlocks.Remove(localPos);
+        }
+
         public void Rotate(Vector3 center, Vector3 axis)
         {
             foreach (var highlightedBlock in highlightedBlocks.Values)
+                highlightedBlock.Rotate(center, axis, Position);
+            foreach (var highlightedBlock in highlightedMetaBlocks.Values)
                 highlightedBlock.Rotate(center, axis, Position);
         }
 
@@ -86,13 +122,19 @@ namespace src
                 highlightedBlock == null) return null;
             return highlightedBlock.Offset;
         }
+        
+        public Vector3Int? GetRotationOffset(MetaLocalPosition localPos)
+        {
+            if (!highlightedMetaBlocks.TryGetValue(localPos, out var highlightedMetaBlock) ||
+                highlightedMetaBlock == null) return null;
+            return highlightedMetaBlock.Offset;
+        }
 
         public void Redraw()
         {
-            // TODO: redraw neighbors? here or in Chunk class?
             DestroyMeshAndMaterial();
             DrawHighlights();
-            foreach (var highlightedBlock in highlightedBlocks.Values)
+            foreach (var highlightedBlock in highlightedMetaBlocks.Values)
                 highlightedBlock.UpdateMetaBlockHighlightPosition();
         }
 

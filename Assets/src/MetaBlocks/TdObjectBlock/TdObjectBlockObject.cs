@@ -76,12 +76,12 @@ namespace src.MetaBlocks.TdObjectBlock
         }
 
         public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            Vector3Int localPos, Action<GameObject> onLoad)
+            MetaLocalPosition localPos, Action<GameObject> onLoad)
         {
             var goRef = gameObject;
             var gameObjectTransform = goRef.transform;
             gameObjectTransform.parent = World.INSTANCE.transform;
-            gameObjectTransform.localPosition = highlightChunkTransform.transform.localPosition + localPos;
+            gameObjectTransform.localPosition = highlightChunkTransform.transform.localPosition + localPos.position;
             Initialize(block, null);
 
             stateChange.AddListener(state =>

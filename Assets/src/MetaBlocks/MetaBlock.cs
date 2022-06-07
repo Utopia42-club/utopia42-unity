@@ -77,18 +77,14 @@ namespace src.MetaBlocks
             }
         }
 
-        public void CreateSelectHighlight(Transform highlightChunkTransform, Vector3Int localPos,
+        public void CreateSelectHighlight(Transform highlightChunkTransform, MetaLocalPosition localPos,
             Action<GameObject> onLoad, out GameObject referenceGo) // TODO [detach metablock] ?
         {
             referenceGo = null;
             if (blockObject != null)
             {
                 var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
-                if (go != null)
-                {
-                    onLoad(go);
-                    return;
-                }
+                if (go != null) onLoad(go);
 
                 blockObject.stateChange.AddListener(state =>
                 {

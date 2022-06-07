@@ -35,6 +35,11 @@ namespace src.Model
         {
             return ToWorld(chunk, local);
         }
+
+        public VoxelPosition ToVoxelPosition()
+        {
+            return new VoxelPosition(ToWorld());
+        }
         
         public static Vector3 ToWorld(Vector3Int chunk, MetaLocalPosition local)
         {
