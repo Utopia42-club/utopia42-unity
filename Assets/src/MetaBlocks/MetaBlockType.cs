@@ -52,7 +52,7 @@ namespace src.MetaBlocks
             if (withCollider)
                 go.AddComponent<BoxCollider>();
             go.SetActive(false);
-            go.name = "marker placeholder";
+            go.name = objName;
             go.transform.localScale = localScale * Vector3.one;
             return go;
         }

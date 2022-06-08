@@ -16,7 +16,7 @@ namespace src.MetaBlocks.TdObjectBlock
         public float initialScale = 0;
 
         public bool detectCollision = true;
-        public TdObjectType type = TdObjectType.OBJ;
+        public TdObjectBlockProperties.TdObjectType type = TdObjectBlockProperties.TdObjectType.OBJ;
         
         public TdObjectBlockPropertiesLegacy()
         {
@@ -80,9 +80,18 @@ namespace src.MetaBlocks.TdObjectBlock
             return url == null || url.Equals("");
         }
 
-        public enum TdObjectType
+        public TdObjectBlockProperties toProperties()
         {
-            OBJ, GLB
+            return new TdObjectBlockProperties()
+            {
+                url = url,
+                scale = scale,
+                rotation = rotation,
+                initialPosition = initialPosition,
+                initialScale = initialScale,
+                detectCollision = detectCollision,
+                type = type
+            };
         }
     }
 }

@@ -4,13 +4,9 @@ using src.Model;
 namespace src.MetaBlocks.ImageBlock
 {
     [Serializable]
-    public class MediaBlockProperties : ICloneable
+    public class MediaBlockProperties : BaseImageBlockProperties, ICloneable
     {
         public string url;
-        public int width;
-        public int height;
-        public bool detectCollision = true;
-        public SerializableVector3 rotation = SerializableVector3.Zero;
 
         public MediaBlockProperties()
         {

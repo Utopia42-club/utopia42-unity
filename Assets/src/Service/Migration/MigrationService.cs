@@ -12,7 +12,8 @@ namespace src.Service.Migration
         {
             migrations.Add(new GlobalToLocalMigration());
             migrations.Add( new RemoveRegionMigration());
-            latestVersion = new Version(0, 2, 0);
+            migrations.Add( new MetaDetachMigration());
+            latestVersion = new Version(0, 3, 0);
         }
 
         public LandDetails Migrate(Land land, LandDetails details)

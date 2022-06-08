@@ -14,7 +14,7 @@ namespace src.Service
         LandDetailsService()
         {
             migrationService = new MigrationService();
-            if (!migrationService.GetLatestVersion().Equals("0.2.0"))
+            if (!migrationService.GetLatestVersion().Equals("0.3.0"))
                 throw new Exception("Unsupported migration latest version.");
         }
 

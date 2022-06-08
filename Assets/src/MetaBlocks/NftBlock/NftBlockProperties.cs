@@ -5,14 +5,10 @@ using src.Model;
 namespace src.MetaBlocks.NftBlock
 {
     [Serializable]
-    public class NftBlockProperties : ICloneable
+    public class NftBlockProperties : BaseImageBlockProperties, ICloneable
     {
         public string collection;
         public long tokenId;
-        public int width;
-        public int height;
-        public bool detectCollision = true;
-        public SerializableVector3 rotation = SerializableVector3.Zero;
 
         public NftBlockProperties()
         {

@@ -4,15 +4,11 @@ using src.Utils;
 
 namespace src.MetaBlocks.VideoBlock
 {
-    [System.Serializable]
-    public class VideoBlockProperties : ICloneable
+    [Serializable]
+    public class VideoBlockProperties : BaseImageBlockProperties, ICloneable
     {
         public string url;
-        public int width;
-        public int height;
         public float previewTime = 0;
-        public bool detectCollision = true;
-        public SerializableVector3 rotation = SerializableVector3.Zero;
 
         public VideoBlockProperties()
         {
