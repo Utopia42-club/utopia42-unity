@@ -9,6 +9,7 @@ namespace src.MetaBlocks.LinkBlock
     public class LinkBlockObject : MetaBlockObject
     {
         private GameObject placeHolder;
+
         public override void OnDataUpdate()
         {
         }
@@ -65,10 +66,13 @@ namespace src.MetaBlocks.LinkBlock
 
         public override void ShowFocusHighlight()
         {
+            if (placeHolder == null) return;
+            AdjustHighlightBox(Player.INSTANCE.tdObjectHighlightBox, placeHolder.GetComponent<BoxCollider>(), true);
         }
 
         public override void RemoveFocusHighlight()
         {
+            Player.INSTANCE.tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
@@ -100,7 +104,11 @@ namespace src.MetaBlocks.LinkBlock
                 if (canEdit)
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
+                    {
+                        RemoveFocusHighlight();
                         EditProps();
+                    }
+
                     if (Input.GetButtonDown("Delete"))
                         GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
                 }
@@ -131,7 +139,7 @@ namespace src.MetaBlocks.LinkBlock
                 if (snackItem != null) SetupDefaultSnack();
             });
         }
-        
+
         private void DestroyPlaceHolder(bool immediate = true)
         {
             if (placeHolder == null) return;
@@ -169,7 +177,7 @@ namespace src.MetaBlocks.LinkBlock
 
             placeHolder = null;
         }
-        
+
         protected override void OnDestroy()
         {
             DestroyPlaceHolder(false);

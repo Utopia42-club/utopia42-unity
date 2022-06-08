@@ -31,7 +31,10 @@ namespace src.MetaBlocks.MarkerBlock
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
+                {
+                    RemoveFocusHighlight();
                     EditProps();
+                }
                 if (Input.GetButtonDown("Delete"))
                     GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
@@ -63,10 +66,13 @@ namespace src.MetaBlocks.MarkerBlock
 
         public override void ShowFocusHighlight()
         {
+            if (placeHolder == null) return;
+            AdjustHighlightBox(Player.INSTANCE.tdObjectHighlightBox, placeHolder.GetComponent<BoxCollider>(), true);
         }
 
         public override void RemoveFocusHighlight()
         {
+            Player.INSTANCE.tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)

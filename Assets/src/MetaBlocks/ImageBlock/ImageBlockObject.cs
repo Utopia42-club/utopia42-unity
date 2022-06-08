@@ -187,10 +187,24 @@ namespace src.MetaBlocks.ImageBlock
 
         public override void ShowFocusHighlight()
         {
+            if (image == null) return;
+            Player.INSTANCE.RemoveHighlightMesh();
+            Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
         }
-
+        
+        private Transform CreateMeshHighlight(Material material, bool active = true)
+        {
+            var clone = Instantiate(image.transform, image.transform.parent);
+            DestroyImmediate(clone.GetComponent<MeshCollider>());
+            var renderer = clone.GetComponent<MeshRenderer>();
+            renderer.enabled = active;
+            renderer.material = material;
+            return clone;
+        }
+        
         public override void RemoveFocusHighlight()
         {
+            Player.INSTANCE.RemoveHighlightMesh();
         }
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)

@@ -144,5 +144,22 @@ namespace src.MetaBlocks
             Block?.OnObjectDestroyed();
             stateChange.RemoveAllListeners();
         }
+        
+        protected static void AdjustHighlightBox(Transform highlightBox, BoxCollider referenceCollider, bool active)
+        {
+            var colliderTransform = referenceCollider.transform;
+            highlightBox.transform.rotation = colliderTransform.rotation;
+
+            var size = referenceCollider.size;
+            var minPos = referenceCollider.center - size / 2;
+
+            var gameObjectTransform = referenceCollider.gameObject.transform;
+            size.Scale(gameObjectTransform.localScale);
+            size.Scale(gameObjectTransform.parent.localScale);
+
+            highlightBox.localScale = size;
+            highlightBox.position = colliderTransform.TransformPoint(minPos);
+            highlightBox.gameObject.SetActive(active);
+        }
     }
 }

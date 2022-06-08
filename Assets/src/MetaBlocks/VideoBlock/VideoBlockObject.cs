@@ -32,7 +32,11 @@ namespace src.MetaBlocks.VideoBlock
                 if (canEdit)
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
+                    {
+                        RemoveFocusHighlight();
                         EditProps();
+                    }
+
                     if (Input.GetKeyDown(KeyCode.V))
                     {
                         RemoveFocusHighlight();
@@ -203,10 +207,25 @@ namespace src.MetaBlocks.VideoBlock
 
         public override void ShowFocusHighlight()
         {
+            if (video == null) return;
+            Player.INSTANCE.RemoveHighlightMesh();
+            Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
         }
-
+        
+        private Transform CreateMeshHighlight(Material material, bool active = true)
+        {
+            var transform = video.transform;
+            var clone = Instantiate(transform, transform.parent);
+            DestroyImmediate(clone.GetComponent<MeshCollider>());
+            var renderer = clone.GetComponent<MeshRenderer>();
+            renderer.enabled = active;
+            renderer.material = material;
+            return clone;
+        }
+        
         public override void RemoveFocusHighlight()
         {
+            Player.INSTANCE.RemoveHighlightMesh();
         }
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
