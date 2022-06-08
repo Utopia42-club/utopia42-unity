@@ -58,8 +58,8 @@ namespace src.Service
         {
             var settings = new JsonSerializerSettings();
             settings.NullValueHandling = NullValueHandling.Ignore;
+            settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             var data = JsonConvert.SerializeObject(body, null, settings);
-            Debug.Log(data);
             var bodyRaw = Encoding.UTF8.GetBytes(data);
             webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
             webRequest.downloadHandler = new DownloadHandlerBuffer();

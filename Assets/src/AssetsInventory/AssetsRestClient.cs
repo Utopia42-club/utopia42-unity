@@ -38,7 +38,7 @@ namespace src.AssetsInventory
                 }
                 else
                 {
-                    searchCriteria.lastId = currentPage[^1].id;
+                    searchCriteria.lastId = currentPage[^1].id.Value;
                     monoBehaviour.StartCoroutine(GetAllAssets(searchCriteria, nextPages =>
                     {
                         var allAssets = new List<Asset>();
@@ -69,7 +69,7 @@ namespace src.AssetsInventory
                 }
                 else
                 {
-                    searchCriteria.lastId = currentPage[^1].id;
+                    searchCriteria.lastId = currentPage[^1].id.Value;
                     monoBehaviour.StartCoroutine(GetAllFavoriteItems(searchCriteria, nextPages =>
                     {
                         var allAssets = new List<FavoriteItem>();

@@ -65,15 +65,14 @@ public class AssetsInventory : MonoBehaviour
 
         StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
         {
-            foreach (var favoriteItem in favItems)
-            {
-                AddToFavoritePanel(favoriteItem);
-            }
-
             addSlot = new FavoriteItemInventorySlot(null, this, root, "Add", 70, 10);
             addSlot.SetBackground(Resources.Load<Sprite>("Icons/add"));
             favBarSlots.Add(addSlot);
             favBar.Add(addSlot.VisualElement());
+            
+            foreach (var favoriteItem in favItems)
+                AddToFavoritePanel(favoriteItem);
+
         }, () => { }, this));
     }
 
@@ -81,7 +80,9 @@ public class AssetsInventory : MonoBehaviour
     {
         var slot = new FavoriteItemInventorySlot(favoriteItem, this, size: 70);
         favBarSlots.Add(slot);
+        favBar.RemoveAt(favBar.childCount - 1);
         favBar.Add(slot.VisualElement());
+        favBar.Add(addSlot.VisualElement());
     }
 
     private void ToggleInventory()
