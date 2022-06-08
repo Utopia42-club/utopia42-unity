@@ -238,7 +238,7 @@ namespace src
             placeBlock.gameObject.SetActive(true);
         }
 
-        public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk) // TODO [detach metablock]: better name?
+        public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk)
         {
             var epsilon = cam.forward * CastStep;
             PossiblePlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);

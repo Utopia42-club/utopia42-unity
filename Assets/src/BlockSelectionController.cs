@@ -55,7 +55,7 @@ namespace src
             rotationMode = !rotationMode;
             if (!rotationMode)
                 mouseLook.RemoveRotationTarget();
-            else if (World.INSTANCE.SelectionActive)
+            else if (World.INSTANCE.SelectionActive && !World.INSTANCE.MetaSelectionActive) // multiple selection rotation is not support for meta selection only
                 mouseLook.SetRotationTarget(RotateSelection);
         }
 
@@ -106,7 +106,13 @@ namespace src
                 Vectors.FloorToInt(0.5f * Vector3.one + moveDirection) +
                 (moveUp ? Vector3Int.up : moveDown ? Vector3Int.down : Vector3Int.zero);
 
-            World.INSTANCE.MoveSelection(delta);
+            if (!World.INSTANCE.MetaSelectionActive)
+            {
+                World.INSTANCE.MoveSelection(delta);
+                return;
+            }
+
+            World.INSTANCE.MoveMetaSelection(0.1f * (Vector3) delta);
         }
 
         private void HandleBlockSelection()

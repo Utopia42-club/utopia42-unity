@@ -67,7 +67,7 @@ namespace src.MetaBlocks
             // var velocity = (pivot.forward * forwardBackward + pivot.right * leftRight + pivot.up * upwardDownward) *
             //                Time.fixedDeltaTime *
             //                MoveSpeed;
-            // moveTarget.position += velocity; // TODO [detach metablock] ?
+            // moveTarget.position += velocity;?
 
             if (scaleTarget == null) return;
             if (scaleUp) ScaleUp();

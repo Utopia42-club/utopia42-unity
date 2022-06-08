@@ -31,6 +31,9 @@ namespace src
         private ConcurrentQueue<HighlightChunk> highlightChunksToRedraw = new ConcurrentQueue<HighlightChunk>();
 
         public Vector3Int HighlightOffset { private set; get; } = Vector3Int.zero;
+        
+        private Vector3 metaOffset = Vector3.zero; // used when the selection is meta only
+        public Vector3 MetaHighlightOffset => MetaSelectionActive ? metaOffset : HighlightOffset; 
         private GameObject highlight;
 
 
@@ -50,8 +53,13 @@ namespace src
 
         public int TotalBlocksSelected =>
             highlightChunks.Values.Where(chunk => chunk != null).Sum(chunk => chunk.TotalBlocksHighlighted);
+        
+        public int TotalNonMetaBlocksSelected =>
+            highlightChunks.Values.Where(chunk => chunk != null).Sum(chunk => chunk.TotalNonMetaBlocksHighlighted);
 
         public bool SelectionActive => TotalBlocksSelected > 0;
+        public bool MetaSelectionActive => metaOffset != Vector3.zero || SelectionActive && TotalNonMetaBlocksSelected == 0;
+        
         public bool ClipboardEmpty => clipboard.Count + metaClipboard.Count == 0;
 
         public List<Vector3Int> GetClipboardWorldPositions()
@@ -62,6 +70,7 @@ namespace src
         }
 
         public bool SelectionDisplaced =>
+            metaOffset != Vector3.zero ||
             HighlightOffset != Vector3Int.zero ||
             highlightChunks.Values.Any(highlightChunk => highlightChunk.SelectionDisplaced);
 
@@ -322,6 +331,7 @@ namespace src
             highlightChunks.Clear();
             highlightChunksToRedraw = new ConcurrentQueue<HighlightChunk>();
             HighlightOffset = Vector3Int.zero;
+            metaOffset = Vector3.zero;
         }
 
         public void RemoveSelectedBlocks(bool ignoreUnmovedBlocks = false)
@@ -341,11 +351,12 @@ namespace src
                     blocks.Add(vp, land);
                 }
 
+                var metaOffset = MetaHighlightOffset;  
                 foreach (var metaLocalPosition in highlightChunk.HighlightedMetaLocalPositions)
                 {
                     var offset = highlightChunk.GetRotationOffset(metaLocalPosition);
                     if (!offset.HasValue ||
-                        ignoreUnmovedBlocks && HighlightOffset + offset.Value == Vector3Int.zero) continue;
+                        ignoreUnmovedBlocks && metaOffset + offset.Value == Vector3Int.zero) continue;
                     var mp = new MetaPosition(highlightChunkCoordinate, metaLocalPosition);
                     var vp = mp.ToVoxelPosition();
                     if (!player.CanEdit(vp.ToWorld(), out var land)) continue;
@@ -386,10 +397,11 @@ namespace src
 
                 PutBlocks(blocks);
 
+                var metaOffset = MetaHighlightOffset;
                 foreach (var highlightedMetaBlock in highlightChunk.HighlightedMetaBlocks)
                 {
-                    if (highlightedMetaBlock == null || offsetCheck && HighlightOffset + highlightedMetaBlock.Offset == Vector3Int.zero) continue;
-                    var newPos = HighlightOffset + highlightChunk.Position + highlightedMetaBlock.CurrentPosition.position;
+                    if (highlightedMetaBlock == null || offsetCheck && metaOffset + highlightedMetaBlock.Offset == Vector3Int.zero) continue;
+                    var newPos = metaOffset + highlightChunk.Position + highlightedMetaBlock.CurrentPosition.position;
                     if (!player.CanEdit(Vectors.TruncateFloor(newPos), out var land)) continue;
                     PutMetaWithProps(new MetaPosition(newPos),
                         (MetaBlockType) Blocks.GetBlockType(highlightedMetaBlock.MetaBlockTypeId),
@@ -398,6 +410,11 @@ namespace src
             }
         }
 
+        public void MoveMetaSelection(Vector3 v)
+        {
+            metaOffset += v;
+            highlight.transform.position += v;
+        }
         public void MoveSelection(Vector3Int v, bool delta = true)
         {
             if (delta)
@@ -484,7 +501,11 @@ namespace src
             yield return AddHighlights(clipboard.ToList(), Vector3Int.zero, null);
             foreach (var metaPosition in metaClipboard)
                 AddHighlight(metaPosition);
-            MoveSelection(offset);
+            if(clipboard.Count == 0)
+                MoveMetaSelection(offset);
+            else
+                MoveSelection(offset);
+                
         }
 
         private Chunk PopRequest()

@@ -26,17 +26,25 @@ namespace src
 
         public Transform transform => HighlightChunkGameObject.transform;
 
-        public int TotalBlocksHighlighted => highlightedBlocks.Count(pair => pair.Value != null) +
-                                             highlightedMetaBlocks.Count(pair => pair.Value != null);
+        public int TotalNonMetaBlocksHighlighted => highlightedBlocks.Count(pair => pair.Value != null);
+
+        public int TotalBlocksHighlighted =>
+            TotalNonMetaBlocksHighlighted + highlightedMetaBlocks.Count(pair => pair.Value != null);
+
 
         public List<HighlightedBlock> HighlightedBlocks => new List<HighlightedBlock>(highlightedBlocks.Values);
-        public List<HighlightedMetaBlock> HighlightedMetaBlocks => new List<HighlightedMetaBlock>(highlightedMetaBlocks.Values);
+
+        public List<HighlightedMetaBlock> HighlightedMetaBlocks =>
+            new List<HighlightedMetaBlock>(highlightedMetaBlocks.Values);
+
         public HashSet<Vector3Int> HighlightedLocalPositions => new HashSet<Vector3Int>(highlightedBlocks.Keys);
-        public HashSet<MetaLocalPosition> HighlightedMetaLocalPositions => new HashSet<MetaLocalPosition>(highlightedMetaBlocks.Keys);
+
+        public HashSet<MetaLocalPosition> HighlightedMetaLocalPositions =>
+            new HashSet<MetaLocalPosition>(highlightedMetaBlocks.Keys);
 
         public bool SelectionDisplaced =>
             highlightedBlocks.Values.Any(highlightedBlock => highlightedBlock.Offset != Vector3Int.zero) ||
-            highlightedMetaBlocks.Values.Any(highlightedMetaBlock => highlightedMetaBlock.Offset != Vector3Int.zero);
+            highlightedMetaBlocks.Values.Any(highlightedMetaBlock => highlightedMetaBlock.Offset != Vector3.zero);
 
         private void Start()
         {
@@ -65,7 +73,7 @@ namespace src
         {
             return highlightedBlocks.ContainsKey(localPos);
         }
-        
+
         public bool Contains(MetaLocalPosition localPos)
         {
             return highlightedMetaBlocks.ContainsKey(localPos);
@@ -122,8 +130,8 @@ namespace src
                 highlightedBlock == null) return null;
             return highlightedBlock.Offset;
         }
-        
-        public Vector3Int? GetRotationOffset(MetaLocalPosition localPos)
+
+        public Vector3? GetRotationOffset(MetaLocalPosition localPos)
         {
             if (!highlightedMetaBlocks.TryGetValue(localPos, out var highlightedMetaBlock) ||
                 highlightedMetaBlock == null) return null;

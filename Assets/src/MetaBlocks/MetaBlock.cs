@@ -78,7 +78,7 @@ namespace src.MetaBlocks
         }
 
         public void CreateSelectHighlight(Transform highlightChunkTransform, MetaLocalPosition localPos,
-            Action<GameObject> onLoad, out GameObject referenceGo) // TODO [detach metablock] ?
+            Action<GameObject> onLoad, out GameObject referenceGo)
         {
             referenceGo = null;
             if (blockObject != null)

@@ -45,12 +45,6 @@ namespace src.Model
             return ToWorld(chunk, local);
         }
 
-        // TODO [detach metablock]: temp
-        // public MetaPosition ToMetaPosition()
-        // {
-        //     return new MetaPosition()
-        // }
-
         public static Vector3Int ToWorld(Vector3Int chunk, Vector3Int local)
         {
             chunk.Scale(Chunk.CHUNK_SIZE);

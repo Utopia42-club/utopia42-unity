@@ -11,6 +11,6 @@ namespace src
 
         public abstract void UnFocus();
         
-        public abstract Vector3? GetBlockPosition(); // TODO [detach metablock]: remove?
+        public abstract Vector3? GetBlockPosition();
     }
 }

@@ -15,7 +15,7 @@ namespace src
         private GameObject metaBlockHighlight;
         private Vector3 metaBlockHighlightPosition;
         private GameObject referenceGo;
-        public Vector3Int Offset { get; private set; } = Vector3Int.zero; // might change because of rotation only
+        public Vector3 Offset { get; private set; } = Vector3.zero; // might change because of rotation only
         public MetaLocalPosition Position { get; private set; }
         public MetaLocalPosition CurrentPosition => new MetaLocalPosition(Position.position + Offset);
 
@@ -38,7 +38,7 @@ namespace src
         
                 highlightedBlock.metaBlockHighlight = highlight;
                 highlightedBlock.metaBlockHighlightPosition =
-                    highlight.transform.localPosition + World.INSTANCE.HighlightOffset; // TODO ?
+                    highlight.transform.localPosition + World.INSTANCE.MetaHighlightOffset; // TODO ?
                 highlightedBlock.UpdateMetaBlockHighlightPosition();
             }, out highlightedBlock.referenceGo);
         
