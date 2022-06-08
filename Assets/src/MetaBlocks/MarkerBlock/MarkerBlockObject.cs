@@ -35,6 +35,7 @@ namespace src.MetaBlocks.MarkerBlock
                     RemoveFocusHighlight();
                     EditProps();
                 }
+
                 if (Input.GetButtonDown("Delete"))
                     GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
@@ -77,12 +78,15 @@ namespace src.MetaBlocks.MarkerBlock
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
-            return null;
-        }
-
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            MetaLocalPosition localPos, Action<GameObject> onLoad)
-        {
+            if (placeHolder == null) return null;
+            Transform highlight;
+            highlight = Instantiate(Player.INSTANCE.tdObjectHighlightBox, default, Quaternion.identity);
+            highlight.GetComponentInChildren<MeshRenderer>().material = World.INSTANCE.SelectedBlock;
+            AdjustHighlightBox(highlight, placeHolder.GetComponent<BoxCollider>(), show);
+            highlight.SetParent(parent, true);
+            var go = highlight.gameObject;
+            go.name = "link highlight";
+            return go;
         }
 
         public override void SetToMovingState()

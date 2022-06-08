@@ -191,7 +191,7 @@ namespace src.MetaBlocks.ImageBlock
             Player.INSTANCE.RemoveHighlightMesh();
             Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
         }
-        
+
         private Transform CreateMeshHighlight(Material material, bool active = true)
         {
             var clone = Instantiate(image.transform, image.transform.parent);
@@ -201,7 +201,7 @@ namespace src.MetaBlocks.ImageBlock
             renderer.material = material;
             return clone;
         }
-        
+
         public override void RemoveFocusHighlight()
         {
             Player.INSTANCE.RemoveHighlightMesh();
@@ -209,12 +209,12 @@ namespace src.MetaBlocks.ImageBlock
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
-            return null;
-        }
-
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            MetaLocalPosition localPos, Action<GameObject> onLoad)
-        {
+            if (image == null) return null;
+            var highlight = CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
+            highlight.SetParent(parent, true);
+            var go = highlight.gameObject;
+            go.name = "image highlight";
+            return go;
         }
 
         public override void SetToMovingState()

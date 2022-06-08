@@ -114,11 +114,6 @@ namespace src.MetaBlocks.LightBlock
             return null;
         }
 
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            MetaLocalPosition localPos, Action<GameObject> onLoad)
-        {
-        }
-
         public override void SetToMovingState()
         {
             throw new NotImplementedException();

@@ -230,12 +230,12 @@ namespace src.MetaBlocks.VideoBlock
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
-            return null;
-        }
-
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            MetaLocalPosition localPos, Action<GameObject> onLoad)
-        {
+            if (video == null) return null;
+            var highlight = CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
+            highlight.SetParent(parent, true);
+            var go = highlight.gameObject;
+            go.name = "image highlight";
+            return go;
         }
 
         public override void SetToMovingState()

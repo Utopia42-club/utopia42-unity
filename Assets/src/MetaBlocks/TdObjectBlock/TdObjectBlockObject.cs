@@ -69,46 +69,10 @@ namespace src.MetaBlocks.TdObjectBlock
                 AdjustHighlightBox(highlight, boxCollider, show);
             }
 
-            ChangeParent(highlight, parent);
+            highlight.SetParent(parent, true);
             highlight.gameObject.name = "3d_object_highlight";
 
             return highlight.gameObject;
-        }
-
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            MetaLocalPosition localPos, Action<GameObject> onLoad)
-        {
-            var goRef = gameObject;
-            var gameObjectTransform = goRef.transform;
-            gameObjectTransform.parent = World.INSTANCE.transform;
-            gameObjectTransform.localPosition = highlightChunkTransform.transform.localPosition + localPos.position;
-            Initialize(block, null);
-
-            stateChange.AddListener(state =>
-            {
-                if (goRef == null) return;
-                if (state != State.Ok)
-                {
-                    if (state != State.Loading)
-                    {
-                        Destroy(goRef);
-                        goRef = null;
-                    }
-
-                    return;
-                }
-
-                var go = CreateSelectHighlight(highlightChunkTransform);
-                if (go != null) onLoad(go);
-
-                foreach (var meshRenderer in gameObject.GetComponentsInChildren<MeshRenderer>())
-                    meshRenderer.enabled = false;
-            });
-        }
-
-        private void ChangeParent(Transform highlight, Transform parent)
-        {
-            highlight.SetParent(parent, true);
         }
 
         private Transform CreateMeshHighlight(Material material, bool active = true)

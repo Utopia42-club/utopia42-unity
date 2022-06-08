@@ -114,7 +114,7 @@ namespace src.MetaBlocks
         }
 
         public abstract GameObject
-            CreateSelectHighlight(Transform parent, bool show = true); // TODO [detach metablock] ?
+            CreateSelectHighlight(Transform parent, bool show = true);
 
         protected internal void UpdateState(State state)
         {
@@ -122,8 +122,36 @@ namespace src.MetaBlocks
             stateChange.Invoke(state);
         }
 
-        public abstract void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            MetaLocalPosition localPos, Action<GameObject> onLoad);
+        public void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
+            MetaLocalPosition localPos, Action<GameObject> onLoad) // TODO [detach metablock]: will not work with link and marker metablocks (they only have empty state)
+        {
+            var goRef = gameObject;
+            var gameObjectTransform = goRef.transform;
+            gameObjectTransform.parent = World.INSTANCE.transform;
+            gameObjectTransform.localPosition = highlightChunkTransform.transform.localPosition + localPos.position;
+            Initialize(block, null);
+
+            stateChange.AddListener(state =>
+            {
+                if (goRef == null) return;
+                if (state != State.Ok)
+                {
+                    if (state != State.Loading && state != State.LoadingMetadata)
+                    {
+                        Destroy(goRef);
+                        goRef = null;
+                    }
+
+                    return;
+                }
+
+                var go = CreateSelectHighlight(highlightChunkTransform);
+                if (go != null) onLoad(go);
+
+                foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())
+                    renderer.enabled = false;
+            });
+        }
 
         protected abstract void DoInitialize();
 

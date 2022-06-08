@@ -28,7 +28,10 @@ namespace src.MetaBlocks.NftBlock
                 if (canEdit)
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
+                    {
+                        RemoveFocusHighlight();
                         EditProps();
+                    }
                     if (Input.GetKeyDown(KeyCode.V))
                     {
                         RemoveFocusHighlight();
