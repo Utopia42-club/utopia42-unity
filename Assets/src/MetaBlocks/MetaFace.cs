@@ -60,11 +60,12 @@ namespace src
             if (meshFilter != null)
                 Destroy(meshFilter.sharedMesh);
 
-            if (meshRenderer != null)
-            {
-                Destroy(meshRenderer.sharedMaterial.mainTexture);
-                Destroy(meshRenderer.sharedMaterial);
-            }
+            if (meshRenderer == null) return;
+            var mat = meshRenderer.sharedMaterial;
+            if (mat == null) return;
+            if (mat.mainTexture != null && mat.mainTexture.name != "failed")
+                Destroy(mat.mainTexture);
+            Destroy(mat);
         }
     }
 }
