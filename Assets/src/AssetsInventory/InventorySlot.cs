@@ -15,15 +15,16 @@ namespace src.AssetsInventory
         protected readonly VisualElement slotIcon;
         protected readonly Button leftAction;
 
-        private readonly global::AssetsInventory assetsInventory;
+        protected readonly global::src.AssetsInventory.AssetsInventory assetsInventory;
         private readonly VisualElement tooltipRoot;
         private IEnumerator imageCoroutine;
         private bool isLoadingImage = false;
+        private bool mouseDown;
 
-        protected InventorySlot(global::AssetsInventory assetsInventory, VisualElement tooltipRoot = null,
-            string tooltip = null, int size = 80, int iconMargin = 0)
+        protected InventorySlot(VisualElement tooltipRoot = null, string tooltip = null, int size = 80,
+            int iconMargin = 0)
         {
-            this.assetsInventory = assetsInventory;
+            this.assetsInventory = global::src.AssetsInventory.AssetsInventory.INSTANCE;
             this.tooltipRoot = tooltipRoot;
             slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot").CloneTree();
             slotIcon = slot.Q<VisualElement>("slotIcon");
@@ -40,9 +41,14 @@ namespace src.AssetsInventory
             {
                 if (evt.button != 0)
                     return;
-
-                assetsInventory.StartDrag(evt.position, this);
+                mouseDown = true;
             });
+            slot.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (mouseDown && evt.pressedButtons == 1)
+                    assetsInventory.StartDrag(evt.position, this);
+            });
+            slot.RegisterCallback<PointerUpEvent>(evt => { mouseDown = false; });
         }
 
         protected void SetTooltip(string tooltip)
@@ -117,9 +123,8 @@ namespace src.AssetsInventory
     {
         private Asset asset;
 
-        public AssetInventorySlot(Asset asset, global::AssetsInventory assetsInventory,
-            VisualElement tooltipRoot = null, int size = 80, int iconMargin = 0)
-            : base(assetsInventory, tooltipRoot, asset.name, size, iconMargin)
+        public AssetInventorySlot(Asset asset, VisualElement tooltipRoot = null, int size = 80, int iconMargin = 0)
+            : base(tooltipRoot, asset.name, size, iconMargin)
         {
             SetAsset(asset);
         }
@@ -142,9 +147,9 @@ namespace src.AssetsInventory
     {
         private Asset asset;
 
-        public AssetBlockInventorySlot(global::AssetsInventory assetsInventory, VisualElement tooltipRoot = null,
+        public AssetBlockInventorySlot(VisualElement tooltipRoot = null,
             string tooltip = null, int size = 80, int iconMargin = 0)
-            : base(assetsInventory, tooltipRoot, tooltip, size, iconMargin)
+            : base(tooltipRoot, tooltip, size, iconMargin)
         {
         }
 
@@ -200,10 +205,11 @@ namespace src.AssetsInventory
     {
         public readonly FavoriteItem favoriteItem;
         private readonly Sprite closeIcon;
+        private readonly VisualElement selectedBorder;
 
-        public FavoriteItemInventorySlot(FavoriteItem favoriteItem, global::AssetsInventory assetsInventory,
+        public FavoriteItemInventorySlot(FavoriteItem favoriteItem,
             VisualElement tooltipRoot = null, string tooltip = null, int size = 80, int iconMargin = 0)
-            : base(assetsInventory, tooltipRoot, tooltip, size, iconMargin)
+            : base(tooltipRoot, tooltip, size, iconMargin)
         {
             this.favoriteItem = favoriteItem;
             if (favoriteItem?.asset != null)
@@ -217,16 +223,19 @@ namespace src.AssetsInventory
                 closeIcon = Resources.Load<Sprite>("Icons/close");
                 slot.RegisterCallback<MouseEnterEvent>(evt =>
                 {
-                    ConfigLeftAction(true, "Delete", closeIcon, () =>
-                    {
-                        assetsInventory.DeleteFavoriteItem(this);
-                    });
+                    ConfigLeftAction(true, "Delete", closeIcon, () => assetsInventory.DeleteFavoriteItem(this));
                 });
-                slot.RegisterCallback<MouseLeaveEvent>(evt =>
-                {
-                    ConfigLeftAction(false);
-                });
+                slot.RegisterCallback<MouseLeaveEvent>(evt => ConfigLeftAction(false));
+
+                selectedBorder = slot.Q<VisualElement>("selectedBorder");
+                slot.RegisterCallback<PointerDownEvent>(evt => assetsInventory.SelectFavoriteItem(this));
             }
+        }
+
+        public void SetSelected(bool selected)
+        {
+            if (selectedBorder != null)
+                selectedBorder.style.display = selected ? DisplayStyle.Flex : DisplayStyle.None;
         }
     }
 }
