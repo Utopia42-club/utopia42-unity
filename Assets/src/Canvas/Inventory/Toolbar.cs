@@ -37,14 +37,32 @@ namespace src.Canvas
 
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
-                if (state == GameManager.State.PLAYING) SelectedChanged();
+                if (state == GameManager.State.PLAYING && !player.ChangeForbidden) SelectedChanged();
             });
             SelectedChanged();
+            if (player.ChangeForbidden)
+            {
+                highlight.gameObject.SetActive(false);
+                hammerHighlight.gameObject.SetActive(false);
+            }
+
+            player.viewModeChanged.AddListener(vm =>
+            {
+                if (!player.ChangeForbidden)
+                {
+                    SelectedChanged();
+                }
+                else if (vm == Player.ViewMode.THIRD_PERSON)
+                {
+                    highlight.gameObject.SetActive(false);
+                    hammerHighlight.gameObject.SetActive(false);
+                }
+            });
         }
 
         private void Update()
         {
-            if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
+            if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING || player.ChangeForbidden) return;
 
             var mouseDelta = Input.mouseScrollDelta.y;
             var dec = Input.GetButtonDown("Change Block")
@@ -53,9 +71,10 @@ namespace src.Canvas
             var inc = !dec && (Input.GetButtonDown("Change Block") || mouseDelta >= 0.1);
             if (!dec && !inc)
             {
-                SelectedChanged();
+                // SelectedChanged();
                 return;
             }
+
             if (dec) selectedSlot--;
             if (inc) selectedSlot++;
             selectedSlot = (selectedSlot + slots.Length + 1) % (slots.Length + 1);
@@ -78,6 +97,6 @@ namespace src.Canvas
             player.ToolbarSelectedChanged(hammerSelected);
         }
 
-        public static Toolbar INSTANCE => GameObject.Find("Toolbar").GetComponent<Toolbar>();
+        public static Toolbar INSTANCE => GameObject.Find("Toolbar")?.GetComponent<Toolbar>();
     }
 }
