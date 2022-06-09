@@ -45,7 +45,7 @@ namespace src
         public GameObject cursorSlot;
         public Player player;
         private VoxelPosition firstSelectedPosition;
-        public VoxelPosition lastSelectedPosition { get; private set; }
+        public VoxelPosition LastSelectedPosition { get; private set; }
 
         public Material Material => material;
         public Material HighlightBlock => highlightBlock;
@@ -174,7 +174,7 @@ namespace src
                 highlightChunk.Add(vp.local, block);
                 if (TotalBlocksSelected == 1)
                     firstSelectedPosition = vp;
-                lastSelectedPosition = vp;
+                LastSelectedPosition = vp;
                 highlightChunksToRedraw.Enqueue(highlightChunk);
                 if (!delayedUpdate)
                     RedrawChangedHighlightChunks();
@@ -220,9 +220,9 @@ namespace src
                 }
 
                 highlightChunk.Add(mp.local, metaBlock);
-                if (TotalBlocksSelected == 1)
-                    firstSelectedPosition = vp;
-                lastSelectedPosition = vp;
+                // if (TotalBlocksSelected == 1)
+                //     firstSelectedPosition = vp;
+                // LastSelectedPosition = vp;
                 highlightChunksToRedraw.Enqueue(highlightChunk);
                 if (!delayedUpdate)
                     RedrawChangedHighlightChunks();
@@ -340,6 +340,8 @@ namespace src
             highlightChunksToRedraw = new ConcurrentQueue<HighlightChunk>();
             HighlightOffset = Vector3Int.zero;
             metaOffset = Vector3.zero;
+            firstSelectedPosition = null;
+            LastSelectedPosition = null;
         }
 
         public void RemoveSelectedBlocks(bool ignoreUnmovedBlocks = false)

@@ -133,11 +133,11 @@ namespace src
                               Input.GetMouseButtonDown(0) && ctrlHeld;
 
             var multipleSelect = selectVoxel && World.INSTANCE.SelectionActive &&
-                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) && World.INSTANCE.LastSelectedPosition != null;
 
             if (multipleSelect) // TODO: add support for metablock multiselection?
             {
-                var lastSelectedPosition = World.INSTANCE.lastSelectedPosition.ToWorld();
+                var lastSelectedPosition = World.INSTANCE.LastSelectedPosition.ToWorld();
                 if (!player.HighlightBlock.gameObject.activeSelf) return;
                 var currentSelectedPosition = player.PossibleHighlightBlockPosInt;
 
@@ -200,8 +200,7 @@ namespace src
                         Blocks.GetBlockType(player.selectedBlockId));
                 }
             }
-            else if (Input.GetMouseButtonDown(1) &&
-                     (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null))
+            else if (Input.GetMouseButtonDown(1))
                 DeleteBlock();
         }
 
