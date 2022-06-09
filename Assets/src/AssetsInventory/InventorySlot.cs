@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using src.AssetsInventory.Models;
 using src.Canvas;
@@ -10,8 +11,9 @@ namespace src.AssetsInventory
     {
         private static readonly Sprite assetDefaultImage = Resources.Load<Sprite>("Icons/loading");
 
-        private readonly VisualElement slot;
-        private readonly VisualElement slotIcon;
+        protected readonly VisualElement slot;
+        protected readonly VisualElement slotIcon;
+        protected readonly Button leftAction;
 
         private readonly global::AssetsInventory assetsInventory;
         private readonly VisualElement tooltipRoot;
@@ -25,6 +27,7 @@ namespace src.AssetsInventory
             this.tooltipRoot = tooltipRoot;
             slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot").CloneTree();
             slotIcon = slot.Q<VisualElement>("slotIcon");
+            leftAction = slot.Q<Button>("leftAction");
             SetTooltip(tooltip);
             var s = slot.style;
             s.width = size;
@@ -97,6 +100,16 @@ namespace src.AssetsInventory
         public Sprite GetBackground()
         {
             return slotIcon.style.backgroundImage.value.sprite;
+        }
+
+        protected void ConfigLeftAction(bool visible, string tooltip = null, Sprite background = null,
+            Action action = null)
+        {
+            leftAction.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!visible) return;
+            leftAction.tooltip = tooltip;
+            leftAction.style.backgroundImage = Background.FromSprite(background);
+            leftAction.clickable.clicked += () => action?.Invoke();
         }
     }
 
@@ -186,6 +199,7 @@ namespace src.AssetsInventory
     public class FavoriteItemInventorySlot : AssetBlockInventorySlot
     {
         public readonly FavoriteItem favoriteItem;
+        private readonly Sprite closeIcon;
 
         public FavoriteItemInventorySlot(FavoriteItem favoriteItem, global::AssetsInventory assetsInventory,
             VisualElement tooltipRoot = null, string tooltip = null, int size = 80, int iconMargin = 0)
@@ -197,6 +211,22 @@ namespace src.AssetsInventory
                 SetAsset(favoriteItem.asset);
             }
             //TODO: else block
+
+            if (favoriteItem != null)
+            {
+                closeIcon = Resources.Load<Sprite>("Icons/close");
+                slot.RegisterCallback<MouseEnterEvent>(evt =>
+                {
+                    ConfigLeftAction(true, "Delete", closeIcon, () =>
+                    {
+                        assetsInventory.DeleteFavoriteItem(this);
+                    });
+                });
+                slot.RegisterCallback<MouseLeaveEvent>(evt =>
+                {
+                    ConfigLeftAction(false);
+                });
+            }
         }
     }
 }

@@ -69,10 +69,9 @@ public class AssetsInventory : MonoBehaviour
             addSlot.SetBackground(Resources.Load<Sprite>("Icons/add"));
             favBarSlots.Add(addSlot);
             favBar.Add(addSlot.VisualElement());
-            
+
             foreach (var favoriteItem in favItems)
                 AddToFavoritePanel(favoriteItem);
-
         }, () => { }, this));
     }
 
@@ -83,6 +82,18 @@ public class AssetsInventory : MonoBehaviour
         favBar.RemoveAt(favBar.childCount - 1);
         favBar.Add(slot.VisualElement());
         favBar.Add(addSlot.VisualElement());
+    }
+
+    private void RemoveFromFavoritePanel(FavoriteItemInventorySlot slot)
+    {
+        favBarSlots.Remove(slot);
+        favBar.Remove(slot.VisualElement());
+    }
+
+    public void DeleteFavoriteItem(FavoriteItemInventorySlot slot)
+    {
+        StartCoroutine(restClient.DeleteFavoriteItem(slot.favoriteItem.id.Value,
+            () => RemoveFromFavoritePanel(slot), () => { }));
     }
 
     private void ToggleInventory()
