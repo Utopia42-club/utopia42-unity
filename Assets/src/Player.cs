@@ -367,7 +367,8 @@ namespace src
                 else
                     placeBlock.gameObject.SetActive(false);
 
-                MetaBlockPlaceHolder.gameObject.SetActive(false);
+                if(MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.gameObject.SetActive(false);
             }
         }
 
