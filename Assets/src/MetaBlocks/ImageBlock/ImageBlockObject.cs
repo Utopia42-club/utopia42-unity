@@ -132,9 +132,10 @@ namespace src.MetaBlocks.ImageBlock
             if (!error && state != State.Empty) return;
 
             DestroyImage();
-            CreateImageFace(gameObject.transform, MediaBlockEditor.DEFAULT_DIMENSION,
-                MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero,
-                out imageContainer, out image, out var renderer, true).PlaceHolderInit(renderer, Block.type, error);
+            var props = (BaseImageBlockProperties) Block.GetProps();
+            CreateImageFace(gameObject.transform, error ? MediaBlockEditor.DEFAULT_DIMENSION : props.width,
+                error ? MediaBlockEditor.DEFAULT_DIMENSION : props.height, props.rotation.ToVector3(),
+                out imageContainer, out image, out var r, true).PlaceHolderInit(r, Block.type, error);
             image.AddComponent<MetaFocusable>().Initialize(this);
         }
 

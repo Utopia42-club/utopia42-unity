@@ -444,7 +444,7 @@ namespace src
 
         private Vector3? GetSelectionRotationCenter()
         {
-            if (!SelectionActive || !highlightChunks.TryGetValue(firstSelectedPosition.chunk, out var highlightChunk) ||
+            if (!SelectionActive || firstSelectedPosition == null || !highlightChunks.TryGetValue(firstSelectedPosition.chunk, out var highlightChunk) ||
                 highlightChunk == null) return null;
             var rotationOffset = highlightChunk.GetRotationOffset(firstSelectedPosition.local);
             if (!rotationOffset.HasValue) return null;

@@ -32,6 +32,7 @@ namespace src
             meta.CreateSelectHighlight(highlightChunk.transform, localPos, highlight =>
             {
                 onLoad?.Invoke(highlightedBlock);
+                onLoad = null;
                 if (highlightedBlock.metaBlockHighlight != null)
                 {
                     DestroyImmediate(highlightedBlock.metaBlockHighlight);

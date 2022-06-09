@@ -68,9 +68,10 @@ namespace src.MetaBlocks.VideoBlock
             if (!error && state != State.Empty) return;
 
             DestroyVideo();
-            CreateVideoFace(gameObject.transform, MediaBlockEditor.DEFAULT_DIMENSION,
-                MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero,
-                out videoContainer, out var go, out var renderer, true).PlaceHolderInit(renderer, error);
+            var props = (VideoBlockProperties) Block.GetProps();
+            CreateVideoFace(gameObject.transform, error ? MediaBlockEditor.DEFAULT_DIMENSION : props.width,
+                error ? MediaBlockEditor.DEFAULT_DIMENSION : props.height, props.rotation.ToVector3(),
+                out videoContainer, out var go, out var r, true).PlaceHolderInit(r, error);
             go.AddComponent<MetaFocusable>().Initialize(this);
         }
 
@@ -211,7 +212,7 @@ namespace src.MetaBlocks.VideoBlock
             Player.INSTANCE.RemoveHighlightMesh();
             Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
         }
-        
+
         private Transform CreateMeshHighlight(Material material, bool active = true)
         {
             var transform = video.transform;
@@ -222,7 +223,7 @@ namespace src.MetaBlocks.VideoBlock
             renderer.material = material;
             return clone;
         }
-        
+
         public override void RemoveFocusHighlight()
         {
             Player.INSTANCE.RemoveHighlightMesh();
