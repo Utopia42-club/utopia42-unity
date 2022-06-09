@@ -316,14 +316,12 @@ namespace src
             PossibleHighlightBlockPosInt = Vectors.FloorToInt(blockHitPoint + epsilon);
 
             if (BlockSelectionController.INSTANCE.selectionMode == BlockSelectionController.SelectionMode.Dragged &&
-                World.INSTANCE.SelectionActive)
+                World.INSTANCE.SelectionActive && CanEdit(PossiblePlaceBlockPosInt, out _))
             {
                 HideCursorBlocksAndPlaceHolder();
-
-                if (CanEdit(PossiblePlaceBlockPosInt, out _))
-                    World.INSTANCE.MoveSelection(PossiblePlaceBlockPosInt, false);
+                World.INSTANCE.MoveSelection(PossiblePlaceBlockPosInt, false);
             }
-            else if (HammerMode)
+            else if (HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
             {
                 highlightBlock.position = PossibleHighlightBlockPosInt;
                 highlightBlock.gameObject.SetActive(true);
@@ -331,7 +329,8 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.SetActive(false);
             }
-            else if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType metaBlockType)
+            else if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType metaBlockType &&
+                     CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
                 placeBlock.gameObject.SetActive(false);
                 highlightBlock.gameObject.SetActive(false);
@@ -339,29 +338,36 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                 {
                     var mp = metaBlockType.GetPutPosition(blockHitPoint);
-                    if (chunk.GetMetaAt(mp) == null && CanEdit(PossibleHighlightBlockPosInt, out placeLand))
+                    if (chunk.GetMetaAt(mp) == null)
                     {
                         MetaBlockPlaceHolder.transform.position = mp.ToWorld();
                         MetaBlockPlaceHolder.gameObject.SetActive(true);
                     }
-                    else
-                        MetaBlockPlaceHolder.gameObject.SetActive(false);
                 }
                 else
                     Debug.LogWarning("Null place holder!"); // should not happen
             }
             else
             {
-                highlightBlock.position = PossibleHighlightBlockPosInt;
-                highlightBlock.gameObject.SetActive(CanEdit(PossibleHighlightBlockPosInt, out highlightLand));
+                if (CanEdit(PossibleHighlightBlockPosInt, out highlightLand))
+                {
+                    highlightBlock.position = PossibleHighlightBlockPosInt;
+                    highlightBlock.gameObject.SetActive(true);
+                }
+                else
+                    highlightBlock.gameObject.SetActive(false);
+
                 var currVox = Vectors.FloorToInt(GetPosition());
-                if (PossiblePlaceBlockPosInt != currVox && PossiblePlaceBlockPosInt != currVox + Vector3Int.up)
+                if (PossiblePlaceBlockPosInt != currVox && PossiblePlaceBlockPosInt != currVox + Vector3Int.up &&
+                    CanEdit(PossiblePlaceBlockPosInt, out placeLand))
                 {
                     placeBlock.position = PossiblePlaceBlockPosInt;
-                    placeBlock.gameObject.SetActive(CanEdit(PossiblePlaceBlockPosInt, out placeLand));
+                    placeBlock.gameObject.SetActive(true);
                 }
                 else
                     placeBlock.gameObject.SetActive(false);
+
+                MetaBlockPlaceHolder.gameObject.SetActive(false);
             }
         }
 
