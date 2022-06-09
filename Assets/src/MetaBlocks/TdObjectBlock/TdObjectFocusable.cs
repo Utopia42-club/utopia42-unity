@@ -8,16 +8,8 @@ namespace src.MetaBlocks.TdObjectBlock
         public void Initialize(MetaBlockObject metaBlockObject)
         {
             if (initialized) return;
-            this.metaBlockObject = metaBlockObject;
+            this.MetaBlockObject = metaBlockObject;
             initialized = true;
-        }
-
-        public override Vector3? GetBlockPosition()
-        {
-            var collider = GetComponent<Collider>();
-            if(collider != null && collider is BoxCollider)
-                return Vectors.TruncateFloor(transform.parent.parent.position);
-            return Vectors.TruncateFloor(transform.parent.parent.parent.position);
         }
     }
 }

@@ -2,29 +2,13 @@ using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.Model;
-using src.Utils;
 using UnityEngine;
 
 namespace src.MetaBlocks.MarkerBlock
 {
     public class MarkerBlockObject : MetaBlockObject
     {
-        private SnackItem snackItem;
-        private Land land;
-        private bool canEdit;
-        private bool ready = false;
-
-        private void Start()
-        {
-            if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-                CreateIcon();
-            ready = true;
-        }
-
-        public override bool IsReady()
-        {
-            return ready;
-        }
+        private GameObject placeHolder;
 
         public override void OnDataUpdate()
         {
@@ -32,78 +16,87 @@ namespace src.MetaBlocks.MarkerBlock
 
         protected override void DoInitialize()
         {
+            UpdateState(State.Empty);
         }
 
-
-        public override void Focus(Voxels.Face face)
+        protected override void SetupDefaultSnack()
         {
-            if (!canEdit) return;
             if (snackItem != null)
             {
                 snackItem.Remove();
                 snackItem = null;
             }
 
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(), () =>
+            if (!canEdit) return;
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
+                {
+                    RemoveFocusHighlight();
                     EditProps();
-                if (Input.GetKeyDown(KeyCode.T))
-                    GetIconObject().SetActive(!GetIconObject().activeSelf);
+                }
+
                 if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
+                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
         }
 
-        private MarkerBlockProperties GetProps()
+        protected override void OnStateChanged(State state)
         {
-            return (MarkerBlockProperties) GetBlock().GetProps();
+            if (state != State.Empty) return; // only empty state is valid for marker metablock
+            if (snackItem != null) SetupDefaultSnack();
+
+            // setting place holder
+            DestroyPlaceHolder();
+            placeHolder = Block.type.CreatePlaceHolder(false, true);
+            placeHolder.transform.SetParent(gameObject.transform, false);
+            placeHolder.SetActive(true);
+            placeHolder.GetComponentInChildren<Collider>()
+                .gameObject.AddComponent<MetaFocusable>()
+                .Initialize(this);
         }
 
-        public override void UnFocus()
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
-        }
-
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face) // TODO
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
+        protected virtual List<string> GetSnackLines()
         {
             return new List<string>
             {
                 "Press Z for details",
-                "Press T to toggle preview",
                 "Press DEL to delete object"
             };
         }
 
         public override void ShowFocusHighlight()
         {
+            if (placeHolder == null) return;
+            AdjustHighlightBox(Player.INSTANCE.tdObjectHighlightBox, placeHolder.GetComponent<BoxCollider>(), true);
         }
 
         public override void RemoveFocusHighlight()
         {
+            Player.INSTANCE.tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
-            return null;
+            if (placeHolder == null) return null;
+            Transform highlight;
+            highlight = Instantiate(Player.INSTANCE.tdObjectHighlightBox, default, Quaternion.identity);
+            highlight.GetComponentInChildren<MeshRenderer>().material = World.INSTANCE.SelectedBlock;
+            AdjustHighlightBox(highlight, placeHolder.GetComponent<BoxCollider>(), show);
+            highlight.SetParent(parent, true);
+            var go = highlight.gameObject;
+            go.name = "link highlight";
+            return go;
         }
 
-        protected override void UpdateState(StateMsg stateMsg)
+        public override void SetToMovingState()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        public override void ExitMovingState()
         {
+            throw new NotImplementedException();
         }
 
         private void EditProps()
@@ -115,18 +108,62 @@ namespace src.MetaBlocks.MarkerBlock
                 .WithContent(MarkerBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<MarkerBlockEditor>();
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             editor.SetValue(props == null ? null : props as MarkerBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new MarkerBlockProperties(GetBlock().GetProps() as MarkerBlockProperties);
+                var props = new MarkerBlockProperties(Block.GetProps() as MarkerBlockProperties);
                 if (value != null)
                     props.name = value.name;
                 if (props.IsEmpty()) props = null;
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
+        }
+
+        private void DestroyPlaceHolder(bool immediate = true)
+        {
+            if (placeHolder == null) return;
+            foreach (var renderer in placeHolder.GetComponentsInChildren<Renderer>())
+            foreach (var mat in renderer.sharedMaterials)
+            {
+                if (mat == null) continue;
+                if (immediate)
+                {
+                    DestroyImmediate(mat.mainTexture);
+                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        DestroyImmediate(mat);
+                }
+                else
+                {
+                    Destroy(mat.mainTexture);
+                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        Destroy(mat);
+                }
+            }
+
+            foreach (var meshFilter in placeHolder.GetComponentsInChildren<MeshFilter>())
+            {
+                if (immediate)
+                    DestroyImmediate(meshFilter.sharedMesh);
+                else
+                    Destroy(meshFilter.sharedMesh);
+            }
+
+
+            if (immediate)
+                DestroyImmediate(placeHolder.gameObject);
+            else
+                Destroy(placeHolder.gameObject);
+
+            placeHolder = null;
+        }
+
+        protected override void OnDestroy()
+        {
+            DestroyPlaceHolder(false);
+            base.OnDestroy();
         }
     }
 }

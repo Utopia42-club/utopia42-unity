@@ -8,45 +8,17 @@ namespace src
     public class HighlightedBlock : MonoBehaviour
     {
         public uint BlockTypeId { get; private set; }
-        public uint MetaBlockTypeId { get; private set; }
-        public object MetaProperties { get; private set; }
-        public bool MetaAttached { get; private set; } = false;
-        private GameObject metaBlockHighlight;
-        private Vector3 metaBlockHighlightPosition;
-        private GameObject referenceGo;
 
         public Vector3Int Offset { get; private set; } = Vector3Int.zero; // might change because of rotation only
         public Vector3Int Position { get; private set; } // original local position to highlight chunk
         public Vector3Int CurrentPosition => Position + Offset;
 
-        public static HighlightedBlock Create(Vector3Int localPos, HighlightChunk highlightChunk,
-            uint blockTypeId,
-            MetaBlock meta = null)
+        public static HighlightedBlock Create(Vector3Int localPos, HighlightChunk highlightChunk, uint blockTypeId)
         {
             var highlightedBlock = highlightChunk.gameObject.AddComponent<HighlightedBlock>();
             highlightedBlock.Position = localPos;
             highlightedBlock.BlockTypeId = blockTypeId;
             highlightedBlock.transform.SetParent(highlightChunk.transform);
-            if (meta == null) return highlightedBlock;
-
-            highlightedBlock.MetaAttached = true;
-            highlightedBlock.MetaBlockTypeId = meta.type.id;
-            highlightedBlock.MetaProperties = ((ICloneable) meta.GetProps())?.Clone();
-
-            meta.CreateSelectHighlight(highlightChunk.transform, localPos, highlight =>
-            {
-                if (highlightedBlock.metaBlockHighlight != null)
-                {
-                    DestroyImmediate(highlightedBlock.metaBlockHighlight);
-                    highlightedBlock.metaBlockHighlight = null;
-                }
-
-                highlightedBlock.metaBlockHighlight = highlight;
-                highlightedBlock.metaBlockHighlightPosition =
-                    highlight.transform.localPosition + World.INSTANCE.HighlightOffset; // TODO ?
-                highlightedBlock.UpdateMetaBlockHighlightPosition();
-            }, out highlightedBlock.referenceGo);
-
             return highlightedBlock;
         }
 
@@ -57,20 +29,6 @@ namespace src
                                 (currentPosition + 0.5f * Vector3.one - center);
             var newPosition = Vectors.TruncateFloor(center + rotatedVector - 0.5f * Vector3.one);
             Offset = Offset + newPosition - currentPosition;
-        }
-
-        public void UpdateMetaBlockHighlightPosition()
-        {
-            if (metaBlockHighlight == null) return;
-            metaBlockHighlight.transform.localPosition = metaBlockHighlightPosition + Offset;
-        }
-
-        private void OnDestroy()
-        {
-            if (metaBlockHighlight != null)
-                DestroyImmediate(metaBlockHighlight);
-            if (referenceGo != null)
-                DestroyImmediate(referenceGo);
         }
     }
 }

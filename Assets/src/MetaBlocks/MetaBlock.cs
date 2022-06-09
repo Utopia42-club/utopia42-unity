@@ -23,7 +23,7 @@ namespace src.MetaBlocks
             this.properties = properties;
         }
 
-        public void RenderAt(Transform parent, Vector3Int position, Chunk chunk)
+        public void RenderAt(Transform parent, Vector3 position, Chunk chunk)
         {
             if (blockObject != null) throw new Exception("Already rendered.");
             GameObject go = new GameObject("MetaBlock");
@@ -31,32 +31,6 @@ namespace src.MetaBlocks
             go.transform.parent = parent;
             go.transform.localPosition = position;
             blockObject.Initialize(this, chunk);
-        }
-
-        public bool IsPositioned()
-        {
-            return blockObject != null;
-        }
-
-        public Vector3 GetPosition()
-        {
-            return blockObject.transform.position;
-        }
-
-        public bool Focus(Voxels.Face face)
-        {
-            if (blockObject != null && blockObject.IsReady())
-            {
-                blockObject.Focus(face);
-                return true;
-            }
-
-            return false;
-        }
-
-        public void UnFocus()
-        {
-            if (blockObject != null) blockObject.UnFocus();
         }
 
         internal void OnObjectDestroyed()
@@ -103,22 +77,18 @@ namespace src.MetaBlocks
             }
         }
 
-        public void CreateSelectHighlight(Transform highlightChunkTransform, Vector3Int localPos,
+        public void CreateSelectHighlight(Transform highlightChunkTransform, MetaLocalPosition localPos,
             Action<GameObject> onLoad, out GameObject referenceGo)
         {
             referenceGo = null;
             if (blockObject != null)
             {
                 var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
-                if (go != null)
-                {
-                    onLoad(go);
-                    return;
-                }
+                if (go != null) onLoad(go);
 
                 blockObject.stateChange.AddListener(state =>
                 {
-                    if (state != StateMsg.Ok) return;
+                    if (state != State.Ok) return;
                     var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
                     if (go != null) onLoad(go);
                 });

@@ -4,17 +4,17 @@ namespace src.MetaBlocks
 {
     public static class MetaBlockState
     {
-        public static string ToString(StateMsg msg, string type = null)
+        public static string ToString(State msg, string type = null)
         {
             return msg switch
             {
-                StateMsg.Loading => LoadingMsg(type),
-                StateMsg.LoadingMetadata => LoadingMetadataMsg(),
-                StateMsg.InvalidUrlOrData => InvalidObjUrlOrDataMsg(type),
-                StateMsg.InvalidData => InvalidObjDataMsg(type),
-                StateMsg.OutOfBound => OutOfBoundMsg(type),
-                StateMsg.ConnectionError => ConnectionErrorMsg(),
-                StateMsg.SizeLimit => SizeLimitMsg(type),
+                State.Loading => LoadingMsg(type),
+                State.LoadingMetadata => LoadingMetadataMsg(),
+                State.InvalidUrlOrData => InvalidObjUrlOrDataMsg(type),
+                State.InvalidData => InvalidObjDataMsg(type),
+                State.OutOfBound => OutOfBoundMsg(type),
+                State.ConnectionError => ConnectionErrorMsg(),
+                State.SizeLimit => SizeLimitMsg(type),
                 _ => "" // TODO
             };
         }
@@ -55,9 +55,14 @@ namespace src.MetaBlocks
             return
                 $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1) : "")} exceeds the size limit of {TdObjectBlockObject.DownloadLimitMb} MB";
         }
+
+        public static bool IsErrorState(State state)
+        {
+            return state != State.Ok && state != State.Empty && state != State.Loading && state != State.LoadingMetadata;
+        }
     }
 
-    public enum StateMsg
+    public enum State
     {
         Loading,
         LoadingMetadata,
@@ -66,6 +71,7 @@ namespace src.MetaBlocks
         OutOfBound,
         ConnectionError,
         Ok,
+        Empty,
         SizeLimit
     }
 }
