@@ -28,6 +28,8 @@ namespace src
 
         public bool PlayerMovementAllowed => !World.INSTANCE.SelectionActive || !movingSelectionAllowed;
 
+        private Transform transform => Player.INSTANCE.transform; // TODO
+        
         public void Start()
         {
             player = Player.INSTANCE;

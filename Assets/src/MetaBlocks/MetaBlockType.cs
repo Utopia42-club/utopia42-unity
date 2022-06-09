@@ -48,7 +48,7 @@ namespace src.MetaBlocks
         
         protected static GameObject Create3dPlaceHolder(string glbName, string objName, bool withCollider, float localScale)
         {
-            var go = Importer.LoadFromFile($"Assets/Resources/PlaceHolder/{glbName}.glb");
+            var go = Importer.LoadFromBytes(Resources.Load<TextAsset>($"PlaceHolder/{glbName}").bytes);
             if (withCollider)
                 go.AddComponent<BoxCollider>();
             go.SetActive(false);
