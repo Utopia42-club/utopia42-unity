@@ -81,6 +81,9 @@ namespace src.AssetsInventory
                 foreach (var favoriteItem in favItems)
                     AddToFavoritePanel(favoriteItem);
             }, () => { }, this));
+            
+            inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
+            ToggleInventory();
         }
 
         private void AddToFavoritePanel(FavoriteItem favoriteItem)
