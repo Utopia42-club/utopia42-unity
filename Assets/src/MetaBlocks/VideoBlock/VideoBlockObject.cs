@@ -92,8 +92,8 @@ namespace src.MetaBlocks.VideoBlock
                 lines.Add("Press Del to delete");
             }
 
-            var line = MetaBlockState.ToString(state, "video");
-            if (line.Length > 0 && state != State.Empty && state != State.Ok)
+            var line = MetaBlockState.ToString(State, "video");
+            if (line.Length > 0 && State != State.Empty && State != State.Ok)
                 lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
         }
@@ -264,7 +264,7 @@ namespace src.MetaBlocks.VideoBlock
         public override void ExitMovingState()
         {
             var props = new VideoBlockProperties(Block.GetProps() as VideoBlockProperties);
-            if (video == null || state != State.Ok) return;
+            if (video == null || State != State.Ok) return;
             props.rotation = new SerializableVector3(videoContainer.transform.eulerAngles);
             Block.SetProps(props, land);
 

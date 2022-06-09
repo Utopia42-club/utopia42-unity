@@ -89,7 +89,7 @@ namespace src.MetaBlocks.TdObjectBlock
         public override void ExitMovingState()
         {
             var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
-            if (tdObjectContainer == null || state != State.Ok) return;
+            if (tdObjectContainer == null || State != State.Ok) return;
             props.rotation = new SerializableVector3(tdObjectContainer.transform.eulerAngles);
             props.scale = new SerializableVector3(tdObjectContainer.transform.localScale);
             Block.SetProps(props, land);
@@ -115,7 +115,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     EditProps();
                 }
 
-                if (Input.GetKeyDown(KeyCode.V) && state == State.Ok)
+                if (Input.GetKeyDown(KeyCode.V) && State == State.Ok)
                 {
                     RemoveFocusHighlight();
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
@@ -176,12 +176,12 @@ namespace src.MetaBlocks.TdObjectBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                if (state == State.Ok)
+                if (State == State.Ok)
                     lines.Add("Press V to move object");
                 lines.Add("Press DEL to delete object");
             }
 
-            var line = MetaBlockState.ToString(state, "3D object");
+            var line = MetaBlockState.ToString(State, "3D object");
             if (line.Length > 0)
                 lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
@@ -200,7 +200,7 @@ namespace src.MetaBlocks.TdObjectBlock
             var rotation = properties.rotation?.ToVector3() ?? Vector3.zero;
             var initialPosition = properties.initialPosition?.ToVector3() ?? Vector3.zero;
 
-            if (currentUrl.Equals(properties.url) && state == State.Ok)
+            if (currentUrl.Equals(properties.url) && State == State.Ok)
             {
                 LoadGameObject(scale, rotation, initialPosition, properties.initialScale,
                     properties.detectCollision, properties.type);

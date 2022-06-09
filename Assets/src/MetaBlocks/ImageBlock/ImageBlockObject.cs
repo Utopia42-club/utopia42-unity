@@ -149,7 +149,7 @@ namespace src.MetaBlocks.ImageBlock
                 lines.Add("Press DEL to delete object");
             }
 
-            var line = MetaBlockState.ToString(state, "image");
+            var line = MetaBlockState.ToString(State, "image");
             if (line.Length > 0)
                 lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
@@ -243,7 +243,7 @@ namespace src.MetaBlocks.ImageBlock
         public override void ExitMovingState()
         {
             var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
-            if (image == null || state != State.Ok) return;
+            if (image == null || State != State.Ok) return;
             props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
             Block.SetProps(props, land);
 

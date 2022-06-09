@@ -14,7 +14,7 @@ namespace src.MetaBlocks
         protected Chunk chunk;
         protected Land land;
         protected bool canEdit;
-        protected State state;
+        public State State { get; protected set; }
         protected SnackItem snackItem;
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
 
@@ -118,7 +118,7 @@ namespace src.MetaBlocks
 
         protected internal void UpdateState(State state)
         {
-            this.state = state;
+            this.State = state;
             stateChange.Invoke(state);
         }
 

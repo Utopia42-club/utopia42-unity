@@ -138,6 +138,17 @@ namespace src
             StartCoroutine(AddHighlight(mp, null, false, consumer));
         }
 
+        private HighlightChunk GetHighlightChunk(Vector3Int chunk)
+        {
+            if (highlight == null)
+            {
+                highlight = new GameObject();
+                highlight.name = "World Highlight";
+            }
+
+            return highlightChunks.GetOrAdd(chunk, HighlightChunk.Create(highlight, chunk));
+        }
+
         private IEnumerator AddHighlight(VoxelPosition vp, uint? blockType, bool delayedUpdate,
             Action<bool> consumer = null)
         {
@@ -147,13 +158,7 @@ namespace src
                 yield break;
             }
 
-            if (highlight == null)
-            {
-                highlight = new GameObject();
-                highlight.name = "World Highlight";
-            }
-
-            var highlightChunk = highlightChunks.GetOrAdd(vp.chunk, HighlightChunk.Create(highlight, vp.chunk));
+            var highlightChunk = GetHighlightChunk(vp.chunk);
             yield return null;
 
             if (highlightChunk.Contains(vp.local))
@@ -194,14 +199,13 @@ namespace src
             Action consumer = null)
         {
             var vp = mp.ToVoxelPosition();
-            if (!player.CanEdit(vp.ToWorld(), out _)) yield break;
-            if (highlight == null)
+            if (!player.CanEdit(vp.ToWorld(), out _))
             {
-                highlight = new GameObject();
-                highlight.name = "World Highlight";
+                consumer?.Invoke();
+                yield break;
             }
 
-            var highlightChunk = highlightChunks.GetOrAdd(mp.chunk, HighlightChunk.Create(highlight, mp.chunk));
+            var highlightChunk = GetHighlightChunk(mp.chunk);
             yield return null;
 
             if (highlightChunk.Contains(mp.local))
@@ -211,31 +215,27 @@ namespace src
                 yield break;
             }
 
-            Action<HighlightedMetaBlock> highlightedMetaBlockProcess = metaBlock =>
+            void HighlightedMetaBlockProcess(HighlightedMetaBlock highlightedMetaBlock)
             {
-                if (metaBlock == null)
+                if (highlightedMetaBlock == null)
                 {
                     consumer?.Invoke();
                     return;
                 }
 
-                highlightChunk.Add(mp.local, metaBlock);
-                // if (TotalBlocksSelected == 1)
-                //     firstSelectedPosition = vp;
-                // LastSelectedPosition = vp;
+                highlightChunk.Add(mp.local, highlightedMetaBlock);
                 highlightChunksToRedraw.Enqueue(highlightChunk);
-                if (!delayedUpdate)
-                    RedrawChangedHighlightChunks();
+                if (!delayedUpdate) RedrawChangedHighlightChunks();
                 consumer?.Invoke();
-            };
+            }
 
             if (metaBlock == null)
             {
-                GetHighlightedMetaBlock(highlightChunk, mp, highlightedMetaBlockProcess);
+                CreateHighlightedMetaBlockAndAddToChunk(highlightChunk, mp, HighlightedMetaBlockProcess); 
                 yield break;
             }
 
-            highlightedMetaBlockProcess.Invoke(HighlightedMetaBlock.Create(mp.local, highlightChunk, metaBlock));
+            HighlightedMetaBlock.CreateAndAddToChunk(mp.local, highlightChunk, metaBlock, HighlightedMetaBlockProcess);
         }
 
         private void GetHighlightedBlock(HighlightChunk highlightChunk, VoxelPosition vp,
@@ -273,8 +273,8 @@ namespace src
             });
         }
 
-        private void GetHighlightedMetaBlock(HighlightChunk highlightChunk, MetaPosition mp,
-            Action<HighlightedMetaBlock> consumer, bool ignoreAir = true)
+        private void CreateHighlightedMetaBlockAndAddToChunk(HighlightChunk highlightChunk, MetaPosition mp,
+            Action<HighlightedMetaBlock> consumer)
         {
             var vp = mp.ToVoxelPosition();
             if (!player.CanEdit(vp.ToWorld(), out var land))
@@ -293,12 +293,12 @@ namespace src
                     return;
                 }
 
-                consumer.Invoke(HighlightedMetaBlock.Create(mp.local, highlightChunk, meta));
+                HighlightedMetaBlock.CreateAndAddToChunk(mp.local, highlightChunk, meta, consumer);
                 return;
             }
 
             WorldService.INSTANCE.GetMetaBlock(mp,
-                meta => { consumer.Invoke(HighlightedMetaBlock.Create(mp.local, highlightChunk, meta)); });
+                meta => { HighlightedMetaBlock.CreateAndAddToChunk(mp.local, highlightChunk, meta, consumer); });
         }
 
         private void RemoveHighlight(VoxelPosition vp, bool delayedUpdate = false)

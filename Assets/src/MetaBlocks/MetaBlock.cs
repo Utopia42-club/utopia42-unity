@@ -3,6 +3,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 using Object = UnityEngine.Object;
 
 namespace src.MetaBlocks
@@ -84,15 +85,27 @@ namespace src.MetaBlocks
             if (blockObject != null)
             {
                 var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
-                if (go != null) onLoad(go);
-
-                blockObject.stateChange.AddListener(state =>
+                if (go != null)
                 {
-                    if (state != State.Ok) return;
-                    var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
-                    if (go != null) onLoad(go);
-                });
-                return;
+                    onLoad(go);
+                    if (blockObject.State is State.Loading or State.LoadingMetadata)
+                    {
+                        void CallBack(State state)
+                        {
+                            if (state is State.Loading or State.LoadingMetadata) return;
+                            if (state == State.Ok && go != null) // go != null (go is not destroyed) is needed to check if the object has been deselected
+                            {
+                                var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
+                                if (go != null) onLoad(go);
+                            }
+
+                            blockObject.stateChange.RemoveListener(CallBack);
+                        }
+
+                        blockObject.stateChange.AddListener(CallBack);
+                    }
+                    return;
+                }
             }
 
             var gameObject = referenceGo = new GameObject

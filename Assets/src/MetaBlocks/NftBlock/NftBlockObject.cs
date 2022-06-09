@@ -74,9 +74,9 @@ namespace src.MetaBlocks.NftBlock
                     lines.Add($"\nDescription: {metadata.description.Trim()}");
             }
 
-            if (state != State.Ok)
+            if (State != State.Ok)
                 lines.Add(
-                    $"\n{MetaBlockState.ToString(state, "image")}");
+                    $"\n{MetaBlockState.ToString(State, "image")}");
 
             return lines;
         }
@@ -142,7 +142,7 @@ namespace src.MetaBlocks.NftBlock
         public override void ExitMovingState()
         {
             var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
-            if (image == null || state != State.Ok) return;
+            if (image == null || State != State.Ok) return;
             props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
             Block.SetProps(props, land);
             
