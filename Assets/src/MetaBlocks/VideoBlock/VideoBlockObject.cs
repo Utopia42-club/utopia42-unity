@@ -69,8 +69,10 @@ namespace src.MetaBlocks.VideoBlock
 
             DestroyVideo();
             var props = (VideoBlockProperties) Block.GetProps();
-            CreateVideoFace(gameObject.transform, error ? MediaBlockEditor.DEFAULT_DIMENSION : props.width,
-                error ? MediaBlockEditor.DEFAULT_DIMENSION : props.height, props.rotation.ToVector3(),
+            CreateVideoFace(gameObject.transform,
+                error ? Math.Min(props.width, MediaBlockEditor.DEFAULT_DIMENSION) : props.width,
+                error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height,
+                props.rotation.ToVector3(),
                 out videoContainer, out var go, out var r, true).PlaceHolderInit(r, error);
             go.AddComponent<MetaFocusable>().Initialize(this);
         }
