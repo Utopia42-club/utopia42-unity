@@ -23,7 +23,7 @@ namespace src.MetaBlocks.TeleportBlock
             var pos = Player.INSTANCE.transform.forward.z > 0
                 ? purePosition - Gap * Vector3.forward
                 : purePosition + Gap * Vector3.forward;
-            pos += 0.5f * 12 * Vector3.up;
+            pos += 0.5f * 2 * Vector3.up;
             return new MetaPosition(pos);
         }
     }

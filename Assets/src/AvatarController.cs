@@ -26,6 +26,8 @@ namespace src
 
         private Vector3 targetPosition;
 
+        private IEnumerator teleportCoroutine;
+
         public void Start()
         {
             avatar = Instantiate(avatarPrefab, transform);
@@ -161,6 +163,47 @@ namespace src
         public PlayerState GetState()
         {
             return state;
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.CompareTag("TeleportPortal"))
+            {
+                Debug.Log("Trigger Enter");
+                teleportCoroutine = CountDownTimer(5, i =>
+                {
+                    Debug.Log(i);
+                });
+                StartCoroutine(teleportCoroutine);
+            }
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (other.CompareTag("TeleportPortal"))
+            {
+                Debug.Log("Trigger Exit");
+                StopCoroutine(teleportCoroutine);
+            }
+        }
+
+        private IEnumerator CountDownTimer(int time, Action<int> onValueChanged)
+        {
+            while (true)
+            {
+                if (time == 0)
+                {
+                    onValueChanged(time);
+                    yield break;
+                }
+                else
+                {
+                    onValueChanged(time);
+                    time = time - 1;
+                }
+
+                yield return new WaitForSeconds(1);
+            }
         }
 
         public class PlayerState
