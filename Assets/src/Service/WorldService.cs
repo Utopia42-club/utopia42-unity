@@ -24,7 +24,7 @@ namespace src.Service
         private readonly LandRegistry landRegistry = new LandRegistry();
         private HashSet<Land> changedLands = new HashSet<Land>();
         public readonly UnityEvent<object> blockPlaced = new UnityEvent<object>();
-        private Dictionary<Vector3, MetaBlock> markerBlocks = new Dictionary<Vector3, MetaBlock>();
+        private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
         private bool initialized = false;
 
         public void GetChunkData(Vector3Int coordinate, Action<ChunkData> consumer)
@@ -286,7 +286,7 @@ namespace src.Service
         public void OnMetaRemoved(MetaBlock block, MetaPosition position)
         {
             if (block.type is MarkerBlockType)
-                markerBlocks.Remove(position.ToWorld());
+                markerBlocks.Remove(position.ToVoxelPosition().ToWorld());
             AddMetaBlock(position, null, block.land);
         }
 
@@ -315,7 +315,7 @@ namespace src.Service
 
             // Debug.Log(block.type);
             if (type is MarkerBlockType)
-                markerBlocks.Add(pos.ToWorld(), block);
+                markerBlocks.Add(pos.ToVoxelPosition().ToWorld(), block);
 
             if (land != null)
                 changedLands.Add(land);
