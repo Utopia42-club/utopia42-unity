@@ -173,6 +173,9 @@ namespace src
                 teleportCoroutine = CountDownTimer(5, i =>
                 {
                     Debug.Log(i);
+                }, () =>
+                {
+                    // teleport
                 });
                 StartCoroutine(teleportCoroutine);
             }
@@ -187,13 +190,13 @@ namespace src
             }
         }
 
-        private IEnumerator CountDownTimer(int time, Action<int> onValueChanged)
+        private IEnumerator CountDownTimer(int time, Action<int> onValueChanged , Action onFinish)
         {
             while (true)
             {
                 if (time == 0)
                 {
-                    onValueChanged(time);
+                    onFinish();
                     yield break;
                 }
                 else
