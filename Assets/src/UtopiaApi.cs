@@ -32,13 +32,55 @@ namespace src
             return WorldService.INSTANCE.GetBlockTypeIfLoaded(vp)?.name;
         }
 
+        public List<Marker> GetMarkers()
+        {
+            return WorldService.INSTANCE.GetMarkers();
+        }
+
+        public List<Land> GetPlayerLands(string walletId)
+        {
+            return WorldService.INSTANCE.GetPlayerLands();
+        }
+
+        public Land GetCurrentLand()
+        {
+            return WorldService.INSTANCE.GetLandForPosition(Player.INSTANCE.GetPosition());
+        }
+
+        public SerializableVector3 GetPlayerPosition()
+        {
+            var pos = Player.INSTANCE.GetPosition();
+            return new SerializableVector3(pos);
+        }
+
+        public List<string> GetBlockTypes()
+        {
+            return Blocks.GetNonMetaBlockTypes();
+        }
+
         public Dictionary<Vector3Int, bool> PlaceBlocks(string request)
         {
             return PlaceBlocksWithOffset(request, Vector3Int.zero);
         }
 
+        public Dictionary<Vector3, bool> PlaceMetaBlocks(string request)
+        {
+            return PlaceMetaBlocksWithOffset(request, Vector3Int.zero);
+        }
+
+        public void PreviewBlocks(string request) // TODO [detach metablock]: add support for metablocks later
+        {
+            PreviewBlocksWithOffset(request, Vector3Int.zero);
+        }
+
         public Dictionary<Vector3Int, bool> PlaceBlocksWithOffset(string request, Vector3Int offset)
         {
+            if (!Player.INSTANCE.PluginWriteAllowed(out var msg))
+            {
+                Debug.LogWarning(msg);
+                return null;
+            }
+
             var reqs = JsonConvert.DeserializeObject<List<PlaceBlockRequest>>(request);
 
             var blocks = new Dictionary<VoxelPosition, BlockType>();
@@ -67,13 +109,14 @@ namespace src
             return placed;
         }
 
-        public Dictionary<Vector3, bool> PlaceMetaBlocks(string request)
-        {
-            return PlaceMetaBlocksWithOffset(request, Vector3Int.zero);
-        }
-
         public Dictionary<Vector3, bool> PlaceMetaBlocksWithOffset(string request, Vector3Int offset)
         {
+            if (!Player.INSTANCE.PluginWriteAllowed(out var msg))
+            {
+                Debug.LogWarning(msg);
+                return null;
+            }
+
             var reqs = JsonConvert.DeserializeObject<List<PlaceMetaBlockRequest>>(request);
 
             var metaBlocks = new Dictionary<MetaPosition, Tuple<MetaBlockType, object>>();
@@ -109,13 +152,14 @@ namespace src
             return placed;
         }
 
-        public void PreviewBlocks(string request) // TODO [detach metablock]: add support for metablocks later
-        {
-            PreviewBlocksWithOffset(request, Vector3Int.zero);
-        }
-
         public void PreviewBlocksWithOffset(string request, Vector3Int offset)
         {
+            if (!Player.INSTANCE.PluginWriteAllowed(out var msg))
+            {
+                Debug.LogWarning(msg);
+                return;
+            }
+
             var reqs = JsonConvert.DeserializeObject<List<PlaceBlockRequest>>(request);
             var highlights = new Dictionary<VoxelPosition, uint>();
 
@@ -135,6 +179,12 @@ namespace src
 
         public void SelectBlocks(string request)
         {
+            if (!Player.INSTANCE.PluginWriteAllowed(out var msg))
+            {
+                Debug.LogWarning(msg);
+                return;
+            }
+
             var positions = JsonConvert.DeserializeObject<List<SerializableVector3>>(request);
             if (positions == null || positions.Count == 0) return;
             var blockPositions = new HashSet<VoxelPosition>();
@@ -150,37 +200,6 @@ namespace src
             {
                 BlockSelectionController.INSTANCE.AddHighlight(position);
             }
-        }
-
-        public SerializableVector3 GetPlayerPosition()
-        {
-            var pos = Player.INSTANCE.GetPosition();
-            return new SerializableVector3(pos);
-        }
-
-        public List<Marker> GetMarkers()
-        {
-            return WorldService.INSTANCE.GetMarkers();
-        }
-
-        public List<Land> GetPlayerLands(string walletId)
-        {
-            return WorldService.INSTANCE.GetPlayerLands();
-        }
-
-        public Land GetCurrentLand()
-        {
-            return WorldService.INSTANCE.GetLandForPosition(Player.INSTANCE.GetPosition());
-        }
-
-        public List<string> GetBlockTypes()
-        {
-            return Blocks.GetNonMetaBlockTypes();
-        }
-
-        private static bool PutBlock(VoxelPosition vp, BlockType getBlockType)
-        {
-            return PutBlocks(new Dictionary<VoxelPosition, BlockType> {{vp, getBlockType}})[vp.ToWorld()];
         }
 
         public static Dictionary<Vector3Int, bool> PutBlocks(Dictionary<VoxelPosition, BlockType> blocks)
@@ -208,6 +227,12 @@ namespace src
         private static Dictionary<MetaPosition, bool> PutMetaBlocks(
             Dictionary<MetaPosition, Tuple<MetaBlockType, object>> metaBlocks)
         {
+            if (!Player.INSTANCE.PluginWriteAllowed(out var msg))
+            {
+                Debug.LogWarning(msg);
+                return null;
+            }
+
             var result = new Dictionary<MetaPosition, bool>();
             foreach (var mp in metaBlocks.Keys)
             {
