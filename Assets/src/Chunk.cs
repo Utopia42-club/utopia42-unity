@@ -16,7 +16,7 @@ namespace src
          */
         public static Vector3Int CHUNK_SIZE => new Vector3Int(16, 32, 16);
 
-        private Dictionary<Vector3Int, MetaBlock> metaBlocks;
+        private Dictionary<MetaLocalPosition, MetaBlock> metaBlocks;
         private readonly uint[,,] voxels = new uint[CHUNK_SIZE.x, CHUNK_SIZE.y, CHUNK_SIZE.z];
         private World world;
         public GameObject chunkObject;
@@ -82,7 +82,7 @@ namespace src
                         voxels[voxel.x, voxel.y, voxel.z] = change.Value;
                     }
 
-                metaBlocks = data?.metaBlocks ?? new Dictionary<Vector3Int, MetaBlock>();
+                metaBlocks = data?.metaBlocks ?? new Dictionary<MetaLocalPosition, MetaBlock>();
                 DrawVoxels();
                 DrawMetaBlocks();
                 inited = true;
@@ -96,7 +96,7 @@ namespace src
             if (metaBlocks != null)
             {
                 foreach (var entry in metaBlocks)
-                    entry.Value.RenderAt(chunkObject.transform, entry.Key, this);
+                    entry.Value.RenderAt(chunkObject.transform, entry.Key.position, this);
             }
         }
 
@@ -138,7 +138,7 @@ namespace src
             return Blocks.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
         }
 
-        public MetaBlock GetMetaAt(VoxelPosition vp)
+        public MetaBlock GetMetaAt(MetaPosition vp)
         {
             if (metaBlocks == null) return null;
 
@@ -260,6 +260,14 @@ namespace src
             WorldService.INSTANCE.AddChange(pos, land);
             OnChanged(pos);
         }
+        
+        public void DeleteMeta(MetaPosition pos) // TODO [detach metablock]: add land param?
+        {
+            var block = metaBlocks[pos.local];
+            metaBlocks.Remove(pos.local);
+            WorldService.INSTANCE.OnMetaRemoved(block, new MetaPosition(coordinate, pos.local)); // TODO ?
+            block.DestroyView();
+        }
 
         public void DeleteVoxels(Dictionary<VoxelPosition, Land> blocks)
         {
@@ -334,18 +342,10 @@ namespace src
                 chunks.Add(chunk);
         }
 
-        public void PutMeta(VoxelPosition pos, MetaBlockType type, Land land)
+        public void PutMeta(MetaPosition pos, MetaBlockType type, Land land)
         {
             var block = metaBlocks[pos.local] = WorldService.INSTANCE.AddMetaBlock(pos, type, land);
-            block.RenderAt(chunkObject.transform, pos.local, this);
-        }
-
-        public void DeleteMeta(VoxelPosition pos)
-        {
-            var block = metaBlocks[pos.local];
-            metaBlocks.Remove(pos.local);
-            WorldService.INSTANCE.OnMetaRemoved(block, new VoxelPosition(coordinate, pos.local)); // TODO ?
-            block.DestroyView();
+            block.RenderAt(chunkObject.transform, pos.local.position, this);
         }
 
         private void OnChanged(VoxelPosition pos)
@@ -357,7 +357,7 @@ namespace src
 
         private Vector3Int ToGlobal(Vector3Int localPoint)
         {
-            return localPoint + new Vector3Int((int) position.x, (int) position.y, (int) position.z);
+            return localPoint + new Vector3Int(position.x, position.y, position.z);
         }
 
         public bool IsActive()

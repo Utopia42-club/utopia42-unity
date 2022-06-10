@@ -6,6 +6,7 @@ namespace src.Service
     {
         public static string ResolveUrl(string url)
         {
+            if (url == null) return null;
             if (!url.StartsWith("ipfs://")) return url;
 
             var arr = url.Split(new[] {"ipfs://"}, StringSplitOptions.None);

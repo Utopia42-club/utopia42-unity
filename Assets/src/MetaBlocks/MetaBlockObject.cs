@@ -1,76 +1,67 @@
 using System;
-using System.Collections.Generic;
+using src.Canvas;
+using src.Model;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
-using Object = UnityEngine.Object;
 
 namespace src.MetaBlocks
 {
     public abstract class MetaBlockObject : MonoBehaviour
     {
-        private MetaBlock block;
+        public MetaBlock Block { get; private set; }
+        public bool Started { get; private set; } = false;
         protected Chunk chunk;
-        private GameObject iconObject;
-        public readonly UnityEvent<StateMsg> stateChange = new UnityEvent<StateMsg>();
+        protected Land land;
+        protected bool canEdit;
+        public State State { get; protected set; }
+        protected SnackItem snackItem;
+        public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
+
+        protected void Start()
+        {
+            canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
+            stateChange.AddListener(OnStateChanged);
+            gameObject.name = Block.type.name + " block object";
+            Started = true;
+        }
 
         public void Initialize(MetaBlock block, Chunk chunk)
         {
-            this.block = block;
+            this.Block = block;
             this.chunk = chunk;
+            Start();
             DoInitialize();
         }
 
-        public abstract bool IsReady();
-
-        protected abstract void DoInitialize();
-
-        public abstract void OnDataUpdate();
-
-        public abstract void Focus(Voxels.Face face);
-
-        public abstract void UnFocus();
-
-        public abstract void UpdateStateAndIcon(StateMsg msg, Voxels.Face face);
-
-        protected abstract List<string> GetFaceSnackLines(Voxels.Face face);
-        
-        protected void OnDestroy()
+        public void Focus()
         {
-            UnFocus();
-            if (iconObject != null)
-                Destroy(iconObject);
-            block?.OnObjectDestroyed();
+            SetupDefaultSnack();
+            if (!canEdit) return;
+            ShowFocusHighlight();
         }
 
-        protected MetaBlock GetBlock()
+        public void UnFocus()
         {
-            return block;
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            RemoveFocusHighlight();
         }
+
+        protected abstract void OnStateChanged(State state);
 
         protected Chunk GetChunk()
         {
             return chunk;
         }
 
-        protected void CreateIcon(bool failed = false)
+        protected bool InLand(BoxCollider bc) //FIXME rename
         {
-            if (chunk == null) return;
-            if (iconObject != null)
-                Destroy(iconObject);
-            iconObject = Instantiate(Resources.Load("MetaBlocks/MetaBlock") as GameObject, transform);
-            foreach (var r in iconObject.GetComponentsInChildren<Renderer>())
-                r.material.mainTexture = block.type.GetIcon(failed).texture;
-        }
-
-        protected GameObject GetIconObject()
-        {
-            return iconObject;
-        }
-
-        protected bool InLand(BoxCollider bc)//FIXME rename
-        {
-            if (block.land == null)
+            if (Block.land == null)
                 return true;
 
             var bcTransform = bc.transform;
@@ -94,7 +85,7 @@ namespace src.MetaBlocks
 
         protected bool InLand(MeshRenderer meshRenderer)
         {
-            if (block.land == null)
+            if (Block.land == null)
                 return true;
 
             var bounds = meshRenderer.bounds;
@@ -117,19 +108,86 @@ namespace src.MetaBlocks
 
         private bool InLand(Vector3 p)
         {
-            if (block.land == null)
+            if (Block.land == null)
                 return true;
-            return block.land.Contains(p);
+            return Block.land.Contains(p);
         }
+
+        public abstract GameObject
+            CreateSelectHighlight(Transform parent, bool show = true);
+
+        protected internal void UpdateState(State state)
+        {
+            this.State = state;
+            stateChange.Invoke(state);
+        }
+
+        public void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
+            MetaLocalPosition localPos, Action<GameObject> onLoad) // TODO [detach metablock]: will not work with link and marker metablocks (they only have empty state)
+        {
+            var goRef = gameObject;
+            var gameObjectTransform = goRef.transform;
+            gameObjectTransform.parent = World.INSTANCE.transform;
+            gameObjectTransform.localPosition = highlightChunkTransform.transform.localPosition + localPos.position;
+            Initialize(block, null);
+
+            stateChange.AddListener(state =>
+            {
+                if (goRef == null) return;
+                if (state != State.Ok)
+                {
+                    if (state != State.Loading && state != State.LoadingMetadata)
+                    {
+                        Destroy(goRef);
+                        goRef = null;
+                    }
+
+                    return;
+                }
+
+                var go = CreateSelectHighlight(highlightChunkTransform);
+                if (go != null) onLoad(go);
+
+                foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())
+                    renderer.enabled = false;
+            });
+        }
+
+        protected abstract void DoInitialize();
+
+        public abstract void OnDataUpdate();
+
+        public abstract void SetToMovingState();
+        public abstract void ExitMovingState();
+
+        protected abstract void SetupDefaultSnack();
 
         public abstract void ShowFocusHighlight();
 
         public abstract void RemoveFocusHighlight();
 
-        public abstract GameObject CreateSelectHighlight(Transform parent, bool show = true);
+        protected virtual void OnDestroy()
+        {
+            UnFocus();
+            Block?.OnObjectDestroyed();
+            stateChange.RemoveAllListeners();
+        }
+        
+        protected static void AdjustHighlightBox(Transform highlightBox, BoxCollider referenceCollider, bool active)
+        {
+            var colliderTransform = referenceCollider.transform;
+            highlightBox.transform.rotation = colliderTransform.rotation;
 
-        protected abstract void UpdateState(StateMsg stateMsg);
+            var size = referenceCollider.size;
+            var minPos = referenceCollider.center - size / 2;
 
-        public abstract void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad);
+            var gameObjectTransform = referenceCollider.gameObject.transform;
+            size.Scale(gameObjectTransform.localScale);
+            size.Scale(gameObjectTransform.parent.localScale);
+
+            highlightBox.localScale = size;
+            highlightBox.position = colliderTransform.TransformPoint(minPos);
+            highlightBox.gameObject.SetActive(active);
+        }
     }
 }

@@ -38,7 +38,7 @@ namespace src.AssetsInventory
                 }
                 else
                 {
-                    searchCriteria.lastId = currentPage[^1].id;
+                    searchCriteria.lastId = currentPage[^1].id.Value;
                     monoBehaviour.StartCoroutine(GetAllAssets(searchCriteria, nextPages =>
                     {
                         var allAssets = new List<Asset>();
@@ -69,7 +69,7 @@ namespace src.AssetsInventory
                 }
                 else
                 {
-                    searchCriteria.lastId = currentPage[^1].id;
+                    searchCriteria.lastId = currentPage[^1].id.Value;
                     monoBehaviour.StartCoroutine(GetAllFavoriteItems(searchCriteria, nextPages =>
                     {
                         var allAssets = new List<FavoriteItem>();
@@ -100,9 +100,9 @@ namespace src.AssetsInventory
             yield return RestClient.Post(url, favoriteItem, success, failed);
         }
 
-        public IEnumerator DeleteFavoriteItem(FavoriteItem favoriteItem, Action success, Action failed)
+        public IEnumerator DeleteFavoriteItem(int id, Action success, Action failed)
         {
-            var url = Constants.ApiURL + "/assets/favorite-items/" + favoriteItem.id;
+            var url = Constants.ApiURL + "/assets/favorite-items/" + id;
             yield return RestClient.Delete(url, success, failed);
         }
     }

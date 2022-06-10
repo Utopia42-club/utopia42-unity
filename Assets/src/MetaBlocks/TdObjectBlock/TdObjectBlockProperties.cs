@@ -9,7 +9,6 @@ namespace src.MetaBlocks.TdObjectBlock
         public string url;
 
         public SerializableVector3 scale = SerializableVector3.One;
-        public SerializableVector3 offset = SerializableVector3.Zero;
         public SerializableVector3 rotation = SerializableVector3.Zero;
 
         public SerializableVector3 initialPosition = SerializableVector3.Zero;
@@ -28,7 +27,6 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 url = obj.url;
                 scale = obj.scale;
-                offset = obj.offset;
                 rotation = obj.rotation;
                 initialPosition = obj.initialPosition;
                 initialScale = obj.initialScale;
@@ -40,12 +38,11 @@ namespace src.MetaBlocks.TdObjectBlock
         public void UpdateProps(TdObjectBlockProperties props)
         {
             if (props == null) return;
-            this.url = props.url;
-            this.scale = props.scale;
-            this.offset = props.offset;
-            this.rotation = props.rotation;
-            this.detectCollision = props.detectCollision;
-            this.type = props.type;
+            url = props.url;
+            scale = props.scale;
+            rotation = props.rotation;
+            detectCollision = props.detectCollision;
+            type = props.type;
         }
 
         public override bool Equals(object obj)
@@ -54,8 +51,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
             var prop = obj as TdObjectBlockProperties;
-            return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(offset, prop.offset) &&
-                   Equals(rotation, prop.rotation)
+            return Equals(url, prop.url) && Equals(scale, prop.scale) && Equals(rotation, prop.rotation)
                    && Equals(initialPosition, prop.initialPosition) && Equals(initialScale, prop.initialScale) &&
                    Equals(detectCollision, prop.detectCollision) && Equals(type, prop.type);
         }
@@ -66,7 +62,6 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 url = url,
                 scale = scale.Clone(),
-                offset = offset.Clone(),
                 rotation = rotation.Clone(),
                 initialPosition = initialPosition.Clone(),
                 initialScale = initialScale,

@@ -3,174 +3,162 @@ using System.Collections.Generic;
 using src.Canvas;
 using src.Model;
 using src.Service;
-using src.Utils;
 using UnityEngine;
 
 namespace src.MetaBlocks.ImageBlock
 {
     public class ImageBlockObject : MetaBlockObject
     {
-        protected readonly List<GameObject> images = new List<GameObject>();
-        protected SnackItem snackItem;
-        protected int lastFocusedFaceIndex = -1;
-        protected Land land;
-        protected bool canEdit;
-        private bool ready = false;
-
-        protected readonly StateMsg[] stateMsg =
-            {StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok, StateMsg.Ok};
-
-        protected void Start()
-        {
-            canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
-            if (canEdit)
-                CreateIcon();
-            ready = true;
-        }
-
-        public override bool IsReady()
-        {
-            return ready;
-        }
+        protected GameObject image;
+        protected GameObject imageContainer;
+        protected ObjectScaleRotationController scaleRotationController;
 
         public override void OnDataUpdate()
         {
-            RenderFaces();
+            RenderFace();
         }
 
         protected override void DoInitialize()
         {
-            RenderFaces();
+            RenderFace();
         }
 
-        public override void Focus(Voxels.Face face)
+        protected override void SetupDefaultSnack()
         {
-            if (!canEdit) return;
             if (snackItem != null) snackItem.Remove();
 
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
+                if (!canEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
-                    EditProps(face);
+                {
+                    RemoveFocusHighlight();
+                    EditProps();
+                }
+
+                if (Input.GetKeyDown(KeyCode.V))
+                {
+                    RemoveFocusHighlight();
+                    GameManager.INSTANCE.ToggleMovingObjectState(this);
+                }
+
                 if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
-                if (Input.GetKeyDown(KeyCode.T))
-                    GetIconObject().SetActive(!GetIconObject().activeSelf);
+                {
+                    World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
+                }
             });
-
-            lastFocusedFaceIndex = face.index;
         }
 
-        public override void UnFocus()
+        protected virtual void RenderFace()
         {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
+            DestroyImage();
+            AddFace((MediaBlockProperties) Block.GetProps());
         }
 
-        private void RenderFaces()
+        protected void DestroyImage(bool immediate = true)
         {
-            DestroyImages();
-            images.Clear();
-            MediaBlockProperties properties = (MediaBlockProperties) GetBlock().GetProps();
-            if (properties != null)
+            if (image != null)
             {
-                AddFace(Voxels.Face.BACK, properties.back);
-                AddFace(Voxels.Face.FRONT, properties.front);
-                AddFace(Voxels.Face.RIGHT, properties.right);
-                AddFace(Voxels.Face.LEFT, properties.left);
-                AddFace(Voxels.Face.TOP, properties.top);
-                AddFace(Voxels.Face.BOTTOM, properties.bottom);
-            }
-        }
-
-        protected void DestroyImages(bool immediate = true)
-        {
-            foreach (var img in images)
-            {
-                var selectable = img.GetComponent<MetaFocusable>();
+                var selectable = image.GetComponent<MetaFocusable>();
                 if (selectable != null)
                     selectable.UnFocus();
                 if (immediate)
-                    DestroyImmediate(img);
+                    DestroyImmediate(image);
                 else
-                    Destroy(img);
+                    Destroy(image);
+                image = null;
+            }
+
+            if (imageContainer != null)
+            {
+                if (immediate)
+                    DestroyImmediate(imageContainer);
+                else
+                    Destroy(imageContainer);
+                imageContainer = null;
             }
         }
 
-        protected void AddFace(Voxels.Face face, MediaBlockProperties.FaceProps props)
+        protected void AddFace(MediaBlockProperties props)
         {
-            if (props == null) return;
-
-            var go = new GameObject();
-            go.transform.parent = transform;
-            go.transform.localPosition = Vector3.zero + ((Vector3) face.direction) * 0.2f;
-            var imgFace = go.AddComponent<ImageFace>();
-            var meshRenderer = imgFace.Initialize(face, props.width, props.height);
-            if (!InLand(meshRenderer))
+            if (props == null)
             {
-                DestroyImmediate(go);
-                UpdateStateAndIcon(StateMsg.OutOfBound, face);
+                UpdateState(State.Empty);
                 return;
             }
 
-            imgFace.Init(meshRenderer, FileService.ResolveUrl(props.url), this, face);
-            go.layer = props.detectCollision
-                ? LayerMask.NameToLayer("Default")
-                : LayerMask.NameToLayer("3DColliderOff");
-            images.Add(go);
-            var faceSelectable = go.AddComponent<FaceFocusable>();
-            faceSelectable.Initialize(this, face);
-        }
+            var imgFace = CreateImageFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(),
+                out imageContainer, out image, out var meshRenderer, true);
 
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face)
-        {
-            stateMsg[face.index] = msg;
-            if (snackItem != null && lastFocusedFaceIndex == face.index)
+            if (!InLand(meshRenderer))
             {
-                ((SnackItem.Text) snackItem).UpdateLines(GetFaceSnackLines(face));
+                UpdateState(State.OutOfBound);
+                return;
             }
 
-            UpdateIcon(msg);
+            imgFace.Init(meshRenderer, FileService.ResolveUrl(props.url), this);
+            image.layer = props.detectCollision
+                ? LayerMask.NameToLayer("Default")
+                : LayerMask.NameToLayer("3DColliderOff");
+            image.AddComponent<MetaFocusable>().Initialize(this);
         }
 
-        protected override List<string> GetFaceSnackLines(Voxels.Face face)
+        public static ImageFace CreateImageFace(Transform transform, int width, int height, Vector3 rotation,
+            out GameObject container, out GameObject image, out MeshRenderer meshRenderer, bool withCollider)
         {
-            var lines = new List<string>
+            container = new GameObject
             {
-                "Press Z for details",
-                "Press T to toggle preview",
-                "Press Del to delete"
+                name = "image container"
             };
-            if (stateMsg[face.index] != StateMsg.Ok)
-                lines.Add($"\n{MetaBlockState.ToString(stateMsg[face.index], "image")}");
+            container.transform.SetParent(transform, false);
+            container.transform.localPosition = Vector3.zero;
+            container.transform.localScale = new Vector3(width, height, 1);
+
+            image = new GameObject();
+            image.transform.SetParent(container.transform, false);
+            image.transform.localPosition = new Vector3(-0.5f, -0.5f, 0);
+
+            container.transform.eulerAngles = rotation;
+
+            var imgFace = image.AddComponent<ImageFace>();
+            meshRenderer = imgFace.Initialize(withCollider);
+            return imgFace;
+        }
+
+        protected override void OnStateChanged(State state)
+        {
+            ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
+            var error = MetaBlockState.IsErrorState(state);
+            if (!error && state != State.Empty) return;
+
+            DestroyImage();
+            var props = (BaseImageBlockProperties) Block.GetProps();
+            CreateImageFace(gameObject.transform,
+                error ? Math.Min(props.width, MediaBlockEditor.DEFAULT_DIMENSION) : props.width,
+                error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height,
+                props.rotation.ToVector3(),
+                out imageContainer, out image, out var r, true).PlaceHolderInit(r, Block.type, error);
+            image.AddComponent<MetaFocusable>().Initialize(this);
+        }
+
+        protected virtual List<string> GetSnackLines()
+        {
+            var lines = new List<string>();
+            if (canEdit)
+            {
+                lines.Add("Press Z for details");
+                // if (state == State.Ok)
+                lines.Add("Press V to edit rotation");
+                lines.Add("Press DEL to delete object");
+            }
+
+            var line = MetaBlockState.ToString(State, "image");
+            if (line.Length > 0)
+                lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
         }
 
-        private void UpdateIcon(StateMsg message) 
-        {
-            if (message != StateMsg.LoadingMetadata && message != StateMsg.Loading && message != StateMsg.Ok)
-            {
-                CreateIcon(true);
-                return;
-            }
-
-            foreach (var msg in stateMsg)
-            {
-                if (message != StateMsg.LoadingMetadata && msg != StateMsg.Loading && msg != StateMsg.Ok)
-                {
-                    CreateIcon(true);
-                    return;
-                }
-            }
-
-            if (canEdit)
-                CreateIcon();
-        }
-
-        private void EditProps(Voxels.Face face)
+        private void EditProps()
         {
             var manager = GameManager.INSTANCE;
             var dialog = manager.OpenDialog();
@@ -179,47 +167,94 @@ namespace src.MetaBlocks.ImageBlock
                 .WithContent(MediaBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<MediaBlockEditor>();
 
-            var props = GetBlock().GetProps();
-            editor.SetValue(props == null ? null : (props as MediaBlockProperties).GetFaceProps(face));
+            var props = Block.GetProps();
+            editor.SetValue(props as MediaBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new MediaBlockProperties(GetBlock().GetProps() as MediaBlockProperties);
+                var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
 
-                props.SetFaceProps(face, value);
+                props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
-            DestroyImages(false);
+            DestroyImage(false);
             base.OnDestroy();
         }
 
         public override void ShowFocusHighlight()
         {
+            if (image == null) return;
+            Player.INSTANCE.RemoveHighlightMesh();
+            Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
+        }
+
+        private Transform CreateMeshHighlight(Material material, bool active = true)
+        {
+            var clone = Instantiate(image.transform, image.transform.parent);
+            DestroyImmediate(clone.GetComponent<MeshCollider>());
+            var renderer = clone.GetComponent<MeshRenderer>();
+            renderer.enabled = active;
+            renderer.material = material;
+            return clone;
         }
 
         public override void RemoveFocusHighlight()
         {
+            Player.INSTANCE.RemoveHighlightMesh();
         }
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
-            return null;
+            if (image == null) return null;
+            var highlight = CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
+            highlight.SetParent(parent, true);
+            var go = highlight.gameObject;
+            go.name = "image highlight";
+            return go;
         }
 
-        protected override void UpdateState(StateMsg stateMsg)
+        public override void SetToMovingState()
         {
-            throw new System.NotImplementedException();
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            if (scaleRotationController == null)
+            {
+                scaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
+                scaleRotationController.Attach(null, imageContainer.transform);
+            }
+
+            snackItem = Snack.INSTANCE.ShowLines(scaleRotationController.EditModeSnackLines, () =>
+            {
+                if (Input.GetKeyDown(KeyCode.X))
+                {
+                    GameManager.INSTANCE.ToggleMovingObjectState(this);
+                }
+            });
         }
 
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        public override void ExitMovingState()
         {
+            var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
+            if (image == null || State != State.Ok) return;
+            props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
+            Block.SetProps(props, land);
+
+            if (snackItem != null) SetupDefaultSnack();
+            if (scaleRotationController == null) return;
+            scaleRotationController.Detach();
+            DestroyImmediate(scaleRotationController);
+            scaleRotationController = null;
         }
     }
 }

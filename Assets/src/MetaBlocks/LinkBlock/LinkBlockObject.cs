@@ -2,29 +2,13 @@ using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.Model;
-using src.Utils;
 using UnityEngine;
 
 namespace src.MetaBlocks.LinkBlock
 {
     public class LinkBlockObject : MetaBlockObject
     {
-        private SnackItem snackItem;
-        private Land land;
-        private bool canEdit;
-        private bool ready = false;
-
-        private void Start()
-        {
-            canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
-            CreateIcon();
-            ready = true;
-        }
-
-        public override bool IsReady()
-        {
-            return ready;
-        }
+        private GameObject placeHolder;
 
         public override void OnDataUpdate()
         {
@@ -32,17 +16,35 @@ namespace src.MetaBlocks.LinkBlock
 
         protected override void DoInitialize()
         {
+            UpdateState(State.Empty);
         }
 
-
-        public override void Focus(Voxels.Face face)
+        private void OpenLink()
         {
-            UpdateSnacks();
+            LinkBlockProperties props = (LinkBlockProperties) Block.GetProps();
+            if (props.pos == null)
+                Application.OpenURL(props.url);
+            else
+                GameManager.INSTANCE.MovePlayerTo(new Vector3(props.pos[0], props.pos[1], props.pos[2]));
         }
 
-        private void UpdateSnacks()
+        protected override void OnStateChanged(State state)
         {
-            if (snackItem != null) snackItem.Remove();
+            if (state != State.Empty) return; // only empty state is valid for marker metablock
+            if (snackItem != null) SetupDefaultSnack();
+
+            // setting place holder
+            DestroyPlaceHolder();
+            placeHolder = Block.type.CreatePlaceHolder(false, true);
+            placeHolder.transform.SetParent(gameObject.transform, false);
+            placeHolder.SetActive(true);
+            placeHolder.GetComponentInChildren<Collider>()
+                .gameObject.AddComponent<MetaFocusable>()
+                .Initialize(this);
+        }
+
+        protected virtual List<string> GetSnackLines()
+        {
             var lines = new List<string>();
             if (canEdit)
             {
@@ -50,7 +52,7 @@ namespace src.MetaBlocks.LinkBlock
                 lines.Add("Press Del to delete");
             }
 
-            LinkBlockProperties props = GetProps();
+            var props = (LinkBlockProperties) Block.GetProps();
             if (props != null && !props.IsEmpty())
             {
                 if (props.pos == null)
@@ -58,73 +60,65 @@ namespace src.MetaBlocks.LinkBlock
                 else
                     lines.Add("Press O to transport");
             }
-            snackItem = Snack.INSTANCE.ShowLines(lines, () =>
-            {
-                if (canEdit)
-                {
-                    if (Input.GetKeyDown(KeyCode.Z))
-                        EditProps();
-                    if (Input.GetButtonDown("Delete"))
-                        GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
-                }
-                if (props != null && !props.IsEmpty() && Input.GetKeyDown(KeyCode.O))
-                    OpenLink();
-            });
-        }
 
-        private void OpenLink()
-        {
-            LinkBlockProperties faceProps = GetProps();
-            if (faceProps.pos == null)
-                Application.OpenURL(faceProps.url);
-            else
-                GameManager.INSTANCE.MovePlayerTo(new Vector3(faceProps.pos[0], faceProps.pos[1], faceProps.pos[2]));
-        }
-
-        private LinkBlockProperties GetProps()
-        {
-            return (LinkBlockProperties)GetBlock().GetProps();
-        }
-
-        public override void UnFocus()
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
-        }
-
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face) // TODO
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override List<string> GetFaceSnackLines(Voxels.Face face) // TODO
-        {
-            throw new System.NotImplementedException();
+            return lines;
         }
 
         public override void ShowFocusHighlight()
         {
+            if (placeHolder == null) return;
+            AdjustHighlightBox(Player.INSTANCE.tdObjectHighlightBox, placeHolder.GetComponent<BoxCollider>(), true);
         }
 
         public override void RemoveFocusHighlight()
         {
+            Player.INSTANCE.tdObjectHighlightBox.gameObject.SetActive(false);
         }
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
-            return null;
+            if (placeHolder == null) return null;
+            Transform highlight;
+            highlight = Instantiate(Player.INSTANCE.tdObjectHighlightBox, default, Quaternion.identity);
+            highlight.GetComponentInChildren<MeshRenderer>().material = World.INSTANCE.SelectedBlock;
+            AdjustHighlightBox(highlight, placeHolder.GetComponent<BoxCollider>(), show);
+            highlight.SetParent(parent, true);
+            var go = highlight.gameObject;
+            go.name = "link highlight";
+            return go;
         }
 
-        protected override void UpdateState(StateMsg stateMsg)
+        public override void SetToMovingState()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        public override void ExitMovingState()
         {
+            throw new NotImplementedException();
+        }
+
+        protected override void SetupDefaultSnack()
+        {
+            if (snackItem != null) snackItem.Remove();
+            var props = (LinkBlockProperties) Block.GetProps();
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
+            {
+                if (canEdit)
+                {
+                    if (Input.GetKeyDown(KeyCode.Z))
+                    {
+                        RemoveFocusHighlight();
+                        EditProps();
+                    }
+
+                    if (Input.GetButtonDown("Delete"))
+                        GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
+                }
+
+                if (props != null && !props.IsEmpty() && Input.GetKeyDown(KeyCode.O))
+                    OpenLink();
+            });
         }
 
         private void EditProps()
@@ -136,17 +130,61 @@ namespace src.MetaBlocks.LinkBlock
                 .WithContent(LinkBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<LinkBlockEditor>();
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             editor.SetValue(props as LinkBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
                 if (value.pos != null) value.url = null;
                 if (value.IsEmpty()) value = null;
-                GetBlock().SetProps(value, land);
+                Block.SetProps(value, land);
                 manager.CloseDialog(dialog);
-                UpdateSnacks();
+                if (snackItem != null) SetupDefaultSnack();
             });
+        }
+
+        private void DestroyPlaceHolder(bool immediate = true)
+        {
+            if (placeHolder == null) return;
+            foreach (var renderer in placeHolder.GetComponentsInChildren<Renderer>())
+            foreach (var mat in renderer.sharedMaterials)
+            {
+                if (mat == null) continue;
+                if (immediate)
+                {
+                    DestroyImmediate(mat.mainTexture);
+                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        DestroyImmediate(mat);
+                }
+                else
+                {
+                    Destroy(mat.mainTexture);
+                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        Destroy(mat);
+                }
+            }
+
+            foreach (var meshFilter in placeHolder.GetComponentsInChildren<MeshFilter>())
+            {
+                if (immediate)
+                    DestroyImmediate(meshFilter.sharedMesh);
+                else
+                    Destroy(meshFilter.sharedMesh);
+            }
+
+
+            if (immediate)
+                DestroyImmediate(placeHolder.gameObject);
+            else
+                Destroy(placeHolder.gameObject);
+
+            placeHolder = null;
+        }
+
+        protected override void OnDestroy()
+        {
+            DestroyPlaceHolder(false);
+            base.OnDestroy();
         }
     }
 }

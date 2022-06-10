@@ -7,6 +7,7 @@ using src.MetaBlocks;
 using src.Model;
 using src.Service;
 using src.Utils;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -41,8 +42,6 @@ namespace src
         private bool floating = false;
         private Vector3Int? lastChunk;
         private List<Land> ownedLands = new List<Land>();
-        private MetaBlock focusedMetaBlock;
-        private Voxels.Face focusedMetaFace;
         private RaycastHit raycastHit;
         private Collider hitCollider;
         private CharacterController characterController;
@@ -54,9 +53,12 @@ namespace src
 
         public Transform tdObjectHighlightMesh;
 
+        public GameObject MetaBlockPlaceHolder { private set; get; }
         public bool HammerMode { get; private set; } = false;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
+
+        public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
 
         [SerializeField] private Vector3 firstPersonCameraPosition;
         [SerializeField] private Vector3 thirdPersonCameraPosition;
@@ -72,10 +74,13 @@ namespace src
 
         public float Horizontal { get; private set; }
         public float Vertical { get; private set; }
-        public Focusable focused { get; private set; }
-        public Vector3Int PlaceBlockPosInt { get; private set; }
+        public Focusable FocusedFocusable { get; private set; }
+        public Vector3Int PossiblePlaceBlockPosInt { get; private set; }
+        public Vector3Int PossibleHighlightBlockPosInt { get; set; }
 
         public Land HighlightLand => highlightLand;
+
+        public Transform transform => avatar?.transform; // TODO
 
         private void Start()
         {
@@ -89,7 +94,7 @@ namespace src
                     hitCollider = null;
             });
 
-            avatar = Instantiate(avatarPrefab, transform);
+            avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatarController = avatar.GetComponent<AvatarController>();
             characterController = avatar.GetComponent<CharacterController>();
             cam.SetParent(avatar.transform);
@@ -99,6 +104,22 @@ namespace src
 
             viewModeChanged = new UnityEvent<ViewMode>();
             ToggleViewMode();
+
+            viewModeChanged.AddListener(vm =>
+            {
+                if (vm == ViewMode.THIRD_PERSON)
+                {
+                    BlockSelectionController.INSTANCE.ExitSelectionMode();
+                    HideCursorBlocksAndPlaceHolder();
+                    if (FocusedFocusable != null)
+                    {
+                        FocusedFocusable.UnFocus();
+                        FocusedFocusable = null;
+                    }
+                }
+
+                hitCollider = null;
+            });
         }
 
 
@@ -106,7 +127,7 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetInputs();
-            if (viewMode == ViewMode.FIRST_PERSON)
+            if (!ChangeForbidden)
                 blockSelectionController.DoUpdate();
 
             if (lastChunk == null)
@@ -155,7 +176,8 @@ namespace src
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             UpdatePlayerPosition();
-            DetectFocus();
+            if (!ChangeForbidden)
+                DetectFocus();
         }
 
         private void UpdatePlayerPosition()
@@ -198,36 +220,38 @@ namespace src
         // ReSharper disable Unity.PerformanceAnalysis
         private void DetectFocus()
         {
-            if (viewMode == ViewMode.FIRST_PERSON
-                && Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
+            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
             {
+                var focusable = raycastHit.collider.GetComponent<Focusable>();
                 if (hitCollider == raycastHit.collider &&
-                    hitCollider.TryGetComponent(typeof(MetaFocusable), out _)) return;
+                    focusable != null && focusable is MetaFocusable) return;
                 hitCollider = raycastHit.collider;
-                var focusable = hitCollider.GetComponent<Focusable>();
                 if (focusable != null)
                 {
-                    focusedMetaFace = null;
-                    if (focused != null)
-                        focused.UnFocus();
+                    if (FocusedFocusable != null)
+                        FocusedFocusable.UnFocus();
                     focusable.Focus(raycastHit.point);
-                    focused = focusable;
+                    FocusedFocusable = focusable;
+                    if (focusable is MetaFocusable metaFocusable)
+                        HideCursorBlocksAndPlaceHolder();
                     return;
                 }
             }
             else
-            {
-                highlightBlock.gameObject.SetActive(false);
-                placeBlock.gameObject.SetActive(false);
-                if (focusedMetaBlock != null)
-                    focusedMetaBlock.UnFocus();
-            }
+                HideCursorBlocksAndPlaceHolder();
 
-            if (focused != null)
-                focused.UnFocus();
-            focusedMetaFace = null;
-            focused = null;
+            if (FocusedFocusable != null)
+                FocusedFocusable.UnFocus();
+            FocusedFocusable = null;
             hitCollider = null;
+        }
+
+        private void HideCursorBlocksAndPlaceHolder()
+        {
+            highlightBlock.gameObject.SetActive(false);
+            placeBlock.gameObject.SetActive(false);
+            if (MetaBlockPlaceHolder != null)
+                MetaBlockPlaceHolder.gameObject.SetActive(false);
         }
 
         public List<Land> GetOwnedLands()
@@ -257,104 +281,105 @@ namespace src
             viewModeChanged.Invoke(viewMode);
         }
 
-        public void SetHammerActive(bool active)
+        public void ToolbarSelectedChanged(bool hammerSelected)
         {
-            if (HammerMode == active) return;
-            HammerMode = active;
-            placeBlock.gameObject.SetActive(!active);
+            if (ChangeForbidden) return;
+            if (HammerMode == false && hammerSelected)
+            {
+                HammerMode = true;
+                placeBlock.gameObject.SetActive(false);
+                if (MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.gameObject.SetActive(false);
+                return;
+            }
+
+            HammerMode = hammerSelected;
+
+            if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType type)
+            {
+                HideCursorBlocksAndPlaceHolder();
+                MetaBlockPlaceHolder = type.GetPlaceHolder();
+                if (MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.SetActive(true);
+                return;
+            }
+
+            if (MetaBlockPlaceHolder != null)
+                MetaBlockPlaceHolder.SetActive(false);
+            placeBlock.gameObject.SetActive(true);
         }
 
         public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk)
         {
             var epsilon = cam.forward * CastStep;
-            PlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
-            var posInt = Vectors.FloorToInt(blockHitPoint + epsilon);
-            var vp = new VoxelPosition(posInt);
-            // var chunk = world.GetChunkIfInited(vp.chunk);
-            // if (chunk == null) return;
-            var metaToFocus = chunk.GetMetaAt(vp);
-            var foundSolid = chunk.GetBlock(vp.local).isSolid;
+            PossiblePlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
+            PossibleHighlightBlockPosInt = Vectors.FloorToInt(blockHitPoint + epsilon);
 
-            if (foundSolid)
+            if (BlockSelectionController.INSTANCE.selectionMode == BlockSelectionController.SelectionMode.Dragged &&
+                World.INSTANCE.SelectionActive && CanEdit(PossiblePlaceBlockPosInt, out _))
             {
-                highlightBlock.position = posInt;
-                highlightBlock.gameObject.SetActive(CanEdit(posInt, out highlightLand));
+                HideCursorBlocksAndPlaceHolder();
+                World.INSTANCE.MoveSelection(PossiblePlaceBlockPosInt, false);
+            }
+            else if (HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
+            {
+                highlightBlock.position = PossibleHighlightBlockPosInt;
+                highlightBlock.gameObject.SetActive(true);
+                placeBlock.gameObject.SetActive(false);
+                if (MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.SetActive(false);
+            }
+            else if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType metaBlockType &&
+                     CanEdit(PossibleHighlightBlockPosInt, out placeLand))
+            {
+                placeBlock.gameObject.SetActive(false);
+                highlightBlock.gameObject.SetActive(false);
 
-                if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType && !HammerMode)
+                if (MetaBlockPlaceHolder != null)
                 {
-                    if (chunk.GetMetaAt(vp) == null)
+                    var mp = metaBlockType.GetPutPosition(blockHitPoint);
+                    if (chunk.GetMetaAt(mp) == null)
                     {
-                        placeBlock.position = posInt;
-                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) && CanEdit(posInt, out placeLand));
+                        MetaBlockPlaceHolder.transform.position = mp.ToWorld();
+                        MetaBlockPlaceHolder.gameObject.SetActive(true);
                     }
-                    else
-                        placeBlock.gameObject.SetActive(false);
                 }
                 else
-                {
-                    var currVox = Vectors.FloorToInt(GetPosition());
-                    if (PlaceBlockPosInt != currVox && PlaceBlockPosInt != currVox + Vector3Int.up)
-                    {
-                        placeBlock.position = PlaceBlockPosInt;
-                        placeBlock.gameObject.SetActive((!HammerMode || ctrlDown) &&
-                                                        CanEdit(PlaceBlockPosInt, out placeLand));
-                    }
-                    else
-                        placeBlock.gameObject.SetActive(false);
-                }
+                    Debug.LogWarning("Null place holder!"); // should not happen
             }
             else
             {
-                highlightBlock.gameObject.SetActive(false);
-                placeBlock.gameObject.SetActive(false);
-            }
-
-            Voxels.Face faceToFocus = null;
-            if (metaToFocus != null)
-            {
-                if (!metaToFocus.IsPositioned()) metaToFocus = null;
+                if (CanEdit(PossibleHighlightBlockPosInt, out highlightLand))
+                {
+                    highlightBlock.position = PossibleHighlightBlockPosInt;
+                    highlightBlock.gameObject.SetActive(true);
+                }
                 else
+                    highlightBlock.gameObject.SetActive(false);
+
+                var currVox = Vectors.FloorToInt(GetPosition());
+                if (PossiblePlaceBlockPosInt != currVox && PossiblePlaceBlockPosInt != currVox + Vector3Int.up &&
+                    CanEdit(PossiblePlaceBlockPosInt, out placeLand))
                 {
-                    faceToFocus = FindFocusedFace(blockHitPoint - posInt);
-                    if (faceToFocus == null) metaToFocus = null;
+                    placeBlock.position = PossiblePlaceBlockPosInt;
+                    placeBlock.gameObject.SetActive(true);
                 }
+                else
+                    placeBlock.gameObject.SetActive(false);
+
+                if(MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.gameObject.SetActive(false);
             }
-
-            if (focusedMetaBlock != metaToFocus || faceToFocus != focusedMetaFace)
-            {
-                if (focusedMetaBlock != null)
-                    focusedMetaBlock.UnFocus();
-                focusedMetaBlock = metaToFocus;
-                focusedMetaFace = faceToFocus;
-
-                if (focusedMetaBlock != null && !World.INSTANCE.SelectionActive)
-                {
-                    if (!focusedMetaBlock.Focus(focusedMetaFace))
-                    {
-                        focusedMetaBlock = null;
-                        focusedMetaFace = null;
-                    }
-                }
-            }
-        }
-
-
-        private Voxels.Face FindFocusedFace(Vector3 blockLocalHitPoint)
-        {
-            if (blockLocalHitPoint.x < CastStep) return Voxels.Face.LEFT;
-            if (Math.Abs(blockLocalHitPoint.x - 1) < CastStep) return Voxels.Face.RIGHT;
-
-            if (blockLocalHitPoint.z < CastStep) return Voxels.Face.BACK;
-            if (Math.Abs(blockLocalHitPoint.z - 1) < CastStep) return Voxels.Face.FRONT;
-
-            if (blockLocalHitPoint.y < CastStep) return Voxels.Face.BOTTOM;
-            if (Math.Abs(blockLocalHitPoint.y - 1) < CastStep) return Voxels.Face.TOP;
-
-            return null;
         }
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
+            if (Settings.IsGuest())
+            {
+                land = null;
+                return false;
+            }
+
             if (!isMeta && (playerPos.Equals(blockPos) ||
                             // playerPos.Equals(blockPos + Vector3Int.up) ||
                             playerPos.Equals(blockPos - Vector3Int.up)))
@@ -363,11 +388,6 @@ namespace src
                 return false;
             }
 
-            if (Settings.IsGuest())
-            {
-                land = null;
-                return false;
-            }
 
             land = FindOwnedLand(blockPos);
             return land != null && !land.isNft;
@@ -436,6 +456,17 @@ namespace src
             return avatar.transform.position;
         }
 
+        public bool PluginWriteAllowed(out string warnMsg)
+        {
+            if (viewMode != ViewMode.FIRST_PERSON)
+            {
+                warnMsg = "executing this plugin is only permitted in first person view mode";
+                return false;
+            }
+
+            warnMsg = null;
+            return true;
+        }
         public enum ViewMode
         {
             FIRST_PERSON,

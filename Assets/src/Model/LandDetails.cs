@@ -9,19 +9,30 @@ namespace src.Model
     {
         public string v;
         public string wallet;
-        public Dictionary<string, MetaBlockData> metadata;
+        public Dictionary<string, MetaBlockData> metadata;   
         public Dictionary<string, Block> changes;
         public LandProperties properties;
 
-        public static Vector3Int ParseKey(string key)
+        public static Vector3Int ParseIntKey(string key)
         {
             var coords = key.Split('_');
             return new Vector3Int(int.Parse(coords[0]), int.Parse(coords[1]), int.Parse(coords[2]));
         }
-
-        public static string FormatKey(Vector3Int pos)
+        
+        public static MetaLocalPosition ParseKey(string key)
         {
-            return string.Format("{0}_{1}_{2}", pos.x, pos.y, pos.z);
+            var coords = key.Split('_');
+            return new MetaLocalPosition(float.Parse(coords[0]), float.Parse(coords[1]), float.Parse(coords[2]));
+        }
+
+        public static string FormatIntKey(Vector3Int pos)
+        {
+            return $"{pos.x}_{pos.y}_{pos.z}";
+        }
+        
+        public static string FormatKey(Vector3 pos)
+        {
+            return $"{pos.x:0.0}_{pos.y:0.0}_{pos.z:0.0}";
         }
     }
 }

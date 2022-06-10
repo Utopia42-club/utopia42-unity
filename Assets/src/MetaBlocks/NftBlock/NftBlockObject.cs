@@ -12,42 +12,43 @@ namespace src.MetaBlocks.NftBlock
 {
     public class NftBlockObject : ImageBlockObject
     {
-        private Dictionary<Voxels.Face, NftMetadata> metadata = new Dictionary<Voxels.Face, NftMetadata>();
+        private NftMetadata metadata = new NftMetadata();
 
         public override void OnDataUpdate()
         {
-            RenderFaces();
+            RenderFace();
         }
 
-        protected override void DoInitialize()
-        {
-            RenderFaces();
-        }
-
-        public override void Focus(Voxels.Face face)
+        protected override void SetupDefaultSnack()
         {
             if (snackItem != null) snackItem.Remove();
 
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(face), () =>
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (canEdit)
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
-                        EditProps(face);
+                    {
+                        RemoveFocusHighlight();
+                        EditProps();
+                    }
+                    if (Input.GetKeyDown(KeyCode.V))
+                    {
+                        RemoveFocusHighlight();
+                        GameManager.INSTANCE.ToggleMovingObjectState(this);
+                    }
                     if (Input.GetButtonDown("Delete"))
-                        GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
-                    if (Input.GetKeyDown(KeyCode.T))
-                        GetIconObject().SetActive(!GetIconObject().activeSelf);
+                    {
+                        World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
+                    }
                 }
 
                 if (Input.GetKeyDown(KeyCode.O))
-                    OpenLink(face);
+                    OpenLink();
             });
-
-            lastFocusedFaceIndex = face.index;
         }
 
-        protected override List<string> GetFaceSnackLines(Voxels.Face face)
+        protected override List<string> GetSnackLines()
         {
             var lines = new List<string>();
             if (canEdit)
@@ -55,61 +56,52 @@ namespace src.MetaBlocks.NftBlock
                 lines.AddRange(new[]
                 {
                     "Press Z for details",
-                    "Press T to toggle preview",
+                    "Press V to edit rotation",
                     "Press Del to delete"
                 });
             }
 
-            var props = GetBlock().GetProps();
-            var url = (props as NftBlockProperties)?.GetFaceProps(face)?.GetOpenseaUrl();
+            var props = Block.GetProps();
+            var url = (props as NftBlockProperties)?.GetOpenseaUrl();
             if (!string.IsNullOrEmpty(url))
                 lines.Add("Press O to open Opensea URL");
 
-            if (metadata.TryGetValue(face, out var faceMetadata))
+            if (metadata != null)
             {
-                if (!string.IsNullOrWhiteSpace(faceMetadata.name))
-                    lines.Add($"\nName: {faceMetadata.name.Trim()}");
-                if (!string.IsNullOrWhiteSpace(faceMetadata.description))
-                    lines.Add($"\nDescription: {faceMetadata.description.Trim()}");
+                if (!string.IsNullOrWhiteSpace(metadata.name))
+                    lines.Add($"\nName: {metadata.name.Trim()}");
+                if (!string.IsNullOrWhiteSpace(metadata.description))
+                    lines.Add($"\nDescription: {metadata.description.Trim()}");
             }
 
-            if (stateMsg[face.index] != StateMsg.Ok)
+            if (State != State.Ok)
                 lines.Add(
-                    $"\n{MetaBlockState.ToString(stateMsg[face.index], "image")}");
+                    $"\n{MetaBlockState.ToString(State, "image")}");
 
             return lines;
         }
 
-        private new void RenderFaces()
+        protected override void RenderFace()
         {
-            DestroyImages();
-            images.Clear();
-            metadata.Clear();
-            var properties = (NftBlockProperties) GetBlock().GetProps();
-            if (properties == null) return;
-
-            AddFaceProperties(Voxels.Face.BACK, properties.back);
-            AddFaceProperties(Voxels.Face.FRONT, properties.front);
-            AddFaceProperties(Voxels.Face.RIGHT, properties.right);
-            AddFaceProperties(Voxels.Face.LEFT, properties.left);
-            AddFaceProperties(Voxels.Face.TOP, properties.top);
-            AddFaceProperties(Voxels.Face.BOTTOM, properties.bottom);
-        }
-
-        private void AddFaceProperties(Voxels.Face face, NftBlockProperties.FaceProps props)
-        {
-            if (props == null || string.IsNullOrWhiteSpace(props.collection)) return;
-            UpdateStateAndIcon(StateMsg.LoadingMetadata, face);
+            DestroyImage();
+            metadata = null;
+            var props = (NftBlockProperties) Block.GetProps();
+            if (props == null || string.IsNullOrWhiteSpace(props.collection))
+            {
+                UpdateState(State.Empty);
+                return;
+            }
+            UpdateState(State.LoadingMetadata);
             StartCoroutine(GetMetadata(props.collection, props.tokenId, md =>
             {
-                metadata.Add(face, md);
+                metadata = md;
                 // var imageUrl = $"{Constants.ApiURL}/nft-metadata/image/{props.collection}/{props.tokenId}";
                 var imageUrl = string.IsNullOrWhiteSpace(md.image) ? md.imageUrl : md.image;
-                AddFace(face, props.ToImageFaceProp(imageUrl));
-            }, () => { UpdateStateAndIcon(StateMsg.ConnectionError, face); }));
+                AddFace(props.ToImageProp(imageUrl));
+            }, () => { UpdateState(State.ConnectionError); }));
         }
 
-        private void EditProps(Voxels.Face face)
+        private void EditProps()
         {
             var manager = GameManager.INSTANCE;
             var dialog = manager.OpenDialog();
@@ -118,25 +110,25 @@ namespace src.MetaBlocks.NftBlock
                 .WithContent(NftBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<NftBlockEditor>();
 
-            var props = GetBlock().GetProps();
-            editor.SetValue((props as NftBlockProperties)?.GetFaceProps(face));
+            var props = Block.GetProps();
+            editor.SetValue(props as NftBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new NftBlockProperties(GetBlock().GetProps() as NftBlockProperties);
+                var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
 
-                props.SetFaceProps(face, value);
+                props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
         }
 
-        private void OpenLink(Voxels.Face face)
+        private void OpenLink()
         {
-            var props = GetBlock().GetProps();
-            var url = (props as NftBlockProperties)?.GetFaceProps(face)?.GetOpenseaUrl();
+            var props = Block.GetProps();
+            var url = (props as NftBlockProperties)?.GetOpenseaUrl();
             if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
         }
 
@@ -145,6 +137,20 @@ namespace src.MetaBlocks.NftBlock
         {
             yield return RestClient.Get($"{Constants.ApiURL}/nft-metadata/{collection}/{tokenId}"
                 , onSuccess, onFailure);
+        }
+        
+        public override void ExitMovingState()
+        {
+            var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
+            if (image == null || State != State.Ok) return;
+            props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
+            Block.SetProps(props, land);
+            
+            if (snackItem != null) SetupDefaultSnack();
+            if (scaleRotationController == null) return;
+            scaleRotationController.Detach();
+            DestroyImmediate(scaleRotationController);
+            scaleRotationController = null;
         }
     }
 }

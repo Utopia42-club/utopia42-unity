@@ -3,6 +3,7 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 using Object = UnityEngine.Object;
 
 namespace src.MetaBlocks
@@ -23,7 +24,7 @@ namespace src.MetaBlocks
             this.properties = properties;
         }
 
-        public void RenderAt(Transform parent, Vector3Int position, Chunk chunk)
+        public void RenderAt(Transform parent, Vector3 position, Chunk chunk)
         {
             if (blockObject != null) throw new Exception("Already rendered.");
             GameObject go = new GameObject("MetaBlock");
@@ -31,32 +32,6 @@ namespace src.MetaBlocks
             go.transform.parent = parent;
             go.transform.localPosition = position;
             blockObject.Initialize(this, chunk);
-        }
-
-        public bool IsPositioned()
-        {
-            return blockObject != null;
-        }
-
-        public Vector3 GetPosition()
-        {
-            return blockObject.transform.position;
-        }
-
-        public bool Focus(Voxels.Face face)
-        {
-            if (blockObject != null && blockObject.IsReady())
-            {
-                blockObject.Focus(face);
-                return true;
-            }
-
-            return false;
-        }
-
-        public void UnFocus()
-        {
-            if (blockObject != null) blockObject.UnFocus();
         }
 
         internal void OnObjectDestroyed()
@@ -103,7 +78,7 @@ namespace src.MetaBlocks
             }
         }
 
-        public void CreateSelectHighlight(Transform highlightChunkTransform, Vector3Int localPos,
+        public void CreateSelectHighlight(Transform highlightChunkTransform, MetaLocalPosition localPos,
             Action<GameObject> onLoad, out GameObject referenceGo)
         {
             referenceGo = null;
@@ -113,16 +88,24 @@ namespace src.MetaBlocks
                 if (go != null)
                 {
                     onLoad(go);
+                    if (blockObject.State is State.Loading or State.LoadingMetadata)
+                    {
+                        void CallBack(State state)
+                        {
+                            if (state is State.Loading or State.LoadingMetadata) return;
+                            if (state == State.Ok && go != null) // go != null (go is not destroyed) is needed to check if the object has been deselected
+                            {
+                                var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
+                                if (go != null) onLoad(go);
+                            }
+
+                            blockObject.stateChange.RemoveListener(CallBack);
+                        }
+
+                        blockObject.stateChange.AddListener(CallBack);
+                    }
                     return;
                 }
-
-                blockObject.stateChange.AddListener(state =>
-                {
-                    if (state != StateMsg.Ok) return;
-                    var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
-                    if (go != null) onLoad(go);
-                });
-                return;
             }
 
             var gameObject = referenceGo = new GameObject

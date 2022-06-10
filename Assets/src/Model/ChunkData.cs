@@ -17,10 +17,10 @@ namespace src.Model
         /**
          * local [to chunk] position -> MetaBlock
          */
-        public Dictionary<Vector3Int, MetaBlock> metaBlocks;
+        public Dictionary<MetaLocalPosition, MetaBlock> metaBlocks;
 
         public ChunkData(Vector3Int position, Dictionary<Vector3Int, uint> blocks,
-            Dictionary<Vector3Int, MetaBlock> metaBlocks)
+            Dictionary<MetaLocalPosition, MetaBlock> metaBlocks)
         {
             this.position = position;
             this.blocks = blocks;
@@ -45,7 +45,7 @@ namespace src.Model
 
             if (changes.metaBlocks != null)
             {
-                metaBlocks ??= new Dictionary<Vector3Int, MetaBlock>();
+                metaBlocks ??= new Dictionary<MetaLocalPosition, MetaBlock>();
                 foreach (var entry in changes.metaBlocks)
                 {
                     if (entry.Value == MetaBlock.DELETED_METABLOCK)
