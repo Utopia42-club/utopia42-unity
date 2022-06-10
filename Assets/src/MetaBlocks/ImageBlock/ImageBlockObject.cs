@@ -32,13 +32,13 @@ namespace src.MetaBlocks.ImageBlock
                 if (!canEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
-                    RemoveFocusHighlight();
+                    UnFocus();
                     EditProps();
                 }
 
-                if (Input.GetKeyDown(KeyCode.V))
+                if (Input.GetKeyDown(KeyCode.V) && State != State.Empty)
                 {
-                    RemoveFocusHighlight();
+                    UnFocus();
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
                 }
 
@@ -140,7 +140,7 @@ namespace src.MetaBlocks.ImageBlock
             var height = props == null
                 ? MediaBlockEditor.DEFAULT_DIMENSION
                 : (error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height);
-            
+
             CreateImageFace(gameObject.transform, width, height, rotation,
                 out imageContainer, out image, out var r, true).PlaceHolderInit(r, Block.type, error);
             image.AddComponent<MetaFocusable>().Initialize(this);
@@ -152,8 +152,8 @@ namespace src.MetaBlocks.ImageBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                // if (state == State.Ok)
-                lines.Add("Press V to edit rotation");
+                if (State != State.Empty)
+                    lines.Add("Press V to edit rotation");
                 lines.Add("Press DEL to delete object");
             }
 

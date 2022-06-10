@@ -108,7 +108,7 @@ namespace src.MetaBlocks.LinkBlock
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                     {
-                        RemoveFocusHighlight();
+                        UnFocus();
                         EditProps();
                     }
 

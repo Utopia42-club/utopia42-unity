@@ -111,13 +111,13 @@ namespace src.MetaBlocks.TdObjectBlock
                 if (!canEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
-                    RemoveFocusHighlight();
+                    UnFocus();
                     EditProps();
                 }
 
                 if (Input.GetKeyDown(KeyCode.V) && State == State.Ok)
                 {
-                    RemoveFocusHighlight();
+                    UnFocus();
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
                 }
 

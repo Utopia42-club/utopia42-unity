@@ -29,14 +29,16 @@ namespace src.MetaBlocks.NftBlock
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                     {
-                        RemoveFocusHighlight();
+                        UnFocus();
                         EditProps();
                     }
-                    if (Input.GetKeyDown(KeyCode.V))
+
+                    if (Input.GetKeyDown(KeyCode.V) && State != State.Empty)
                     {
-                        RemoveFocusHighlight();
+                        UnFocus();
                         GameManager.INSTANCE.ToggleMovingObjectState(this);
                     }
+
                     if (Input.GetButtonDown("Delete"))
                     {
                         World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
@@ -53,12 +55,10 @@ namespace src.MetaBlocks.NftBlock
             var lines = new List<string>();
             if (canEdit)
             {
-                lines.AddRange(new[]
-                {
-                    "Press Z for details",
-                    "Press V to edit rotation",
-                    "Press Del to delete"
-                });
+                lines.Add("Press Z for details");
+                if (State != State.Empty)
+                    lines.Add("Press V to edit rotation");
+                lines.Add("Press Del to delete");
             }
 
             var props = Block.GetProps();
@@ -75,8 +75,11 @@ namespace src.MetaBlocks.NftBlock
             }
 
             if (State != State.Ok)
-                lines.Add(
-                    $"\n{MetaBlockState.ToString(State, "image")}");
+            {
+                var msg = MetaBlockState.ToString(State, "image");
+                if (msg.Length > 0)
+                    lines.Add($"\n{msg}");
+            }
 
             return lines;
         }
@@ -91,6 +94,7 @@ namespace src.MetaBlocks.NftBlock
                 UpdateState(State.Empty);
                 return;
             }
+
             UpdateState(State.LoadingMetadata);
             StartCoroutine(GetMetadata(props.collection, props.tokenId, md =>
             {
@@ -138,14 +142,14 @@ namespace src.MetaBlocks.NftBlock
             yield return RestClient.Get($"{Constants.ApiURL}/nft-metadata/{collection}/{tokenId}"
                 , onSuccess, onFailure);
         }
-        
+
         public override void ExitMovingState()
         {
             var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
             if (image == null) return;
             props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
             Block.SetProps(props, land);
-            
+
             if (snackItem != null) SetupDefaultSnack();
             if (scaleRotationController == null) return;
             scaleRotationController.Detach();
