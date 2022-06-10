@@ -142,7 +142,7 @@ namespace src.MetaBlocks.NftBlock
         public override void ExitMovingState()
         {
             var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
-            if (image == null || State != State.Ok) return;
+            if (image == null) return;
             props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
             Block.SetProps(props, land);
             

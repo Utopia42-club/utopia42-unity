@@ -69,10 +69,16 @@ namespace src.MetaBlocks.VideoBlock
 
             DestroyVideo();
             var props = (VideoBlockProperties) Block.GetProps();
-            CreateVideoFace(gameObject.transform,
-                error ? Math.Min(props.width, MediaBlockEditor.DEFAULT_DIMENSION) : props.width,
-                error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height,
-                props.rotation.ToVector3(),
+            
+            var rotation = props == null ? Vector3.zero : props.rotation.ToVector3();
+            var width = props == null
+                ? MediaBlockEditor.DEFAULT_DIMENSION
+                : (error ? Math.Min(props.width, MediaBlockEditor.DEFAULT_DIMENSION) : props.width);
+            var height = props == null
+                ? MediaBlockEditor.DEFAULT_DIMENSION
+                : (error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height);
+            
+            CreateVideoFace(gameObject.transform, width, height, rotation,
                 out videoContainer, out var go, out var r, true).PlaceHolderInit(r, error);
             go.AddComponent<MetaFocusable>().Initialize(this);
         }
@@ -267,7 +273,7 @@ namespace src.MetaBlocks.VideoBlock
         public override void ExitMovingState()
         {
             var props = new VideoBlockProperties(Block.GetProps() as VideoBlockProperties);
-            if (video == null || State != State.Ok) return;
+            if (video == null) return;
             props.rotation = new SerializableVector3(videoContainer.transform.eulerAngles);
             Block.SetProps(props, land);
 

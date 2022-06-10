@@ -1,4 +1,5 @@
 using System;
+using src.MetaBlocks;
 using src.Utils;
 using UnityEngine;
 
@@ -63,7 +64,8 @@ namespace src
             if (meshRenderer == null) return;
             var mat = meshRenderer.sharedMaterial;
             if (mat == null) return;
-            if (mat.mainTexture != null && mat.mainTexture.name != "failed")
+            if (mat.mainTexture != null && mat.mainTexture.name != "failed" && mat.mainTexture.name != "video" &&
+                mat.mainTexture.name != "nft" && mat.mainTexture.name != "image") // TODO ?
                 Destroy(mat.mainTexture);
             Destroy(mat);
         }

@@ -133,10 +133,15 @@ namespace src.MetaBlocks.ImageBlock
 
             DestroyImage();
             var props = (BaseImageBlockProperties) Block.GetProps();
-            CreateImageFace(gameObject.transform,
-                error ? Math.Min(props.width, MediaBlockEditor.DEFAULT_DIMENSION) : props.width,
-                error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height,
-                props.rotation.ToVector3(),
+            var rotation = props == null ? Vector3.zero : props.rotation.ToVector3();
+            var width = props == null
+                ? MediaBlockEditor.DEFAULT_DIMENSION
+                : (error ? Math.Min(props.width, MediaBlockEditor.DEFAULT_DIMENSION) : props.width);
+            var height = props == null
+                ? MediaBlockEditor.DEFAULT_DIMENSION
+                : (error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height);
+            
+            CreateImageFace(gameObject.transform, width, height, rotation,
                 out imageContainer, out image, out var r, true).PlaceHolderInit(r, Block.type, error);
             image.AddComponent<MetaFocusable>().Initialize(this);
         }
@@ -246,7 +251,7 @@ namespace src.MetaBlocks.ImageBlock
         public override void ExitMovingState()
         {
             var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
-            if (image == null || State != State.Ok) return;
+            if (image == null) return;
             props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
             Block.SetProps(props, land);
 
