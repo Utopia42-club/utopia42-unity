@@ -367,7 +367,7 @@ namespace src
                 else
                     placeBlock.gameObject.SetActive(false);
 
-                if(MetaBlockPlaceHolder != null)
+                if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.gameObject.SetActive(false);
             }
         }
@@ -448,12 +448,12 @@ namespace src
 
         public void SetPosition(Vector3 pos)
         {
-            avatar.transform.position = pos;
+            avatarController.SetPosition(pos);
         }
 
         public Vector3 GetPosition()
         {
-            return avatar.transform.position;
+            return avatarController.GetPosition();
         }
 
         public bool PluginWriteAllowed(out string warnMsg)
@@ -467,6 +467,7 @@ namespace src
             warnMsg = null;
             return true;
         }
+
         public enum ViewMode
         {
             FIRST_PERSON,

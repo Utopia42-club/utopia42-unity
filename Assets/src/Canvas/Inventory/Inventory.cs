@@ -34,7 +34,7 @@ namespace src.Canvas
             colorSlot = Instantiate(colorSlotPrefab, transform);
 
             colorItemSlot = colorSlot.GetComponent<ColorItemSlot>();
-            colorItemSlot.onColorCreated = color => { AddColorBlock(color); };
+            colorItemSlot.onColorCreated = AddColorBlock;
 
             foreach (var colorBlock in GetPlayerColorBlocks())
             {

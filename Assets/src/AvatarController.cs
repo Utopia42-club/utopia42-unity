@@ -40,9 +40,17 @@ namespace src
             var currentPosition = transform.position;
             if (targetPosition != currentPosition)
             {
-                var step = Player.INSTANCE.walkSpeed * Time.deltaTime;
-                var newPos = Vector3.MoveTowards(currentPosition, targetPosition, step);
-                Move(newPos - currentPosition);
+                var movement = targetPosition - currentPosition;
+                if (movement.sqrMagnitude > 10000)
+                {
+                    Move(movement);
+                }
+                else
+                {
+                    var step = Player.INSTANCE.walkSpeed * Time.deltaTime;
+                    var newPos = Vector3.MoveTowards(currentPosition, targetPosition, step);
+                    Move(newPos - currentPosition);
+                }
             }
         }
 
@@ -56,20 +64,20 @@ namespace src
             controller.Move(motion);
         }
 
-        public void LookAt(Vector3 cameraForward)
+        private void LookAt(Vector3 cameraForward)
         {
             cameraForward.y = 0;
             transform.rotation = Quaternion.LookRotation(cameraForward);
         }
 
-        private void SetPosition(Vector3 pos)
+        public void SetPosition(Vector3 target)
         {
-            var movement = transform.position - pos;
-            targetPosition = pos;
-            if (movement.magnitude > 100)
-            {
-                Move(pos - transform.position);
-            }
+            targetPosition = target;
+        }
+
+        public Vector3 GetPosition()
+        {
+            return transform.position;
         }
 
         public void SetAvatarBodyDisabled(bool disabled)
