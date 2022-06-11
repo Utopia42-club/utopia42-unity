@@ -4,23 +4,26 @@ using src.Model;
 namespace src.MetaBlocks.TeleportBlock
 {
     [Serializable]
-    public class TeleportBlockProperties :  ICloneable
+    public class TeleportBlockProperties : ICloneable
     {
+        public int[] destination;
 
         public TeleportBlockProperties()
         {
         }
-        
+
         public TeleportBlockProperties(TeleportBlockProperties obj)
         {
             if (obj != null)
             {
+                destination = obj.destination;
             }
         }
-        
+
         public void UpdateProps(TeleportBlockProperties props)
         {
             if (props == null) return;
+            destination = props.destination;
         }
 
         public override bool Equals(object obj)
@@ -29,15 +32,21 @@ namespace src.MetaBlocks.TeleportBlock
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
             var prop = obj as TeleportBlockProperties;
-            return true;
+            return destination[0] == prop.destination[0] &&
+                   destination[1] == prop.destination[1] &&
+                   destination[2] == prop.destination[2];
         }
 
         public object Clone()
         {
-            return new TeleportBlockProperties()
+            var obj = new TeleportBlockProperties();
+            if (destination != null)
             {
-            };
+                obj.destination = new int[3];
+                destination.CopyTo(obj.destination, 0);
+            }
+
+            return obj;
         }
-        
     }
 }

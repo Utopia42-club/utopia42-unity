@@ -219,7 +219,7 @@ namespace src.MetaBlocks.VideoBlock
         {
             if (video == null) return;
             Player.INSTANCE.RemoveHighlightMesh();
-            Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
+            Player.INSTANCE.focusHighlight = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
         }
 
         private Transform CreateMeshHighlight(Material material, bool active = true)

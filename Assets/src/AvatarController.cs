@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using src.Canvas;
+using src.MetaBlocks.TeleportBlock;
 using src.Model;
 using UnityEngine;
 
@@ -171,30 +172,31 @@ namespace src
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.CompareTag("TeleportPortal"))
-            {
-                Debug.Log("Trigger Enter");
-                teleportCoroutine = CountDownTimer(5, i =>
+            if (!other.CompareTag("TeleportPortal")) return;
+            var metaBlock = other.GetComponent<MetaFocusable>()?.MetaBlockObject;
+            if (metaBlock == null || metaBlock is not TeleportBlockObject teleportBlockObject) return;
+            var props = teleportBlockObject.Block.GetProps() as TeleportBlockProperties;
+            if (props == null) return;
+
+            teleportCoroutine = CountDownTimer(5, i => { },
+                () =>
                 {
-                    Debug.Log(i);
-                }, () =>
-                {
-                    // teleport
+                    GameManager.INSTANCE.MovePlayerTo(new Vector3(props.destination[0], props.destination[1],
+                        props.destination[2]));
                 });
-                StartCoroutine(teleportCoroutine);
-            }
+            StartCoroutine(teleportCoroutine);
         }
 
         private void OnTriggerExit(Collider other)
         {
             if (other.CompareTag("TeleportPortal"))
             {
-                Debug.Log("Trigger Exit");
-                StopCoroutine(teleportCoroutine);
+                if (teleportCoroutine != null)
+                    StopCoroutine(teleportCoroutine);
             }
         }
 
-        private IEnumerator CountDownTimer(int time, Action<int> onValueChanged , Action onFinish)
+        private IEnumerator CountDownTimer(int time, Action<int> onValueChanged, Action onFinish)
         {
             while (true)
             {

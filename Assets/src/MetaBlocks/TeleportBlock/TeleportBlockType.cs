@@ -5,8 +5,9 @@ namespace src.MetaBlocks.TeleportBlock
 {
     public class TeleportBlockType : MetaBlockType
     {
-        public const float Gap = 0.2f;
-        public static readonly string PORTAL_PREFAB = "Portal";
+        private const float Gap = 0.2f;
+        internal const float LocalScale = 2f;
+        internal const string PortalPrefab = "Portal";
 
         public TeleportBlockType(byte id) : base(id, "teleport", typeof(TeleportBlockObject),
             typeof(TeleportBlockProperties))
@@ -15,16 +16,14 @@ namespace src.MetaBlocks.TeleportBlock
 
         public override GameObject CreatePlaceHolder(bool error, bool withCollider)
         {
-            return Object.Instantiate(Resources.Load<GameObject>(PORTAL_PREFAB), World.INSTANCE.transform);
+            var go = TeleportBlockObject.CreatePortal(World.INSTANCE.transform, withCollider);
+            go.name = "Teleport place holder";
+            return go;
         }
 
         public override MetaPosition GetPutPosition(Vector3 purePosition)
         {
-            var pos = Player.INSTANCE.transform.forward.z > 0
-                ? purePosition - Gap * Vector3.forward
-                : purePosition + Gap * Vector3.forward;
-            pos += 0.5f * 2 * Vector3.up;
-            return new MetaPosition(pos);
+            return new MetaPosition(purePosition + (LocalScale - Gap) * Vector3.up);
         }
     }
 }

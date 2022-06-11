@@ -6,7 +6,7 @@ namespace src
 {
     public class MetaFocusable : Focusable
     {
-        protected MetaBlockObject MetaBlockObject { set; get; }
+        public MetaBlockObject MetaBlockObject { protected set; get; }
 
         public void Initialize(MetaBlockObject metaBlockObject)
         {

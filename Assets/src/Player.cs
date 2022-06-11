@@ -48,10 +48,10 @@ namespace src
         private BlockSelectionController blockSelectionController;
         private bool ctrlDown = false;
         private Vector3Int playerPos;
-        [NonSerialized] public GameObject avatar;
         private AvatarController avatarController;
+        [NonSerialized] public GameObject avatar;
+        [NonSerialized] public Transform focusHighlight;
 
-        public Transform tdObjectHighlightMesh;
 
         public GameObject MetaBlockPlaceHolder { private set; get; }
         public bool HammerMode { get; private set; } = false;
@@ -440,9 +440,9 @@ namespace src
 
         public bool RemoveHighlightMesh()
         {
-            if (tdObjectHighlightMesh == null) return false;
-            DestroyImmediate(tdObjectHighlightMesh.gameObject);
-            tdObjectHighlightMesh = null;
+            if (focusHighlight == null) return false;
+            DestroyImmediate(focusHighlight.gameObject);
+            focusHighlight = null;
             return true;
         }
 
