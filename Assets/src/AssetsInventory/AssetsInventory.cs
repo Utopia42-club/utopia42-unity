@@ -20,7 +20,8 @@ namespace src.AssetsInventory
 
         private VisualElement root;
         private VisualElement tabBody;
-        private VisualElement loadingLayer;
+        private VisualElement inventoryLoadingLayer;
+        private VisualElement favPanelLoadingLayer;
         private VisualElement inventory;
         private VisualElement favPanel;
         private Button openCloseInvButton;
@@ -57,7 +58,8 @@ namespace src.AssetsInventory
             Utils.IncreaseScrollSpeed(favBar, 600);
             openCloseInvButton = favPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
-            loadingLayer = root.Q<VisualElement>("loadingLayer");
+            inventoryLoadingLayer = root.Q<VisualElement>("inventoryLoadingLayer");
+            favPanelLoadingLayer = root.Q<VisualElement>("favPanelLoadingLayer");
 
             openImage = Resources.Load<Sprite>("Icons/openPane");
             closeImage = Resources.Load<Sprite>("Icons/closePane");
@@ -73,6 +75,7 @@ namespace src.AssetsInventory
             foreach (var tab in tabs)
                 tab.Value.Item1.clicked += () => OpenTab(tab.Key);
 
+            ShowFavPanelLoadingLayer(true);
             StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
             {
                 addSlot = new FavoriteItemInventorySlot(null);
@@ -83,7 +86,12 @@ namespace src.AssetsInventory
 
                 foreach (var favoriteItem in favItems)
                     AddToFavoritePanel(favoriteItem);
-            }, () => { }, this));
+                ShowFavPanelLoadingLayer(false);
+            }, () =>
+            {
+                ShowFavPanelLoadingLayer(false); 
+                //TODO: show error snack
+            }, this));
 
             inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
@@ -163,9 +171,15 @@ namespace src.AssetsInventory
             }
         }
 
-        private void ShowLoadingLayer(bool show)
+        private void ShowInventoryLoadingLayer(bool show)
         {
-            loadingLayer.style.display =
+            inventoryLoadingLayer.style.display =
+                show ? new StyleEnum<DisplayStyle>(DisplayStyle.Flex) : new StyleEnum<DisplayStyle>(DisplayStyle.None);
+        }
+
+        private void ShowFavPanelLoadingLayer(bool show)
+        {
+            favPanelLoadingLayer.style.display =
                 show ? new StyleEnum<DisplayStyle>(DisplayStyle.Flex) : new StyleEnum<DisplayStyle>(DisplayStyle.None);
         }
 
@@ -197,14 +211,14 @@ namespace src.AssetsInventory
             {
                 limit = 100
             };
-            ShowLoadingLayer(true);
+            ShowInventoryLoadingLayer(true);
             StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
             {
                 foreach (var pack in packs)
                     this.packs[pack.id] = pack;
-            }, () => { ShowLoadingLayer(false); }));
+            }, () => { ShowInventoryLoadingLayer(false); }));
 
-            ShowLoadingLayer(true);
+            ShowInventoryLoadingLayer(true);
             StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
             {
                 if (currentTab != 1)
@@ -217,8 +231,8 @@ namespace src.AssetsInventory
                 foreach (var category in categories)
                     scrollView.Add(CreateCategoriesListItem(category));
 
-                ShowLoadingLayer(false);
-            }, () => { ShowLoadingLayer(false); }));
+                ShowInventoryLoadingLayer(false);
+            }, () => { ShowInventoryLoadingLayer(false); }));
 
             // Setup searchField
             var searchField = tabBody.Q<TextField>("searchField");
@@ -410,7 +424,7 @@ namespace src.AssetsInventory
             ss.width = new StyleLength(new Length(90, LengthUnit.Percent));
             ss.flexGrow = 1;
 
-            ShowLoadingLayer(true);
+            ShowInventoryLoadingLayer(true);
             StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
             {
                 var assetGroups = GroupAssetsByPack(assets);
@@ -430,8 +444,8 @@ namespace src.AssetsInventory
                     scrollView.Add(foldout);
                 }
 
-                ShowLoadingLayer(false);
-            }, () => { ShowLoadingLayer(false); }, this));
+                ShowInventoryLoadingLayer(false);
+            }, () => { ShowInventoryLoadingLayer(false); }, this));
             return scrollView;
         }
 
@@ -520,26 +534,34 @@ namespace src.AssetsInventory
                 }
 
                 if (closestSlot == addSlot)
+                {
+                    ShowFavPanelLoadingLayer(true);
                     StartCoroutine(restClient.CreateFavoriteItem(favoriteItem, item =>
                     {
                         AddToFavoritePanel(item);
                         DestroyGhostSlot();
+                        ShowFavPanelLoadingLayer(false);
                     }, () =>
                     {
+                        ShowFavPanelLoadingLayer(false);
                         //TODO a toast?
                     }));
+                }
                 else
                 {
                     favoriteItem.id = closestSlot.favoriteItem.id;
                     favoriteItem.walletId = closestSlot.favoriteItem.walletId;
+                    ShowFavPanelLoadingLayer(true);
                     StartCoroutine(restClient.UpdateFavoriteItem(favoriteItem,
                         () =>
                         {
                             closestSlot.UpdateSlot(ghostSlot);
                             closestSlot.SetFavoriteItem(favoriteItem);
                             DestroyGhostSlot();
+                            ShowFavPanelLoadingLayer(false);
                         }, () =>
                         {
+                            ShowFavPanelLoadingLayer(false);
                             //TODO a toast?
                         }));
                 }

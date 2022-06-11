@@ -11,13 +11,14 @@
             </ui:VisualElement>
             <ui:VisualElement name="breadcrumb" style="height: 6%; flex-direction: row; display: none;" />
             <ui:VisualElement name="tabBody" class="tabBody" style="align-items: center;" />
-            <ui:Instance template="Loading" name="loadingLayer" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none;" />
+            <ui:Instance template="Loading" name="inventoryLoadingLayer" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none;" />
         </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="favPanel" style="flex-grow: 1; flex-shrink: 1; width: 100px; align-items: stretch; right: 362px; position: absolute; height: 100%; justify-content: center; transition-property: right; transition-duration: 500ms; transition-delay: 50ms;">
         <ui:VisualElement name="root" style="flex-grow: 1; flex-shrink: 1; width: 100px; align-items: center; right: 0; position: absolute; height: 90%; background-color: rgb(32, 47, 63); border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;">
             <ui:Button display-tooltip-when-elided="true" name="openCloseInvButton" class="utopia-button" style="background-image: resource(&apos;Icons/closePane&apos;); width: 60%; -unity-background-scale-mode: scale-to-fit;" />
             <ui:ScrollView name="favBar" horizontal-scroller-visibility="Hidden" />
+            <ui:Instance template="Loading" name="favPanelLoadingLayer" style="flex-grow: 1; position: absolute; left: 0; bottom: 0; top: 0; right: 0; display: none;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
