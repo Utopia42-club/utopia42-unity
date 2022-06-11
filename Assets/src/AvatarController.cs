@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using src.Canvas;
+using src.MetaBlocks.TeleportBlock;
 using src.Model;
 using UnityEngine;
 
@@ -25,6 +26,8 @@ namespace src
         private bool isAnotherPlayer = false;
 
         private Vector3 targetPosition;
+
+        private IEnumerator teleportCoroutine;
 
         public void Start()
         {
@@ -173,6 +176,51 @@ namespace src
         public PlayerState GetState()
         {
             return state;
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!other.CompareTag("TeleportPortal")) return;
+            var metaBlock = other.GetComponent<MetaFocusable>()?.MetaBlockObject;
+            if (metaBlock == null || metaBlock is not TeleportBlockObject teleportBlockObject) return;
+            var props = teleportBlockObject.Block.GetProps() as TeleportBlockProperties;
+            if (props == null) return;
+
+            teleportCoroutine = CountDownTimer(5, i => { },
+                () =>
+                {
+                    GameManager.INSTANCE.MovePlayerTo(new Vector3(props.destination[0], props.destination[1],
+                        props.destination[2]));
+                });
+            StartCoroutine(teleportCoroutine);
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (other.CompareTag("TeleportPortal"))
+            {
+                if (teleportCoroutine != null)
+                    StopCoroutine(teleportCoroutine);
+            }
+        }
+
+        private IEnumerator CountDownTimer(int time, Action<int> onValueChanged, Action onFinish)
+        {
+            while (true)
+            {
+                if (time == 0)
+                {
+                    onFinish();
+                    yield break;
+                }
+                else
+                {
+                    onValueChanged(time);
+                    time = time - 1;
+                }
+
+                yield return new WaitForSeconds(1);
+            }
         }
 
         public class PlayerState

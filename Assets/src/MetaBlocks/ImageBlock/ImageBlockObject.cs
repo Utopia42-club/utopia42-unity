@@ -59,9 +59,9 @@ namespace src.MetaBlocks.ImageBlock
         {
             if (image != null)
             {
-                var selectable = image.GetComponent<MetaFocusable>();
-                if (selectable != null)
-                    selectable.UnFocus();
+                var focusable = image.GetComponent<MetaFocusable>();
+                if (focusable != null)
+                    focusable.UnFocus();
                 if (immediate)
                     DestroyImmediate(image);
                 else
@@ -103,7 +103,7 @@ namespace src.MetaBlocks.ImageBlock
             image.AddComponent<MetaFocusable>().Initialize(this);
         }
 
-        public static ImageFace CreateImageFace(Transform transform, int width, int height, Vector3 rotation,
+        internal static ImageFace CreateImageFace(Transform transform, int width, int height, Vector3 rotation,
             out GameObject container, out GameObject image, out MeshRenderer meshRenderer, bool withCollider)
         {
             container = new GameObject
@@ -197,7 +197,7 @@ namespace src.MetaBlocks.ImageBlock
         {
             if (image == null) return;
             Player.INSTANCE.RemoveHighlightMesh();
-            Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
+            Player.INSTANCE.focusHighlight = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
         }
 
         private Transform CreateMeshHighlight(Material material, bool active = true)

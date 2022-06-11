@@ -44,7 +44,7 @@ namespace src.MetaBlocks.TdObjectBlock
             else
             {
                 Player.INSTANCE.RemoveHighlightMesh();
-                Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
+                Player.INSTANCE.focusHighlight = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
             }
         }
 
