@@ -456,6 +456,17 @@ namespace src
             return avatar.transform.position;
         }
 
+        public bool PluginWriteAllowed(out string warnMsg)
+        {
+            if (viewMode != ViewMode.FIRST_PERSON)
+            {
+                warnMsg = "executing this plugin is only permitted in first person view mode";
+                return false;
+            }
+
+            warnMsg = null;
+            return true;
+        }
         public enum ViewMode
         {
             FIRST_PERSON,

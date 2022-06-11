@@ -33,13 +33,13 @@ namespace src.MetaBlocks.VideoBlock
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                     {
-                        RemoveFocusHighlight();
+                        UnFocus();
                         EditProps();
                     }
 
-                    if (Input.GetKeyDown(KeyCode.V))
+                    if (Input.GetKeyDown(KeyCode.V) && State != State.Empty)
                     {
-                        RemoveFocusHighlight();
+                        UnFocus();
                         GameManager.INSTANCE.ToggleMovingObjectState(this);
                     }
 
@@ -68,9 +68,18 @@ namespace src.MetaBlocks.VideoBlock
             if (!error && state != State.Empty) return;
 
             DestroyVideo();
-            CreateVideoFace(gameObject.transform, MediaBlockEditor.DEFAULT_DIMENSION,
-                MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero,
-                out videoContainer, out var go, out var renderer, true).PlaceHolderInit(renderer, error);
+            var props = (VideoBlockProperties) Block.GetProps();
+
+            var rotation = props == null ? Vector3.zero : props.rotation.ToVector3();
+            var width = props == null
+                ? MediaBlockEditor.DEFAULT_DIMENSION
+                : (error ? Math.Min(props.width, MediaBlockEditor.DEFAULT_DIMENSION) : props.width);
+            var height = props == null
+                ? MediaBlockEditor.DEFAULT_DIMENSION
+                : (error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height);
+
+            CreateVideoFace(gameObject.transform, width, height, rotation,
+                out videoContainer, out var go, out var r, true).PlaceHolderInit(r, error);
             go.AddComponent<MetaFocusable>().Initialize(this);
         }
 
@@ -88,12 +97,13 @@ namespace src.MetaBlocks.VideoBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                lines.Add("Press V to edit rotation");
+                if (State != State.Empty)
+                    lines.Add("Press V to edit rotation");
                 lines.Add("Press Del to delete");
             }
 
-            var line = MetaBlockState.ToString(state, "video");
-            if (line.Length > 0 && state != State.Empty && state != State.Ok)
+            var line = MetaBlockState.ToString(State, "video");
+            if (line.Length > 0 && State != State.Empty && State != State.Ok)
                 lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
         }
@@ -211,7 +221,7 @@ namespace src.MetaBlocks.VideoBlock
             Player.INSTANCE.RemoveHighlightMesh();
             Player.INSTANCE.tdObjectHighlightMesh = CreateMeshHighlight(World.INSTANCE.HighlightBlock);
         }
-        
+
         private Transform CreateMeshHighlight(Material material, bool active = true)
         {
             var transform = video.transform;
@@ -222,7 +232,7 @@ namespace src.MetaBlocks.VideoBlock
             renderer.material = material;
             return clone;
         }
-        
+
         public override void RemoveFocusHighlight()
         {
             Player.INSTANCE.RemoveHighlightMesh();
@@ -264,7 +274,7 @@ namespace src.MetaBlocks.VideoBlock
         public override void ExitMovingState()
         {
             var props = new VideoBlockProperties(Block.GetProps() as VideoBlockProperties);
-            if (video == null || state != State.Ok) return;
+            if (video == null) return;
             props.rotation = new SerializableVector3(videoContainer.transform.eulerAngles);
             Block.SetProps(props, land);
 

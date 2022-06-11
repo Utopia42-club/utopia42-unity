@@ -29,7 +29,7 @@ namespace src
         public bool PlayerMovementAllowed => !World.INSTANCE.SelectionActive || !movingSelectionAllowed;
 
         private Transform transform => Player.INSTANCE.transform; // TODO
-        
+
         public void Start()
         {
             player = Player.INSTANCE;
@@ -57,7 +57,9 @@ namespace src
             rotationMode = !rotationMode;
             if (!rotationMode)
                 mouseLook.RemoveRotationTarget();
-            else if (World.INSTANCE.SelectionActive && !World.INSTANCE.MetaSelectionActive) // multiple selection rotation is not support for meta selection only
+            else if (World.INSTANCE.SelectionActive &&
+                     !World.INSTANCE
+                         .MetaSelectionActive) // multiple selection rotation is not support for meta selection only
                 mouseLook.SetRotationTarget(RotateSelection);
         }
 
@@ -131,11 +133,11 @@ namespace src
                               Input.GetMouseButtonDown(0) && ctrlHeld;
 
             var multipleSelect = selectVoxel && World.INSTANCE.SelectionActive &&
-                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) && World.INSTANCE.LastSelectedPosition != null;
 
             if (multipleSelect) // TODO: add support for metablock multiselection?
             {
-                var lastSelectedPosition = World.INSTANCE.lastSelectedPosition.ToWorld();
+                var lastSelectedPosition = World.INSTANCE.LastSelectedPosition.ToWorld();
                 if (!player.HighlightBlock.gameObject.activeSelf) return;
                 var currentSelectedPosition = player.PossibleHighlightBlockPosInt;
 
@@ -198,8 +200,7 @@ namespace src
                         Blocks.GetBlockType(player.selectedBlockId));
                 }
             }
-            else if (Input.GetMouseButtonDown(1) &&
-                     (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null))
+            else if (Input.GetMouseButtonDown(1))
                 DeleteBlock();
         }
 
@@ -377,15 +378,20 @@ namespace src
         public void AddHighlights(List<VoxelPosition> vps)
         {
             if (vps.Count == 0) return;
-            World.INSTANCE.AddHighlights(vps, () => AfterAddHighlight());
+            World.INSTANCE.AddHighlights(vps, result =>
+            {
+                if (!result.ContainsValue(true)) return;
+                AfterAddHighlight();
+            });
         }
 
         public void AddPreviewHighlights(Dictionary<VoxelPosition, uint> highlights)
         {
             if (highlights.Count == 0 || selectionMode != SelectionMode.Preview && World.INSTANCE.SelectionActive)
                 return; // do not add preview highlights after existing non-preview highlights
-            StartCoroutine(World.INSTANCE.AddHighlights(highlights, () =>
+            StartCoroutine(World.INSTANCE.AddHighlights(highlights, result =>
             {
+                if(!result.ContainsValue(true)) return;
                 AfterAddHighlight(false);
                 PrepareForClipboardMovement(SelectionMode.Preview);
             }));
@@ -403,7 +409,7 @@ namespace src
 
         public void AddHighlight(VoxelPosition vp)
         {
-            World.INSTANCE.AddHighlight(vp, () => AfterAddHighlight());
+            World.INSTANCE.AddHighlight(vp, _ => AfterAddHighlight());
         }
 
         public void AddHighlight(MetaPosition mp)

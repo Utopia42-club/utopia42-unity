@@ -8,12 +8,12 @@ namespace src.MetaBlocks.MarkerBlock
     public class Marker
     {
         public string name;
-        public SerializableVector3 position;
+        public SerializableVector3Int position;
 
-        public Marker(string name, Vector3 position)
+        public Marker(string name, Vector3Int position)
         {
             this.name = name;
-            this.position = new SerializableVector3(position);
+            this.position = new SerializableVector3Int(position);
         }
     }
 }
