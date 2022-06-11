@@ -32,13 +32,13 @@ namespace src.MetaBlocks.ImageBlock
                 if (!canEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
-                    RemoveFocusHighlight();
+                    UnFocus();
                     EditProps();
                 }
 
-                if (Input.GetKeyDown(KeyCode.V))
+                if (Input.GetKeyDown(KeyCode.V) && State != State.Empty)
                 {
-                    RemoveFocusHighlight();
+                    UnFocus();
                     GameManager.INSTANCE.ToggleMovingObjectState(this);
                 }
 
@@ -132,9 +132,17 @@ namespace src.MetaBlocks.ImageBlock
             if (!error && state != State.Empty) return;
 
             DestroyImage();
-            CreateImageFace(gameObject.transform, MediaBlockEditor.DEFAULT_DIMENSION,
-                MediaBlockEditor.DEFAULT_DIMENSION, Vector3.zero,
-                out imageContainer, out image, out var renderer, true).PlaceHolderInit(renderer, Block.type, error);
+            var props = (BaseImageBlockProperties) Block.GetProps();
+            var rotation = props == null ? Vector3.zero : props.rotation.ToVector3();
+            var width = props == null
+                ? MediaBlockEditor.DEFAULT_DIMENSION
+                : (error ? Math.Min(props.width, MediaBlockEditor.DEFAULT_DIMENSION) : props.width);
+            var height = props == null
+                ? MediaBlockEditor.DEFAULT_DIMENSION
+                : (error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height);
+
+            CreateImageFace(gameObject.transform, width, height, rotation,
+                out imageContainer, out image, out var r, true).PlaceHolderInit(r, Block.type, error);
             image.AddComponent<MetaFocusable>().Initialize(this);
         }
 
@@ -144,12 +152,12 @@ namespace src.MetaBlocks.ImageBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                // if (state == State.Ok)
-                lines.Add("Press V to edit rotation");
+                if (State != State.Empty)
+                    lines.Add("Press V to edit rotation");
                 lines.Add("Press DEL to delete object");
             }
 
-            var line = MetaBlockState.ToString(state, "image");
+            var line = MetaBlockState.ToString(State, "image");
             if (line.Length > 0)
                 lines.Add((lines.Count > 0 ? "\n" : "") + line);
             return lines;
@@ -243,7 +251,7 @@ namespace src.MetaBlocks.ImageBlock
         public override void ExitMovingState()
         {
             var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
-            if (image == null || state != State.Ok) return;
+            if (image == null) return;
             props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
             Block.SetProps(props, land);
 

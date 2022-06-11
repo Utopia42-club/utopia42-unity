@@ -19,7 +19,8 @@ namespace src
         public MetaLocalPosition Position { get; private set; }
         public MetaLocalPosition CurrentPosition => new MetaLocalPosition(Position.position + Offset);
 
-        public static HighlightedMetaBlock Create(MetaLocalPosition localPos, HighlightChunk highlightChunk, MetaBlock meta)
+        public static void CreateAndAddToChunk(MetaLocalPosition localPos, HighlightChunk highlightChunk,
+            MetaBlock meta, Action<HighlightedMetaBlock> onLoad = null)
         {
             
             var highlightedBlock = highlightChunk.gameObject.AddComponent<HighlightedMetaBlock>();
@@ -30,6 +31,8 @@ namespace src
         
             meta.CreateSelectHighlight(highlightChunk.transform, localPos, highlight =>
             {
+                onLoad?.Invoke(highlightedBlock);
+                onLoad = null;
                 if (highlightedBlock.metaBlockHighlight != null)
                 {
                     DestroyImmediate(highlightedBlock.metaBlockHighlight);
@@ -41,8 +44,6 @@ namespace src
                     highlight.transform.localPosition + World.INSTANCE.MetaHighlightOffset; // TODO ?
                 highlightedBlock.UpdateMetaBlockHighlightPosition();
             }, out highlightedBlock.referenceGo);
-        
-            return highlightedBlock;
         }
 
         public void Rotate(Vector3 center, Vector3 axis, Vector3Int chunkPosition)

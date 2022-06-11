@@ -32,7 +32,7 @@ namespace src.MetaBlocks.MarkerBlock
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
-                    RemoveFocusHighlight();
+                    UnFocus();
                     EditProps();
                 }
 

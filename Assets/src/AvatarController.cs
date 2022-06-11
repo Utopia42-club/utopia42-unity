@@ -33,7 +33,8 @@ namespace src
             avatar = Instantiate(avatarPrefab, transform);
             animator = avatar.GetComponent<Animator>();
             controller = GetComponent<CharacterController>();
-            StartCoroutine(UpdateAnimationCoroutine());
+            if (!isAnotherPlayer)
+                StartCoroutine(UpdateAnimationCoroutine());
         }
 
         private void Update()
@@ -84,10 +85,13 @@ namespace src
             SetPosition(playerState.position.ToVector3());
             LookAt(playerState.forward.ToVector3());
             state = playerState;
+            if (isAnotherPlayer)
+                UpdateAnimation();
         }
 
         private void UpdateAnimation()
         {
+            if (state == null) return;
             var lastPos = lastAnimationState?.Position() ?? state.Position();
             var movement = state.Position() - lastPos;
             var velocity = movement / (Time.time - updatedTime);
