@@ -2,8 +2,8 @@
     <Style src="project://database/Assets/Resources/UiDocuments/styles/AssetsInventory.uss?fileID=7433441132597879392&amp;guid=cb2dc14ae923fe41b9bb557470ffb356&amp;type=3#AssetsInventory" />
     <AspectRatioPanel aspect-ratio-x="1" aspect-ratio-y="1">
         <ui:VisualElement name="slotContainer" class="slot-container" style="flex-grow: 1;">
-            <ui:VisualElement name="selectedBorder" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none; border-left-color: rgb(220, 119, 119); border-right-color: rgb(220, 119, 119); border-top-color: rgb(220, 119, 119); border-bottom-color: rgb(220, 119, 119); border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px;" />
             <ui:VisualElement name="slotIcon" style="flex-grow: 1;" />
+            <ui:VisualElement name="selectedBorder" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none; border-left-color: rgb(220, 119, 119); border-right-color: rgb(220, 119, 119); border-top-color: rgb(220, 119, 119); border-bottom-color: rgb(220, 119, 119); border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px;" />
             <ui:Button display-tooltip-when-elided="true" name="leftAction" enable-rich-text="false" style="position: absolute; left: 0; top: 0; width: 20%; height: 20%; background-color: rgb(32, 47, 63); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; display: none; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
         </ui:VisualElement>
     </AspectRatioPanel>

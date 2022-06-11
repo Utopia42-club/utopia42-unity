@@ -2,7 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using src.AssetsInventory.Models;
+using src.AssetsInventory.slots;
 using src.Canvas;
+using src.MetaBlocks;
+using src.Model;
+using src.Utils;
+using UnityEditor.Graphs;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
@@ -34,10 +39,13 @@ namespace src.AssetsInventory
 
         private List<FavoriteItemInventorySlot> favBarSlots = new();
         private FavoriteItemInventorySlot addSlot;
-        private AssetBlockInventorySlot ghostSlot;
+        private InventorySlotWrapper ghostSlot;
 
         private FavoriteItem selectedFavoriteItem;
-        public readonly UnityEvent<FavoriteItem> selectedFavoriteItemChanged = new UnityEvent<FavoriteItem>();
+        public readonly UnityEvent<FavoriteItem> selectedFavoriteItemChanged = new();
+
+        [SerializeField] private ColorSlotPicker colorSlotPicker;
+        private Foldout colorBlocksFoldout;
 
         void Start()
         {
@@ -50,10 +58,6 @@ namespace src.AssetsInventory
             openCloseInvButton = favPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
             loadingLayer = root.Q<VisualElement>("loadingLayer");
-            ghostSlot = new AssetBlockInventorySlot(null, null, 60);
-            root.Add(ghostSlot.VisualElement());
-            ghostSlot.VisualElement().visible = false;
-            ghostSlot.HideSlotBackground();
 
             openImage = Resources.Load<Sprite>("Icons/openPane");
             closeImage = Resources.Load<Sprite>("Icons/closePane");
@@ -69,26 +73,47 @@ namespace src.AssetsInventory
             foreach (var tab in tabs)
                 tab.Value.Item1.clicked += () => OpenTab(tab.Key);
 
-            ghostSlot.VisualElement().RegisterCallback<PointerUpEvent>(GhostSlotOnMouseUp);
-
             StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
             {
-                addSlot = new FavoriteItemInventorySlot(null, root, "Add", 70, 10);
-                addSlot.SetBackground(Resources.Load<Sprite>("Icons/add"));
+                addSlot = new FavoriteItemInventorySlot(null);
+                addSlot.GetCurrentSlot().SetBackground(Resources.Load<Sprite>("Icons/add"));
+                addSlot.SetSize(70, 10);
                 favBarSlots.Add(addSlot);
                 favBar.Add(addSlot.VisualElement());
 
                 foreach (var favoriteItem in favItems)
                     AddToFavoritePanel(favoriteItem);
             }, () => { }, this));
-            
+
             inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
         }
 
+        private void DestroyGhostSlot()
+        {
+            isDragging = false;
+            if (ghostSlot != null)
+            {
+                ghostSlot.VisualElement().RemoveFromHierarchy();
+                ghostSlot = null;
+            }
+        }
+
+        private InventorySlotWrapper CreateGhostSlot(InventorySlot baseSlot)
+        {
+            var slot = new InventorySlotWrapper(true);
+            slot.SetSize(60);
+            slot.UpdateSlot(baseSlot);
+            slot.GetCurrentSlot().HideSlotBackground();
+            slot.VisualElement().RegisterCallback<PointerUpEvent>(GhostSlotOnMouseUp);
+            root.Add(slot.VisualElement());
+            return slot;
+        }
+
         private void AddToFavoritePanel(FavoriteItem favoriteItem)
         {
-            var slot = new FavoriteItemInventorySlot(favoriteItem, size: 70);
+            var slot = new FavoriteItemInventorySlot(favoriteItem);
+            slot.SetSize(70);
             favBarSlots.Add(slot);
             favBar.RemoveAt(favBar.childCount - 1);
             favBar.Add(slot.VisualElement());
@@ -98,7 +123,7 @@ namespace src.AssetsInventory
         private void RemoveFromFavoritePanel(FavoriteItemInventorySlot slot)
         {
             favBarSlots.Remove(slot);
-            favBar.Remove(slot.VisualElement());
+            slot.VisualElement().RemoveFromHierarchy();
         }
 
         public void DeleteFavoriteItem(FavoriteItemInventorySlot slot)
@@ -160,6 +185,7 @@ namespace src.AssetsInventory
                     ShowAssetsTab();
                     break;
                 case 2:
+                    ShowBlocksTab();
                     break;
             }
         }
@@ -207,7 +233,111 @@ namespace src.AssetsInventory
                     searchField.SetValueWithoutNotify("Search");
             });
             var debounce = Utils.Debounce<string>(arg => filterText = arg);
-            searchField.RegisterValueChangedCallback(evt => { debounce(evt.newValue); });
+            searchField.RegisterValueChangedCallback(evt => debounce(evt.newValue));
+        }
+
+        private void ShowBlocksTab()
+        {
+            var scrollView = tabBody.Q<ScrollView>("blockPacks");
+            scrollView.Clear();
+            Utils.IncreaseScrollSpeed(scrollView, 600);
+            scrollView.mode = ScrollViewMode.Vertical;
+            scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
+
+            var regularBlocksFoldout = CreateBlocksPackFoldout("Regular Blocks",
+                Blocks.GetBlockTypes().Where(blockType => blockType is not MetaBlockType && blockType.name != "air")
+                    .ToList());
+
+            var metaBlocksFoldout = CreateBlocksPackFoldout("Meta Blocks",
+                Blocks.GetBlockTypes().Where(blockType => blockType is MetaBlockType).ToList());
+
+            colorSlotPicker.SetOnColorCreated(color =>
+            {
+                ColorBlocks.SaveBlockColor(color);
+                UpdateUserColorBlocks();
+            });
+            colorSlotPicker.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+
+            scrollView.Add(regularBlocksFoldout);
+            scrollView.Add(metaBlocksFoldout);
+
+            colorBlocksFoldout = CreateColorBlocksFoldout();
+            UpdateUserColorBlocks();
+            scrollView.Add(colorBlocksFoldout);
+        }
+
+        private void UpdateUserColorBlocks()
+        {
+            if (colorBlocksFoldout.childCount == 2)
+                colorBlocksFoldout.RemoveAt(1);
+            var colorSlotsContainer = CreateUserColorBlocks();
+            colorBlocksFoldout.contentContainer.Add(colorSlotsContainer);
+            colorBlocksFoldout.contentContainer.style.height = colorSlotsContainer.style.height.value.value + 75;
+        }
+
+        private Foldout CreateColorBlocksFoldout()
+        {
+            var foldout = CreatePackFoldout("Color Blocks");
+            var colorBlockCreator = Resources.Load<VisualTreeAsset>("UiDocuments/ColorBlockCreator").CloneTree();
+            var colorPickerToggle = colorBlockCreator.Q<Button>();
+            colorPickerToggle.style.height = 70;
+            colorPickerToggle.clickable.clicked += () => colorSlotPicker.ToggleColorPicker();
+            foldout.contentContainer.Add(colorPickerToggle);
+            return foldout;
+        }
+
+        private static VisualElement CreateUserColorBlocks()
+        {
+            var playerColorBlocks = ColorBlocks.GetPlayerColorBlocks();
+            var size = playerColorBlocks.Count;
+            var slotsContainer = new VisualElement();
+            for (var i = 0; i < size; i++)
+            {
+                var slot = new ColorBlockInventorySlot(playerColorBlocks[i]);
+                slot.SetSize(80);
+                slot.SetGridPosition(i, 3);
+                slotsContainer.Add(slot.VisualElement());
+            }
+
+            slotsContainer.style.height = 90 * (size / 3 + 1);
+            return slotsContainer;
+        }
+
+        public void DeleteColorBlock(ColorBlockInventorySlot colorBlockInventorySlot)
+        {
+            ColorBlocks.RemoveBlockColorFromSaving(colorBlockInventorySlot.color);
+            UpdateUserColorBlocks();
+        }
+
+        private Foldout CreateBlocksPackFoldout(string name, List<BlockType> blocks)
+        {
+            var foldout = CreatePackFoldout(name);
+
+            var size = blocks.Count;
+            if (size <= 0) return foldout;
+            for (var i = 0; i < size; i++)
+            {
+                var slot = new BlockInventorySlot(blocks[i]);
+                slot.SetSize(80);
+                slot.SetGridPosition(i, 3);
+                foldout.contentContainer.Add(slot.VisualElement());
+            }
+
+            foldout.contentContainer.style.height = 90 * (size / 3 + 1);
+            return foldout;
+        }
+
+        private static Foldout CreatePackFoldout(string name)
+        {
+            var foldout = new Foldout
+            {
+                text = name
+            };
+            foldout.SetValueWithoutNotify(true);
+            foldout.AddToClassList("utopia-foldout");
+            var fs = foldout.style;
+            fs.marginRight = fs.marginLeft = fs.marginBottom = fs.marginTop = 5;
+            return foldout;
         }
 
         private void FilterAssets(string filter)
@@ -286,18 +416,12 @@ namespace src.AssetsInventory
                 var assetGroups = GroupAssetsByPack(assets);
                 foreach (var assetGroup in assetGroups)
                 {
-                    var foldout = new Foldout
-                    {
-                        text = packs[assetGroup.Key].name
-                    };
-                    foldout.SetValueWithoutNotify(true);
-                    foldout.AddToClassList("utopia-foldout");
-                    var fs = foldout.style;
-                    fs.marginRight = fs.marginLeft = fs.marginBottom = fs.marginTop = 5;
+                    var foldout = CreatePackFoldout(packs[assetGroup.Key].name);
                     var size = assetGroup.Value.Count;
                     for (var i = 0; i < size; i++)
                     {
-                        var slot = new AssetInventorySlot(assetGroup.Value[i], root);
+                        var slot = new AssetInventorySlot(assetGroup.Value[i]);
+                        slot.SetSize(80);
                         slot.SetGridPosition(i, 3);
                         foldout.contentContainer.Add(slot.VisualElement());
                     }
@@ -350,22 +474,24 @@ namespace src.AssetsInventory
             return dictionary;
         }
 
-        public void StartDrag(Vector2 position, InventorySlot slot)
+        public void StartDrag(Vector2 position, BaseInventorySlot slot)
         {
+            if (isDragging)
+                return;
+
             isDragging = true;
 
+            ghostSlot = CreateGhostSlot(slot);
             ghostSlot.VisualElement().style.top = position.y - ghostSlot.VisualElement().layout.height / 2;
             ghostSlot.VisualElement().style.left = position.x - ghostSlot.VisualElement().layout.width / 2;
-
-            ghostSlot.UpdateSlot(slot);
-
-            ghostSlot.VisualElement().style.visibility = Visibility.Visible;
         }
 
         private void GhostSlotOnMouseUp(PointerUpEvent evt)
         {
             if (!isDragging)
                 return;
+
+            ghostSlot.GetCurrentSlot().slot.visible = false;
 
             var slots = favBarSlots
                 .Where(favBarSlot =>
@@ -376,33 +502,62 @@ namespace src.AssetsInventory
             {
                 var closestSlot = slots.OrderBy(x => Vector2.Distance
                     (x.VisualElement().worldBound.position, ghostSlot.VisualElement().worldBound.position)).First();
-                if (closestSlot == addSlot)
+
+                var favoriteItem = new FavoriteItem();
+                switch (ghostSlot.GetCurrentSlot())
                 {
-                    var favoriteItem = new FavoriteItem
-                    {
-                        asset = new Asset
+                    case AssetInventorySlot assetInventorySlot:
+                        favoriteItem.asset = new Asset
                         {
-                            id = ghostSlot.GetAsset().id
-                        }
-                        //TODO: block
-                    };
-                    StartCoroutine(restClient.CreateFavoriteItem(favoriteItem, AddToFavoritePanel, () => { }));
+                            id = assetInventorySlot.GetAsset().id
+                        };
+                        favoriteItem.blockId = null;
+                        break;
+                    case BlockInventorySlot blockInventorySlot:
+                        favoriteItem.blockId = blockInventorySlot.GetBlock().id;
+                        favoriteItem.asset = null;
+                        break;
                 }
+
+                if (closestSlot == addSlot)
+                    StartCoroutine(restClient.CreateFavoriteItem(favoriteItem, item =>
+                    {
+                        AddToFavoritePanel(item);
+                        DestroyGhostSlot();
+                    }, () =>
+                    {
+                        //TODO a toast?
+                    }));
                 else
                 {
-                    closestSlot.UpdateSlot(ghostSlot);
-                    closestSlot.favoriteItem.asset = ghostSlot.GetAsset();
-                    //TODO: block
-                    StartCoroutine(restClient.UpdateFavoriteItem(closestSlot.favoriteItem, () => { }, () => { }));
+                    favoriteItem.id = closestSlot.favoriteItem.id;
+                    favoriteItem.walletId = closestSlot.favoriteItem.walletId;
+                    StartCoroutine(restClient.UpdateFavoriteItem(favoriteItem,
+                        () =>
+                        {
+                            closestSlot.UpdateSlot(ghostSlot);
+                            closestSlot.SetFavoriteItem(favoriteItem);
+                            DestroyGhostSlot();
+                        }, () =>
+                        {
+                            //TODO a toast?
+                        }));
                 }
             }
-
-            isDragging = false;
-            ghostSlot.VisualElement().style.visibility = Visibility.Hidden;
+            else
+                DestroyGhostSlot();
         }
 
         public void SelectFavoriteItem(FavoriteItemInventorySlot slot)
         {
+            if (selectedFavoriteItem == slot.favoriteItem)
+            {
+                selectedFavoriteItem = null;
+                selectedFavoriteItemChanged.Invoke(null);
+                slot.SetSelected(false);
+                return;
+            }
+
             selectedFavoriteItem = slot.favoriteItem;
             foreach (var favBarSlot in favBarSlots)
                 favBarSlot.SetSelected(false);
@@ -413,6 +568,11 @@ namespace src.AssetsInventory
         public FavoriteItem GetSelectedFavoriteItem()
         {
             return selectedFavoriteItem;
+        }
+
+        public VisualElement GetTooltipRoot()
+        {
+            return root;
         }
 
         public static AssetsInventory INSTANCE => instance;

@@ -28,6 +28,8 @@ namespace src.Canvas
 
         private void MouseIn(MouseEnterEvent e)
         {
+            if (string.IsNullOrEmpty(target.tooltip))
+                return;
             element = new VisualElement
             {
                 style =
@@ -40,10 +42,10 @@ namespace src.Canvas
                     borderBottomRightRadius = 8,
                     borderTopRightRadius = 8,
                     borderTopLeftRadius = 8,
+                    transitionDelay = new List<TimeValue> {new(200, TimeUnit.Millisecond)},
+                    transitionDuration = new List<TimeValue> {new(50, TimeUnit.Millisecond)}
                 }
             };
-            element.style.transitionDelay = new List<TimeValue> {new(200, TimeUnit.Millisecond)};
-            element.style.transitionDuration = new List<TimeValue> {new(50, TimeUnit.Millisecond)};
             var label = new Label(target.tooltip)
             {
                 style =
@@ -58,7 +60,12 @@ namespace src.Canvas
 
         private void MouseOut(MouseOutEvent e)
         {
-            element.RemoveFromHierarchy();
+            Destroy();
+        }
+
+        public void Destroy()
+        {
+            element?.RemoveFromHierarchy();
         }
     }
 }

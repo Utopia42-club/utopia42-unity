@@ -1,5 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 using src.Model;
 using UnityEngine;
 
@@ -8,6 +12,7 @@ namespace src.Utils
     public static class ColorBlocks
     {
         private static readonly ColorCache Cache = new ColorCache(1024);
+        public static readonly string PLAYER_COLOR_BLOCKS = "PLAYER_COLOR_BLOCKS";
 
         public static bool IsColorBlockType(string colorBlockTypeName, out BlockType blockType)
         {
@@ -77,6 +82,32 @@ namespace src.Utils
         private static uint GetTypeIdFromColor(Color32 color)
         {
             return (uint) (color.b + (color.g << 8) + (color.r << 16) + (1 << 24));
+        }
+        
+        public static void SaveBlockColor(Color color)
+        {
+            var colorBlocks = GetPlayerColorBlocks();
+            colorBlocks.Add("#" + ColorUtility.ToHtmlStringRGB(color));
+            SetPlayerColorBlocks(colorBlocks);
+        }
+
+        public static void RemoveBlockColorFromSaving(Color color)
+        {
+            var colorBlocks = GetPlayerColorBlocks();
+            colorBlocks = colorBlocks.Where(c => c != "#" + ColorUtility.ToHtmlStringRGB(color)).ToList();
+            SetPlayerColorBlocks(colorBlocks);
+        }
+
+        public static void SetPlayerColorBlocks(IEnumerable colorBlocks)
+        {
+            PlayerPrefs.SetString(PLAYER_COLOR_BLOCKS, JsonConvert.SerializeObject(colorBlocks));
+        }
+
+        public static List<string> GetPlayerColorBlocks()
+        {
+            var deserializeObject =
+                JsonConvert.DeserializeObject<List<string>>(PlayerPrefs.GetString(PLAYER_COLOR_BLOCKS, "[]"));
+            return new HashSet<string>(deserializeObject).ToList();
         }
 
         private class ColorCache
