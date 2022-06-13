@@ -4,30 +4,28 @@ namespace src.AssetsInventory.slots
 {
     public class AssetInventorySlot : BaseInventorySlot
     {
-        private Asset asset;
+        private readonly bool updateImage;
 
-        public AssetInventorySlot(Asset asset, bool updateImage = true)
+        public AssetInventorySlot(bool updateImage = true)
         {
-            SetAsset(asset, updateImage);
+            this.updateImage = updateImage;
         }
 
-        public void SetAsset(Asset asset, bool updateImage = true)
+        public override void SetSlotInfo(SlotInfo slotInfo)
         {
-            this.asset = asset;
-            if (asset == null) return;
+            base.SetSlotInfo(slotInfo);
+            var asset = slotInfo.asset;
+            if (asset == null)
+                return;
             SetTooltip(asset.name);
             if (updateImage)
                 LoadImage(asset.thumbnailUrl);
         }
 
-        public Asset GetAsset()
-        {
-            return asset;
-        }
-
         public override object Clone()
         {
-            var clone = new AssetInventorySlot(asset, IsLoadingImage());
+            var clone = new AssetInventorySlot(IsLoadingImage());
+            clone.SetSlotInfo(slotInfo);
             if (!IsLoadingImage())
                 clone.SetBackground(GetBackground());
             return clone;

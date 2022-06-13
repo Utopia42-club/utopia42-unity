@@ -1,6 +1,5 @@
-using src.Canvas;
-using src.Model;
-using src.Utils;
+using System;
+using src.AssetsInventory.Models;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -8,15 +7,10 @@ namespace src.AssetsInventory.slots
 {
     public class ColorBlockInventorySlot : BlockInventorySlot
     {
-        public readonly Color color;
-        private readonly string colorString;
+        public Color color;
 
-        public ColorBlockInventorySlot(string color, bool addDeleteAction = true) : base(null)
+        public ColorBlockInventorySlot(bool addDeleteAction = true)
         {
-            colorString = color;
-            this.color = Colors.ConvertHexToColor(color) ?? Color.white;
-            SetBlock(ColorBlocks.GetBlockTypeFromColor(this.color));
-
             if (addDeleteAction)
             {
                 ConfigLeftAction("Delete", Resources.Load<Sprite>("Icons/close"),
@@ -26,9 +20,12 @@ namespace src.AssetsInventory.slots
             }
         }
 
-        public void SetBlock(BlockType block)
+        public override void SetSlotInfo(SlotInfo slotInfo)
         {
-            base.SetBlock(block);
+            base.SetSlotInfo(slotInfo);
+            if (slotInfo.block.color == null)
+                throw new Exception("Invalid SlotInfo for color slot");
+            color = slotInfo.block.color.Value;
             SetBackgroundColor(color);
         }
 
@@ -39,7 +36,10 @@ namespace src.AssetsInventory.slots
 
         public override object Clone()
         {
-            return new ColorBlockInventorySlot(colorString, false);
+            var clone = new ColorBlockInventorySlot(false);
+            clone.SetSlotInfo(slotInfo);
+            clone.SetSize(size);
+            return clone;
         }
     }
 }

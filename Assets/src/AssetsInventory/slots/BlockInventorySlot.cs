@@ -1,33 +1,24 @@
-using src.Model;
+using src.AssetsInventory.Models;
 
 namespace src.AssetsInventory.slots
 {
     public class BlockInventorySlot : BaseInventorySlot
     {
-        private BlockType block;
-
-        public BlockInventorySlot(BlockType block)
+        public override void SetSlotInfo(SlotInfo slotInfo)
         {
-            SetBlock(block);
-        }
-
-        public void SetBlock(BlockType block)
-        {
-            this.block = block;
+            base.SetSlotInfo(slotInfo);
+            var block = slotInfo.block;
             if (block == null) return;
             SetTooltip(block.name);
             SetBackground(block.GetIcon());
         }
 
-        public BlockType GetBlock()
-        {
-            return block;
-        }
-
         public override object Clone()
         {
-            var slot = new BlockInventorySlot(block);
-            return slot;
+            var clone = new BlockInventorySlot();
+            clone.SetSlotInfo(slotInfo);
+            clone.SetSize(size);
+            return clone;
         }
     }
 }

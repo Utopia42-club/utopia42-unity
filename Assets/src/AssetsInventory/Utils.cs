@@ -36,5 +36,20 @@ namespace src.AssetsInventory
                 evt.StopPropagation();
             });
         }
+
+        public static void SetGridPosition(VisualElement element, int size, int index, int itemsInARow)
+        {
+            var s = element.style;
+            s.position = new StyleEnum<Position>(Position.Absolute);
+            var div = index / itemsInARow;
+            var rem = index % itemsInARow;
+            s.left = rem * (size + 10);
+            s.top = div * (size + 10);
+        }
+
+        public static void SetGridContainerSize(VisualElement container, int size)
+        {
+            container.style.height = 90 * (size / 3 + 1);
+        }
     }
 }
