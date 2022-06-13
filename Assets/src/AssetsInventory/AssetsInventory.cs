@@ -95,6 +95,8 @@ namespace src.AssetsInventory
 
             inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
+
+            Player.INSTANCE.InitOnSelectedAssetChanged(); // TODO ?
         }
 
         private void DestroyGhostSlot()

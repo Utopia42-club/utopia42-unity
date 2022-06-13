@@ -14,17 +14,19 @@ namespace src.MetaBlocks.TdObjectBlock
     {
         public const ulong DownloadLimitMb = 10;
 
-        private GameObject tdObjectContainer;
-        private GameObject tdObject;
+        private GameObject objContainer;
+        public GameObject Obj { private set; get; }
 
-        public Collider TdObjectCollider { private set; get; }
+        private Collider objCollider;
 
-        private TdObjectFocusable tdObjectFocusable;
+        private TdObjectFocusable objFocusable;
 
         private string currentUrl = "";
 
         private ObjectScaleRotationController scaleRotationController;
         private Transform selectHighlight;
+
+        public bool hasClone = false;
 
         public override void OnDataUpdate()
         {
@@ -38,8 +40,8 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public override void ShowFocusHighlight()
         {
-            if (TdObjectCollider == null) return;
-            if (TdObjectCollider is BoxCollider boxCollider)
+            if (objCollider == null) return;
+            if (objCollider is BoxCollider boxCollider)
                 AdjustHighlightBox(Player.INSTANCE.tdObjectHighlightBox, boxCollider, true);
             else
             {
@@ -56,11 +58,11 @@ namespace src.MetaBlocks.TdObjectBlock
 
         public override GameObject CreateSelectHighlight(Transform parent, bool show = true)
         {
-            if (TdObjectCollider == null) return null;
+            if (objCollider == null) return null;
 
             Transform highlight;
 
-            if (TdObjectCollider is not BoxCollider boxCollider)
+            if (objCollider is not BoxCollider boxCollider)
                 highlight = CreateMeshHighlight(World.INSTANCE.SelectedBlock, show);
             else
             {
@@ -77,7 +79,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private Transform CreateMeshHighlight(Material material, bool active = true)
         {
-            var go = TdObjectCollider.gameObject;
+            var go = objCollider.gameObject;
             var clone = Instantiate(go.transform, go.transform.parent);
             DestroyImmediate(clone.GetComponent<MeshCollider>());
             var renderer = clone.GetComponent<MeshRenderer>();
@@ -89,9 +91,9 @@ namespace src.MetaBlocks.TdObjectBlock
         public override void ExitMovingState()
         {
             var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
-            if (tdObjectContainer == null || State != State.Ok) return;
-            props.rotation = new SerializableVector3(tdObjectContainer.transform.eulerAngles);
-            props.scale = new SerializableVector3(tdObjectContainer.transform.localScale);
+            if (objContainer == null || State != State.Ok) return;
+            props.rotation = new SerializableVector3(objContainer.transform.eulerAngles);
+            props.scale = new SerializableVector3(objContainer.transform.localScale);
             Block.SetProps(props, land);
 
             if (snackItem != null) SetupDefaultSnack();
@@ -139,7 +141,7 @@ namespace src.MetaBlocks.TdObjectBlock
             if (scaleRotationController == null)
             {
                 scaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
-                scaleRotationController.Attach(tdObjectContainer.transform, tdObjectContainer.transform);
+                scaleRotationController.Attach(objContainer.transform, objContainer.transform);
             }
 
             snackItem = Snack.INSTANCE.ShowLines(scaleRotationController.EditModeSnackLines, () =>
@@ -157,17 +159,18 @@ namespace src.MetaBlocks.TdObjectBlock
             if (state == State.Ok) return;
 
             // setting place holder
+            hasClone = false;
             DestroyObject();
             ResetContainer();
-            tdObject = Block.type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), true);
-            tdObject.transform.SetParent(tdObjectContainer.transform, false);
-            tdObject.SetActive(true);
-            TdObjectCollider = tdObject.GetComponentInChildren<Collider>();
-            tdObject.transform.SetParent(tdObjectContainer.transform, false);
+            Obj = Block.type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), true);
+            Obj.transform.SetParent(objContainer.transform, false);
+            Obj.SetActive(true);
+            objCollider = Obj.GetComponentInChildren<Collider>();
+            Obj.transform.SetParent(objContainer.transform, false);
 
             if (chunk == null) return;
-            tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
-            tdObjectFocusable.Initialize(this);
+            objFocusable = objCollider.gameObject.AddComponent<TdObjectFocusable>();
+            objFocusable.Initialize(this);
         }
 
         protected virtual List<string> GetSnackLines()
@@ -189,37 +192,44 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void LoadTdObject()
         {
-            var properties = (TdObjectBlockProperties) Block.GetProps();
-            if (properties == null)
+            var p = (TdObjectBlockProperties) Block.GetProps();
+            if (p == null)
             {
                 UpdateState(State.Empty);
                 return;
             }
 
-            var scale = properties.scale?.ToVector3() ?? Vector3.one;
-            var rotation = properties.rotation?.ToVector3() ?? Vector3.zero;
-            var initialPosition = properties.initialPosition?.ToVector3() ?? Vector3.zero;
+            var scale = p.scale?.ToVector3() ?? Vector3.one;
+            var rotation = p.rotation?.ToVector3() ?? Vector3.zero;
+            var initialPosition = p.initialPosition?.ToVector3() ?? Vector3.zero;
 
-            if (currentUrl.Equals(properties.url) && State == State.Ok)
+            if (currentUrl.Equals(p.url) && State == State.Ok)
             {
-                LoadGameObject(scale, rotation, initialPosition, properties.initialScale,
-                    properties.detectCollision, properties.type);
+                LoadGameObject(scale, rotation, initialPosition, p.initialScale,
+                    p.detectCollision, p.type, false, null);
             }
             else
             {
                 UpdateState(State.Loading);
-                var reinitialize = !currentUrl.Equals("") || properties.initialScale == 0;
-                currentUrl = properties.url;
-                StartCoroutine(LoadBytes(properties.url, properties.type, go =>
-                {
-                    DestroyObject();
-                    TdObjectCollider = null;
-                    ResetContainer();
-                    tdObject = go;
+                var reinitialize = !currentUrl.Equals("") || p.initialScale == 0;
+                currentUrl = p.url;
 
-                    LoadGameObject(scale, rotation, initialPosition, properties.initialScale,
-                        properties.detectCollision, properties.type, reinitialize);
-                }));
+                var go = TdObjectCache.GetAsset(this);
+                if (go != null)
+                {
+                    hasClone = true;
+                    LoadGameObject(scale, rotation, initialPosition, p.initialScale,
+                        p.detectCollision, p.type, reinitialize, go);
+                }
+                else
+                {
+                    hasClone = false;
+                    StartCoroutine(LoadBytes(p.url, p.type, loadedGo =>
+                    {
+                        LoadGameObject(scale, rotation, initialPosition, p.initialScale,
+                            p.detectCollision, p.type, reinitialize, loadedGo);
+                    }));
+                }
             }
         }
 
@@ -229,56 +239,66 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void ResetContainer()
         {
-            tdObjectContainer = new GameObject("3d object container");
-            tdObjectContainer.transform.SetParent(transform, false);
-            tdObjectContainer.transform.localPosition = Vector3.zero;
-            tdObjectContainer.transform.localScale = Vector3.one;
-            tdObjectContainer.transform.eulerAngles = Vector3.zero;
+            objContainer = new GameObject("3d object container");
+            objContainer.transform.SetParent(transform, false);
+            objContainer.transform.localPosition = Vector3.zero;
+            objContainer.transform.localScale = Vector3.one;
+            objContainer.transform.eulerAngles = Vector3.zero;
         }
 
         private void SetMeshCollider(Transform colliderTransform)
         {
-            Destroy(tdObjectFocusable);
-            Destroy(TdObjectCollider);
+            Destroy(objFocusable);
+            Destroy(objCollider);
 
-            TdObjectCollider = TdObjectTools.PrepareMeshCollider(colliderTransform);
+            objCollider = TdObjectTools.PrepareMeshCollider(colliderTransform);
             if (chunk != null)
             {
-                tdObjectFocusable = TdObjectCollider.gameObject.AddComponent<TdObjectFocusable>();
-                tdObjectFocusable.Initialize(this);
+                objFocusable = objCollider.gameObject.AddComponent<TdObjectFocusable>();
+                objFocusable.Initialize(this);
             }
         }
 
         private void LoadGameObject(Vector3 scale, Vector3 rotation, Vector3 initialPosition,
             float initialScale, bool detectCollision, TdObjectBlockProperties.TdObjectType type,
-            bool reinitialize = false)
+            bool reinitialize, GameObject loadedGo)
         {
-            if (TdObjectCollider == null)
+            if (loadedGo != null)
             {
-                TdObjectCollider = tdObject.AddComponent<BoxCollider>();
+                DestroyObject();
+                objCollider = null;
+                ResetContainer();
+                Obj = loadedGo;
+                Obj.transform.localPosition = Vector3.zero;
+                Obj.transform.localScale = Vector3.one;
+            }
+
+            if (objCollider == null)
+            {
+                objCollider = Obj.AddComponent<BoxCollider>();
                 if (chunk != null)
                 {
-                    tdObjectFocusable = tdObject.AddComponent<TdObjectFocusable>();
-                    tdObjectFocusable.Initialize(this);
+                    objFocusable = Obj.AddComponent<TdObjectFocusable>();
+                    objFocusable.Initialize(this);
                 }
 
-                ((BoxCollider) TdObjectCollider).center = TdObjectTools.GetRendererCenter(tdObject);
-                ((BoxCollider) TdObjectCollider).size =
-                    TdObjectTools.GetRendererSize(((BoxCollider) TdObjectCollider).center, tdObject);
-                tdObject.transform.SetParent(tdObjectContainer.transform, false);
+                ((BoxCollider) objCollider).center = TdObjectTools.GetRendererCenter(Obj);
+                ((BoxCollider) objCollider).size =
+                    TdObjectTools.GetRendererSize(((BoxCollider) objCollider).center, Obj);
+                Obj.transform.SetParent(objContainer.transform, false);
             }
 
             if (reinitialize)
             {
-                tdObject.transform.localScale = Vector3.one;
-                tdObject.transform.localPosition = Vector3.zero;
+                Obj.transform.localScale = Vector3.one;
+                Obj.transform.localPosition = Vector3.zero;
 
-                var size = ((BoxCollider) TdObjectCollider).size;
+                var size = ((BoxCollider) objCollider).size;
                 var maxD = new[] {size.x, size.y, size.z}.Max();
                 var newInitScale = maxD > 10f ? 10f / maxD : 1;
-                tdObject.transform.localScale = newInitScale * Vector3.one;
-                var newInitPosition = tdObjectContainer.transform.TransformPoint(Vector3.zero) -
-                                      TdObjectCollider.transform.TransformPoint(((BoxCollider) TdObjectCollider)
+                Obj.transform.localScale = newInitScale * Vector3.one;
+                var newInitPosition = objContainer.transform.TransformPoint(Vector3.zero) -
+                                      objCollider.transform.TransformPoint(((BoxCollider) objCollider)
                                           .center);
 
                 if (Math.Abs(newInitScale - initialScale) > 0.0001 || newInitPosition != initialPosition)
@@ -288,90 +308,60 @@ namespace src.MetaBlocks.TdObjectBlock
                 }
             }
 
-            tdObject.transform.localScale = initialScale * Vector3.one;
-            tdObject.transform.localPosition = initialPosition;
+            Obj.transform.localScale = initialScale * Vector3.one;
+            Obj.transform.localPosition = initialPosition;
 
-            tdObjectContainer.transform.localScale = scale;
-            tdObjectContainer.transform.eulerAngles = rotation;
+            objContainer.transform.localScale = scale;
+            objContainer.transform.eulerAngles = rotation;
 
-            var colliderTransform = TdObjectTools.GetMeshColliderTransform(tdObject);
+            var colliderTransform = TdObjectTools.GetMeshColliderTransform(Obj);
             if (colliderTransform != null && type == TdObjectBlockProperties.TdObjectType.GLB)
             {
                 // replace box collider with mesh collider if any colliders are defined in the glb object
-                if (TdObjectCollider is BoxCollider)
+                if (objCollider is BoxCollider)
                     SetMeshCollider(colliderTransform);
 
-                if (Block.land != null && !InLand(TdObjectCollider.GetComponent<MeshRenderer>()))
+                if (Block.land != null && !InLand(objCollider.GetComponent<MeshRenderer>()))
                 {
                     UpdateState(State.OutOfBound);
                     return;
                 }
             }
-            else if (Block.land != null && !InLand((BoxCollider) TdObjectCollider))
+            else if (Block.land != null && !InLand((BoxCollider) objCollider))
             {
                 UpdateState(State.OutOfBound);
                 return;
             }
 
-            TdObjectCollider.gameObject.layer =
+            objCollider.gameObject.layer =
                 detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
 
             UpdateState(State.Ok);
+            TdObjectCache.Add(this);
             // chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position))); // TODO: fix on focus
         }
 
         private void DestroyObject(bool immediate = true)
         {
-            if (tdObjectFocusable != null)
+            if (objFocusable != null)
             {
-                tdObjectFocusable.UnFocus();
-                tdObjectFocusable = null;
+                objFocusable.UnFocus();
+                objFocusable = null;
             }
 
-            if (tdObject != null)
+            if (Obj != null)
             {
-                foreach (var renderer in tdObject.GetComponentsInChildren<Renderer>())
-                foreach (var mat in renderer.sharedMaterials)
-                {
-                    if (mat == null) continue;
-                    if (immediate)
-                    {
-                        DestroyImmediate(mat.mainTexture);
-                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
-                            DestroyImmediate(mat);
-                    }
-                    else
-                    {
-                        Destroy(mat.mainTexture);
-                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
-                            Destroy(mat);
-                    }
-                }
-
-                foreach (var meshFilter in tdObject.GetComponentsInChildren<MeshFilter>())
-                {
-                    if (immediate)
-                        DestroyImmediate(meshFilter.sharedMesh);
-                    else
-                        Destroy(meshFilter.sharedMesh);
-                }
-
-
-                if (immediate)
-                    DestroyImmediate(tdObject.gameObject);
-                else
-                    Destroy(tdObject.gameObject);
-
-                tdObject = null;
+                DeepDestroy3DObject(Obj, immediate, TdObjectCache.HasClone(this));
+                Obj = null;
             }
 
-            if (tdObjectContainer != null)
+            if (objContainer != null)
             {
-                DestroyImmediate(tdObjectContainer.gameObject);
-                tdObjectContainer = null;
+                DestroyImmediate(objContainer.gameObject);
+                objContainer = null;
             }
 
-            TdObjectCollider = null;
+            objCollider = null;
         }
 
         private void InitializeProps(Vector3 initialPosition, float initialScale)
