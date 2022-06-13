@@ -17,7 +17,7 @@ namespace src.AssetsInventory.slots
             {
                 if (favoriteItem.asset != null)
                     UpdateSlot(new AssetInventorySlot(favoriteItem.asset));
-                else if (favoriteItem.blockId.Value != null)
+                else if (favoriteItem.blockId.HasValue)
                 {
                     if (ColorBlocks.IsColorTypeId(favoriteItem.blockId.Value, out var blockType))
                         UpdateSlot(new ColorBlockInventorySlot(blockType.name));
@@ -62,7 +62,7 @@ namespace src.AssetsInventory.slots
         public void SetSize(int size, int margin = 0)
         {
             base.SetSize(size, margin);
-            GetCurrentSlot().SetSize(size, margin);
+            GetCurrentSlot()?.SetSize(size, margin);
         }
     }
 }
