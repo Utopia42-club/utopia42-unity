@@ -146,38 +146,7 @@ namespace src.MetaBlocks.LinkBlock
         private void DestroyPlaceHolder(bool immediate = true)
         {
             if (placeHolder == null) return;
-            foreach (var renderer in placeHolder.GetComponentsInChildren<Renderer>())
-            foreach (var mat in renderer.sharedMaterials)
-            {
-                if (mat == null) continue;
-                if (immediate)
-                {
-                    DestroyImmediate(mat.mainTexture);
-                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
-                        DestroyImmediate(mat);
-                }
-                else
-                {
-                    Destroy(mat.mainTexture);
-                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
-                        Destroy(mat);
-                }
-            }
-
-            foreach (var meshFilter in placeHolder.GetComponentsInChildren<MeshFilter>())
-            {
-                if (immediate)
-                    DestroyImmediate(meshFilter.sharedMesh);
-                else
-                    Destroy(meshFilter.sharedMesh);
-            }
-
-
-            if (immediate)
-                DestroyImmediate(placeHolder.gameObject);
-            else
-                Destroy(placeHolder.gameObject);
-
+            DeepDestroy3DObject(placeHolder, immediate);
             placeHolder = null;
         }
 

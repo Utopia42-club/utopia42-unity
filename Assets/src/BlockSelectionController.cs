@@ -199,6 +199,12 @@ namespace src
                     World.INSTANCE.TryPutMeta(new MetaPosition(player.MetaBlockPlaceHolder.transform.position),
                         Blocks.GetBlockType(player.selectedBlockId));
                 }
+                else if (player.PreparedMetaBlock != null && player.PreparedMetaBlock.IsActive)
+                {
+                    World.INSTANCE.PutMetaWithProps(
+                        new MetaPosition(player.PreparedMetaBlock.blockObject.transform.position),
+                        player.PreparedMetaBlock.type, player.PreparedMetaBlock.GetProps(), player.placeLand);
+                }
             }
             else if (Input.GetMouseButtonDown(1))
                 DeleteBlock();

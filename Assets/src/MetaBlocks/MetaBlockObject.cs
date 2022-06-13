@@ -11,7 +11,7 @@ namespace src.MetaBlocks
     {
         public MetaBlock Block { get; private set; }
         public bool Started { get; private set; } = false;
-        protected Chunk chunk;
+        public Chunk chunk;
         protected Land land;
         protected bool canEdit;
         public State State { get; protected set; }
@@ -28,7 +28,7 @@ namespace src.MetaBlocks
 
         public void Initialize(MetaBlock block, Chunk chunk)
         {
-            this.Block = block;
+            Block = block;
             this.chunk = chunk;
             Start();
             DoInitialize();
@@ -123,7 +123,8 @@ namespace src.MetaBlocks
         }
 
         public void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform,
-            MetaLocalPosition localPos, Action<GameObject> onLoad) // TODO [detach metablock]: will not work with link and marker metablocks (they only have empty state)
+            MetaLocalPosition localPos,
+            Action<GameObject> onLoad) // TODO [detach metablock]: will not work with link and marker metablocks (they only have empty state)
         {
             var goRef = gameObject;
             var gameObjectTransform = goRef.transform;
@@ -172,7 +173,7 @@ namespace src.MetaBlocks
             Block?.OnObjectDestroyed();
             stateChange.RemoveAllListeners();
         }
-        
+
         protected static void AdjustHighlightBox(Transform highlightBox, BoxCollider referenceCollider, bool active)
         {
             var colliderTransform = referenceCollider.transform;
@@ -188,6 +189,44 @@ namespace src.MetaBlocks
             highlightBox.localScale = size;
             highlightBox.position = colliderTransform.TransformPoint(minPos);
             highlightBox.gameObject.SetActive(active);
+        }
+
+        protected static void DeepDestroy3DObject(GameObject go, bool immediate = true, bool ignoreShared = false)
+        {
+            if (!ignoreShared)
+            {
+                foreach (var renderer in go.GetComponentsInChildren<Renderer>())
+                foreach (var mat in renderer.sharedMaterials)
+                {
+                    if (mat == null) continue;
+                    if (immediate)
+                    {
+                        DestroyImmediate(mat.mainTexture);
+                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                            DestroyImmediate(mat);
+                    }
+                    else
+                    {
+                        Destroy(mat.mainTexture);
+                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                            Destroy(mat);
+                    }
+                }
+
+                foreach (var meshFilter in go.GetComponentsInChildren<MeshFilter>())
+                {
+                    if (immediate)
+                        DestroyImmediate(meshFilter.sharedMesh);
+                    else
+                        Destroy(meshFilter.sharedMesh);
+                }
+            }
+
+
+            if (immediate)
+                DestroyImmediate(go.gameObject);
+            else
+                Destroy(go.gameObject);
         }
     }
 }

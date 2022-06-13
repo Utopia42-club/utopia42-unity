@@ -16,6 +16,8 @@ namespace src.MetaBlocks
         public readonly Land land;
         public readonly MetaBlockType type;
         private object properties;
+        
+        public bool IsActive => blockObject.gameObject.activeSelf;
 
         public MetaBlock(MetaBlockType type, Land land, object properties)
         {
@@ -43,7 +45,8 @@ namespace src.MetaBlocks
         {
             if (Equals(properties, props)) return;
             properties = props;
-            WorldService.INSTANCE.MarkLandChanged(land);
+            if (land != null)
+                WorldService.INSTANCE.MarkLandChanged(land);
             if (blockObject != null)
                 blockObject.OnDataUpdate();
         }
@@ -62,6 +65,11 @@ namespace src.MetaBlocks
                 Object.Destroy(blockObject.gameObject);
         }
 
+        public void SetActive(bool active)
+        {
+            if(blockObject != null)
+                blockObject.gameObject.SetActive(active);
+        }
 
         public static MetaBlock Parse(Land land, MetaBlockData meta)
         {
@@ -93,7 +101,8 @@ namespace src.MetaBlocks
                         void CallBack(State state)
                         {
                             if (state is State.Loading or State.LoadingMetadata) return;
-                            if (state == State.Ok && go != null) // go != null (go is not destroyed) is needed to check if the object has been deselected
+                            if (state == State.Ok &&
+                                go != null) // go != null (go is not destroyed) is needed to check if the object has been deselected
                             {
                                 var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
                                 if (go != null) onLoad(go);
@@ -104,6 +113,7 @@ namespace src.MetaBlocks
 
                         blockObject.stateChange.AddListener(CallBack);
                     }
+
                     return;
                 }
             }
@@ -114,6 +124,16 @@ namespace src.MetaBlocks
             };
             blockObject = (MetaBlockObject) gameObject.AddComponent(type.componentType);
             blockObject.LoadSelectHighlight(this, highlightChunkTransform, localPos, onLoad);
+        }
+        public void UpdateWorldPosition(Vector3 pos)
+        {
+            if (blockObject.chunk != null || land != null)
+            {
+                Debug.LogWarning(
+                    "Can not update the world position of a metablock that already belongs to a land/chunk");
+                return;
+            }
+            blockObject.gameObject.transform.position = pos;
         }
     }
 }
