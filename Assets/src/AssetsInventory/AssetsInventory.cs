@@ -84,6 +84,8 @@ namespace src.AssetsInventory
             inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
             LoadFavoriteItems(); // FIXME: what to do on error?
+            
+            Player.INSTANCE.InitOnSelectedAssetChanged(); // TODO ?
         }
 
         private void OpenTab(int index)

@@ -495,11 +495,11 @@ namespace src
 
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
 
-        private void OnSelectedAssetChanged(FavoriteItem favItem)
+        private void OnSelectedAssetChanged(SlotInfo slotInfo)
         {
             if (ChangeForbidden) return;
 
-            if (favItem == null) // item unselected (set hammer mode?)
+            if (slotInfo == null) // item unselected (set hammer mode?)
             {
                 Debug.Log("hammer mode!");
                 if (PreparedMetaBlock != null)
@@ -511,7 +511,7 @@ namespace src
                 return;
             }
 
-            var glbUrl = favItem.asset?.glbUrl;
+            var glbUrl = slotInfo.asset?.glbUrl;
             // if (glbUrl != null) // glb asset is selected
             if (true) // TODO: remove
             {
@@ -530,10 +530,10 @@ namespace src
             }
 
 
-            if (favItem.blockId != null) // simple block is selected 
+            if (slotInfo.block != null) // simple block is selected 
             {
-                Debug.Log($"Block with id {favItem.id} selected");
-                selectedBlockId = favItem.blockId.Value;
+                // Debug.Log($"Block with id {slotInfo.id} selected");
+                selectedBlockId = slotInfo.block.id;
 
                 // var type = Blocks.GetBlockType(favItem.blockId.Value);
                 // if (type is MetaBlockType metaBlockType)
@@ -549,7 +549,7 @@ namespace src
 
         public void InitOnSelectedAssetChanged()
         {
-            AssetsInventory.AssetsInventory.INSTANCE.selectedFavoriteItemChanged.AddListener(OnSelectedAssetChanged);
+            AssetsInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
         }
     }
 }
