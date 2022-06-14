@@ -6,6 +6,7 @@ using src.AssetsInventory.slots;
 using src.Canvas;
 using src.MetaBlocks;
 using src.Model;
+using src.UiUtils;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -18,7 +19,6 @@ namespace src.AssetsInventory
         private static AssetsInventory instance;
 
         private VisualElement root;
-        private VisualElement tabBody;
         private VisualElement inventoryLoadingLayer;
         private VisualElement inventory;
         private VisualElement handyPanel;
@@ -31,9 +31,7 @@ namespace src.AssetsInventory
         private Sprite addToFavoriteIcon;
         private Sprite removeFromFavoriteIcon;
 
-        private Dictionary<int, Tuple<Button, string, Action>> tabs;
         private readonly AssetsRestClient restClient = new();
-        private int currentTab;
         private readonly Dictionary<int, Pack> packs = new();
         private Category selectedCategory;
         private string filterText = "";
@@ -48,18 +46,35 @@ namespace src.AssetsInventory
         [SerializeField] private ColorSlotPicker colorSlotPicker;
         private Foldout colorBlocksFoldout;
         private List<FavoriteItem> favoriteItems;
+        private TabPane tabPane;
+        private VisualElement breadcrumb;
 
         void Start()
         {
             instance = this;
             root = GetComponent<UIDocument>().rootVisualElement;
             inventory = root.Q<VisualElement>("inventory");
+
+            var tabConfigurations = new List<TabConfiguration>
+            {
+                new("Assets", "UiDocuments/AssetsTab", SetupAssetsTab),
+                new("Blocks", "UiDocuments/BlocksTab", SetupBlocksTab),
+                new("Favorites", "UiDocuments/FavoritesTab", SetupFavoritesTab)
+            };
+            tabPane = new TabPane(tabConfigurations);
+            var s = tabPane.VisualElement().style;
+            s.height = new StyleLength(new Length(95, LengthUnit.Percent));
+            s.width = 350;
+            inventory.Add(tabPane.VisualElement());
+            inventoryLoadingLayer = root.Q<VisualElement>("tabPaneLoadingLayer");
+
+            breadcrumb = root.Q("breadcrumb");
+
             handyPanel = root.Q<VisualElement>("handyPanel");
             handyBar = handyPanel.Q<ScrollView>("handyBar");
             Utils.IncreaseScrollSpeed(handyBar, 600);
             openCloseInvButton = handyPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
-            inventoryLoadingLayer = root.Q<VisualElement>("inventoryLoadingLayer");
 
             openIcon = Resources.Load<Sprite>("Icons/openPane");
             closeIcon = Resources.Load<Sprite>("Icons/closePane");
@@ -67,40 +82,109 @@ namespace src.AssetsInventory
             addToFavoriteIcon = Resources.Load<Sprite>("Icons/whiteHeart");
             removeFromFavoriteIcon = Resources.Load<Sprite>("Icons/redHeart");
 
-            tabs = new Dictionary<int, Tuple<Button, string, Action>>();
-            tabBody = root.Q<VisualElement>("tabBody");
-            var assetsTabBt = root.Q<Button>("assetsTab");
-            var blocksTabBt = root.Q<Button>("blocksTab");
-            var favoritesTabBt = root.Q<Button>("favoritesTab");
-
-            tabs.Add(1, new Tuple<Button, string, Action>(assetsTabBt, "UiDocuments/AssetsTab", SetupAssetsTab));
-            tabs.Add(2, new Tuple<Button, string, Action>(blocksTabBt, "UiDocuments/BlocksTab", SetupBlocksTab));
-            tabs.Add(3,
-                new Tuple<Button, string, Action>(favoritesTabBt, "UiDocuments/FavoritesTab", SetupFavoritesTab));
-
-            foreach (var tab in tabs)
-                tab.Value.Item1.clicked += () => OpenTab(tab.Key);
-
             inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
             LoadFavoriteItems(); // FIXME: what to do on error?
-            
+
             Player.INSTANCE.InitOnSelectedAssetChanged(); // TODO ?
         }
 
-        private void OpenTab(int index)
+        private void SetupAssetsTab()
         {
-            var (button, uxmlPath, action) = tabs[index];
-            var tabBodyContent = Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree();
-            tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
-            SetBodyContent(tabBody, tabBodyContent, null);
-            foreach (var t in tabs)
-                t.Value.Item1.RemoveFromClassList("selected-tab");
-            button.AddToClassList("selected-tab");
-            currentTab = index;
-            action.Invoke();
+            selectedCategory = null;
+            var searchCriteria = new SearchCriteria
+            {
+                limit = 100
+            };
+            ShowInventoryLoadingLayer(true);
+            StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
+            {
+                foreach (var pack in packs)
+                    this.packs[pack.id] = pack;
+            }, () => ShowInventoryLoadingLayer(false)));
+
+            ShowInventoryLoadingLayer(true);
+            StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
+            {
+                var scrollView = tabPane.GetTabBody().Q<ScrollView>("categories");
+                scrollView.Clear();
+                Utils.IncreaseScrollSpeed(scrollView, 600);
+                scrollView.mode = ScrollViewMode.Vertical;
+                scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
+                foreach (var category in categories)
+                    scrollView.Add(CreateCategoriesListItem(category));
+
+                ShowInventoryLoadingLayer(false);
+            }, () => { ShowInventoryLoadingLayer(false); }));
+
+            // Setup searchField
+            var searchField = tabPane.GetTabBody().Q<TextField>("searchField");
+            searchField.RegisterCallback<FocusInEvent>(evt =>
+            {
+                if (searchField.text == "Search")
+                    searchField.SetValueWithoutNotify("");
+            });
+            searchField.RegisterCallback<FocusOutEvent>(evt =>
+            {
+                if (searchField.text == "")
+                    searchField.SetValueWithoutNotify("Search");
+            });
+            var debounce = Utils.Debounce<string>(arg => filterText = arg);
+            searchField.RegisterValueChangedCallback(evt => debounce(evt.newValue));
         }
 
+
+        private void SetupBlocksTab()
+        {
+            var scrollView = tabPane.GetTabBody().Q<ScrollView>("blockPacks");
+            scrollView.Clear();
+            Utils.IncreaseScrollSpeed(scrollView, 600);
+            scrollView.mode = ScrollViewMode.Vertical;
+            scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
+
+            var regularBlocksFoldout = CreateBlocksPackFoldout("Regular Blocks",
+                Blocks.GetBlockTypes().Where(blockType => blockType is not MetaBlockType && blockType.name != "air")
+                    .ToList());
+
+            var metaBlocksFoldout = CreateBlocksPackFoldout("Meta Blocks",
+                Blocks.GetBlockTypes().Where(blockType => blockType is MetaBlockType).ToList());
+
+            colorSlotPicker.SetOnColorCreated(color =>
+            {
+                ColorBlocks.SaveBlockColor(color);
+                UpdateUserColorBlocks();
+            });
+            colorSlotPicker.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+
+            scrollView.Add(regularBlocksFoldout);
+            scrollView.Add(metaBlocksFoldout);
+
+            colorBlocksFoldout = CreateColorBlocksFoldout();
+            UpdateUserColorBlocks();
+            scrollView.Add(colorBlocksFoldout);
+        }
+
+        private void SetupFavoritesTab()
+        {
+            LoadFavoriteItems(() =>
+            {
+                var scrollView = tabPane.GetTabBody().Q<ScrollView>("favorites");
+                var container = new VisualElement();
+                for (int i = 0; i < favoriteItems.Count; i++)
+                {
+                    var favoriteItem = favoriteItems[i];
+                    var slot = new FavoriteItemInventorySlot(favoriteItem);
+                    Utils.SetGridPosition(slot.VisualElement(), 80, i, 3);
+                    container.Add(slot.VisualElement());
+                }
+
+                Utils.SetGridContainerSize(container, favoriteItems.Count);
+                scrollView.Add(container);
+            }, () =>
+            {
+                //TODO: show error snack
+            });
+        }
 
         private InventorySlotWrapper CreateGhostSlot(InventorySlot baseSlot)
         {
@@ -123,6 +207,23 @@ namespace src.AssetsInventory
             }
         }
 
+        private void Update()
+        {
+            if (filterText.Length > 0)
+            {
+                FilterAssets(filterText);
+                filterText = "";
+            }
+
+            if (isDragging)
+            {
+                var pos = Input.mousePosition;
+                ghostSlot.VisualElement().style.top =
+                    root.worldBound.height - pos.y - ghostSlot.VisualElement().layout.height / 2;
+                ghostSlot.VisualElement().style.left = pos.x - ghostSlot.VisualElement().layout.width / 2;
+            }
+        }
+        
         public void AddToHandyPanel(SlotInfo slotInfo)
         {
             var slot = new HandyItemInventorySlot();
@@ -156,130 +257,13 @@ namespace src.AssetsInventory
             };
             openCloseInvButton.style.backgroundImage = background;
             if (!isVisible)
-                OpenTab(1);
-        }
-
-        private void Update()
-        {
-            if (filterText.Length > 0)
-            {
-                FilterAssets(filterText);
-                filterText = "";
-            }
-
-            if (isDragging)
-            {
-                var pos = Input.mousePosition;
-                ghostSlot.VisualElement().style.top =
-                    root.worldBound.height - pos.y - ghostSlot.VisualElement().layout.height / 2;
-                ghostSlot.VisualElement().style.left = pos.x - ghostSlot.VisualElement().layout.width / 2;
-            }
+                OpenAssetsTab();
         }
 
         private void ShowInventoryLoadingLayer(bool show)
         {
             inventoryLoadingLayer.style.display =
                 show ? new StyleEnum<DisplayStyle>(DisplayStyle.Flex) : new StyleEnum<DisplayStyle>(DisplayStyle.None);
-        }
-
-
-        private void SetupAssetsTab()
-        {
-            selectedCategory = null;
-            var searchCriteria = new SearchCriteria
-            {
-                limit = 100
-            };
-            ShowInventoryLoadingLayer(true);
-            StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
-            {
-                foreach (var pack in packs)
-                    this.packs[pack.id] = pack;
-            }, () => { ShowInventoryLoadingLayer(false); }));
-
-            ShowInventoryLoadingLayer(true);
-            StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
-            {
-                if (currentTab != 1)
-                    return;
-                var scrollView = tabBody.Q<ScrollView>("categories");
-                scrollView.Clear();
-                Utils.IncreaseScrollSpeed(scrollView, 600);
-                scrollView.mode = ScrollViewMode.Vertical;
-                scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
-                foreach (var category in categories)
-                    scrollView.Add(CreateCategoriesListItem(category));
-
-                ShowInventoryLoadingLayer(false);
-            }, () => { ShowInventoryLoadingLayer(false); }));
-
-            // Setup searchField
-            var searchField = tabBody.Q<TextField>("searchField");
-            searchField.RegisterCallback<FocusInEvent>(evt =>
-            {
-                if (searchField.text == "Search")
-                    searchField.SetValueWithoutNotify("");
-            });
-            searchField.RegisterCallback<FocusOutEvent>(evt =>
-            {
-                if (searchField.text == "")
-                    searchField.SetValueWithoutNotify("Search");
-            });
-            var debounce = Utils.Debounce<string>(arg => filterText = arg);
-            searchField.RegisterValueChangedCallback(evt => debounce(evt.newValue));
-        }
-
-
-        private void SetupBlocksTab()
-        {
-            var scrollView = tabBody.Q<ScrollView>("blockPacks");
-            scrollView.Clear();
-            Utils.IncreaseScrollSpeed(scrollView, 600);
-            scrollView.mode = ScrollViewMode.Vertical;
-            scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
-
-            var regularBlocksFoldout = CreateBlocksPackFoldout("Regular Blocks",
-                Blocks.GetBlockTypes().Where(blockType => blockType is not MetaBlockType && blockType.name != "air")
-                    .ToList());
-
-            var metaBlocksFoldout = CreateBlocksPackFoldout("Meta Blocks",
-                Blocks.GetBlockTypes().Where(blockType => blockType is MetaBlockType).ToList());
-
-            colorSlotPicker.SetOnColorCreated(color =>
-            {
-                ColorBlocks.SaveBlockColor(color);
-                UpdateUserColorBlocks();
-            });
-            colorSlotPicker.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
-
-            scrollView.Add(regularBlocksFoldout);
-            scrollView.Add(metaBlocksFoldout);
-
-            colorBlocksFoldout = CreateColorBlocksFoldout();
-            UpdateUserColorBlocks();
-            scrollView.Add(colorBlocksFoldout);
-        }
-
-        private void SetupFavoritesTab()
-        {
-            LoadFavoriteItems(() =>
-            {
-                var scrollView = tabBody.Q<ScrollView>("favorites");
-                var container = new VisualElement();
-                for (int i = 0; i < favoriteItems.Count; i++)
-                {
-                    var favoriteItem = favoriteItems[i];
-                    var slot = new FavoriteItemInventorySlot(favoriteItem, 80);
-                    container.Add(slot.VisualElement());
-                    Utils.SetGridPosition(slot.VisualElement(), 80, i, 3);
-                }
-
-                Utils.SetGridContainerSize(container, favoriteItems.Count);
-                scrollView.Add(container);
-            }, () =>
-            {
-                //TODO: show error snack
-            });
         }
 
         private void LoadFavoriteItems(Action onDone = null, Action onFail = null)
@@ -317,7 +301,7 @@ namespace src.AssetsInventory
             return foldout;
         }
 
-        private static VisualElement CreateUserColorBlocks()
+        private VisualElement CreateUserColorBlocks()
         {
             var playerColorBlocks = ColorBlocks.GetPlayerColorBlocks();
             var size = playerColorBlocks.Count;
@@ -329,6 +313,7 @@ namespace src.AssetsInventory
                 slot.SetSlotInfo(new SlotInfo(ColorBlocks.GetBlockTypeFromColor(color)));
                 slot.SetSize(80);
                 slot.SetGridPosition(i, 3);
+                SetupFavoriteAction(slot);
                 slotsContainer.Add(slot.VisualElement());
             }
 
@@ -389,7 +374,13 @@ namespace src.AssetsInventory
             if (selectedCategory != null)
                 sc.searchTerms.Add("category", selectedCategory.id);
             var scrollView = CreateAssetsScrollView(sc);
-            SetAssetsTabContent(scrollView, () => OpenTab(1), "Categories");
+            SetAssetsTabContent(scrollView, OpenAssetsTab, "Categories");
+        }
+
+        private void OpenAssetsTab()
+        {
+            breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+            tabPane.OpenTab(0);
         }
 
         private VisualElement CreateCategoriesListItem(Category category)
@@ -416,15 +407,15 @@ namespace src.AssetsInventory
                     searchTerms = new Dictionary<string, object> {{"category", category.id}}
                 };
                 var scrollView = CreateAssetsScrollView(searchCriteria);
-                SetAssetsTabContent(scrollView, () => OpenTab(1), "Categories");
+                SetAssetsTabContent(scrollView, OpenAssetsTab, "Categories");
             };
             return container;
         }
 
         private void SetAssetsTabContent(VisualElement visualElement, Action onBack, string backButtonText = "Back")
         {
-            var assetsTabContent = tabBody.Q<VisualElement>("content");
-            var categoriesView = tabBody.Q<ScrollView>("categories");
+            var assetsTabContent = tabPane.GetTabBody().Q<VisualElement>("content");
+            var categoriesView = tabPane.GetTabBody().Q<ScrollView>("categories");
             assetsTabContent.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
             categoriesView.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
             SetBodyContent(assetsTabContent, visualElement, onBack, backButtonText);
@@ -520,7 +511,6 @@ namespace src.AssetsInventory
             string backButtonText = "Back")
         {
             body.Clear();
-            var breadcrumb = root.Q("breadcrumb");
             if (onBack == null)
             {
                 breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);

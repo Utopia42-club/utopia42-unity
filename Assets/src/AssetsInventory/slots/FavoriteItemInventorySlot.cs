@@ -12,7 +12,7 @@ namespace src.AssetsInventory.slots
         public FavoriteItemInventorySlot(FavoriteItem favoriteItem, int size = 80)
         {
             this.favoriteItem = favoriteItem;
-            SetSize(80);
+            SetSize(size);
             if (favoriteItem != null)
             {
                 if (favoriteItem.asset != null)

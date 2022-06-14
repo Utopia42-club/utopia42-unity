@@ -11,6 +11,7 @@ namespace src.AssetsInventory.slots
 
         private readonly bool hideTooltip;
         private int size;
+        private int iconMargin;
 
         public InventorySlotWrapper(bool hideTooltip = false)
         {
@@ -21,6 +22,7 @@ namespace src.AssetsInventory.slots
         public void SetSize(int size, int iconMargin = 0)
         {
             this.size = size;
+            this.iconMargin = iconMargin;
             root.style.width = size;
             root.style.height = size;
         }
@@ -57,7 +59,7 @@ namespace src.AssetsInventory.slots
         public void UpdateSlot(InventorySlot sourceSlot)
         {
             currentSlot = (BaseInventorySlot) sourceSlot.Clone();
-            currentSlot.SetSize(size);
+            currentSlot.SetSize(size, iconMargin);
             if (hideTooltip)
                 currentSlot.SetTooltip(null);
             root.Clear();

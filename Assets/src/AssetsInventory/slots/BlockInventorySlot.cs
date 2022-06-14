@@ -17,7 +17,6 @@ namespace src.AssetsInventory.slots
         {
             var clone = new BlockInventorySlot();
             clone.SetSlotInfo(slotInfo);
-            clone.SetSize(size);
             return clone;
         }
     }

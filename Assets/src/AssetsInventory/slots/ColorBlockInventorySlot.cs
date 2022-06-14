@@ -38,7 +38,6 @@ namespace src.AssetsInventory.slots
         {
             var clone = new ColorBlockInventorySlot(false);
             clone.SetSlotInfo(slotInfo);
-            clone.SetSize(size);
             return clone;
         }
     }
