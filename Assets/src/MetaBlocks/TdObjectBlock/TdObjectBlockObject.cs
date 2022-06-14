@@ -210,7 +210,6 @@ namespace src.MetaBlocks.TdObjectBlock
             }
             else
             {
-                UpdateState(State.Loading);
                 var reinitialize = !currentUrl.Equals("") || p.initialScale == 0;
                 currentUrl = p.url;
 
@@ -223,6 +222,7 @@ namespace src.MetaBlocks.TdObjectBlock
                 }
                 else
                 {
+                    UpdateState(State.Loading);
                     hasClone = false;
                     StartCoroutine(LoadBytes(p.url, p.type, loadedGo =>
                     {

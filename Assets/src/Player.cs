@@ -9,10 +9,8 @@ using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
-using Object = UnityEngine.Object;
 
 namespace src
 {
@@ -45,8 +43,8 @@ namespace src
         private bool floating = false;
         private Vector3Int? lastChunk;
         private List<Land> ownedLands = new List<Land>();
-        private RaycastHit raycastHit;
         private Collider hitCollider;
+        private RaycastHit raycastHit;
         private CharacterController characterController;
         private BlockSelectionController blockSelectionController;
         private bool ctrlDown = false;
@@ -79,11 +77,11 @@ namespace src
         public float Vertical { get; private set; }
         public Focusable FocusedFocusable { get; private set; }
         public Vector3Int PossiblePlaceBlockPosInt { get; private set; }
+        public Vector3 PossiblePlaceMetaBlockPos { get; private set; }
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
-
         public Land HighlightLand => highlightLand;
-
         public Transform transform => avatar?.transform; // TODO
+        public RaycastHit RaycastHit => raycastHit;
 
         private void Start()
         {
@@ -234,7 +232,7 @@ namespace src
                         FocusedFocusable.UnFocus();
                     focusable.Focus(raycastHit.point);
                     FocusedFocusable = focusable;
-                    if (focusable is MetaFocusable metaFocusable)
+                    if (focusable is MetaFocusable)
                         HideCursors();
                     return;
                 }
@@ -253,7 +251,7 @@ namespace src
             highlightBlock.gameObject.SetActive(false);
             placeBlock.gameObject.SetActive(false);
         }
-        
+
         private void HideCursors()
         {
             HideBlockCursors();
@@ -323,13 +321,10 @@ namespace src
             var epsilon = cam.forward * CastStep;
             PossiblePlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
             PossibleHighlightBlockPosInt = Vectors.FloorToInt(blockHitPoint + epsilon);
+            PossiblePlaceMetaBlockPos = new MetaPosition(blockHitPoint).ToWorld();
 
-            if (BlockSelectionController.INSTANCE.selectionMode == BlockSelectionController.SelectionMode.Dragged &&
-                World.INSTANCE.SelectionActive && CanEdit(PossiblePlaceBlockPosInt, out _))
-            {
+            if (BlockSelectionController.INSTANCE.DraggedPosition != null)
                 HideCursors();
-                World.INSTANCE.MoveSelection(PossiblePlaceBlockPosInt, false);
-            }
             else if (HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
             {
                 highlightBlock.position = PossibleHighlightBlockPosInt;

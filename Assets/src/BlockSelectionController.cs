@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
 using src.Canvas;
-using src.MetaBlocks;
-using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Utils;
 using TMPro;
 using UnityEngine;
+using Vector3 = UnityEngine.Vector3;
 
 namespace src
 {
@@ -24,11 +22,18 @@ namespace src
         private bool movingSelectionAllowed = false;
         private bool rotationMode = false;
         public SelectionMode selectionMode { private set; get; } = SelectionMode.Default;
+        public Vector3? DraggedPosition { get; private set; }
         private bool KeepSourceAfterSelectionMovement => selectionMode != SelectionMode.Default;
 
-        public bool PlayerMovementAllowed => !World.INSTANCE.SelectionActive || !movingSelectionAllowed;
+        public bool PlayerMovementAllowed => !selectionActive || !movingSelectionAllowed;
 
         private Transform transform => Player.INSTANCE.transform; // TODO
+
+        private bool ctrlHeld;
+        private bool selectionActive;
+        private bool metaSelectionActive;
+        private bool onlyMetaSelectionActive;
+        private bool dragging;
 
         public void Start()
         {
@@ -36,15 +41,25 @@ namespace src
             mouseLook = MouseLook.INSTANCE;
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
-                if (state != GameManager.State.PLAYING && World.INSTANCE.SelectionActive)
+                if (state != GameManager.State.PLAYING && selectionActive)
                     ExitSelectionMode();
             });
         }
 
         public void DoUpdate()
         {
-            if (World.INSTANCE.SelectionActive && movingSelectionAllowed)
-                HandleBlockMovement();
+            ctrlHeld = Input.GetKey(KeyCode.LeftControl) ||
+                       Input.GetKey(KeyCode.RightControl) ||
+                       Input.GetKey(KeyCode.LeftCommand) ||
+                       Input.GetKey(KeyCode.RightCommand);
+
+            selectionActive = World.INSTANCE.SelectionActive;
+            metaSelectionActive = World.INSTANCE.MetaSelectionActive;
+            onlyMetaSelectionActive = World.INSTANCE.OnlyMetaSelectionActive;
+            dragging = DraggedPosition.HasValue;
+
+            HandleSelectionKeyboardMovement();
+            HandleSelectionMouseMovement();
             HandleBlockRotation();
             HandleBlockSelection();
             HandleBlockClipboard();
@@ -52,14 +67,13 @@ namespace src
 
         private void HandleBlockRotation()
         {
-            if (!World.INSTANCE.SelectionActive) return;
-            if (rotationMode == Input.GetKey(KeyCode.R)) return;
+            if (dragging || !selectionActive || metaSelectionActive || rotationMode == Input.GetKey(KeyCode.R)) return;
             rotationMode = !rotationMode;
             if (!rotationMode)
                 mouseLook.RemoveRotationTarget();
-            else if (World.INSTANCE.SelectionActive &&
+            else if (selectionActive &&
                      !World.INSTANCE
-                         .MetaSelectionActive) // multiple selection rotation is not support for meta selection only
+                         .OnlyMetaSelectionActive) // multiple selection rotation is not support for meta selection only
                 mouseLook.SetRotationTarget(RotateSelection);
         }
 
@@ -93,8 +107,9 @@ namespace src
             rotationSum = Vector3.zero;
         }
 
-        private void HandleBlockMovement()
+        private void HandleSelectionKeyboardMovement()
         {
+            if (!selectionActive || !movingSelectionAllowed || dragging) return;
             var moveDown = Input.GetButtonDown("Jump") &&
                            (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
             var moveUp = !moveDown && Input.GetButtonDown("Jump");
@@ -110,30 +125,58 @@ namespace src
                 Vectors.FloorToInt(0.5f * Vector3.one + moveDirection) +
                 (moveUp ? Vector3Int.up : moveDown ? Vector3Int.down : Vector3Int.zero);
 
-            if (!World.INSTANCE.MetaSelectionActive)
+            if (!onlyMetaSelectionActive)
             {
-                World.INSTANCE.MoveSelection(delta);
+                World.INSTANCE.MoveSelection(delta, null);
                 return;
             }
 
-            World.INSTANCE.MoveMetaSelection(0.1f * (Vector3) delta);
+            World.INSTANCE.MoveMetaSelection(0.1f * (Vector3) delta, null);
+        }
+
+        private void HandleSelectionMouseMovement()
+        {
+            if (!selectionActive || ctrlHeld) return;
+            if (Input.GetMouseButtonUp(0) && DraggedPosition != null)
+            {
+                ConfirmMove();
+                ReSelectSelection();
+                DraggedPosition = null;
+            }
+
+            else if (Input.GetMouseButtonDown(0) && DraggedPosition == null)
+            {
+                DraggedPosition = player.FocusedFocusable switch
+                {
+                    MetaFocusable metaFocusable => metaFocusable.GetBlockPosition(),
+                    ChunkFocusable => player.PossiblePlaceBlockPosInt,
+                    _ => null
+                };
+            }
+
+            else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&
+                     player.FocusedFocusable is ChunkFocusable &&
+                     player.CanEdit(player.PossiblePlaceBlockPosInt, out _, true))
+            {
+                if (onlyMetaSelectionActive)
+                    World.INSTANCE.MoveMetaSelection(player.PossiblePlaceMetaBlockPos, DraggedPosition.Value);
+                else
+                    World.INSTANCE.MoveSelection(player.PossiblePlaceBlockPosInt,
+                        Vectors.TruncateFloor(DraggedPosition.Value));
+            }
         }
 
         private void HandleBlockSelection()
         {
-            if (rotationMode || !mouseLook.cursorLocked) return;
-
-            var ctrlHeld = Input.GetKey(KeyCode.LeftControl) ||
-                           Input.GetKey(KeyCode.RightControl) ||
-                           Input.GetKey(KeyCode.LeftCommand) ||
-                           Input.GetKey(KeyCode.RightCommand);
+            if (dragging || rotationMode || !mouseLook.cursorLocked) return;
 
             var selectVoxel = !World.INSTANCE.SelectionDisplaced && selectionMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
                               Input.GetMouseButtonDown(0) && ctrlHeld;
 
-            var multipleSelect = selectVoxel && World.INSTANCE.SelectionActive &&
-                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) && World.INSTANCE.LastSelectedPosition != null;
+            var multipleSelect = selectVoxel && selectionActive &&
+                                 (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) &&
+                                 World.INSTANCE.LastSelectedPosition != null;
 
             if (multipleSelect) // TODO: add support for metablock multiselection?
             {
@@ -184,7 +227,7 @@ namespace src
 
             if (ctrlHeld) return;
 
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(0) && !selectionActive)
             {
                 if (player.HammerMode &&
                     (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null))
@@ -230,6 +273,7 @@ namespace src
 
         private void HandleBlockClipboard()
         {
+            if (dragging) return;
             if (Input.GetKeyDown(KeyCode.X))
             {
                 ExitSelectionMode();
@@ -257,7 +301,7 @@ namespace src
                      (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)) &&
                      player.PlaceBlock.gameObject.activeSelf && !World.INSTANCE.ClipboardEmpty &&
-                     !World.INSTANCE.SelectionActive)
+                     !selectionActive)
             {
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();
                 var conflictWithPlayer = false;
@@ -294,6 +338,18 @@ namespace src
             World.INSTANCE.DuplicateSelectedBlocks(!KeepSourceAfterSelectionMovement);
             if (!KeepSourceAfterSelectionMovement)
                 World.INSTANCE.RemoveSelectedBlocks(true);
+        }
+
+        private void ReSelectSelection()
+        {
+            var selectedPositions = World.INSTANCE.GetSelectedBlocksPositions();
+            var selectedMetaPositions = World.INSTANCE.GetSelectedMetaBlocksPositions();
+            ExitSelectionMode();
+            AddHighlights(selectedPositions);
+            foreach (var metaPosition in selectedMetaPositions)
+            {
+                AddHighlight(metaPosition);
+            }
         }
 
         private void ClearSelection()
@@ -350,8 +406,11 @@ namespace src
                 lines.Add("CTRL+CLICK : select/unselect block");
                 lines.Add(
                     "CTRL+SHIFT+CLICK : select/unselect all blocks between the last selected block and current block");
-                lines.Add("R + horizontal mouse movement : rotate around y axis");
-                lines.Add("R + vertical mouse movement : rotate around player right axis");
+                if (!metaSelectionActive)
+                {
+                    lines.Add("R + horizontal mouse movement : rotate around y axis");
+                    lines.Add("R + vertical mouse movement : rotate around player right axis");
+                }
             }
             else
             {
@@ -379,6 +438,7 @@ namespace src
             ClearSelection();
             movingSelectionAllowed = false;
             selectionMode = SelectionMode.Default;
+            DraggedPosition = null;
         }
 
         public void AddHighlights(List<VoxelPosition> vps)
@@ -393,25 +453,15 @@ namespace src
 
         public void AddPreviewHighlights(Dictionary<VoxelPosition, uint> highlights)
         {
-            if (highlights.Count == 0 || selectionMode != SelectionMode.Preview && World.INSTANCE.SelectionActive)
+            if (highlights.Count == 0 || selectionMode != SelectionMode.Preview && selectionActive)
                 return; // do not add preview highlights after existing non-preview highlights
             StartCoroutine(World.INSTANCE.AddHighlights(highlights, result =>
             {
-                if(!result.ContainsValue(true)) return;
+                if (!result.ContainsValue(true)) return;
                 AfterAddHighlight(false);
                 PrepareForClipboardMovement(SelectionMode.Preview);
             }));
         }
-
-        // public void AddDraggedGlbHighlight(string url)
-        // {
-        //     var vp = new VoxelPosition(player.transform.position + 3 * Vector3.up);
-        //     World.INSTANCE.AddHighlight(vp, () => { selectionMode = SelectionMode.Dragged; },
-        //         new Tuple<uint, MetaBlock>(Blocks.GetBlockType("#000000").id,
-        //             Blocks.TdObjectBlockType.Instantiate(null,
-        //                 "{\"url\":\"" + url + "\", \"type\":\"GLB\"}")));
-        // }
-
 
         public void AddHighlight(VoxelPosition vp)
         {
@@ -420,7 +470,13 @@ namespace src
 
         public void AddHighlight(MetaPosition mp)
         {
-            World.INSTANCE.AddHighlight(mp, () => AfterAddHighlight());
+            var metaSelectionActive = World.INSTANCE.MetaSelectionActive;
+            World.INSTANCE.AddHighlight(mp, () =>
+            {
+                AfterAddHighlight();
+                if (metaSelectionActive != World.INSTANCE.MetaSelectionActive)
+                    SetBlockSelectionSnack();
+            });
         }
 
         private void AfterAddHighlight(bool setSnack = true)
@@ -453,7 +509,6 @@ namespace src
             Default,
             Clipboard,
             Preview,
-            Dragged
         }
     }
 }
