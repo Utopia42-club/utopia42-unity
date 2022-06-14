@@ -52,17 +52,17 @@ namespace src.AssetsInventory
         void Start()
         {
             instance = this;
-            
+
             openIcon = Resources.Load<Sprite>("Icons/openPane");
             closeIcon = Resources.Load<Sprite>("Icons/closePane");
 
             addToFavoriteIcon = Resources.Load<Sprite>("Icons/whiteHeart");
             removeFromFavoriteIcon = Resources.Load<Sprite>("Icons/redHeart");
-            
+
             GameManager.INSTANCE.stateChange.AddListener(_ => UpdateVisibility());
             Player.INSTANCE.viewModeChanged.AddListener(_ => UpdateVisibility());
             UpdateVisibility();
-            
+
             Player.INSTANCE.InitOnSelectedAssetChanged(); // TODO ?
         }
 
@@ -98,8 +98,7 @@ namespace src.AssetsInventory
             //FIXME
             var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
-                         && false
-                         ; // && Can Edit Land 
+                ; // && Can Edit Land 
             gameObject.SetActive(active);
             inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
@@ -647,6 +646,13 @@ namespace src.AssetsInventory
         public void SelectSlot(InventorySlot slot, bool addToHandyPanel = true)
         {
             selectedSlot?.SetSelected(false);
+            if (selectedSlot == slot)
+            {
+                selectedSlot = null;
+                selectedSlotChanged.Invoke(null);
+                return;
+            }
+
             selectedSlot = slot;
             slot.SetSelected(true);
             var slotInfo = slot.GetSlotInfo();
