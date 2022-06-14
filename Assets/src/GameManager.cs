@@ -43,6 +43,7 @@ namespace src
 
         void Update()
         {
+            var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
             if (Input.GetButtonDown("Cancel"))
             {
                 if (state == State.PLAYING && MouseLook.INSTANCE.cursorLocked)
@@ -50,7 +51,8 @@ namespace src
                 else
                     ReturnToGame();
             }
-            else if (state == State.PLAYING)
+            else if (state == State.PLAYING
+                     && (assetsInventory == null || !assetsInventory.IsOpen()))
             {
                 if (IsControlKeyDown() && doubleCtrlTap)
                 {
