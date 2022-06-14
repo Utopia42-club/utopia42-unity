@@ -33,7 +33,7 @@ namespace src
         [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] public GameObject avatarPrefab;
 
-        [NonSerialized] public uint selectedBlockId = 1;
+        public BlockType SelectedBlockType { private set; get; }
 
         private bool sprinting;
         private Vector3 velocity = Vector3.zero;
@@ -47,7 +47,7 @@ namespace src
         private RaycastHit raycastHit;
         private CharacterController characterController;
         private BlockSelectionController blockSelectionController;
-        private bool ctrlDown = false;
+        public bool CtrlDown { private set; get; }
         private Vector3Int playerPos;
         private AvatarController avatarController;
         [NonSerialized] public GameObject avatar;
@@ -55,7 +55,7 @@ namespace src
 
         public MetaBlock PreparedMetaBlock { private set; get; }
         public GameObject MetaBlockPlaceHolder { private set; get; }
-        public bool HammerMode { get; private set; } = false;
+        public bool HammerMode { get; private set; } = true;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
 
@@ -260,8 +260,7 @@ namespace src
             HideBlockCursors();
             if (MetaBlockPlaceHolder != null)
                 MetaBlockPlaceHolder.gameObject.SetActive(false);
-            if (PreparedMetaBlock != null)
-                PreparedMetaBlock.SetActive(false);
+            PreparedMetaBlock?.SetActive(false);
         }
 
         public List<Land> GetOwnedLands()
@@ -296,40 +295,14 @@ namespace src
             return viewMode;
         }
 
-        public void ToolbarSelectedChanged(bool hammerSelected)
-        {
-            if (ChangeForbidden) return;
-            if (HammerMode == false && hammerSelected)
-            {
-                HammerMode = true;
-                placeBlock.gameObject.SetActive(false);
-                if (MetaBlockPlaceHolder != null)
-                    MetaBlockPlaceHolder.gameObject.SetActive(false);
-                return;
-            }
-
-            HammerMode = hammerSelected;
-
-            if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType type)
-            {
-                HideCursors();
-                MetaBlockPlaceHolder = type.GetPlaceHolder();
-                if (MetaBlockPlaceHolder != null)
-                    MetaBlockPlaceHolder.SetActive(true);
-                return;
-            }
-
-            if (MetaBlockPlaceHolder != null)
-                MetaBlockPlaceHolder.SetActive(false);
-            placeBlock.gameObject.SetActive(true);
-        }
-
         public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk)
         {
             var epsilon = cam.forward * CastStep;
             PossiblePlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
             PossibleHighlightBlockPosInt = Vectors.FloorToInt(blockHitPoint + epsilon);
             PossiblePlaceMetaBlockPos = new MetaPosition(blockHitPoint).ToWorld();
+
+            var selectionActive = World.INSTANCE.SelectionActive;
 
             if (BlockSelectionController.INSTANCE.DraggedPosition != null)
                 HideCursors();
@@ -341,7 +314,8 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.SetActive(false);
             }
-            else if (PreparedMetaBlock != null && CanEdit(PossibleHighlightBlockPosInt, out placeLand))
+            else if (!CtrlDown && !selectionActive && PreparedMetaBlock != null &&
+                     CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
                 HideBlockCursors();
                 if (MetaBlockPlaceHolder != null)
@@ -353,7 +327,7 @@ namespace src
                 else
                     PreparedMetaBlock.UpdateWorldPosition(mp.ToWorld());
             }
-            else if (Blocks.GetBlockType(selectedBlockId) is MetaBlockType metaBlockType &&
+            else if (!CtrlDown && !selectionActive && SelectedBlockType is MetaBlockType metaBlockType &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
                 HideBlockCursors();
@@ -391,6 +365,7 @@ namespace src
 
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.gameObject.SetActive(false);
+                PreparedMetaBlock?.SetActive(false);
             }
         }
 
@@ -498,31 +473,42 @@ namespace src
 
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
 
-        private void OnSelectedAssetChanged(SlotInfo slotInfo)
+         private void OnSelectedAssetChanged(SlotInfo slotInfo)
         {
             if (ChangeForbidden) return;
 
-            if (slotInfo == null) // item unselected (set hammer mode?)
+            SelectedBlockType = null;
+
+            if (slotInfo == null)
             {
-                Debug.Log("hammer mode!");
+                if (HammerMode == false)
+                {
+                    placeBlock.gameObject.SetActive(false);
+                    if (MetaBlockPlaceHolder != null)
+                        MetaBlockPlaceHolder.gameObject.SetActive(false);
+                }
+
                 if (PreparedMetaBlock != null)
                 {
                     PreparedMetaBlock.DestroyView();
                     PreparedMetaBlock = null;
                 }
 
+                HammerMode = true;
                 return;
             }
 
+            HammerMode = false;
+
             var glbUrl = slotInfo.asset?.glbUrl;
-            // if (glbUrl != null) // glb asset is selected
-            if (true) // TODO: remove
+
+            
+            if (glbUrl != null)
             {
-                Debug.Log($"GLB asset with url {glbUrl} selected");
-
-
-                glbUrl =
-                    "https://github.com/decentraland/builder-assets/raw/master/assets/02_Pirates/Bench_01/Bench_01.glb"; // TODO: remove
+                var props = (TdObjectBlockProperties) PreparedMetaBlock?.GetProps();
+                if (props != null && props.url.Equals(glbUrl)) return;
+                
+                PreparedMetaBlock?.DestroyView();
                 PreparedMetaBlock = new MetaBlock(Blocks.TdObjectBlockType, null, new TdObjectBlockProperties
                 {
                     url = glbUrl,
@@ -533,25 +519,30 @@ namespace src
             }
 
 
-            if (slotInfo.block != null) // simple block is selected 
+            if (slotInfo.block != null)
             {
-                // Debug.Log($"Block with id {slotInfo.id} selected");
-                selectedBlockId = slotInfo.block.id;
+                SelectedBlockType = slotInfo.block;
+                if (SelectedBlockType is MetaBlockType metaBlockType)
+                {
+                    HideCursors();
+                    MetaBlockPlaceHolder = metaBlockType.GetPlaceHolder();
+                    if (MetaBlockPlaceHolder != null)
+                        MetaBlockPlaceHolder.SetActive(true);
+                    return;
+                }
 
-                // var type = Blocks.GetBlockType(favItem.blockId.Value);
-                // if (type is MetaBlockType metaBlockType)
-                // {
-                //     
-                // }
-                // else
-                // {
-                //     
-                // }
+                if (MetaBlockPlaceHolder != null)
+                    MetaBlockPlaceHolder.SetActive(false);
+                placeBlock.gameObject.SetActive(true);
+                
+                PreparedMetaBlock?.DestroyView();
+                PreparedMetaBlock = null;
             }
         }
 
         public void InitOnSelectedAssetChanged()
         {
+            HammerMode = true;
             AssetsInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
         }
     }
