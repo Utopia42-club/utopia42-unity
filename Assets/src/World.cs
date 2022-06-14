@@ -8,7 +8,6 @@ using src.Model;
 using src.Service;
 using src.Utils;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace src
 {
@@ -33,7 +32,7 @@ namespace src
         public Vector3Int HighlightOffset { private set; get; } = Vector3Int.zero;
 
         private Vector3 metaOffset = Vector3.zero; // used when the selection is meta only
-        public Vector3 MetaHighlightOffset => MetaSelectionActive ? metaOffset : HighlightOffset;
+        public Vector3 MetaHighlightOffset => OnlyMetaSelectionActive ? metaOffset : HighlightOffset;
         private GameObject highlight;
 
 
@@ -46,6 +45,7 @@ namespace src
         public Player player;
         private VoxelPosition firstSelectedPosition;
         public VoxelPosition LastSelectedPosition { get; private set; }
+        public MetaPosition LastSelectedMetaPosition { get; private set; }
 
         public Material Material => material;
         public Material HighlightBlock => highlightBlock;
@@ -59,8 +59,10 @@ namespace src
 
         public bool SelectionActive => TotalBlocksSelected > 0;
 
-        public bool MetaSelectionActive =>
+        public bool OnlyMetaSelectionActive =>
             metaOffset != Vector3.zero || SelectionActive && TotalNonMetaBlocksSelected == 0;
+
+        public bool MetaSelectionActive => TotalBlocksSelected - TotalNonMetaBlocksSelected > 0;
 
         public bool ClipboardEmpty => clipboard.Count + metaClipboard.Count == 0;
 
@@ -108,7 +110,7 @@ namespace src
             RedrawChangedHighlightChunks();
             consumer?.Invoke(done);
             if (offset != Vector3Int.zero)
-                MoveSelection(offset);
+                MoveSelection(offset, null);
         }
 
         public IEnumerator AddHighlights(Dictionary<VoxelPosition, uint> highlights,
@@ -231,7 +233,7 @@ namespace src
 
             if (metaBlock == null)
             {
-                CreateHighlightedMetaBlockAndAddToChunk(highlightChunk, mp, HighlightedMetaBlockProcess); 
+                CreateHighlightedMetaBlockAndAddToChunk(highlightChunk, mp, HighlightedMetaBlockProcess);
                 yield break;
             }
 
@@ -387,6 +389,39 @@ namespace src
             DeleteBlocks(blocks);
         }
 
+        public List<VoxelPosition> GetSelectedBlocksPositions()
+        {
+            var result = new List<VoxelPosition>();
+            foreach (var highlightChunk in highlightChunks.Values)
+            {
+                if (highlightChunk == null) continue;
+                foreach (var highlightedBlock in highlightChunk.HighlightedBlocks)
+                {
+                    result.Add(new VoxelPosition(HighlightOffset + highlightChunk.Position +
+                                                 highlightedBlock.CurrentPosition));
+                }
+            }
+
+            return result;
+        }
+
+        public List<MetaPosition> GetSelectedMetaBlocksPositions()
+        {
+            var result = new List<MetaPosition>();
+            foreach (var highlightChunk in highlightChunks.Values)
+            {
+                if (highlightChunk == null) continue;
+                var metaOffset = MetaHighlightOffset;
+                foreach (var highlightedMetaBlock in highlightChunk.HighlightedMetaBlocks)
+                {
+                    result.Add(new MetaPosition(metaOffset + highlightChunk.Position +
+                                                highlightedMetaBlock.CurrentPosition.position));
+                }
+            }
+
+            return result;
+        }
+
         public void DuplicateSelectedBlocks(bool offsetCheck)
         {
             foreach (var highlightChunk in highlightChunks.Values)
@@ -422,15 +457,23 @@ namespace src
             }
         }
 
-        public void MoveMetaSelection(Vector3 v)
+        public void MoveMetaSelection(Vector3 v, Vector3? referencePosition)
         {
-            metaOffset += v;
-            highlight.transform.position += v;
+            if (!referencePosition.HasValue)
+            {
+                metaOffset += v;
+                highlight.transform.position += v;
+                return;
+            }
+            
+            var oldOffset = metaOffset;
+            metaOffset = v - referencePosition.Value;
+            highlight.transform.position = (highlight.transform.position - oldOffset) + metaOffset;
         }
 
-        public void MoveSelection(Vector3Int v, bool delta = true)
+        public void MoveSelection(Vector3Int v, Vector3Int? referencePosition)
         {
-            if (delta)
+            if (!referencePosition.HasValue)
             {
                 HighlightOffset += v;
                 highlight.transform.position += v;
@@ -438,13 +481,14 @@ namespace src
             }
 
             var oldOffset = HighlightOffset;
-            HighlightOffset = v - firstSelectedPosition.ToWorld();
+            HighlightOffset = v - referencePosition.Value;
             highlight.transform.position = (highlight.transform.position - oldOffset) + HighlightOffset;
         }
 
         private Vector3? GetSelectionRotationCenter()
         {
-            if (!SelectionActive || firstSelectedPosition == null || !highlightChunks.TryGetValue(firstSelectedPosition.chunk, out var highlightChunk) ||
+            if (!SelectionActive || firstSelectedPosition == null ||
+                !highlightChunks.TryGetValue(firstSelectedPosition.chunk, out var highlightChunk) ||
                 highlightChunk == null) return null;
             var rotationOffset = highlightChunk.GetRotationOffset(firstSelectedPosition.local);
             if (!rotationOffset.HasValue) return null;
@@ -515,9 +559,9 @@ namespace src
             foreach (var metaPosition in metaClipboard)
                 AddHighlight(metaPosition);
             if (clipboard.Count == 0)
-                MoveMetaSelection(offset);
+                MoveMetaSelection(offset, null);
             else
-                MoveSelection(offset);
+                MoveSelection(offset, null);
         }
 
         private Chunk PopRequest()
