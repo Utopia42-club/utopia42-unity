@@ -10,7 +10,7 @@ namespace src.Utils
         // public static readonly string ApiURL = "https://api.utopia42.club";
         // public static readonly string ApiURL = "http://localhost:8080";
 
-        public static readonly string NetsURL = "https://utopiapi.vitaminhq.ir" + "/static/networks.json";
+        public static readonly string NetsURL = ApiURL + "/static/networks.json";
         // public static readonly string NetsURL = "https://api.utopia42.club" + "/static/networks.json";
         public static readonly string WebAppHomeURL = WebAppBaseURL + "/home";
     }
