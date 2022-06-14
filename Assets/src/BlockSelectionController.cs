@@ -29,7 +29,6 @@ namespace src
 
         private Transform transform => Player.INSTANCE.transform; // TODO
 
-        private bool ctrlHeld;
         private bool selectionActive;
         private bool metaSelectionActive;
         private bool onlyMetaSelectionActive;
@@ -48,11 +47,6 @@ namespace src
 
         public void DoUpdate()
         {
-            ctrlHeld = Input.GetKey(KeyCode.LeftControl) ||
-                       Input.GetKey(KeyCode.RightControl) ||
-                       Input.GetKey(KeyCode.LeftCommand) ||
-                       Input.GetKey(KeyCode.RightCommand);
-
             selectionActive = World.INSTANCE.SelectionActive;
             metaSelectionActive = World.INSTANCE.MetaSelectionActive;
             onlyMetaSelectionActive = World.INSTANCE.OnlyMetaSelectionActive;
@@ -136,7 +130,7 @@ namespace src
 
         private void HandleSelectionMouseMovement()
         {
-            if (!selectionActive || ctrlHeld) return;
+            if (!selectionActive || player.CtrlDown) return;
             if (Input.GetMouseButtonUp(0) && DraggedPosition != null)
             {
                 ConfirmMove();
@@ -172,7 +166,7 @@ namespace src
 
             var selectVoxel = !World.INSTANCE.SelectionDisplaced && selectionMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
-                              Input.GetMouseButtonDown(0) && ctrlHeld;
+                              Input.GetMouseButtonDown(0) && player.CtrlDown;
 
             var multipleSelect = selectVoxel && selectionActive &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) &&
@@ -225,22 +219,21 @@ namespace src
                 }
             }
 
-            if (ctrlHeld) return;
+            if (player.CtrlDown) return;
 
             if (Input.GetMouseButtonDown(0) && !selectionActive)
             {
-                if (player.HammerMode &&
-                    (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null))
+                if (player.HammerMode)
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf)
                 {
                     World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PossiblePlaceBlockPosInt),
-                        Blocks.GetBlockType(player.selectedBlockId));
+                        player.SelectedBlockType);
                 }
                 else if (player.MetaBlockPlaceHolder != null && player.MetaBlockPlaceHolder.activeSelf)
                 {
                     World.INSTANCE.TryPutMeta(new MetaPosition(player.MetaBlockPlaceHolder.transform.position),
-                        Blocks.GetBlockType(player.selectedBlockId));
+                        player.SelectedBlockType);
                 }
                 else if (player.PreparedMetaBlock != null && player.PreparedMetaBlock.IsActive)
                 {
@@ -297,10 +290,9 @@ namespace src
                     World.INSTANCE.RemoveSelectedBlocks();
                 ExitSelectionMode();
             }
-            else if (Input.GetKeyDown(KeyCode.V) &&
-                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)) &&
-                     player.PlaceBlock.gameObject.activeSelf && !World.INSTANCE.ClipboardEmpty &&
+            else if (Input.GetKeyDown(KeyCode.V) && player.CtrlDown &&
+                     player.PlaceBlock.gameObject.activeSelf &&
+                     !World.INSTANCE.ClipboardEmpty &&
                      !selectionActive)
             {
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();

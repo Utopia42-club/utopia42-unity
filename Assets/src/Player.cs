@@ -151,7 +151,7 @@ namespace src
             var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
             if (assetsInventory != null && assetsInventory.IsOpen())
                 return;
-            ctrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+            CtrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
                        Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");

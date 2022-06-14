@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 using Button = UnityEngine.UI.Button;
 
 namespace src.Canvas
@@ -83,18 +82,18 @@ namespace src.Canvas
 
         private void SelectedChanged()
         {
-            var hammerSelected = selectedSlot == slots.Length;
-            highlight.gameObject.SetActive(!hammerSelected);
-            hammerHighlight.gameObject.SetActive(hammerSelected);
-            if (!hammerSelected)
-            {
-                highlight.position = slots[selectedSlot].transform.position;
-                if (slots[selectedSlot].GetItemSlot().GetStack() != null)
-                    player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
-                else player.selectedBlockId = 0;
-            }
-
-            player.ToolbarSelectedChanged(hammerSelected);
+            // var hammerSelected = selectedSlot == slots.Length;
+            // highlight.gameObject.SetActive(!hammerSelected);
+            // hammerHighlight.gameObject.SetActive(hammerSelected);
+            // if (!hammerSelected)
+            // {
+            //     highlight.position = slots[selectedSlot].transform.position;
+            //     if (slots[selectedSlot].GetItemSlot().GetStack() != null)
+            //         player.selectedBlockId = slots[selectedSlot].GetItemSlot().GetStack().id;
+            //     else player.selectedBlockId = 0;
+            // }
+            //
+            // player.ToolbarSelectedChanged(hammerSelected);
         }
 
         public static Toolbar INSTANCE => GameObject.Find("Toolbar")?.GetComponent<Toolbar>();
