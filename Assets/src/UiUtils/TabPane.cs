@@ -13,12 +13,14 @@ namespace src.UiUtils
         private int currentTab;
         private readonly VisualElement tabBody;
         private readonly VisualElement tabButtonsArea;
-
+        private readonly VisualElement breadcrumb;
+        
         public TabPane(List<TabConfiguration> tabConfigs)
         {
             this.tabConfigs = tabConfigs;
             root = Resources.Load<VisualTreeAsset>("UiDocuments/TabPane").CloneTree();
             tabBody = root.Q<VisualElement>("tabBody");
+            breadcrumb = root.Q<VisualElement>("breadcrumb");
             tabButtonsArea = root.Q<VisualElement>("tabs");
             for (var ind = 0; ind < tabConfigs.Count; ind++)
             {
@@ -37,6 +39,7 @@ namespace src.UiUtils
 
         public void OpenTab(int index)
         {
+            breadcrumb.style.display = DisplayStyle.None;
             var config = tabConfigs[index];
             var tabBodyContent = Resources.Load<VisualTreeAsset>(config.uxmlPath).CloneTree();
             tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
