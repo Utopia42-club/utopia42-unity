@@ -148,11 +148,11 @@ namespace src
 
         private void GetInputs()
         {
-            var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
-            if (assetsInventory != null && assetsInventory.IsOpen())
-                return;
             CtrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
                        Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
+            // var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
+            // if (assetsInventory != null && assetsInventory.IsOpen())
+            //     return;
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
 
