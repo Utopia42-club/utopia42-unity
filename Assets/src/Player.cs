@@ -288,6 +288,11 @@ namespace src
             viewModeChanged.Invoke(viewMode);
         }
 
+        public ViewMode GetViewMode()
+        {
+            return viewMode;
+        }
+
         public void ToolbarSelectedChanged(bool hammerSelected)
         {
             if (ChangeForbidden) return;

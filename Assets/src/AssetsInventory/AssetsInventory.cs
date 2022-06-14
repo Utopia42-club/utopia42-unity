@@ -52,6 +52,22 @@ namespace src.AssetsInventory
         void Start()
         {
             instance = this;
+            
+            openIcon = Resources.Load<Sprite>("Icons/openPane");
+            closeIcon = Resources.Load<Sprite>("Icons/closePane");
+
+            addToFavoriteIcon = Resources.Load<Sprite>("Icons/whiteHeart");
+            removeFromFavoriteIcon = Resources.Load<Sprite>("Icons/redHeart");
+            
+            GameManager.INSTANCE.stateChange.AddListener(_ => UpdateVisibility());
+            Player.INSTANCE.viewModeChanged.AddListener(_ => UpdateVisibility());
+            UpdateVisibility();
+            
+            Player.INSTANCE.InitOnSelectedAssetChanged(); // TODO ?
+        }
+
+        void OnEnable()
+        {
             root = GetComponent<UIDocument>().rootVisualElement;
             inventory = root.Q<VisualElement>("inventory");
 
@@ -75,18 +91,19 @@ namespace src.AssetsInventory
             Utils.IncreaseScrollSpeed(handyBar, 600);
             openCloseInvButton = handyPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
+        }
 
-            openIcon = Resources.Load<Sprite>("Icons/openPane");
-            closeIcon = Resources.Load<Sprite>("Icons/closePane");
-
-            addToFavoriteIcon = Resources.Load<Sprite>("Icons/whiteHeart");
-            removeFromFavoriteIcon = Resources.Load<Sprite>("Icons/redHeart");
-
+        private void UpdateVisibility()
+        {
+            //FIXME
+            var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
+                         && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
+                         && false; // && Can Edit Land 
+            gameObject.SetActive(active);
             inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
-            LoadFavoriteItems(); // FIXME: what to do on error?
-
-            Player.INSTANCE.InitOnSelectedAssetChanged(); // TODO ?
+            if (active)
+                LoadFavoriteItems(); // FIXME: what to do on error?
         }
 
         private void SetupAssetsTab()
@@ -223,7 +240,7 @@ namespace src.AssetsInventory
                 ghostSlot.VisualElement().style.left = pos.x - ghostSlot.VisualElement().layout.width / 2;
             }
         }
-        
+
         public void AddToHandyPanel(SlotInfo slotInfo)
         {
             var slot = new HandyItemInventorySlot();

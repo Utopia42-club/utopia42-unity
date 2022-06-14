@@ -20,13 +20,13 @@ namespace src
     {
         private bool worldInited = false;
 
-        public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
-        public readonly List<Func<State, State, bool>> stateGuards = new List<Func<State, State, bool>>();
+        public readonly UnityEvent<State> stateChange = new();
+        public readonly List<Func<State, State, bool>> stateGuards = new();
 
         private State state = State.LOADING;
         private State? previousState;
 
-        private List<Dialog> dialogs = new List<Dialog>();
+        private List<Dialog> dialogs = new();
         private bool captureAllKeyboardInputOrig;
 
         public GameObject helpDialog;
@@ -73,7 +73,8 @@ namespace src
                     SetState(State.MAP);
                 else if (Input.GetButtonDown("Inventory"))
                     SetState(State.INVENTORY);
-            }else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
+            }
+            else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
                 SetState(State.PLAYING);
             else if (Input.GetButtonDown("Map") && state == State.MAP)
                 SetState(State.PLAYING);
