@@ -97,8 +97,8 @@ namespace src.AssetsInventory
         {
             //FIXME
             var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
-                         && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
-                         && false; // && Can Edit Land 
+                         && !Player.INSTANCE.ChangeForbidden
+                         && true; // && Can Edit Land 
             gameObject.SetActive(active);
             inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
