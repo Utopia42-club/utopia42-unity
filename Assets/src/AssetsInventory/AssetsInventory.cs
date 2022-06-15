@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using src.AssetsInventory.Models;
 using src.AssetsInventory.slots;
 using src.Canvas;
@@ -17,6 +18,7 @@ namespace src.AssetsInventory
     public class AssetsInventory : MonoBehaviour
     {
         private static AssetsInventory instance;
+        private static readonly string HANDY_SLOTS_KEY = "HANDY_SLOTS";
 
         private VisualElement root;
         private VisualElement inventoryLoadingLayer;
@@ -47,11 +49,10 @@ namespace src.AssetsInventory
         private TabPane tabPane;
         private VisualElement breadcrumb;
         private VisualElement inventoryContainer;
+        private bool firstTime = true;
 
         void Start()
         {
-            instance = this;
-
             openIcon = Resources.Load<Sprite>("Icons/openPane");
             closeIcon = Resources.Load<Sprite>("Icons/closePane");
 
@@ -67,6 +68,13 @@ namespace src.AssetsInventory
 
         void OnEnable()
         {
+            if (firstTime)
+            {
+                firstTime = false;
+                instance = this;
+                PlayerPrefs.SetString(HANDY_SLOTS_KEY, "[]");
+            }
+
             root = GetComponent<UIDocument>().rootVisualElement;
             inventory = root.Q<VisualElement>("inventory");
             inventoryContainer = root.Q<VisualElement>("inventoryContainer");
@@ -91,6 +99,11 @@ namespace src.AssetsInventory
             Utils.IncreaseScrollSpeed(handyBar, 600);
             openCloseInvButton = handyPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
+
+            handyBarSlots.Clear();
+            handyBar.Clear();
+            foreach (var savedHandySlot in GetSavedHandySlots())
+                AddToHandyPanel(savedHandySlot);
         }
 
         private void UpdateVisibility()
@@ -222,6 +235,7 @@ namespace src.AssetsInventory
                     handyBar.Remove(handyBarSlot.VisualElement());
                     handyBar.Insert(0, handyBarSlot.VisualElement());
                     SelectSlot(handyBarSlot, false);
+                    SaveHandySlots();
                     return;
                 }
             }
@@ -236,6 +250,7 @@ namespace src.AssetsInventory
             handyBar.Insert(0, slot.VisualElement());
             if (handyBar.childCount > 10)
                 handyBar.RemoveAt(handyBar.childCount - 1);
+            SaveHandySlots();
         }
 
         public void RemoveFromHandyPanel(InventorySlotWrapper slot)
@@ -244,6 +259,7 @@ namespace src.AssetsInventory
             slot.VisualElement().RemoveFromHierarchy();
             while (handyBar.childCount < 10 && handyBarSlots.Count >= 10)
                 handyBar.Add(handyBarSlots[handyBar.childCount].VisualElement());
+            SaveHandySlots();
         }
 
 
@@ -607,6 +623,19 @@ namespace src.AssetsInventory
             selectedSlotChanged.Invoke(slotInfo);
             if (addToHandyPanel)
                 AddToHandyPanel(slotInfo);
+        }
+
+        private void SaveHandySlots()
+        {
+            var items = handyBarSlots.Select(slot => SerializableSlotInfo.FromSlotInfo(slot.GetSlotInfo())).ToList();
+            PlayerPrefs.SetString(HANDY_SLOTS_KEY, JsonConvert.SerializeObject(items));
+        }
+
+        private List<SlotInfo> GetSavedHandySlots()
+        {
+            return JsonConvert
+                .DeserializeObject<List<SerializableSlotInfo>>(PlayerPrefs.GetString(HANDY_SLOTS_KEY, "[]"))
+                .Select(serializedSlotInfo => serializedSlotInfo.ToSlotInfo()).ToList();
         }
 
         public SlotInfo GetSelectedSlot()

@@ -13,6 +13,11 @@ namespace src.Model
         public readonly int[] textures = new int[FACES.Length];
         public readonly Color32? color;
 
+        // For deserialization
+        public BlockType()
+        {
+        }
+
         public BlockType(uint id, string name, bool isSolid,
             int backTexture, int rightTexture,
             int frontTexture, int leftTexture,
