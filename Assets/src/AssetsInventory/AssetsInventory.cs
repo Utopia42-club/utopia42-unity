@@ -48,6 +48,7 @@ namespace src.AssetsInventory
         private List<FavoriteItem> favoriteItems;
         private TabPane tabPane;
         private VisualElement breadcrumb;
+        private VisualElement inventoryContainer;
 
         void Start()
         {
@@ -70,6 +71,7 @@ namespace src.AssetsInventory
         {
             root = GetComponent<UIDocument>().rootVisualElement;
             inventory = root.Q<VisualElement>("inventory");
+            inventoryContainer = root.Q<VisualElement>("inventoryContainer");
 
             var tabConfigurations = new List<TabConfiguration>
             {
@@ -100,7 +102,7 @@ namespace src.AssetsInventory
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
                 ; // && Can Edit Land 
             gameObject.SetActive(active);
-            inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
+            inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
             if (active)
                 LoadFavoriteItems(); // FIXME: what to do on error?
@@ -265,8 +267,8 @@ namespace src.AssetsInventory
 
         private void ToggleInventory()
         {
-            var isVisible = inventory.style.visibility == Visibility.Visible;
-            inventory.style.visibility = isVisible ? Visibility.Hidden : Visibility.Visible;
+            var isVisible = inventoryContainer.style.visibility == Visibility.Visible;
+            inventoryContainer.style.visibility = isVisible ? Visibility.Hidden : Visibility.Visible;
             handyPanel.style.right = isVisible ? 5 : 362;
             var background = new StyleBackground
             {

@@ -123,24 +123,15 @@ namespace src.MetaBlocks.LinkBlock
 
         private void EditProps()
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("Link Block Properties")
-                .WithContent(LinkBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<LinkBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props as LinkBlockProperties);
-            dialog.WithAction("OK", () =>
+            var editor = new LinkBlockEditor((value) =>
             {
-                var value = editor.GetValue();
                 if (value.pos != null) value.url = null;
                 if (value.IsEmpty()) value = null;
                 Block.SetProps(value, land);
-                manager.CloseDialog(dialog);
                 if (snackItem != null) SetupDefaultSnack();
             });
+            editor.SetValue(Block.GetProps() as LinkBlockProperties);
+            editor.Show();
         }
 
         private void DestroyPlaceHolder(bool immediate = true)

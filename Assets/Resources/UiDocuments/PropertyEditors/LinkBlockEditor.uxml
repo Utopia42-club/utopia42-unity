@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <ui:VisualElement name="propertyEditor" style="flex-grow: 1; flex-shrink: 1; align-items: stretch; justify-content: center;">
+        <ui:DropdownField label="Type" index="-1" choices="Web Link, Game Link" name="type" style="margin-bottom: 10px;" />
+        <ui:TextField picking-mode="Ignore" label="Url" value="filler text" name="url" class="utopia-field" />
+        <ui:VisualElement name="position" style="flex-direction: row; flex-wrap: nowrap;">
+            <ui:TextField picking-mode="Ignore" label="X" name="x" class="utopia-field" style="flex-grow: 1;" />
+            <ui:TextField picking-mode="Ignore" label="Y" name="y" class="utopia-field" style="flex-grow: 1;" />
+            <ui:TextField picking-mode="Ignore" label="Z" name="z" class="utopia-field" style="flex-grow: 1;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
