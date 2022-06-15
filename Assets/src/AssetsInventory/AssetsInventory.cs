@@ -97,7 +97,6 @@ namespace src.AssetsInventory
 
         private void UpdateVisibility()
         {
-            //FIXME
             var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
                 ; // && Can Edit Land 
@@ -245,9 +244,23 @@ namespace src.AssetsInventory
 
         public void AddToHandyPanel(SlotInfo slotInfo)
         {
+            foreach (var handyBarSlot in handyBarSlots)
+            {
+                if (handyBarSlot.GetSlotInfo().Equals(slotInfo))
+                {
+                    handyBarSlots.Remove(handyBarSlot);
+                    handyBarSlots.Insert(0, handyBarSlot);
+                    handyBar.Remove(handyBarSlot.VisualElement());
+                    handyBar.Insert(0, handyBarSlot.VisualElement());
+                    SelectSlot(handyBarSlot, false);
+                    return;
+                }
+            }
+
             var slot = new HandyItemInventorySlot();
             slot.SetSize(70);
             slot.SetSlotInfo(slotInfo);
+            SelectSlot(slot, false);
             if (handyBarSlots.Count == 15)
                 handyBarSlots.RemoveAt(14);
             handyBarSlots.Insert(0, slot);

@@ -20,5 +20,17 @@ namespace src.AssetsInventory.Models
         public SlotInfo()
         {
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return true;
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            if (obj is SlotInfo slotInfo)
+                return (slotInfo.asset != null && asset != null && slotInfo.asset.id.Value == asset.id.Value)
+                       || (slotInfo.block != null && block != null && slotInfo.block.id == block.id);
+            return false;
+        }
     }
 }
