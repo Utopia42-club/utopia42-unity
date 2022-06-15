@@ -585,16 +585,16 @@ namespace src.AssetsInventory
                 }));
         }
 
-        public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot)
+        public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot, Action onDone = null)
         {
             ShowInventoryLoadingLayer(true);
-            Debug.Log(favoriteItem.id.Value);
             StartCoroutine(restClient.DeleteFavoriteItem(favoriteItem.id.Value,
                 () =>
                 {
                     ShowInventoryLoadingLayer(false);
                     favoriteItems.Remove(favoriteItem);
                     SetupFavoriteAction(slot);
+                    onDone?.Invoke();
                     //TODO a toast?
                 }, () =>
                 {
@@ -659,5 +659,10 @@ namespace src.AssetsInventory
         }
 
         public static AssetsInventory INSTANCE => instance;
+
+        public void ReloadTab()
+        {
+            tabPane.OpenTab(tabPane.GetCurrentTab());
+        }
     }
 }
