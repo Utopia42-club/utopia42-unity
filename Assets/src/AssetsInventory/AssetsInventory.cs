@@ -35,10 +35,8 @@ namespace src.AssetsInventory
         private readonly Dictionary<int, Pack> packs = new();
         private Category selectedCategory;
         private string filterText = "";
-        private static bool isDragging;
 
         private List<InventorySlotWrapper> handyBarSlots = new();
-        private InventorySlotWrapper ghostSlot;
 
         private InventorySlot selectedSlot;
         public readonly UnityEvent<SlotInfo> selectedSlotChanged = new();
@@ -204,41 +202,12 @@ namespace src.AssetsInventory
             });
         }
 
-        private InventorySlotWrapper CreateGhostSlot(InventorySlot baseSlot)
-        {
-            var slot = new InventorySlotWrapper(true);
-            slot.SetSize(60);
-            slot.UpdateSlot(baseSlot);
-            slot.GetCurrentSlot().HideSlotBackground();
-            slot.VisualElement().RegisterCallback<PointerUpEvent>(GhostSlotOnMouseUp);
-            root.Add(slot.VisualElement());
-            return slot;
-        }
-
-        private void DestroyGhostSlot()
-        {
-            isDragging = false;
-            if (ghostSlot != null)
-            {
-                ghostSlot.VisualElement().RemoveFromHierarchy();
-                ghostSlot = null;
-            }
-        }
-
         private void Update()
         {
             if (filterText.Length > 0)
             {
                 FilterAssets(filterText);
                 filterText = "";
-            }
-
-            if (isDragging)
-            {
-                var pos = Input.mousePosition;
-                ghostSlot.VisualElement().style.top =
-                    root.worldBound.height - pos.y - ghostSlot.VisualElement().layout.height / 2;
-                ghostSlot.VisualElement().style.left = pos.x - ghostSlot.VisualElement().layout.width / 2;
             }
         }
 
@@ -575,42 +544,6 @@ namespace src.AssetsInventory
             }
 
             return dictionary;
-        }
-
-        public void StartDrag(Vector2 position, BaseInventorySlot slot)
-        {
-            if (isDragging)
-                return;
-
-            isDragging = true;
-
-            ghostSlot = CreateGhostSlot(slot);
-            ghostSlot.VisualElement().style.top = position.y - ghostSlot.VisualElement().layout.height / 2;
-            ghostSlot.VisualElement().style.left = position.x - ghostSlot.VisualElement().layout.width / 2;
-        }
-
-        private void GhostSlotOnMouseUp(PointerUpEvent evt)
-        {
-            if (!isDragging)
-                return;
-
-            ghostSlot.GetCurrentSlot().slot.visible = false;
-
-            var slots = handyBarSlots
-                .Where(favBarSlot =>
-                    favBarSlot.VisualElement().worldBound.Overlaps(ghostSlot.VisualElement().worldBound))
-                .ToList();
-
-            if (slots.Count != 0)
-            {
-                var closestSlot = slots.OrderBy(x => Vector2.Distance
-                    (x.VisualElement().worldBound.position, ghostSlot.VisualElement().worldBound.position)).First();
-
-                closestSlot.UpdateSlot(ghostSlot.GetCurrentSlot());
-                DestroyGhostSlot();
-            }
-            else
-                DestroyGhostSlot();
         }
 
         public void AddToFavorites(BaseInventorySlot slot)

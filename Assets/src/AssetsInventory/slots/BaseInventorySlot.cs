@@ -23,7 +23,6 @@ namespace src.AssetsInventory.slots
 
         private IEnumerator imageCoroutine;
         private bool isLoadingImage = false;
-        private bool mouseDown;
         private ToolTipManipulator toolTipManipulator;
         private readonly VisualElement selectedBorder;
         private bool selectable = true;
@@ -36,18 +35,6 @@ namespace src.AssetsInventory.slots
             slotIcon = slot.Q<VisualElement>("slotIcon");
             leftAction = slot.Q<Button>("leftAction");
             rightAction = slot.Q<Button>("rightAction");
-            slot.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                if (evt.button != 0)
-                    return;
-                mouseDown = true;
-            });
-            slot.RegisterCallback<PointerMoveEvent>(evt =>
-            {
-                if (mouseDown && evt.pressedButtons == 1)
-                    assetsInventory.StartDrag(evt.position, this);
-            });
-            slot.RegisterCallback<PointerUpEvent>(evt => mouseDown = false);
 
             selectedBorder = slot.Q<VisualElement>("selectedBorder");
             slot.RegisterCallback<PointerDownEvent>(evt =>
