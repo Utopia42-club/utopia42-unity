@@ -490,6 +490,7 @@ namespace src.AssetsInventory
                 isFavorite ? removeFromFavoriteIcon : addToFavoriteIcon,
                 () =>
                 {
+                    var isFavorite = IsUserFavorite(slotInfo, out _);
                     if (isFavorite)
                         RemoveFromFavorites(slot);
                     else
@@ -586,14 +587,18 @@ namespace src.AssetsInventory
 
         public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot)
         {
+            ShowInventoryLoadingLayer(true);
+            Debug.Log(favoriteItem.id.Value);
             StartCoroutine(restClient.DeleteFavoriteItem(favoriteItem.id.Value,
                 () =>
                 {
+                    ShowInventoryLoadingLayer(false);
                     favoriteItems.Remove(favoriteItem);
                     SetupFavoriteAction(slot);
                     //TODO a toast?
                 }, () =>
                 {
+                    ShowInventoryLoadingLayer(false);
                     //TODO a toast?
                 }));
         }

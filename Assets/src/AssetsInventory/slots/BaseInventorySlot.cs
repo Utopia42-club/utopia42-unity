@@ -144,6 +144,7 @@ namespace src.AssetsInventory.slots
         {
             leftAction.tooltip = tooltip;
             leftAction.style.backgroundImage = Background.FromSprite(background);
+            leftAction.clickable = new Clickable(()=>{ });
             leftAction.clickable.clicked += () => action?.Invoke();
             leftAction.AddManipulator(new ToolTipManipulator(assetsInventory.GetTooltipRoot()));
         }
@@ -158,6 +159,7 @@ namespace src.AssetsInventory.slots
         {
             rightAction.tooltip = tooltip;
             rightAction.style.backgroundImage = Background.FromSprite(background);
+            rightAction.clickable = new Clickable(()=>{ });
             rightAction.clickable.clicked += () => action?.Invoke();
             rightAction.AddManipulator(new ToolTipManipulator(assetsInventory.GetTooltipRoot()));
         }
