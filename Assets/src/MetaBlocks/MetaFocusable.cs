@@ -4,15 +4,20 @@ using UnityEngine;
 
 namespace src
 {
-    public abstract class MetaFocusable : Focusable
+    public class MetaFocusable : Focusable
     {
-        public MetaBlockObject metaBlockObject { protected set; get; }
-        protected Voxels.Face face;
+        public MetaBlockObject MetaBlockObject { protected set; get; }
 
+        public void Initialize(MetaBlockObject metaBlockObject)
+        {
+            if (initialized) return;
+            MetaBlockObject = metaBlockObject;
+            initialized = true;
+        }
         public override void UnFocus()
         {
             if (!initialized) return;
-            metaBlockObject.UnFocus();
+            MetaBlockObject.UnFocus();
         }
 
         public override void Focus(Vector3? point = null)
@@ -21,10 +26,21 @@ namespace src
 
             if (World.INSTANCE.SelectionActive)
             {
-                metaBlockObject.ShowFocusHighlight();
+                MetaBlockObject.ShowFocusHighlight();
                 return;
             }
-            metaBlockObject.Focus(face);
+            MetaBlockObject.Focus();
         }
+        
+        public override Vector3? GetBlockPosition()
+        {
+            return MetaBlockObject.transform.position;
+        }
+
+        public MetaBlock GetBlock()
+        {
+            return MetaBlockObject.Block;
+        }
+        
     }
 }

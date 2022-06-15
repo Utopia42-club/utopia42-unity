@@ -29,7 +29,7 @@ namespace src.Model
             this.local = local;
         }
 
-        public VoxelPosition(float x, float y, float z)
+        private VoxelPosition(float x, float y, float z)
         {
             var chunkSize = Chunk.CHUNK_SIZE;
             chunk = Vectors.TruncateFloor(x / chunkSize.x, y / chunkSize.y, z / chunkSize.z);
@@ -50,7 +50,7 @@ namespace src.Model
             chunk.Scale(Chunk.CHUNK_SIZE);
             return chunk + local;
         }
-
+        
         protected bool Equals(VoxelPosition other)
         {
             return chunk.Equals(other.chunk) && local.Equals(other.local);

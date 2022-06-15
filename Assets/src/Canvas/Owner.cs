@@ -38,6 +38,7 @@ namespace src.Canvas
         {
             if (manager.GetState() == GameManager.State.PLAYING)
             {
+                var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
                 var player = Player.INSTANCE;
                 var changed = IsLandChanged(player.GetPosition());
                 if (changed)
@@ -45,8 +46,10 @@ namespace src.Canvas
                 if (changed || !view.activeSelf && currentWallet != null)
                     OnOwnerChanged();
 
-                if (Input.GetButtonDown("Profile") && currentWallet != null &&
-                    !profileLoader.IsWalletLoading(currentWallet))
+                if (Input.GetButtonDown("Profile")
+                    && currentWallet != null
+                    && !profileLoader.IsWalletLoading(currentWallet)
+                    && (assetsInventory == null || !assetsInventory.IsOpen()))
                     manager.ShowProfile(currentProfile, currentLand);
             }
             else

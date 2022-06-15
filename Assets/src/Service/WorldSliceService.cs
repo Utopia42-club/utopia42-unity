@@ -105,10 +105,10 @@ namespace src.Service
             var worldService = WorldService.INSTANCE;
             foreach (var chunkEntry in slice.blocks)
             {
-                var chunkPos = LandDetails.ParseKey(chunkEntry.Key);
+                var chunkPos = LandDetails.ParseIntKey(chunkEntry.Key);
                 var chunkBlocks = new Dictionary<Vector3Int, uint>();
                 foreach (var blockEntry in chunkEntry.Value)
-                    chunkBlocks[LandDetails.ParseKey(blockEntry.Key)] =
+                    chunkBlocks[LandDetails.ParseIntKey(blockEntry.Key)] =
                         Blocks.GetBlockType(blockEntry.Value.name).id;
 
                 chunks[chunkPos] = new ChunkData(chunkPos, chunkBlocks, null);
@@ -116,13 +116,13 @@ namespace src.Service
 
             foreach (var chunkEntry in slice.metaBlocks)
             {
-                var chunkPos = LandDetails.ParseKey(chunkEntry.Key);
-                var chunkMetaBlocks = new Dictionary<Vector3Int, MetaBlock>();
+                var chunkPos = LandDetails.ParseIntKey(chunkEntry.Key);
+                var chunkMetaBlocks = new Dictionary<MetaLocalPosition, MetaBlock>();
                 foreach (var blockEntry in chunkEntry.Value)
                 {
                     var localPosition = LandDetails.ParseKey(blockEntry.Key);
                     var metaBlock = MetaBlock.Parse(
-                        WorldService.INSTANCE.GetLandForPosition(VoxelPosition.ToWorld(chunkPos, localPosition)),
+                        WorldService.INSTANCE.GetLandForPosition(MetaPosition.ToWorld(chunkPos, localPosition)),
                         blockEntry.Value);
 
                     chunkMetaBlocks[localPosition] = metaBlock;

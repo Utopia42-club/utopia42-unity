@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <ui:Button display-tooltip-when-elided="true" class="utopia-button right-align-text-button" style="flex-grow: 1; flex-shrink: 1; -unity-text-align: middle-center; flex-direction: row; justify-content: flex-start; align-items: center; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+        <ui:VisualElement name="arrow" style="width: 20%; height: 90%; background-image: url(&apos;project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=-4528830608231651361&amp;guid=a80665435d1ae52f687d90cdd44fb201&amp;type=3#arrow-left@2x&apos;); min-width: 20%; min-height: 90%;" />
+        <ui:Label text="Label" display-tooltip-when-elided="true" name="label" style="flex-grow: 1;" />
+    </ui:Button>
+</ui:UXML>

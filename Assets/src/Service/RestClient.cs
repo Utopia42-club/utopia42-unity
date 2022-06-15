@@ -1,10 +1,7 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Text;
 using Newtonsoft.Json;
-using src.Model;
-using src.Service.Ethereum;
-using src.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -12,38 +9,6 @@ namespace src.Service
 {
     public class RestClient
     {
-        public static RestClient INSATANCE = new RestClient();
-
-        private RestClient()
-        {
-        }
-
-        public IEnumerator LoadNetworks(Action<EthNetwork[]> consumer, Action failed)
-        {
-            using (var webRequest = UnityWebRequest.Get(Constants.NetsURL))
-            {
-                yield return ExecuteRequest(webRequest, consumer, failed);
-            }
-        }
-        
-        public IEnumerator GetProfile(string walletId, Action<Profile> consumer, Action failed)
-        {
-            string url = Constants.ApiURL + "/profile";
-            yield return (url, walletId, consumer, failed);
-            using (UnityWebRequest webRequest = UnityWebRequest.Post(url, walletId))
-            {
-                webRequest.SetRequestHeader("Content-Type", "application/json");
-                webRequest.SetRequestHeader("Accept", "*/*");
-                yield return ExecuteRequest(webRequest, consumer, failed);
-            }
-        }
-        
-        public IEnumerator SetLandMetadata(LandMetadata landMetadata, Action success, Action failed)
-        {
-            string url = Constants.ApiURL + "/land-metadata/set";
-            yield return Post(url, landMetadata, success, failed);
-        }
-
         internal static IEnumerator Post<TB>(string url, TB body, Action success, Action failure)
         {
             using (var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
@@ -73,6 +38,15 @@ namespace src.Service
             }
         }
         
+        internal static IEnumerator Delete(string url, Action success, Action failure)
+        {
+            using (var webRequest = UnityWebRequest.Delete(url))
+            {
+                webRequest.SetRequestHeader("Accept", "*/*");
+                yield return ExecuteRequest(webRequest, success, failure);
+            }
+        }
+        
         internal static IEnumerator ExecuteRequest<TB, TR>(UnityWebRequest webRequest, TB body, Action<TR> success,
             Action failure)
         {
@@ -84,6 +58,7 @@ namespace src.Service
         {
             var settings = new JsonSerializerSettings();
             settings.NullValueHandling = NullValueHandling.Ignore;
+            settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             var data = JsonConvert.SerializeObject(body, null, settings);
             var bodyRaw = Encoding.UTF8.GetBytes(data);
             webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);

@@ -1,0 +1,73 @@
+.slot-container {
+    background-image: url('project://database/Assets/Images/Cell.png?fileID=2800000&guid=343203b5ff8d853dbae497531c270bab&type=3#Cell');
+    transition-duration: 200ms;
+    transition-delay: 10ms;
+    transition-property: padding;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.slot-container:hover {
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.unity-scroller__low-button {
+    display: none;
+}
+
+.unity-scroller__high-button {
+    display: none;
+}
+
+.unity-slider__input {
+    width: 12px;
+}
+
+.unity-scroller {
+    width: 12px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.unity-base-slider {
+    margin-top: 0;
+    margin-bottom: 0;
+    align-items: center;
+    width: 18px;
+    min-width: 18px;
+}
+
+.unity-base-slider__drag-container {
+    width: 12px;
+    background-color: rgb(76, 97, 118);
+    border-radius: 8px;
+}
+
+.unity-base-slider__dragger {
+    width: 6px;
+    background-color: rgb(52, 73, 94);
+    border-radius: 8px;
+}
+
+.unity-base-slider__dragger-border {
+    width: 6px;
+    background-color: rgb(52, 73, 94);
+}
+
+.unity-base-slider__tracker {
+    width: 12px;
+    background-color: rgb(76, 97, 118);
+    border-radius: 8px;
+}
+
+.unity-foldout__text {
+    color: white;
+}
+
+.unity-foldout__text:active {
+    color: white;
+}

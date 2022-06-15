@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using src.Canvas;
 using src.Canvas.Map;
+using src.MetaBlocks;
 using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
@@ -19,13 +20,13 @@ namespace src
     {
         private bool worldInited = false;
 
-        public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
-        public readonly List<Func<State, State, bool>> stateGuards = new List<Func<State, State, bool>>();
+        public readonly UnityEvent<State> stateChange = new();
+        public readonly List<Func<State, State, bool>> stateGuards = new();
 
         private State state = State.LOADING;
         private State? previousState;
 
-        private List<Dialog> dialogs = new List<Dialog>();
+        private List<Dialog> dialogs = new();
         private bool captureAllKeyboardInputOrig;
 
         public GameObject helpDialog;
@@ -42,23 +43,7 @@ namespace src
 
         void Update()
         {
-            if (IsControlKeyDown() && doubleCtrlTap)
-            {
-                if (Time.time - doubleCtrlTapTime < 0.4f)
-                {
-                    OpenPluginsDialog();
-                    doubleCtrlTapTime = 0f;
-                }
-
-                doubleCtrlTap = false;
-            }
-
-            if (IsControlKeyDown() && !doubleCtrlTap)
-            {
-                doubleCtrlTap = true;
-                doubleCtrlTapTime = Time.time;
-            }
-
+            var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
             if (Input.GetButtonDown("Cancel"))
             {
                 if (state == State.PLAYING && MouseLook.INSTANCE.cursorLocked)
@@ -66,18 +51,37 @@ namespace src
                 else
                     ReturnToGame();
             }
+            else if (state == State.PLAYING
+                     && (assetsInventory == null || !assetsInventory.IsOpen()))
+            {
+                if (IsControlKeyDown() && doubleCtrlTap)
+                {
+                    if (Time.time - doubleCtrlTapTime < 0.4f)
+                    {
+                        OpenPluginsDialog();
+                        doubleCtrlTapTime = 0f;
+                    }
 
-            else if (Input.GetButtonDown("Menu") && state == State.PLAYING)
-                SetState(State.SETTINGS);
-
+                    doubleCtrlTap = false;
+                }
+                else if (IsControlKeyDown() && !doubleCtrlTap)
+                {
+                    doubleCtrlTap = true;
+                    doubleCtrlTapTime = Time.time;
+                }
+                else if (Input.GetButtonDown("Menu"))
+                    SetState(State.SETTINGS);
+                else if (Input.GetButtonDown("Map"))
+                    SetState(State.MAP);
+                else if (Input.GetButtonDown("Inventory"))
+                    SetState(State.INVENTORY);
+            }
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
                 SetState(State.PLAYING);
-
-            else if (Input.GetButtonDown("Map"))
-                SetState(state == State.MAP ? State.PLAYING : State.MAP);
-
-            else if (Input.GetButtonDown("Inventory"))
-                SetState(state == State.INVENTORY ? State.PLAYING : State.INVENTORY);
+            else if (Input.GetButtonDown("Map") && state == State.MAP)
+                SetState(State.PLAYING);
+            else if (Input.GetButtonDown("Inventory") && state == State.INVENTORY)
+                SetState(State.PLAYING);
         }
 
         public void OpenPluginsDialog()
@@ -191,7 +195,7 @@ namespace src
             var checksPerFrame = 100;
             var todo = checksPerFrame;
 
-            var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, 0f, .5f);
+            var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, .5f, .5f);
             while (true)
             {
                 bool coll = false;
@@ -454,7 +458,7 @@ namespace src
 
         private void SetLandNftImage(string key, Land land)
         {
-            StartCoroutine(RestClient.INSATANCE.SetLandMetadata(new LandMetadata(land.id, key), () =>
+            StartCoroutine(WorldRestClient.INSTANCE.SetLandMetadata(new LandMetadata(land.id, key), () =>
             {
                 BrowserConnector.INSTANCE.SetNft(land.id, true,
                     () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
@@ -475,17 +479,17 @@ namespace src
             }));
         }
 
-        public void ToggleMovingObjectState(TdObjectBlockObject tdObjectBlockObject)
+        public void ToggleMovingObjectState(MetaBlockObject metaBlockObject)
         {
             if (GetState() == State.PLAYING)
             {
                 SetState(State.MOVING_OBJECT);
-                tdObjectBlockObject.SetToMovingState();
+                metaBlockObject.SetToMovingState();
             }
             else if (GetState() == State.MOVING_OBJECT)
             {
                 SetState(State.PLAYING);
-                tdObjectBlockObject.ExitMovingState();
+                metaBlockObject.ExitMovingState();
             }
         }
 

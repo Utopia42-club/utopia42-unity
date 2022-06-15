@@ -18,6 +18,9 @@ namespace src.Environment
 
         void Update()
         {
+            var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
+            if (assetsInventory != null && assetsInventory.IsOpen())
+                return;
             if (Input.GetButtonDown("Light"))
             {
                 spotLight.range = spotLight.range > 0 ? 0 : 20;

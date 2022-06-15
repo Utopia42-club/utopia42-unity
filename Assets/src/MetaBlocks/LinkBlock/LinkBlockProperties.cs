@@ -2,7 +2,7 @@ using System;
 
 namespace src.MetaBlocks.LinkBlock
 {
-    [System.Serializable]
+    [Serializable]
     public class LinkBlockProperties : ICloneable
     {
         public string url;
@@ -14,17 +14,15 @@ namespace src.MetaBlocks.LinkBlock
 
         public LinkBlockProperties(LinkBlockProperties obj)
         {
-            if (obj != null)
-            {
-                url = obj.url;
-                pos = obj.pos;
-            }
+            if (obj == null) return;
+            url = obj.url;
+            pos = obj.pos;
         }
 
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            if ((obj == null) || !GetType().Equals(obj.GetType()))
                 return false;
 
             return obj is LinkBlockProperties props &&
@@ -49,7 +47,7 @@ namespace src.MetaBlocks.LinkBlock
 
         public bool IsEmpty()
         {
-            return (url == null || url.Length == 0) && pos == null;
+            return string.IsNullOrEmpty(url) && pos == null;
         }
     }
 }

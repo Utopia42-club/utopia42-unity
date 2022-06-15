@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -8,8 +9,13 @@ namespace src
     {
         [SerializeField] public GameObject avatarPrefab;
 
-        public Dictionary<string, AvatarController> playersMap = new Dictionary<string, AvatarController>();
+        public readonly Dictionary<string, AvatarController> playersMap = new Dictionary<string, AvatarController>();
 
+        public void ReportOtherPlayersStateFromWeb(string state)
+        {
+            ReportOtherPlayersState(JsonConvert.DeserializeObject<AvatarController.PlayerState>(state));
+        }
+        
         public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
         {
             if (playersMap.TryGetValue(playerState.walletId, out var controller))
@@ -21,14 +27,15 @@ namespace src
                 var avatar = Instantiate(avatarPrefab, transform);
                 var c = avatar.GetComponent<AvatarController>();
                 c.SetIsAnotherPlayer(true);
-                c.UpdatePlayerState(playerState);
+                StartCoroutine(UpdatePlayerState(c, playerState));
                 playersMap.Add(playerState.walletId, c);
             }
         }
 
-        public void ReportOtherPlayersState(string state)
+        private IEnumerator UpdatePlayerState(AvatarController controller, AvatarController.PlayerState playerState)
         {
-            ReportOtherPlayersState(JsonConvert.DeserializeObject<AvatarController.PlayerState>(state));
+            yield return 0;
+            controller.UpdatePlayerState(playerState);
         }
     }
 }

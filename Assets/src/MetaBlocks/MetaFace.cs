@@ -1,4 +1,5 @@
 using System;
+using src.MetaBlocks;
 using src.Utils;
 using UnityEngine;
 
@@ -10,56 +11,47 @@ namespace src
         private MeshCollider meshCollider;
         private MeshRenderer meshRenderer;
 
-        public MeshRenderer Initialize(Voxels.Face face, int width, int height)
+        public MeshRenderer Initialize(bool withCollider)
         {
             meshFilter = gameObject.AddComponent<MeshFilter>();
-            meshCollider = gameObject.AddComponent<MeshCollider>();
+            if (withCollider)
+                meshCollider = gameObject.AddComponent<MeshCollider>();
 
             meshRenderer = gameObject.AddComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = new Material(Shader.Find("Unlit/Texture"));
 
-            if (face == Voxels.Face.FRONT || face == Voxels.Face.BACK)
-                transform.localScale = new Vector3(width, height, 1);
-            else if (face == Voxels.Face.LEFT || face == Voxels.Face.RIGHT)
-                transform.localScale = new Vector3(1, height, width);
-            else
-                transform.localScale = new Vector3(width, 1, height);
-
-            var vertices = new Vector3[4];
-            for (var i = 0; i < 4; i++)
-                vertices[i] = Voxels.Vertices[face.verts[i]];
-
             var mesh = new Mesh
             {
-                vertices = vertices,
-                triangles = new int[12] {0, 1, 2, 2, 1, 3, 2, 1, 0, 3, 1, 2,}
+                vertices = new Vector3[]
+                {
+                    new Vector3Int(0, 0, 0),
+                    new Vector3Int(0, 1, 0),
+                    new Vector3Int(1, 0, 0),
+                    new Vector3Int(1, 1, 0)
+                },
+                triangles = new int[12] {0, 1, 2, 2, 1, 3, 2, 1, 0, 3, 1, 2,},
+                uv = new Vector2[4]
+                {
+                    new Vector2(0, 0),
+                    new Vector2(0, 1),
+                    new Vector2(1, 0),
+                    new Vector2(1, 1)
+                },
+                normals = new Vector3[4]
+                {
+                    -Vector3.forward,
+                    -Vector3.forward,
+                    -Vector3.forward,
+                    -Vector3.forward
+                }
             };
 
-            var uv = new Vector2[4]
-            {
-                //  new Vector2(1, 0),
-                // new Vector2(1, 1),
-                // new Vector2(0, 0),
-                // new Vector2(0, 1)
-                new Vector2(0, 0),
-                new Vector2(0, 1),
-                new Vector2(1, 0),
-                new Vector2(1, 1)
-            };
-            mesh.uv = uv;
-
-            Vector3[] normals = new Vector3[4]
-            {
-                -Vector3.forward,
-                -Vector3.forward,
-                -Vector3.forward,
-                -Vector3.forward
-            };
-            mesh.normals = normals;
             meshFilter.sharedMesh = mesh;
-
-            meshCollider.convex = true;
-            meshCollider.sharedMesh = mesh;
+            if (withCollider)
+            {
+                meshCollider.sharedMesh = mesh;
+                meshCollider.convex = true;
+            }
 
             return meshRenderer;
         }
@@ -69,11 +61,13 @@ namespace src
             if (meshFilter != null)
                 Destroy(meshFilter.sharedMesh);
 
-            if (meshRenderer != null)
-            {
-                Destroy(meshRenderer.sharedMaterial.mainTexture);
-                Destroy(meshRenderer.sharedMaterial);
-            }
+            if (meshRenderer == null) return;
+            var mat = meshRenderer.sharedMaterial;
+            if (mat == null) return;
+            if (mat.mainTexture != null && mat.mainTexture.name != "failed" && mat.mainTexture.name != "video" &&
+                mat.mainTexture.name != "nft" && mat.mainTexture.name != "image") // TODO ?
+                Destroy(mat.mainTexture);
+            Destroy(mat);
         }
     }
 }

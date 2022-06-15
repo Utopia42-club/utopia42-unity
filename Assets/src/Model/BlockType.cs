@@ -42,6 +42,11 @@ namespace src.Model
             return textures[face.index];
         }
 
+        public bool IsColorBlockType()
+        {
+            return ColorBlocks.IsColorTypeId(id);
+        }
+
         public Sprite GetIcon(bool failed = false)
         {
             BlockType colorBlock;

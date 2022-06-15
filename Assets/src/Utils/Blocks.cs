@@ -6,6 +6,7 @@ using src.MetaBlocks.LinkBlock;
 using src.MetaBlocks.MarkerBlock;
 using src.MetaBlocks.NftBlock;
 using src.MetaBlocks.TdObjectBlock;
+using src.MetaBlocks.TeleportBlock;
 using src.MetaBlocks.VideoBlock;
 using src.Model;
 using UnityEngine;
@@ -16,6 +17,8 @@ namespace src.Utils
     {
         private static readonly Dictionary<uint, BlockType> TYPES = new Dictionary<uint, BlockType>();
         public static readonly BlockType AIR;
+        public static MetaBlockType TdObjectBlockType => TYPES[34] as MetaBlockType; 
+        public static MetaBlockType VideoBlockType => TYPES[32] as MetaBlockType; 
 
         static Blocks()
         {
@@ -57,6 +60,7 @@ namespace src.Utils
             TYPES[35] = new MarkerBlockType(35);
             // TYPES[36] = new LightBlockType(36);
             TYPES[37] = new NftBlockType(37);
+            TYPES[38] = new TeleportBlockType(38);
         }
 
 

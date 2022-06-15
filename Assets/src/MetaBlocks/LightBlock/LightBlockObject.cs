@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using src.Canvas;
 using src.Model;
-using src.Utils;
 using UnityEngine;
 using LightType = UnityEngine.LightType;
 
@@ -24,25 +23,7 @@ namespace src.MetaBlocks.LightBlock
             (LightDistance + 1) * Vector3.up + 0.5f * (Vector3.right + Vector3.forward)
         };
 
-        private SnackItem snackItem;
-        private Land land;
-        private bool canEdit;
-        private bool ready = false;
-        
         private List<Light> sideLights = new List<Light>();
-
-        private void Start()
-        {
-            if (canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land))
-                CreateIcon();
-            ready = true;
-            gameObject.name = "light metablock";
-        }
-
-        public override bool IsReady()
-        {
-            return ready;
-        }
 
         public override void OnDataUpdate()
         {
@@ -102,51 +83,20 @@ namespace src.MetaBlocks.LightBlock
             sideLights.Clear();
         }
 
-        public override void Focus(Voxels.Face face)
-        {
-            if (!canEdit) return;
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
-
-            snackItem = Snack.INSTANCE.ShowLines(GetFaceSnackLines(), () =>
-            {
-                if (Input.GetKeyDown(KeyCode.Z))
-                    EditProps();
-                if (Input.GetKeyDown(KeyCode.T))
-                    GetIconObject().SetActive(!GetIconObject().activeSelf);
-                if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new VoxelPosition(transform.localPosition));
-            });
-        }
-
         private LightBlockProperties GetProps()
         {
-            return (LightBlockProperties) GetBlock().GetProps();
+            return (LightBlockProperties) Block.GetProps();
         }
 
-        public override void UnFocus()
+        protected override void OnStateChanged(State state)
         {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
         }
 
-        public override void UpdateStateAndIcon(StateMsg msg, Voxels.Face face)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override List<string> GetFaceSnackLines(Voxels.Face face = null)
+        protected virtual List<string> GetSnackLines()
         {
             return new List<string>
             {
                 "Press Z for details",
-                "Press T to toggle preview",
                 "Press DEL to delete object"
             };
         }
@@ -164,13 +114,32 @@ namespace src.MetaBlocks.LightBlock
             return null;
         }
 
-        protected override void UpdateState(StateMsg stateMsg)
+        public override void SetToMovingState()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        public override void LoadSelectHighlight(MetaBlock block, Transform highlightChunkTransform, Vector3Int localPos, Action<GameObject> onLoad)
+        public override void ExitMovingState()
         {
+            throw new NotImplementedException();
+        }
+
+        protected override void SetupDefaultSnack()
+        {
+            if (snackItem != null)
+            {
+                snackItem.Remove();
+                snackItem = null;
+            }
+
+            if (!canEdit) return;
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
+            {
+                if (Input.GetKeyDown(KeyCode.Z))
+                    EditProps();
+                if (Input.GetButtonDown("Delete"))
+                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
+            });
         }
 
         private void EditProps()
@@ -182,12 +151,12 @@ namespace src.MetaBlocks.LightBlock
                 .WithContent(LightBlockEditor.PREFAB);
             var editor = dialog.GetContent().GetComponent<LightBlockEditor>();
 
-            var props = GetBlock().GetProps();
+            var props = Block.GetProps();
             editor.SetValue(props == null ? null : props as LightBlockProperties);
             dialog.WithAction("OK", () =>
             {
                 var value = editor.GetValue();
-                var props = new LightBlockProperties(GetBlock().GetProps() as LightBlockProperties);
+                var props = new LightBlockProperties(Block.GetProps() as LightBlockProperties);
                 if (value != null)
                 {
                     props.intensity = value.intensity;
@@ -195,7 +164,7 @@ namespace src.MetaBlocks.LightBlock
                     props.hexColor = value.hexColor;
                 }
 
-                GetBlock().SetProps(props, land);
+                Block.SetProps(props, land);
                 manager.CloseDialog(dialog);
             });
         }
