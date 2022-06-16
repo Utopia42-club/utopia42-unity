@@ -8,6 +8,7 @@ namespace src.Canvas
     {
         private VisualElement element;
         private readonly VisualElement rootElement;
+        private static VisualElement currentTooltip;
 
         public ToolTipManipulator(VisualElement rootElement)
         {
@@ -30,6 +31,7 @@ namespace src.Canvas
         {
             if (string.IsNullOrEmpty(target.tooltip))
                 return;
+            currentTooltip?.RemoveFromHierarchy();
             element = new VisualElement
             {
                 style =
@@ -56,6 +58,7 @@ namespace src.Canvas
             element.Add(label);
             rootElement.Add(element);
             element.BringToFront();
+            currentTooltip = element;
         }
 
         private void MouseOut(MouseOutEvent e)
@@ -66,6 +69,7 @@ namespace src.Canvas
         public void Destroy()
         {
             element?.RemoveFromHierarchy();
+            currentTooltip = null;
         }
     }
 }
