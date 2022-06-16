@@ -35,25 +35,42 @@ namespace src.MetaBlocks.TdObjectBlock
             foreach (var focusable in clone.GetComponentsInChildren<Focusable>())
                 Object.DestroyImmediate(focusable);
 
-            asset.hasClone = true;
+            CloneMeshesAndTextures(clone);
+
             Assets[id].Add(tdObject);
 
             return clone;
         }
 
+        private static void CloneMeshesAndTextures(GameObject go)
+        {
+            foreach (var renderer in go.GetComponentsInChildren<Renderer>())
+            {
+                var mats = renderer.materials;
+                for (var i = 0; i < mats.Length; i++)
+                {
+                    var mat = mats[i];
+                    if (mat.Equals(World.INSTANCE.SelectedBlock) || mat.Equals(World.INSTANCE.HighlightBlock))
+                    {
+                        Object.Destroy(mat.mainTexture);
+                        Object.Destroy(mat);
+                    }
+                    else
+                    {
+                        renderer.sharedMaterials[i] = mat;
+                        if(mat.mainTexture != null)
+                            renderer.sharedMaterials[i].mainTexture = Object.Instantiate(mat.mainTexture);
+                    }
+                }
+            }
+
+            foreach (var meshFilter in go.GetComponentsInChildren<MeshFilter>())
+                meshFilter.sharedMesh = meshFilter.mesh;
+        }
+
         private static TdObjectBlockObject FirstNonNull(List<TdObjectBlockObject> assets)
         {
             return assets?.FirstOrDefault(o => o != null && o.Obj != null);
-        }
-
-        public static bool HasClone(TdObjectBlockObject tdObject)
-        {
-            if (!tdObject.hasClone) return false;
-            var props = (TdObjectBlockProperties) tdObject.Block.GetProps();
-            if (props == null) return false;
-            var id = new Key(props.url, props.type);
-            if (!Assets.TryGetValue(id, out var assets)) return false;
-            return FirstNonNull(assets) != null;
         }
 
         public static void Add(TdObjectBlockObject tdObject)

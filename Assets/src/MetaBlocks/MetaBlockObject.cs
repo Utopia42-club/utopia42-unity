@@ -191,37 +191,33 @@ namespace src.MetaBlocks
             highlightBox.gameObject.SetActive(active);
         }
 
-        protected static void DeepDestroy3DObject(GameObject go, bool immediate = true, bool ignoreShared = false)
+        protected static void DeepDestroy3DObject(GameObject go, bool immediate = true)
         {
-            if (!ignoreShared)
+            foreach (var renderer in go.GetComponentsInChildren<Renderer>())
+            foreach (var mat in renderer.sharedMaterials)
             {
-                foreach (var renderer in go.GetComponentsInChildren<Renderer>())
-                foreach (var mat in renderer.sharedMaterials)
+                if (mat == null) continue;
+                if (immediate)
                 {
-                    if (mat == null) continue;
-                    if (immediate)
-                    {
-                        DestroyImmediate(mat.mainTexture);
-                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
-                            DestroyImmediate(mat);
-                    }
-                    else
-                    {
-                        Destroy(mat.mainTexture);
-                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
-                            Destroy(mat);
-                    }
+                    DestroyImmediate(mat.mainTexture);
+                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        DestroyImmediate(mat);
                 }
-
-                foreach (var meshFilter in go.GetComponentsInChildren<MeshFilter>())
+                else
                 {
-                    if (immediate)
-                        DestroyImmediate(meshFilter.sharedMesh);
-                    else
-                        Destroy(meshFilter.sharedMesh);
+                    Destroy(mat.mainTexture);
+                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        Destroy(mat);
                 }
             }
 
+            foreach (var meshFilter in go.GetComponentsInChildren<MeshFilter>())
+            {
+                if (immediate)
+                    DestroyImmediate(meshFilter.sharedMesh);
+                else
+                    Destroy(meshFilter.sharedMesh);
+            }
 
             if (immediate)
                 DestroyImmediate(go.gameObject);

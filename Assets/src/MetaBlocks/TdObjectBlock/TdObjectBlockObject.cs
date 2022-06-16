@@ -26,8 +26,6 @@ namespace src.MetaBlocks.TdObjectBlock
         private ObjectScaleRotationController scaleRotationController;
         private Transform selectHighlight;
 
-        public bool hasClone = false;
-
         public override void OnDataUpdate()
         {
             LoadTdObject();
@@ -164,7 +162,6 @@ namespace src.MetaBlocks.TdObjectBlock
             }
 
             // setting place holder
-            hasClone = false;
             DestroyObject();
             ResetContainer();
             Obj = Block.type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), !Block.IsCursor);
@@ -221,14 +218,12 @@ namespace src.MetaBlocks.TdObjectBlock
                 var go = TdObjectCache.GetAsset(this);
                 if (go != null)
                 {
-                    hasClone = true;
                     LoadGameObject(scale, rotation, initialPosition, p.initialScale,
                         p.detectCollision, p.type, reinitialize, go);
                 }
                 else
                 {
                     UpdateState(State.Loading);
-                    hasClone = false;
                     StartCoroutine(LoadBytes(p.url, p.type, loadedGo =>
                     {
                         LoadGameObject(scale, rotation, initialPosition, p.initialScale,
@@ -356,7 +351,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             if (Obj != null)
             {
-                DeepDestroy3DObject(Obj, immediate, TdObjectCache.HasClone(this));
+                DeepDestroy3DObject(Obj, immediate);
                 Obj = null;
             }
 
