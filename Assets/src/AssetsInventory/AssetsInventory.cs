@@ -224,9 +224,13 @@ namespace src.AssetsInventory
                 filterText = "";
             }
 
+            // if (selectedHandySlotIndex != -1 && (Input.GetButtonDown("Clear slot selection") || Input.GetMouseButtonDown(1)))
+            if (selectedHandySlotIndex != -1 && Input.GetButtonDown("Clear slot selection"))
+                SelectSlot(null);
+
             if (handyBar.childCount == 0)
                 return;
- 
+
             var mouseDelta = Input.mouseScrollDelta.y;
             var inc = Input.GetButtonDown("Change Block") || mouseDelta <= -0.1;
             var dec = (
@@ -250,6 +254,7 @@ namespace src.AssetsInventory
                 else
                     selectedHandySlotIndex++;
             }
+
             handyBar.ScrollTo(handyBarSlots[selectedHandySlotIndex].VisualElement());
             SelectSlot(handyBarSlots[selectedHandySlotIndex], false);
         }
@@ -645,7 +650,7 @@ namespace src.AssetsInventory
         public void SelectSlot(InventorySlot slot, bool addToHandyPanel = true)
         {
             selectedSlot?.SetSelected(false);
-            if (selectedSlot == slot)
+            if (selectedSlot == slot || slot == null)
             {
                 selectedSlot = null;
                 selectedSlotChanged.Invoke(null);
