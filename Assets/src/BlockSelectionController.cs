@@ -219,9 +219,9 @@ namespace src
                 }
             }
 
-            if (player.CtrlDown) return;
+            if (player.CtrlDown || selectionActive) return;
 
-            if (Input.GetMouseButtonDown(0) && !selectionActive)
+            if (Input.GetMouseButtonDown(0))
             {
                 if (player.HammerMode)
                     DeleteBlock();
@@ -474,20 +474,18 @@ namespace src
         private void AfterAddHighlight(bool setSnack = true)
         {
             var total = World.INSTANCE.TotalBlocksSelected;
-            switch (total)
-            {
-                case 0:
-                    ExitSelectionMode();
-                    break;
-                case 1:
-                    if (setSnack)
-                    {
-                        movingSelectionAllowed = false;
-                        SetBlockSelectionSnack();
-                    }
 
-                    selectedBlocksCountTextContainer.gameObject.SetActive(true);
-                    break;
+            if (total == 0)
+                ExitSelectionMode();
+            else
+            {
+                if (setSnack)
+                {
+                    movingSelectionAllowed = false;
+                    SetBlockSelectionSnack();
+                }
+
+                selectedBlocksCountTextContainer.gameObject.SetActive(true);
             }
 
             UpdateCountMsg();
