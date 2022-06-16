@@ -111,7 +111,7 @@ namespace src.AssetsInventory
 
         private void UpdateVisibility()
         {
-            var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
+            var active = (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING || GameManager.INSTANCE.GetState() == GameManager.State.MOVING_OBJECT) 
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
                 ; // && Can Edit Land 
             gameObject.SetActive(active);

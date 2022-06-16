@@ -138,12 +138,12 @@ namespace src
             return Blocks.GetBlockType(voxels[localPos.x, localPos.y, localPos.z]);
         }
 
-        public MetaBlock GetMetaAt(MetaPosition vp)
+        public MetaBlock GetMetaAt(MetaPosition mp)
         {
             if (metaBlocks == null) return null;
 
             MetaBlock block;
-            if (metaBlocks.TryGetValue(vp.local, out block))
+            if (metaBlocks.TryGetValue(mp.local, out block))
                 return block;
 
             return null;

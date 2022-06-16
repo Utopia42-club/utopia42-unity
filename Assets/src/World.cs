@@ -73,6 +73,38 @@ namespace src
             return positions;
         }
 
+        public float? GetMetaClipboardMinY()
+        {
+            if (metaClipboard == null || metaClipboard.Count == 0) return null;
+            var minY = float.MaxValue;
+            foreach (var mp in metaClipboard)
+            {
+                var chunk = GetChunkIfInited(mp.chunk);
+                if (chunk == null) return null;
+                var metaBlock = chunk.GetMetaAt(mp)?.blockObject;
+                if (metaBlock == null) return null;
+                if (minY > metaBlock.MinGlobalY) minY = metaBlock.MinGlobalY;
+            }
+
+            return minY;
+        }
+
+        public float? GetMetaSelectionMinY()
+        {
+            var minY = float.MaxValue;
+            foreach (var (key, value) in highlightChunks)
+            foreach (var mp in value.HighlightedMetaLocalPositions)
+            {
+                var chunk = GetChunkIfInited(key);
+                if (chunk == null) return null;
+                var metaBlock = chunk.GetMetaAt(new MetaPosition(key, mp))?.blockObject;
+                if (metaBlock == null) return null;
+                if (minY > metaBlock.MinGlobalY) minY = metaBlock.MinGlobalY;
+            }
+
+            return minY;
+        }
+
         public bool SelectionDisplaced =>
             metaOffset != Vector3.zero ||
             HighlightOffset != Vector3Int.zero ||
@@ -465,7 +497,7 @@ namespace src
                 highlight.transform.position += v;
                 return;
             }
-            
+
             var oldOffset = metaOffset;
             metaOffset = v - referencePosition.Value;
             highlight.transform.position = (highlight.transform.position - oldOffset) + metaOffset;
@@ -531,10 +563,13 @@ namespace src
 
         public Vector3Int GetClipboardMinPoint()
         {
+            var positions = GetClipboardWorldPositions();
+            // if (positions.Count == 0) return null;
+            
             var minX = int.MaxValue;
             var minY = int.MaxValue;
             var minZ = int.MaxValue;
-            foreach (var pos in GetClipboardWorldPositions())
+            foreach (var pos in positions)
             {
                 if (pos.x < minX)
                     minX = pos.x;

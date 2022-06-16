@@ -37,6 +37,11 @@ namespace src
             return MetaBlockObject.transform.position;
         }
 
+        public float MinY()
+        {
+            return MetaBlockObject.MinGlobalY;
+        }
+
         public MetaBlock GetBlock()
         {
             return MetaBlockObject.Block;

@@ -93,6 +93,8 @@ namespace src
             {
                 if (state == GameManager.State.PLAYING)
                     hitCollider = null;
+                else
+                    HideCursors();
             });
 
             avatar = Instantiate(avatarPrefab, gameObject.transform);
@@ -306,7 +308,7 @@ namespace src
 
             if (BlockSelectionController.INSTANCE.DraggedPosition != null)
                 HideCursors();
-            else if (HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
+            else if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
             {
                 highlightBlock.position = PossibleHighlightBlockPosInt;
                 highlightBlock.gameObject.SetActive(true);
@@ -475,7 +477,7 @@ namespace src
 
         public static Player INSTANCE => GameObject.Find("Player").GetComponent<Player>();
 
-         private void OnSelectedAssetChanged(SlotInfo slotInfo)
+        private void OnSelectedAssetChanged(SlotInfo slotInfo)
         {
             if (ChangeForbidden) return;
 
@@ -504,12 +506,12 @@ namespace src
 
             var glbUrl = slotInfo.asset?.glbUrl;
 
-            
+
             if (glbUrl != null)
             {
                 var props = (TdObjectBlockProperties) PreparedMetaBlock?.GetProps();
                 if (props != null && props.url.Equals(glbUrl)) return;
-                
+
                 PreparedMetaBlock?.DestroyView();
                 PreparedMetaBlock = new MetaBlock(Blocks.TdObjectBlockType, null, new TdObjectBlockProperties
                 {
@@ -536,7 +538,7 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.SetActive(false);
                 placeBlock.gameObject.SetActive(true);
-                
+
                 PreparedMetaBlock?.DestroyView();
                 PreparedMetaBlock = null;
             }

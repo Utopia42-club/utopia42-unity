@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using src.Canvas;
 using src.Model;
 using src.Utils;
@@ -140,23 +141,32 @@ namespace src
 
             else if (Input.GetMouseButtonDown(0) && DraggedPosition == null)
             {
-                DraggedPosition = player.FocusedFocusable switch
-                {
-                    MetaFocusable metaFocusable => metaFocusable.GetBlockPosition(),
-                    ChunkFocusable => player.PossiblePlaceBlockPosInt,
-                    _ => null
-                };
+                if (player.FocusedFocusable is not MetaFocusable metaFocusable) return; // TODO ?
+                var pos = metaFocusable.GetBlockPosition();
+                if (pos.HasValue)
+                    DraggedPosition = new Vector3(pos.Value.x, metaFocusable.MinY(), pos.Value.z);
             }
 
             else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&
                      player.FocusedFocusable is ChunkFocusable &&
                      player.CanEdit(player.PossiblePlaceBlockPosInt, out _, true))
             {
+                var metaMinY = World.INSTANCE.GetMetaSelectionMinY();
                 if (onlyMetaSelectionActive)
-                    World.INSTANCE.MoveMetaSelection(player.PossiblePlaceMetaBlockPos, DraggedPosition.Value);
+                {
+                    var pos = player.PossiblePlaceMetaBlockPos;
+                    if (metaMinY.HasValue && pos.y > metaMinY)
+                        pos.y += pos.y - metaMinY.Value;
+                    World.INSTANCE.MoveMetaSelection(pos, DraggedPosition.Value);
+                }
                 else
-                    World.INSTANCE.MoveSelection(player.PossiblePlaceBlockPosInt,
+                {
+                    var pos = player.PossiblePlaceBlockPosInt;
+                    if (metaMinY.HasValue && pos.y > metaMinY)
+                        pos.y += pos.y - Mathf.FloorToInt(metaMinY.Value);
+                    World.INSTANCE.MoveSelection(pos,
                         Vectors.TruncateFloor(DraggedPosition.Value));
+                }
             }
         }
 
@@ -312,6 +322,11 @@ namespace src
 
                 if (!conflictWithPlayer)
                 {
+                    var metaMinY = World.INSTANCE.GetMetaClipboardMinY();
+                    // if (minPoint == null)
+                    //     minPoint = Vector3Int.zero;
+                    if (metaMinY.HasValue && minPoint.y > metaMinY.Value)
+                        minPoint = new Vector3Int(minPoint.x, Mathf.FloorToInt(metaMinY.Value), minPoint.z);
                     World.INSTANCE.PasteClipboard(player.PossiblePlaceBlockPosInt - minPoint);
                     PrepareForClipboardMovement(SelectionMode.Clipboard);
                 }
