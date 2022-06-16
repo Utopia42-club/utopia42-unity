@@ -21,8 +21,6 @@ public class ColorSlotPicker : MonoBehaviour
         });
 
         closeButton.onClick.AddListener(ToggleColorPicker);
-        
-        ToggleColorPicker();
     }
 
     void Update()
@@ -45,5 +43,10 @@ public class ColorSlotPicker : MonoBehaviour
     public void ToggleColorPicker()
     {
         colorPickerPanel.SetActive(!colorPickerPanel.activeSelf);
+    }
+
+    public bool IsOpen()
+    {
+        return colorPickerPanel.activeSelf;
     }
 }
