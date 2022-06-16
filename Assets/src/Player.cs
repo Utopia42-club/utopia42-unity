@@ -513,7 +513,7 @@ namespace src
                 {
                     url = glbUrl,
                     type = TdObjectBlockProperties.TdObjectType.GLB
-                });
+                }, true);
 
                 return;
             }

@@ -16,14 +16,16 @@ namespace src.MetaBlocks
         public readonly Land land;
         public readonly MetaBlockType type;
         private object properties;
+        public bool IsCursor { private set; get; } = false;
         
         public bool IsActive => blockObject.gameObject.activeSelf;
 
-        public MetaBlock(MetaBlockType type, Land land, object properties)
+        public MetaBlock(MetaBlockType type, Land land, object properties, bool isCursor = false)
         {
             this.type = type;
             this.land = land;
             this.properties = properties;
+            this.IsCursor = isCursor;
         }
 
         public void RenderAt(Transform parent, Vector3 position, Chunk chunk)

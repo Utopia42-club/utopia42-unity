@@ -156,19 +156,24 @@ namespace src.MetaBlocks.TdObjectBlock
         protected override void OnStateChanged(State state)
         {
             ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
-            if (state == State.Ok) return;
+            if (state == State.Ok)
+            {
+                if (Block.IsCursor && objCollider != null)
+                    DestroyImmediate(objCollider);
+                return;
+            }
 
             // setting place holder
             hasClone = false;
             DestroyObject();
             ResetContainer();
-            Obj = Block.type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), true);
+            Obj = Block.type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), !Block.IsCursor);
             Obj.transform.SetParent(objContainer.transform, false);
             Obj.SetActive(true);
             objCollider = Obj.GetComponentInChildren<Collider>();
             Obj.transform.SetParent(objContainer.transform, false);
 
-            if (chunk == null) return;
+            if (chunk == null || objCollider == null) return;
             objFocusable = objCollider.gameObject.AddComponent<TdObjectFocusable>();
             objFocusable.Initialize(this);
         }
