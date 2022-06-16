@@ -41,7 +41,7 @@ namespace src.MetaBlocks
             return placeHolder = CreatePlaceHolder(false, false);
         }
 
-        public virtual MetaPosition GetPutPosition(Vector3 purePosition)
+        public virtual MetaPosition GetPlaceHolderPutPosition(Vector3 purePosition)
         {
             return new MetaPosition(purePosition);
         }

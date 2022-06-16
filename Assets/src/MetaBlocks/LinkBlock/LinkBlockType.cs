@@ -17,7 +17,7 @@ namespace src.MetaBlocks.LinkBlock
                 LocalScale);
         }
 
-        public override MetaPosition GetPutPosition(Vector3 purePosition)
+        public override MetaPosition GetPlaceHolderPutPosition(Vector3 purePosition)
         {
             return new MetaPosition(purePosition + LocalScale * Vector3.up);
         }

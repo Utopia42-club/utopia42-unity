@@ -17,7 +17,7 @@ namespace src.MetaBlocks.MarkerBlock
                 LocalScale);
         }
 
-        public override MetaPosition GetPutPosition(Vector3 purePosition)
+        public override MetaPosition GetPlaceHolderPutPosition(Vector3 purePosition)
         {
             return new MetaPosition(Player.INSTANCE.PossibleHighlightBlockPosInt + 0.5f * Vector3.one);
         }

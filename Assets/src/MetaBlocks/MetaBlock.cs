@@ -17,7 +17,7 @@ namespace src.MetaBlocks
         public readonly MetaBlockType type;
         private object properties;
         public bool IsCursor { private set; get; } = false;
-        
+
         public bool IsActive => blockObject.gameObject.activeSelf;
 
         public MetaBlock(MetaBlockType type, Land land, object properties, bool isCursor = false)
@@ -69,7 +69,7 @@ namespace src.MetaBlocks
 
         public void SetActive(bool active)
         {
-            if(blockObject != null)
+            if (blockObject != null)
                 blockObject.gameObject.SetActive(active);
         }
 
@@ -127,6 +127,7 @@ namespace src.MetaBlocks
             blockObject = (MetaBlockObject) gameObject.AddComponent(type.componentType);
             blockObject.LoadSelectHighlight(this, highlightChunkTransform, localPos, onLoad);
         }
+
         public void UpdateWorldPosition(Vector3 pos)
         {
             if (blockObject.chunk != null || land != null)
@@ -135,7 +136,8 @@ namespace src.MetaBlocks
                     "Can not update the world position of a metablock that already belongs to a land/chunk");
                 return;
             }
-            blockObject.gameObject.transform.position = pos;
+
+            blockObject.gameObject.transform.position = pos - blockObject.DeltaY * Vector3.up;
         }
     }
 }

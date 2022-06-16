@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using src.Canvas;
 using src.Model;
 using src.Utils;
@@ -17,7 +18,9 @@ namespace src.MetaBlocks
         public State State { get; protected set; }
         protected SnackItem snackItem;
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
-
+        public float MinGlobalY { get; protected set; }
+        public float DeltaY { get; protected set; } = 0;
+        
         protected void Start()
         {
             canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
@@ -106,6 +109,19 @@ namespace src.MetaBlocks
                 InLand(new Vector3(max.x, max.y, max.z));
         }
 
+        protected static float GetMinGlobalY(GameObject go)
+        {
+            return go.GetComponentsInChildren<Renderer>().Select(GetMinGlobalY).Prepend(float.MaxValue).Min();
+        }
+
+        protected static float GetMinGlobalY(Renderer renderer)
+        {
+            var bounds = renderer.bounds;
+            var center = bounds.center;
+            var size = bounds.size;
+            return (center - size * 0.5f).y;
+        }
+
         private bool InLand(Vector3 p)
         {
             if (Block.land == null)
@@ -118,7 +134,7 @@ namespace src.MetaBlocks
 
         protected internal void UpdateState(State state)
         {
-            this.State = state;
+            State = state;
             stateChange.Invoke(state);
         }
 
@@ -132,7 +148,7 @@ namespace src.MetaBlocks
             gameObjectTransform.localPosition = highlightChunkTransform.transform.localPosition + localPos.position;
             Initialize(block, null);
 
-            stateChange.AddListener(state =>
+            stateChange.AddListener((state) =>
             {
                 if (goRef == null) return;
                 if (state != State.Ok)

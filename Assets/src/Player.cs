@@ -321,11 +321,13 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.gameObject.SetActive(false);
                 PreparedMetaBlock.SetActive(true);
-                var mp = PreparedMetaBlock.type.GetPutPosition(blockHitPoint);
+                var pos = PreparedMetaBlock.type.GetPlaceHolderPutPosition(blockHitPoint).ToWorld();
                 if (PreparedMetaBlock.blockObject == null)
-                    PreparedMetaBlock.RenderAt(null, mp.ToWorld(), null);
+                {
+                    PreparedMetaBlock.RenderAt(null, pos, null);
+                }
                 else
-                    PreparedMetaBlock.UpdateWorldPosition(mp.ToWorld());
+                    PreparedMetaBlock.UpdateWorldPosition(pos);
             }
             else if (!CtrlDown && !selectionActive && SelectedBlockType is MetaBlockType metaBlockType &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
@@ -333,7 +335,7 @@ namespace src
                 HideBlockCursors();
                 if (MetaBlockPlaceHolder != null)
                 {
-                    var mp = metaBlockType.GetPutPosition(blockHitPoint);
+                    var mp = metaBlockType.GetPlaceHolderPutPosition(blockHitPoint);
                     if (chunk.GetMetaAt(mp) == null)
                     {
                         MetaBlockPlaceHolder.transform.position = mp.ToWorld();
