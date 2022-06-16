@@ -50,6 +50,7 @@ namespace src.AssetsInventory
         private VisualElement breadcrumb;
         private VisualElement inventoryContainer;
         private bool firstTime = true;
+        private int selectedHandySlotIndex = -1;
 
         void Start()
         {
@@ -222,6 +223,34 @@ namespace src.AssetsInventory
                 FilterAssets(filterText);
                 filterText = "";
             }
+
+            if (handyBar.childCount == 0)
+                return;
+            var mouseDelta = Input.mouseScrollDelta.y;
+            var inc = Input.GetButtonDown("Change Block") || mouseDelta <= -0.1;
+            var dec = (
+                          Input.GetButtonDown("Change Block") &&
+                          (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                      )
+                      || mouseDelta >= 0.1;
+            if (!dec && !inc)
+                return;
+            if (dec)
+            {
+                if (selectedHandySlotIndex is -1 or 0)
+                    selectedHandySlotIndex = handyBar.childCount - 1;
+                else
+                    selectedHandySlotIndex--;
+            }
+            else
+            {
+                if (selectedHandySlotIndex == handyBar.childCount - 1)
+                    selectedHandySlotIndex = 0;
+                else
+                    selectedHandySlotIndex++;
+            }
+
+            SelectSlot(handyBarSlots[selectedHandySlotIndex], false);
         }
 
         public void AddToHandyPanel(SlotInfo slotInfo)
@@ -619,6 +648,7 @@ namespace src.AssetsInventory
             {
                 selectedSlot = null;
                 selectedSlotChanged.Invoke(null);
+                selectedHandySlotIndex = -1;
                 return;
             }
 
@@ -627,7 +657,10 @@ namespace src.AssetsInventory
             var slotInfo = slot.GetSlotInfo();
             selectedSlotChanged.Invoke(slotInfo);
             if (addToHandyPanel)
+            {
                 AddToHandyPanel(slotInfo);
+                selectedHandySlotIndex = 0;
+            }
         }
 
         private void SaveHandySlots()
