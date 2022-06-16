@@ -103,7 +103,9 @@ namespace src.AssetsInventory
 
             handyBarSlots.Clear();
             handyBar.Clear();
-            foreach (var savedHandySlot in GetSavedHandySlots())
+            var savedHandySlots = GetSavedHandySlots();
+            savedHandySlots.Reverse();
+            foreach (var savedHandySlot in savedHandySlots)
                 AddToHandyPanel(savedHandySlot);
         }
 
@@ -116,7 +118,14 @@ namespace src.AssetsInventory
             inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
             if (active)
-                LoadFavoriteItems(); // FIXME: what to do on error?
+                LoadFavoriteItems(() =>
+                {
+                    if (handyBarSlots.Count == 0)
+                    {
+                        foreach (var favoriteItem in favoriteItems)
+                            AddToHandyPanel(favoriteItem.ToSlotInfo());
+                    }
+                }); // FIXME: what to do on error?
         }
 
         private void SetupAssetsTab()
