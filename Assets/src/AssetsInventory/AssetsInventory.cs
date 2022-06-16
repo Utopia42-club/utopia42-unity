@@ -226,6 +226,7 @@ namespace src.AssetsInventory
 
             if (handyBar.childCount == 0)
                 return;
+ 
             var mouseDelta = Input.mouseScrollDelta.y;
             var inc = Input.GetButtonDown("Change Block") || mouseDelta <= -0.1;
             var dec = (
@@ -249,7 +250,7 @@ namespace src.AssetsInventory
                 else
                     selectedHandySlotIndex++;
             }
-
+            handyBar.ScrollTo(handyBarSlots[selectedHandySlotIndex].VisualElement());
             SelectSlot(handyBarSlots[selectedHandySlotIndex], false);
         }
 
