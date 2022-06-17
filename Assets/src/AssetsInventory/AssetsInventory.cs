@@ -110,7 +110,7 @@ namespace src.AssetsInventory
             savedHandySlots.Reverse();
             foreach (var savedHandySlot in savedHandySlots)
                 AddToHandyPanel(savedHandySlot);
-            
+
             var locked = MouseLook.INSTANCE.cursorLocked;
             root.focusable = !locked;
             root.SetEnabled(!locked);
@@ -170,10 +170,10 @@ namespace src.AssetsInventory
             }, () => { ShowInventoryLoadingLayer(false); }));
 
             var searchField = tabPane.GetTabBody().Q<TextField>("searchField");
-            
+
             UiUtils.Utils.SetPlaceHolderForTextField(searchField, "Search");
             UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
-            
+
             IEnumerator searchCoroutine = null;
             searchField.RegisterValueChangedCallback(evt =>
             {
@@ -294,7 +294,10 @@ namespace src.AssetsInventory
                 {
                     handyBarSlots.Remove(handyBarSlot);
                     handyBarSlots.Insert(0, handyBarSlot);
-                    handyBar.Remove(handyBarSlot.VisualElement());
+                    if (handyBar.Contains(handyBarSlot.VisualElement()))
+                        handyBar.Remove(handyBarSlot.VisualElement());
+                    else
+                        handyBar.RemoveAt(handyBar.childCount - 1);
                     handyBar.Insert(0, handyBarSlot.VisualElement());
                     SelectSlot(handyBarSlot, false);
                     SaveHandySlots();
