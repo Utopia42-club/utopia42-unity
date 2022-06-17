@@ -159,18 +159,11 @@ namespace src.AssetsInventory
                 ShowInventoryLoadingLayer(false);
             }, () => { ShowInventoryLoadingLayer(false); }));
 
-            // Setup searchField
             var searchField = tabPane.GetTabBody().Q<TextField>("searchField");
-            searchField.RegisterCallback<FocusInEvent>(evt =>
-            {
-                if (searchField.text == "Search")
-                    searchField.SetValueWithoutNotify("");
-            });
-            searchField.RegisterCallback<FocusOutEvent>(evt =>
-            {
-                if (searchField.text == "")
-                    searchField.SetValueWithoutNotify("Search");
-            });
+            
+            UiUtils.Utils.SetPlaceHolderForTextField(searchField, "Search");
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
+            
             IEnumerator searchCoroutine = null;
             searchField.RegisterValueChangedCallback(evt =>
             {
@@ -720,11 +713,6 @@ namespace src.AssetsInventory
         public VisualElement GetTooltipRoot()
         {
             return root;
-        }
-
-        public bool IsOpen()
-        {
-            return gameObject.activeSelf && inventory.style.visibility == Visibility.Visible;
         }
 
         public static AssetsInventory INSTANCE => instance;

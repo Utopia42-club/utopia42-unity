@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace src.UiUtils
-{
+{   
     public class TabPane
     {
         private readonly TemplateContainer root;

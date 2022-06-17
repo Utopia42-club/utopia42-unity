@@ -49,7 +49,7 @@ namespace src.Canvas
                 if (Input.GetButtonDown("Profile")
                     && currentWallet != null
                     && !profileLoader.IsWalletLoading(currentWallet)
-                    && (assetsInventory == null || !assetsInventory.IsOpen()))
+                    && !manager.IsUiEngaged())
                     manager.ShowProfile(currentProfile, currentLand);
             }
             else

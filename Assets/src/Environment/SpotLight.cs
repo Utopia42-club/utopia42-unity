@@ -11,17 +11,15 @@ namespace src.Environment
             spotLight.range = 20;
             GameManager.INSTANCE.stateChange.AddListener(state =>
                 {
-                    gameObject.SetActive(state == GameManager.State.PLAYING || state == GameManager.State.MOVING_OBJECT);
+                    gameObject.SetActive(state == GameManager.State.PLAYING ||
+                                         state == GameManager.State.MOVING_OBJECT);
                 }
             );
         }
 
         void Update()
         {
-            var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
-            if (assetsInventory != null && assetsInventory.IsOpen())
-                return;
-            if (Input.GetButtonDown("Light"))
+            if (!GameManager.INSTANCE.IsUiEngaged() && Input.GetButtonDown("Light"))
             {
                 spotLight.range = spotLight.range > 0 ? 0 : 20;
             }

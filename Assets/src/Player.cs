@@ -150,11 +150,10 @@ namespace src
 
         private void GetInputs()
         {
+            if (GameManager.INSTANCE.IsUiEngaged())
+                return;
             CtrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
                        Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
-            // var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
-            // if (assetsInventory != null && assetsInventory.IsOpen())
-            //     return;
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
 

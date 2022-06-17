@@ -13,6 +13,7 @@ using src.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace src
 {
@@ -35,6 +36,9 @@ namespace src
         private bool doubleCtrlTap = false;
         private double doubleCtrlTapTime;
 
+        private readonly List<int> engagedUIs = new();
+        private int uiId;
+
         void Start()
         {
             SetState(State.SETTINGS);
@@ -43,7 +47,6 @@ namespace src
 
         void Update()
         {
-            var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
             if (Input.GetButtonDown("Cancel"))
             {
                 if (state == State.PLAYING && MouseLook.INSTANCE.cursorLocked)
@@ -51,8 +54,7 @@ namespace src
                 else
                     ReturnToGame();
             }
-            else if (state == State.PLAYING
-                     && (assetsInventory == null || !assetsInventory.IsOpen()))
+            else if (state == State.PLAYING && !IsUiEngaged())
             {
                 if (IsControlKeyDown() && doubleCtrlTap)
                 {
@@ -639,6 +641,24 @@ namespace src
         {
             if (state == State.PLAYING)
                 SetState(State.INVENTORY);
+        }
+
+        public int EngageUi()
+        {
+            Debug.Log("Ui added " + uiId);
+            engagedUIs.Add(uiId);
+            return uiId++;
+        }
+
+        public void UnEngageUi(int id)
+        {
+            Debug.Log("Ui removed " + id);
+            engagedUIs.Remove(id);
+        }
+
+        public bool IsUiEngaged()
+        {
+            return engagedUIs.Count != 0;
         }
     }
 }
