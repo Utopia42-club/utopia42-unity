@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using src.AssetsInventory.Models;
 using src.AssetsInventory.slots;
@@ -36,7 +38,7 @@ namespace src.AssetsInventory
         private readonly AssetsRestClient restClient = new();
         private readonly Dictionary<int, Pack> packs = new();
         private Category selectedCategory;
-        private string filterText = "";
+        private string filterText;
 
         private List<InventorySlotWrapper> handyBarSlots = new();
 
@@ -111,7 +113,8 @@ namespace src.AssetsInventory
 
         private void UpdateVisibility()
         {
-            var active = (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING || GameManager.INSTANCE.GetState() == GameManager.State.MOVING_OBJECT) 
+            var active = (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING ||
+                          GameManager.INSTANCE.GetState() == GameManager.State.MOVING_OBJECT)
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
                 ; // && Can Edit Land 
             gameObject.SetActive(active);
@@ -168,8 +171,20 @@ namespace src.AssetsInventory
                 if (searchField.text == "")
                     searchField.SetValueWithoutNotify("Search");
             });
-            var debounce = Utils.Debounce<string>(arg => filterText = arg);
-            searchField.RegisterValueChangedCallback(evt => debounce(evt.newValue));
+            IEnumerator searchCoroutine = null;
+            searchField.RegisterValueChangedCallback(evt =>
+            {
+                if (searchCoroutine != null)
+                    StopCoroutine(searchCoroutine);
+                searchCoroutine = DebounceSearchField(evt.newValue);
+                StartCoroutine(searchCoroutine);
+            });
+        }
+
+        private IEnumerator DebounceSearchField(string value)
+        {
+            yield return new WaitForSeconds(0.6f);
+            filterText = value;
         }
 
 
@@ -227,10 +242,10 @@ namespace src.AssetsInventory
 
         private void Update()
         {
-            if (filterText.Length > 0)
+            if (filterText != null)
             {
                 FilterAssets(filterText);
-                filterText = "";
+                filterText = null;
             }
 
             // if (selectedHandySlotIndex != -1 && (Input.GetButtonDown("Clear slot selection") || Input.GetMouseButtonDown(1)))
@@ -424,6 +439,12 @@ namespace src.AssetsInventory
 
         private void FilterAssets(string filter)
         {
+            if (filter.Length == 0)
+            {
+                tabPane.OpenTab(0);
+                return;
+            }
+
             var sc = new SearchCriteria
             {
                 limit = 100,

@@ -8,23 +8,23 @@ namespace src.AssetsInventory
 {
     public class Utils
     {
-        public static Action<T> Debounce<T>(Action<T> func, int milliseconds = 500)
-        {
-            CancellationTokenSource? cancelTokenSource = null;
-            return arg =>
-            {
-                cancelTokenSource?.Cancel();
-                cancelTokenSource = new CancellationTokenSource();
-                Task.Delay(milliseconds, cancelTokenSource.Token)
-                    .ContinueWith(t =>
-                    {
-                        if (t.IsCompletedSuccessfully)
-                        {
-                            func(arg);
-                        }
-                    }, TaskScheduler.Default);
-            };
-        }
+        // public static Action<T> Debounce<T>(Action<T> func, int milliseconds = 500)
+        // {
+        //     CancellationTokenSource? cancelTokenSource = null;
+        //     return arg =>
+        //     {
+        //         cancelTokenSource?.Cancel();
+        //         cancelTokenSource = new CancellationTokenSource();
+        //         Task.Delay(milliseconds, cancelTokenSource.Token)
+        //             .ContinueWith(t =>
+        //             {
+        //                 if (t.IsCompletedSuccessfully)
+        //                 {
+        //                     func(arg);
+        //                 }
+        //             }, TaskScheduler.Default);
+        //     };
+        // }
 
         public static void IncreaseScrollSpeed(ScrollView scrollView, float factor)
         {
