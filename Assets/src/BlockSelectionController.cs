@@ -143,8 +143,9 @@ namespace src
             {
                 if (player.FocusedFocusable is not MetaFocusable metaFocusable) return; // TODO ?
                 var pos = metaFocusable.GetBlockPosition();
+                var minY = metaFocusable.MinY();
                 if (pos.HasValue)
-                    DraggedPosition = new Vector3(pos.Value.x, metaFocusable.MinY(), pos.Value.z);
+                    DraggedPosition = new Vector3(pos.Value.x, minY ?? pos.Value.y, pos.Value.z);
             }
 
             else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&

@@ -160,11 +160,11 @@ namespace src.MetaBlocks.TdObjectBlock
                     DestroyImmediate(objCollider);
 
                 var newMinGlobalY = GetMinGlobalY(Obj);
-                if (Block.IsCursor)
+                if (Block.IsCursor && MinGlobalY.HasValue)
                 {
-                    var delta = newMinGlobalY - MinGlobalY;
+                    var delta = newMinGlobalY - MinGlobalY.Value;
                     if (Mathf.Abs(delta) > 0.001)
-                        DeltaY = newMinGlobalY - MinGlobalY;
+                        DeltaY = delta;
                 }
 
                 MinGlobalY = newMinGlobalY;

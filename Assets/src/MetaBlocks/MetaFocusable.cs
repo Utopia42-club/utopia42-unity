@@ -38,7 +38,7 @@ namespace src
             return new MetaPosition(MetaBlockObject.transform.position).ToWorld();
         }
 
-        public float MinY()
+        public float? MinY()
         {
             return MetaBlockObject.MinGlobalY;
         }

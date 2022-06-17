@@ -82,8 +82,8 @@ namespace src
                 var chunk = GetChunkIfInited(mp.chunk);
                 if (chunk == null) return null;
                 var metaBlock = chunk.GetMetaAt(mp)?.blockObject;
-                if (metaBlock == null) return null;
-                if (minY > metaBlock.MinGlobalY) minY = metaBlock.MinGlobalY;
+                if (metaBlock == null || !metaBlock.MinGlobalY.HasValue) return null;
+                if (minY > metaBlock.MinGlobalY) minY = metaBlock.MinGlobalY.Value;
             }
 
             return minY;
@@ -98,8 +98,8 @@ namespace src
                 var chunk = GetChunkIfInited(key);
                 if (chunk == null) return null;
                 var metaBlock = chunk.GetMetaAt(new MetaPosition(key, mp))?.blockObject;
-                if (metaBlock == null) return null;
-                if (minY > metaBlock.MinGlobalY) minY = metaBlock.MinGlobalY;
+                if (metaBlock == null || !metaBlock.MinGlobalY.HasValue) return null;
+                if (minY > metaBlock.MinGlobalY) minY = metaBlock.MinGlobalY.Value;
             }
 
             return minY;

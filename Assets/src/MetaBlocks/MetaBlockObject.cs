@@ -18,7 +18,7 @@ namespace src.MetaBlocks
         public State State { get; protected set; }
         protected SnackItem snackItem;
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
-        public float MinGlobalY { get; protected set; }
+        public float? MinGlobalY { get; protected set; }
         public float DeltaY { get; protected set; } = 0;
         
         protected void Start()
