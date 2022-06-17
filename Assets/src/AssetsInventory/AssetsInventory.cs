@@ -285,50 +285,7 @@ namespace src.AssetsInventory
             handyBar.ScrollTo(handyBarSlots[selectedHandySlotIndex].VisualElement());
             SelectSlot(handyBarSlots[selectedHandySlotIndex], false);
         }
-
-        public void AddToHandyPanel(SlotInfo slotInfo)
-        {
-            foreach (var handyBarSlot in handyBarSlots)
-            {
-                if (handyBarSlot.GetSlotInfo().Equals(slotInfo))
-                {
-                    handyBarSlots.Remove(handyBarSlot);
-                    handyBarSlots.Insert(0, handyBarSlot);
-                    if (handyBar.Contains(handyBarSlot.VisualElement()))
-                        handyBar.Remove(handyBarSlot.VisualElement());
-                    else
-                        handyBar.RemoveAt(handyBar.childCount - 1);
-                    handyBar.Insert(0, handyBarSlot.VisualElement());
-                    SelectSlot(handyBarSlot, false);
-                    SaveHandySlots();
-                    return;
-                }
-            }
-
-            var slot = new HandyItemInventorySlot();
-            slot.SetSize(70);
-            slot.SetSlotInfo(slotInfo);
-            if (handyBarSlots.Count == 15)
-                handyBarSlots.RemoveAt(14);
-            handyBarSlots.Insert(0, slot);
-            handyBar.Insert(0, slot.VisualElement());
-            if (handyBar.childCount > 10)
-                handyBar.RemoveAt(handyBar.childCount - 1);
-            SaveHandySlots();
-            selectedHandySlotIndex = 0;
-            SelectSlot(slot, false);
-        }
-
-        public void RemoveFromHandyPanel(InventorySlotWrapper slot)
-        {
-            handyBarSlots.Remove(slot);
-            slot.VisualElement().RemoveFromHierarchy();
-            while (handyBar.childCount < 10 && handyBarSlots.Count >= 10)
-                handyBar.Add(handyBarSlots[handyBar.childCount].VisualElement());
-            SaveHandySlots();
-        }
-
-
+        
         private void ToggleInventory()
         {
             var isVisible = inventoryContainer.style.visibility == Visibility.Visible;
@@ -701,7 +658,7 @@ namespace src.AssetsInventory
             selectedSlotChanged.Invoke(slotInfo);
             if (addToHandyPanel)
                 AddToHandyPanel(slotInfo);
-            else
+            else // from handy bar itself
             {
                 for (var i = 0; i < handyBarSlots.Count; i++)
                 {
@@ -712,6 +669,48 @@ namespace src.AssetsInventory
                     }
                 }
             }
+        }
+
+        public void AddToHandyPanel(SlotInfo slotInfo)
+        {
+            foreach (var handyBarSlot in handyBarSlots)
+            {
+                if (handyBarSlot.GetSlotInfo().Equals(slotInfo))
+                {
+                    handyBarSlots.Remove(handyBarSlot);
+                    handyBarSlots.Insert(0, handyBarSlot);
+                    if (handyBar.Contains(handyBarSlot.VisualElement()))
+                        handyBar.Remove(handyBarSlot.VisualElement());
+                    else
+                        handyBar.RemoveAt(handyBar.childCount - 1);
+                    handyBar.Insert(0, handyBarSlot.VisualElement());
+                    SelectSlot(handyBarSlot, false);
+                    SaveHandySlots();
+                    return;
+                }
+            }
+
+            var slot = new HandyItemInventorySlot();
+            slot.SetSize(70);
+            slot.SetSlotInfo(slotInfo);
+            if (handyBarSlots.Count == 15)
+                handyBarSlots.RemoveAt(14);
+            handyBarSlots.Insert(0, slot);
+            handyBar.Insert(0, slot.VisualElement());
+            if (handyBar.childCount > 10)
+                handyBar.RemoveAt(handyBar.childCount - 1);
+            SaveHandySlots();
+            selectedHandySlotIndex = 0;
+            SelectSlot(slot, false);
+        }
+
+        public void RemoveFromHandyPanel(InventorySlotWrapper slot)
+        {
+            handyBarSlots.Remove(slot);
+            slot.VisualElement().RemoveFromHierarchy();
+            while (handyBar.childCount < 10 && handyBarSlots.Count >= 10)
+                handyBar.Add(handyBarSlots[handyBar.childCount].VisualElement());
+            SaveHandySlots();
         }
 
         private void SaveHandySlots()

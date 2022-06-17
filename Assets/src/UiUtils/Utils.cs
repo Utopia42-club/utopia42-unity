@@ -12,6 +12,14 @@ namespace src.UiUtils
             textField.RegisterCallback<FocusOutEvent>(evt =>
             {
                 if (engagementId != null)
+                {
+                    GameManager.INSTANCE.UnEngageUi(engagementId.Value);
+                    engagementId = null;
+                }
+            });
+            MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(locked =>
+            {
+                if (locked && engagementId != null)
                     GameManager.INSTANCE.UnEngageUi(engagementId.Value);
             });
         }
