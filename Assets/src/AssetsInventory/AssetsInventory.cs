@@ -308,7 +308,6 @@ namespace src.AssetsInventory
             var slot = new HandyItemInventorySlot();
             slot.SetSize(70);
             slot.SetSlotInfo(slotInfo);
-            SelectSlot(slot, false);
             if (handyBarSlots.Count == 15)
                 handyBarSlots.RemoveAt(14);
             handyBarSlots.Insert(0, slot);
@@ -316,6 +315,8 @@ namespace src.AssetsInventory
             if (handyBar.childCount > 10)
                 handyBar.RemoveAt(handyBar.childCount - 1);
             SaveHandySlots();
+            selectedHandySlotIndex = 0;
+            SelectSlot(slot, false);
         }
 
         public void RemoveFromHandyPanel(InventorySlotWrapper slot)
@@ -699,9 +700,17 @@ namespace src.AssetsInventory
             var slotInfo = slot.GetSlotInfo();
             selectedSlotChanged.Invoke(slotInfo);
             if (addToHandyPanel)
-            {
                 AddToHandyPanel(slotInfo);
-                selectedHandySlotIndex = 0;
+            else
+            {
+                for (var i = 0; i < handyBarSlots.Count; i++)
+                {
+                    if (handyBarSlots[i] == slot)
+                    {
+                        selectedHandySlotIndex = i;
+                        break;
+                    }
+                }
             }
         }
 
