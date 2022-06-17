@@ -521,9 +521,11 @@ namespace src
                 return;
             }
 
-
             if (slotInfo.block != null)
             {
+                PreparedMetaBlock?.DestroyView();
+                PreparedMetaBlock = null;
+                
                 SelectedBlockType = slotInfo.block;
                 if (SelectedBlockType is MetaBlockType metaBlockType)
                 {
@@ -537,9 +539,6 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.SetActive(false);
                 placeBlock.gameObject.SetActive(true);
-
-                PreparedMetaBlock?.DestroyView();
-                PreparedMetaBlock = null;
             }
         }
 
