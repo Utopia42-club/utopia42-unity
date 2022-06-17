@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace src
 {
@@ -12,6 +13,7 @@ namespace src
         private Action onUpdate = () => { };
         private Action<Vector3> rotationTarget = null;
         public bool cursorLocked = true;
+        public readonly UnityEvent<bool> cursorLockedStateChanged = new();
 
         void Start()
         {
@@ -64,6 +66,7 @@ namespace src
             cursorLocked = locked;
             Cursor.visible = !locked;
             Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
+            cursorLockedStateChanged.Invoke(locked);
         }
 
         private void DoUpdate()

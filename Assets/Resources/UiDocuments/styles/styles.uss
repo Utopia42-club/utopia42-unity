@@ -203,3 +203,6 @@
     background-color: var(--color-background-dark);
     border-radius: var(--default-border-radius);
 }
+
+.utopia-panel:disabled {
+}

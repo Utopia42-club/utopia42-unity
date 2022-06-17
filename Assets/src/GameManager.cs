@@ -645,14 +645,12 @@ namespace src
 
         public int EngageUi()
         {
-            Debug.Log("Ui added " + uiId);
             engagedUIs.Add(uiId);
             return uiId++;
         }
 
         public void UnEngageUi(int id)
         {
-            Debug.Log("Ui removed " + id);
             engagedUIs.Remove(id);
         }
 

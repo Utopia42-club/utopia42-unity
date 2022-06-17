@@ -1,4 +1,5 @@
-﻿using UnityEngine.UIElements;
+﻿using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace src.UiUtils
 {
@@ -24,7 +25,7 @@ namespace src.UiUtils
             });
             textField.RegisterCallback<FocusOutEvent>(evt =>
             {
-                if (textField.text == "")
+                if (string.IsNullOrEmpty(textField.text))
                     textField.SetValueWithoutNotify(placeHolder);
             });
         }

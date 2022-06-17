@@ -13,6 +13,7 @@ using src.UiUtils;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 
 namespace src.AssetsInventory
@@ -109,6 +110,15 @@ namespace src.AssetsInventory
             savedHandySlots.Reverse();
             foreach (var savedHandySlot in savedHandySlots)
                 AddToHandyPanel(savedHandySlot);
+            
+            var locked = MouseLook.INSTANCE.cursorLocked;
+            root.focusable = !locked;
+            root.SetEnabled(!locked);
+            MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(locked =>
+            {
+                root.focusable = !locked;
+                root.SetEnabled(!locked);
+            });
         }
 
         private void UpdateVisibility()
