@@ -281,9 +281,7 @@ namespace src
             {
                 ExitSelectionMode();
             }
-            else if (Input.GetKeyDown(KeyCode.C) &&
-                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
+            else if (Input.GetKeyDown(KeyCode.C) && player.CtrlDown)
             {
                 World.INSTANCE.ResetClipboard();
                 ExitSelectionMode();
@@ -383,9 +381,7 @@ namespace src
             {
                 if (Input.GetKeyDown(KeyCode.H))
                     SetBlockSelectionSnack(!help);
-                if (Input.GetKeyDown(KeyCode.V) &&
-                    !(Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
+                if (Input.GetKeyDown(KeyCode.V) && !player.CtrlDown)
                 {
                     movingSelectionAllowed = !movingSelectionAllowed;
                     SetBlockSelectionSnack(help);
