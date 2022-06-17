@@ -237,7 +237,7 @@ namespace src.AssetsInventory
             if (selectedHandySlotIndex != -1 && Input.GetButtonDown("Clear slot selection"))
                 SelectSlot(null);
 
-            if (handyBar.childCount == 0)
+            if (handyBar.childCount == 0 || !MouseLook.INSTANCE.cursorLocked)
                 return;
 
             var mouseDelta = Input.mouseScrollDelta.y;
