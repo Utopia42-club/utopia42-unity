@@ -1,0 +1,39 @@
+
+.unity-popup-field {
+    white-space: nowrap;
+}
+
+.unity-popup-field__input {
+    flex: 1 1 auto;
+    flex-direction: row;
+    padding: 0 10px;
+    border-width: 1px;
+    border-radius: var(--default-border-radius);
+    border-color: var(--color-primary-lighter);
+    background-color: var(--color-background-dark);
+}
+
+.unity-popup-field:hover .unity-popup-field__input {
+    border-color: var(--color-primary-darker);
+}
+
+.unity-base-popup-field__text {
+    -unity-text-align: middle-left;
+    flex-shrink: 1;
+    flex-grow: 1;
+}
+
+.unity-base-popup-field__arrow {
+    width: 20px;
+    height: 20px;
+    background-image: url('/Assets/Resources/Icons/dropdown.png');
+    -unity-background-image-tint-color: var(--color-text-darker);
+    margin-top: 7px;
+    margin-bottom: 7px;
+}
+
+.unity-base-dropdown {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
