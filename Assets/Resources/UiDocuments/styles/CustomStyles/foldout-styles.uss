@@ -1,7 +1,0 @@
-.unity-foldout__text {
-    color: var(--color-text);
-}
-
-.unity-foldout__text:active {
-    color: var(--color-text-darker);
-}

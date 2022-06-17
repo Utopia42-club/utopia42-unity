@@ -1,5 +1,7 @@
 using System;
+using src;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UIElements;
 
 public class PropertyEditor : MonoBehaviour
@@ -11,6 +13,7 @@ public class PropertyEditor : MonoBehaviour
     private Label label;
     private Button cancelAction;
     private Button saveAction;
+    private UnityAction<bool> focusListener;
 
     private void Start()
     {
@@ -36,7 +39,20 @@ public class PropertyEditor : MonoBehaviour
         cancelAction = root.Q<Button>("cancel");
         cancelAction.clickable.clicked += Hide;
         saveAction = root.Q<Button>("save");
+        saveAction.clickable = new Clickable(() => {});
         saveAction.clickable.clicked += onSave;
+
+        var locked = MouseLook.INSTANCE.cursorLocked;
+        root.focusable = !locked;
+        root.SetEnabled(!locked);
+        if (focusListener != null)
+            MouseLook.INSTANCE.cursorLockedStateChanged.RemoveListener(focusListener);
+        focusListener = locked =>
+        {
+            root.focusable = !locked;
+            root.SetEnabled(!locked);
+        };
+        MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(focusListener);
         return editor;
     }
 

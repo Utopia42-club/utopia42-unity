@@ -54,6 +54,7 @@ namespace src.AssetsInventory
         private VisualElement inventoryContainer;
         private bool firstTime = true;
         private int selectedHandySlotIndex = -1;
+        private UnityAction<bool> focusListener;
 
         void Start()
         {
@@ -114,11 +115,14 @@ namespace src.AssetsInventory
             var locked = MouseLook.INSTANCE.cursorLocked;
             root.focusable = !locked;
             root.SetEnabled(!locked);
-            MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(locked =>
+            if (focusListener != null)
+                MouseLook.INSTANCE.cursorLockedStateChanged.RemoveListener(focusListener);
+            focusListener = locked =>
             {
                 root.focusable = !locked;
                 root.SetEnabled(!locked);
-            });
+            };
+            MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(focusListener);
         }
 
         private void UpdateVisibility()
@@ -285,7 +289,7 @@ namespace src.AssetsInventory
             handyBar.ScrollTo(handyBarSlots[selectedHandySlotIndex].VisualElement());
             SelectSlot(handyBarSlots[selectedHandySlotIndex], false);
         }
-        
+
         private void ToggleInventory()
         {
             var isVisible = inventoryContainer.style.visibility == Visibility.Visible;
@@ -395,7 +399,6 @@ namespace src.AssetsInventory
                 text = name
             };
             foldout.SetValueWithoutNotify(true);
-            foldout.AddToClassList("utopia-foldout");
             var fs = foldout.style;
             fs.marginRight = fs.marginLeft = fs.marginBottom = fs.marginTop = 5;
             return foldout;

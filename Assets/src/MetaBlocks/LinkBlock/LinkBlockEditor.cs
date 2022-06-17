@@ -30,6 +30,11 @@ namespace src.MetaBlocks.LinkBlock
             yField = root.Q<TextField>("y");
             zField = root.Q<TextField>("z");
 
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(urlField);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(xField);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(yField);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(zField);
+
             typeField.RegisterValueChangedCallback(evt => UpdateFieldsVisibility());
             UpdateFieldsVisibility();
         }
@@ -109,7 +114,7 @@ namespace src.MetaBlocks.LinkBlock
 
         private bool HasValue(TextField f)
         {
-            return f.text != null && f.text.Length > 0;
+            return !string.IsNullOrEmpty(f.text);
         }
     }
 }
