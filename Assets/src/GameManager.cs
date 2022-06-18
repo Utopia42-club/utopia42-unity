@@ -13,6 +13,7 @@ using src.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace src
 {
@@ -35,6 +36,9 @@ namespace src
         private bool doubleCtrlTap = false;
         private double doubleCtrlTapTime;
 
+        private readonly List<int> engagedUIs = new();
+        private int uiId;
+
         void Start()
         {
             SetState(State.SETTINGS);
@@ -50,7 +54,7 @@ namespace src
                 else
                     ReturnToGame();
             }
-            else if (state == State.PLAYING)
+            else if (state == State.PLAYING && !IsUiEngaged())
             {
                 if (IsControlKeyDown() && doubleCtrlTap)
                 {
@@ -71,14 +75,10 @@ namespace src
                     SetState(State.SETTINGS);
                 else if (Input.GetButtonDown("Map"))
                     SetState(State.MAP);
-                else if (Input.GetButtonDown("Inventory"))
-                    SetState(State.INVENTORY);
             }
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
                 SetState(State.PLAYING);
             else if (Input.GetButtonDown("Map") && state == State.MAP)
-                SetState(State.PLAYING);
-            else if (Input.GetButtonDown("Inventory") && state == State.INVENTORY)
                 SetState(State.PLAYING);
         }
 
@@ -94,9 +94,7 @@ namespace src
 
         private bool IsControlKeyDown()
         {
-            return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl)
-                                                         || Input.GetKeyDown(KeyCode.LeftCommand) ||
-                                                         Input.GetKeyDown(KeyCode.RightCommand);
+            return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
         }
 
         public bool IsWorldInited()
@@ -266,7 +264,6 @@ namespace src
                     SetState(State.PLAYING);
                     break;
                 case State.SETTINGS:
-                case State.INVENTORY:
                 case State.FREEZE:
                     SetState(State.PLAYING);
                     break;
@@ -619,7 +616,7 @@ namespace src
             SETTINGS,
             PLAYING,
             MAP,
-            INVENTORY,
+            INVENTORY, //FIXME Remove !
             HELP,
             DIALOG,
             PROFILE_DIALOG,
@@ -633,10 +630,20 @@ namespace src
             Loading.INSTANCE.ShowConnectionError();
         }
 
-        public void OpenInventory()
+        public int EngageUi()
         {
-            if (state == State.PLAYING)
-                SetState(State.INVENTORY);
+            engagedUIs.Add(uiId);
+            return uiId++;
+        }
+
+        public void UnEngageUi(int id)
+        {
+            engagedUIs.Remove(id);
+        }
+
+        public bool IsUiEngaged()
+        {
+            return engagedUIs.Count != 0;
         }
     }
 }

@@ -1,14 +1,24 @@
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
+using System;
+using UnityEngine.UIElements;
 
 namespace src.MetaBlocks.MarkerBlock
 {
-    public class MarkerBlockEditor : MonoBehaviour
+    public class MarkerBlockEditor
     {
-        public static readonly string PREFAB = "MetaBlocks/MarkerBlockEditor";
+        private TextField name;
 
-        public new InputField name;
+        public MarkerBlockEditor(Action<MarkerBlockProperties> onSave)
+        {
+            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/MarkerBlockEditor",
+                "Marker Block Properties", () =>
+                {
+                    onSave(GetValue());
+                    PropertyEditor.INSTANCE.Hide();
+                });
+            name = root.Q<TextField>("name");
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(name);
+        }
+
 
         public MarkerBlockProperties GetValue()
         {
@@ -27,14 +37,19 @@ namespace src.MetaBlocks.MarkerBlock
         {
             if (value == null)
             {
-                name.text = "";
+                name.value = "";
                 return;
             }
 
-            name.text = value.name == null ? "" : value.name;
+            name.value = value.name == null ? "" : value.name;
         }
 
-        private bool HasValue(InputField f)
+        public void Show()
+        {
+            PropertyEditor.INSTANCE.Show();
+        }
+
+        private bool HasValue(TextField f)
         {
             return !string.IsNullOrEmpty(f.text);
         }

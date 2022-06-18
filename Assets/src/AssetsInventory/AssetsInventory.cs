@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using src.AssetsInventory.Models;
 using src.AssetsInventory.slots;
 using src.Canvas;
@@ -17,6 +19,7 @@ namespace src.AssetsInventory
     public class AssetsInventory : MonoBehaviour
     {
         private static AssetsInventory instance;
+        private static readonly string HANDY_SLOTS_KEY = "HANDY_SLOTS";
 
         private VisualElement root;
         private VisualElement inventoryLoadingLayer;
@@ -34,11 +37,9 @@ namespace src.AssetsInventory
         private readonly AssetsRestClient restClient = new();
         private readonly Dictionary<int, Pack> packs = new();
         private Category selectedCategory;
-        private string filterText = "";
-        private static bool isDragging;
+        private string filterText;
 
         private List<InventorySlotWrapper> handyBarSlots = new();
-        private InventorySlotWrapper ghostSlot;
 
         private InventorySlot selectedSlot;
         public readonly UnityEvent<SlotInfo> selectedSlotChanged = new();
@@ -48,28 +49,38 @@ namespace src.AssetsInventory
         private List<FavoriteItem> favoriteItems;
         private TabPane tabPane;
         private VisualElement breadcrumb;
+        private VisualElement inventoryContainer;
+        private bool firstTime = true;
+        private int selectedHandySlotIndex = -1;
+        private UnityAction<bool> focusListener;
 
         void Start()
         {
-            instance = this;
-            
             openIcon = Resources.Load<Sprite>("Icons/openPane");
             closeIcon = Resources.Load<Sprite>("Icons/closePane");
 
             addToFavoriteIcon = Resources.Load<Sprite>("Icons/whiteHeart");
             removeFromFavoriteIcon = Resources.Load<Sprite>("Icons/redHeart");
-            
+
             GameManager.INSTANCE.stateChange.AddListener(_ => UpdateVisibility());
             Player.INSTANCE.viewModeChanged.AddListener(_ => UpdateVisibility());
             UpdateVisibility();
-            
+
             Player.INSTANCE.InitOnSelectedAssetChanged(); // TODO ?
         }
 
         void OnEnable()
         {
+            if (firstTime)
+            {
+                firstTime = false;
+                instance = this;
+                PlayerPrefs.SetString(HANDY_SLOTS_KEY, "[]");
+            }
+
             root = GetComponent<UIDocument>().rootVisualElement;
             inventory = root.Q<VisualElement>("inventory");
+            inventoryContainer = root.Q<VisualElement>("inventoryContainer");
 
             var tabConfigurations = new List<TabConfiguration>
             {
@@ -83,27 +94,51 @@ namespace src.AssetsInventory
             s.width = 350;
             inventory.Add(tabPane.VisualElement());
             inventoryLoadingLayer = root.Q<VisualElement>("tabPaneLoadingLayer");
-
-            breadcrumb = root.Q("breadcrumb");
-
+            
             handyPanel = root.Q<VisualElement>("handyPanel");
             handyBar = handyPanel.Q<ScrollView>("handyBar");
-            Utils.IncreaseScrollSpeed(handyBar, 600);
+            UiUtils.Utils.IncreaseScrollSpeed(handyBar, 600);
             openCloseInvButton = handyPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
+
+            handyBarSlots.Clear();
+            handyBar.Clear();
+            var savedHandySlots = GetSavedHandySlots();
+            savedHandySlots.Reverse();
+            foreach (var savedHandySlot in savedHandySlots)
+                AddToHandyPanel(savedHandySlot);
+
+            var locked = MouseLook.INSTANCE.cursorLocked;
+            root.focusable = !locked;
+            root.SetEnabled(!locked);
+            if (focusListener != null)
+                MouseLook.INSTANCE.cursorLockedStateChanged.RemoveListener(focusListener);
+            focusListener = locked =>
+            {
+                root.focusable = !locked;
+                root.SetEnabled(!locked);
+            };
+            MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(focusListener);
         }
 
         private void UpdateVisibility()
         {
-            //FIXME
-            var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
-                         && !Player.INSTANCE.ChangeForbidden
-                         && true; // && Can Edit Land 
+            var active = (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING ||
+                          GameManager.INSTANCE.GetState() == GameManager.State.MOVING_OBJECT)
+                         && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
+                ; // && Can Edit Land 
             gameObject.SetActive(active);
-            inventory.style.visibility = Visibility.Visible; // is null at start and can't be checked !
+            inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !
             ToggleInventory();
             if (active)
-                LoadFavoriteItems(); // FIXME: what to do on error?
+                LoadFavoriteItems(() =>
+                {
+                    if (handyBarSlots.Count == 0)
+                    {
+                        foreach (var favoriteItem in favoriteItems)
+                            AddToHandyPanel(favoriteItem.ToSlotInfo());
+                    }
+                }); // FIXME: what to do on error?
         }
 
         private void SetupAssetsTab()
@@ -125,7 +160,7 @@ namespace src.AssetsInventory
             {
                 var scrollView = tabPane.GetTabBody().Q<ScrollView>("categories");
                 scrollView.Clear();
-                Utils.IncreaseScrollSpeed(scrollView, 600);
+                UiUtils.Utils.IncreaseScrollSpeed(scrollView, 600);
                 scrollView.mode = ScrollViewMode.Vertical;
                 scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
                 foreach (var category in categories)
@@ -134,20 +169,25 @@ namespace src.AssetsInventory
                 ShowInventoryLoadingLayer(false);
             }, () => { ShowInventoryLoadingLayer(false); }));
 
-            // Setup searchField
             var searchField = tabPane.GetTabBody().Q<TextField>("searchField");
-            searchField.RegisterCallback<FocusInEvent>(evt =>
+
+            UiUtils.Utils.SetPlaceHolderForTextField(searchField, "Search");
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
+
+            IEnumerator searchCoroutine = null;
+            searchField.RegisterValueChangedCallback(evt =>
             {
-                if (searchField.text == "Search")
-                    searchField.SetValueWithoutNotify("");
+                if (searchCoroutine != null)
+                    StopCoroutine(searchCoroutine);
+                searchCoroutine = DebounceSearchField(evt.newValue);
+                StartCoroutine(searchCoroutine);
             });
-            searchField.RegisterCallback<FocusOutEvent>(evt =>
-            {
-                if (searchField.text == "")
-                    searchField.SetValueWithoutNotify("Search");
-            });
-            var debounce = Utils.Debounce<string>(arg => filterText = arg);
-            searchField.RegisterValueChangedCallback(evt => debounce(evt.newValue));
+        }
+
+        private IEnumerator DebounceSearchField(string value)
+        {
+            yield return new WaitForSeconds(0.6f);
+            filterText = value;
         }
 
 
@@ -155,7 +195,7 @@ namespace src.AssetsInventory
         {
             var scrollView = tabPane.GetTabBody().Q<ScrollView>("blockPacks");
             scrollView.Clear();
-            Utils.IncreaseScrollSpeed(scrollView, 600);
+            UiUtils.Utils.IncreaseScrollSpeed(scrollView, 600);
             scrollView.mode = ScrollViewMode.Vertical;
             scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
 
@@ -191,11 +231,11 @@ namespace src.AssetsInventory
                 {
                     var favoriteItem = favoriteItems[i];
                     var slot = new FavoriteItemInventorySlot(favoriteItem);
-                    Utils.SetGridPosition(slot.VisualElement(), 80, i, 3);
+                    GridUtils.SetChildPosition(slot.VisualElement(), 80, i, 3);
                     container.Add(slot.VisualElement());
                 }
 
-                Utils.SetGridContainerSize(container, favoriteItems.Count);
+                GridUtils.SetContainerSize(container, favoriteItems.Count);
                 scrollView.Add(container);
             }, () =>
             {
@@ -203,70 +243,53 @@ namespace src.AssetsInventory
             });
         }
 
-        private InventorySlotWrapper CreateGhostSlot(InventorySlot baseSlot)
-        {
-            var slot = new InventorySlotWrapper(true);
-            slot.SetSize(60);
-            slot.UpdateSlot(baseSlot);
-            slot.GetCurrentSlot().HideSlotBackground();
-            slot.VisualElement().RegisterCallback<PointerUpEvent>(GhostSlotOnMouseUp);
-            root.Add(slot.VisualElement());
-            return slot;
-        }
-
-        private void DestroyGhostSlot()
-        {
-            isDragging = false;
-            if (ghostSlot != null)
-            {
-                ghostSlot.VisualElement().RemoveFromHierarchy();
-                ghostSlot = null;
-            }
-        }
-
         private void Update()
         {
-            if (filterText.Length > 0)
+            if (filterText != null)
             {
                 FilterAssets(filterText);
-                filterText = "";
+                filterText = null;
             }
 
-            if (isDragging)
+            // if (selectedHandySlotIndex != -1 && (Input.GetButtonDown("Clear slot selection") || Input.GetMouseButtonDown(1)))
+            if (selectedHandySlotIndex != -1 && Input.GetButtonDown("Clear slot selection"))
+                SelectSlot(null);
+
+            if (handyBar.childCount == 0 || !MouseLook.INSTANCE.cursorLocked)
+                return;
+
+            var mouseDelta = Input.mouseScrollDelta.y;
+            var inc = Input.GetButtonDown("Change Block") || mouseDelta <= -0.1;
+            var dec = (
+                          Input.GetButtonDown("Change Block") &&
+                          (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                      )
+                      || mouseDelta >= 0.1;
+            if (!dec && !inc)
+                return;
+            if (dec)
             {
-                var pos = Input.mousePosition;
-                ghostSlot.VisualElement().style.top =
-                    root.worldBound.height - pos.y - ghostSlot.VisualElement().layout.height / 2;
-                ghostSlot.VisualElement().style.left = pos.x - ghostSlot.VisualElement().layout.width / 2;
+                if (selectedHandySlotIndex is -1 or 0)
+                    selectedHandySlotIndex = handyBar.childCount - 1;
+                else
+                    selectedHandySlotIndex--;
             }
-        }
+            else
+            {
+                if (selectedHandySlotIndex == handyBar.childCount - 1)
+                    selectedHandySlotIndex = 0;
+                else
+                    selectedHandySlotIndex++;
+            }
 
-        public void AddToHandyPanel(SlotInfo slotInfo)
-        {
-            var slot = new HandyItemInventorySlot();
-            slot.SetSize(70);
-            slot.SetSlotInfo(slotInfo);
-            if (handyBarSlots.Count == 15)
-                handyBarSlots.RemoveAt(14);
-            handyBarSlots.Insert(0, slot);
-            handyBar.Insert(0, slot.VisualElement());
-            if (handyBar.childCount > 10)
-                handyBar.RemoveAt(handyBar.childCount - 1);
+            handyBar.ScrollTo(handyBarSlots[selectedHandySlotIndex].VisualElement());
+            SelectSlot(handyBarSlots[selectedHandySlotIndex], false);
         }
-
-        public void RemoveFromHandyPanel(InventorySlotWrapper slot)
-        {
-            handyBarSlots.Remove(slot);
-            slot.VisualElement().RemoveFromHierarchy();
-            while (handyBar.childCount < 10 && handyBarSlots.Count >= 10)
-                handyBar.Add(handyBarSlots[handyBar.childCount].VisualElement());
-        }
-
 
         private void ToggleInventory()
         {
-            var isVisible = inventory.style.visibility == Visibility.Visible;
-            inventory.style.visibility = isVisible ? Visibility.Hidden : Visibility.Visible;
+            var isVisible = inventoryContainer.style.visibility == Visibility.Visible;
+            inventoryContainer.style.visibility = isVisible ? Visibility.Hidden : Visibility.Visible;
             handyPanel.style.right = isVisible ? 5 : 362;
             var background = new StyleBackground
             {
@@ -361,7 +384,7 @@ namespace src.AssetsInventory
                 foldout.contentContainer.Add(slot.VisualElement());
             }
 
-            Utils.SetGridContainerSize(foldout.contentContainer, size);
+            GridUtils.SetContainerSize(foldout.contentContainer, size);
             return foldout;
         }
 
@@ -372,7 +395,6 @@ namespace src.AssetsInventory
                 text = name
             };
             foldout.SetValueWithoutNotify(true);
-            foldout.AddToClassList("utopia-foldout");
             var fs = foldout.style;
             fs.marginRight = fs.marginLeft = fs.marginBottom = fs.marginTop = 5;
             return foldout;
@@ -380,6 +402,12 @@ namespace src.AssetsInventory
 
         private void FilterAssets(string filter)
         {
+            if (filter.Length == 0)
+            {
+                tabPane.OpenTab(0);
+                return;
+            }
+
             var sc = new SearchCriteria
             {
                 limit = 100,
@@ -390,14 +418,15 @@ namespace src.AssetsInventory
             };
             if (selectedCategory != null)
                 sc.searchTerms.Add("category", selectedCategory.id);
-            var scrollView = CreateAssetsScrollView(sc);
+            var scrollView = CreateAssetsScrollView(sc, true);
             SetAssetsTabContent(scrollView, OpenAssetsTab, "Categories");
         }
 
         private void OpenAssetsTab()
         {
-            breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
             tabPane.OpenTab(0);
+            breadcrumb = tabPane.GetTabBody().Q("breadcrumb");
+            breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
         }
 
         private VisualElement CreateCategoriesListItem(Category category)
@@ -439,7 +468,7 @@ namespace src.AssetsInventory
         }
 
 
-        private ScrollView CreateAssetsScrollView(SearchCriteria searchCriteria)
+        private ScrollView CreateAssetsScrollView(SearchCriteria searchCriteria, bool isSearchResult = false)
         {
             var scrollView = new ScrollView(ScrollViewMode.Vertical)
             {
@@ -447,39 +476,73 @@ namespace src.AssetsInventory
                 verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible
             };
             scrollView.RegisterCallback<WheelEvent>(evt => { evt.StopPropagation(); });
-            Utils.IncreaseScrollSpeed(scrollView, 600);
+            UiUtils.Utils.IncreaseScrollSpeed(scrollView, 600);
             scrollView.AddToClassList("utopia-scrollView");
             var ss = scrollView.style;
             ss.height = new StyleLength(new Length(90, LengthUnit.Percent));
             ss.width = new StyleLength(new Length(90, LengthUnit.Percent));
             ss.flexGrow = 1;
 
-            ShowInventoryLoadingLayer(true);
-            StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
+            if (isSearchResult)
             {
-                var assetGroups = GroupAssetsByPack(assets);
-                foreach (var assetGroup in assetGroups)
+                ShowInventoryLoadingLayer(true);
+                StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
                 {
-                    var foldout = CreatePackFoldout(packs[assetGroup.Key].name);
-                    var size = assetGroup.Value.Count;
-                    for (var i = 0; i < size; i++)
+                    var assetGroups = GroupAssetsByPack(assets);
+                    foreach (var assetGroup in assetGroups)
                     {
-                        var slot = new AssetInventorySlot();
-                        var slotInfo = new SlotInfo(assetGroup.Value[i]);
-                        slot.SetSlotInfo(slotInfo);
-                        slot.SetSize(80);
-                        slot.SetGridPosition(i, 3);
-                        SetupFavoriteAction(slot);
-                        foldout.contentContainer.Add(slot.VisualElement());
+                        var foldout = CreatePackFoldout(packs[assetGroup.Key].name);
+                        PopulatePackFoldoutWithAssets(foldout, assetGroup.Value);
+                        scrollView.Add(foldout);
                     }
 
-                    foldout.contentContainer.style.height = 90 * (size / 3 + 1);
+                    ShowInventoryLoadingLayer(false);
+                }, () => ShowInventoryLoadingLayer(false), this));
+            }
+            else
+            {
+                foreach (var pack in packs)
+                {
+                    var foldout = CreatePackFoldout(pack.Value.name);
+                    foldout.SetValueWithoutNotify(false);
+                    foldout.RegisterValueChangedCallback(evt =>
+                    {
+                        foldout.contentContainer.Clear();
+                        if (evt.newValue)
+                        {
+                            if (searchCriteria.searchTerms.ContainsKey("pack"))
+                                searchCriteria.searchTerms.Remove("pack");
+                            searchCriteria.searchTerms.Add("pack", pack.Key);
+                            ShowInventoryLoadingLayer(true);
+                            StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
+                            {
+                                PopulatePackFoldoutWithAssets(foldout, assets);
+                                ShowInventoryLoadingLayer(false);
+                            }, () => ShowInventoryLoadingLayer(false), this));
+                        }
+                    });
                     scrollView.Add(foldout);
                 }
+            }
 
-                ShowInventoryLoadingLayer(false);
-            }, () => { ShowInventoryLoadingLayer(false); }, this));
             return scrollView;
+        }
+
+        private void PopulatePackFoldoutWithAssets(Foldout foldout, List<Asset> assets)
+        {
+            var size = assets.Count;
+            for (var i = 0; i < size; i++)
+            {
+                var slot = new AssetInventorySlot();
+                var slotInfo = new SlotInfo(assets[i]);
+                slot.SetSlotInfo(slotInfo);
+                slot.SetSize(80);
+                slot.SetGridPosition(i, 3);
+                SetupFavoriteAction(slot);
+                foldout.contentContainer.Add(slot.VisualElement());
+            }
+
+            foldout.contentContainer.style.height = 90 * (size / 3 + 1);
         }
 
         private void SetupFavoriteAction(BaseInventorySlot slot)
@@ -490,6 +553,7 @@ namespace src.AssetsInventory
                 isFavorite ? removeFromFavoriteIcon : addToFavoriteIcon,
                 () =>
                 {
+                    var isFavorite = IsUserFavorite(slotInfo, out _);
                     if (isFavorite)
                         RemoveFromFavorites(slot);
                     else
@@ -562,42 +626,6 @@ namespace src.AssetsInventory
             return dictionary;
         }
 
-        public void StartDrag(Vector2 position, BaseInventorySlot slot)
-        {
-            if (isDragging)
-                return;
-
-            isDragging = true;
-
-            ghostSlot = CreateGhostSlot(slot);
-            ghostSlot.VisualElement().style.top = position.y - ghostSlot.VisualElement().layout.height / 2;
-            ghostSlot.VisualElement().style.left = position.x - ghostSlot.VisualElement().layout.width / 2;
-        }
-
-        private void GhostSlotOnMouseUp(PointerUpEvent evt)
-        {
-            if (!isDragging)
-                return;
-
-            ghostSlot.GetCurrentSlot().slot.visible = false;
-
-            var slots = handyBarSlots
-                .Where(favBarSlot =>
-                    favBarSlot.VisualElement().worldBound.Overlaps(ghostSlot.VisualElement().worldBound))
-                .ToList();
-
-            if (slots.Count != 0)
-            {
-                var closestSlot = slots.OrderBy(x => Vector2.Distance
-                    (x.VisualElement().worldBound.position, ghostSlot.VisualElement().worldBound.position)).First();
-
-                closestSlot.UpdateSlot(ghostSlot.GetCurrentSlot());
-                DestroyGhostSlot();
-            }
-            else
-                DestroyGhostSlot();
-        }
-
         public void AddToFavorites(BaseInventorySlot slot)
         {
             var slotInfo = slot.GetSlotInfo();
@@ -620,16 +648,20 @@ namespace src.AssetsInventory
                 }));
         }
 
-        public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot)
+        public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot, Action onDone = null)
         {
+            ShowInventoryLoadingLayer(true);
             StartCoroutine(restClient.DeleteFavoriteItem(favoriteItem.id.Value,
                 () =>
                 {
+                    ShowInventoryLoadingLayer(false);
                     favoriteItems.Remove(favoriteItem);
                     SetupFavoriteAction(slot);
+                    onDone?.Invoke();
                     //TODO a toast?
                 }, () =>
                 {
+                    ShowInventoryLoadingLayer(false);
                     //TODO a toast?
                 }));
         }
@@ -646,12 +678,86 @@ namespace src.AssetsInventory
         public void SelectSlot(InventorySlot slot, bool addToHandyPanel = true)
         {
             selectedSlot?.SetSelected(false);
+            if (selectedSlot == slot || slot == null)
+            {
+                selectedSlot = null;
+                selectedSlotChanged.Invoke(null);
+                selectedHandySlotIndex = -1;
+                return;
+            }
+
             selectedSlot = slot;
             slot.SetSelected(true);
             var slotInfo = slot.GetSlotInfo();
             selectedSlotChanged.Invoke(slotInfo);
             if (addToHandyPanel)
                 AddToHandyPanel(slotInfo);
+            else // from handy bar itself
+            {
+                for (var i = 0; i < handyBarSlots.Count; i++)
+                {
+                    if (handyBarSlots[i] == slot)
+                    {
+                        selectedHandySlotIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void AddToHandyPanel(SlotInfo slotInfo)
+        {
+            foreach (var handyBarSlot in handyBarSlots)
+            {
+                if (handyBarSlot.GetSlotInfo().Equals(slotInfo))
+                {
+                    handyBarSlots.Remove(handyBarSlot);
+                    handyBarSlots.Insert(0, handyBarSlot);
+                    if (handyBar.Contains(handyBarSlot.VisualElement()))
+                        handyBar.Remove(handyBarSlot.VisualElement());
+                    else
+                        handyBar.RemoveAt(handyBar.childCount - 1);
+                    handyBar.Insert(0, handyBarSlot.VisualElement());
+                    SelectSlot(handyBarSlot, false);
+                    SaveHandySlots();
+                    return;
+                }
+            }
+
+            var slot = new HandyItemInventorySlot();
+            slot.SetSize(70);
+            slot.SetSlotInfo(slotInfo);
+            if (handyBarSlots.Count == 15)
+                handyBarSlots.RemoveAt(14);
+            handyBarSlots.Insert(0, slot);
+            handyBar.Insert(0, slot.VisualElement());
+            if (handyBar.childCount > 10)
+                handyBar.RemoveAt(handyBar.childCount - 1);
+            SaveHandySlots();
+            selectedHandySlotIndex = 0;
+            SelectSlot(slot, false);
+        }
+
+        public void RemoveFromHandyPanel(InventorySlotWrapper slot)
+        {
+            handyBarSlots.Remove(slot);
+            slot.VisualElement().RemoveFromHierarchy();
+            while (handyBar.childCount < 10 && handyBarSlots.Count >= 10)
+                handyBar.Add(handyBarSlots[handyBar.childCount].VisualElement());
+            SaveHandySlots();
+        }
+
+        private void SaveHandySlots()
+        {
+            var items = handyBarSlots.Select(slot => SerializableSlotInfo.FromSlotInfo(slot.GetSlotInfo())).ToList();
+            PlayerPrefs.SetString(HANDY_SLOTS_KEY, JsonConvert.SerializeObject(items));
+        }
+
+        private List<SlotInfo> GetSavedHandySlots()
+        {
+            return JsonConvert
+                .DeserializeObject<List<SerializableSlotInfo>>(PlayerPrefs.GetString(HANDY_SLOTS_KEY, "[]"))
+                .Select(serializedSlotInfo => serializedSlotInfo.ToSlotInfo()).ToList();
         }
 
         public SlotInfo GetSelectedSlot()
@@ -665,5 +771,10 @@ namespace src.AssetsInventory
         }
 
         public static AssetsInventory INSTANCE => instance;
+
+        public void ReloadTab()
+        {
+            tabPane.OpenTab(tabPane.GetCurrentTab());
+        }
     }
 }

@@ -23,7 +23,6 @@ namespace src.AssetsInventory.slots
 
         private IEnumerator imageCoroutine;
         private bool isLoadingImage = false;
-        private bool mouseDown;
         private ToolTipManipulator toolTipManipulator;
         private readonly VisualElement selectedBorder;
         private bool selectable = true;
@@ -36,18 +35,6 @@ namespace src.AssetsInventory.slots
             slotIcon = slot.Q<VisualElement>("slotIcon");
             leftAction = slot.Q<Button>("leftAction");
             rightAction = slot.Q<Button>("rightAction");
-            slot.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                if (evt.button != 0)
-                    return;
-                mouseDown = true;
-            });
-            slot.RegisterCallback<PointerMoveEvent>(evt =>
-            {
-                if (mouseDown && evt.pressedButtons == 1)
-                    assetsInventory.StartDrag(evt.position, this);
-            });
-            slot.RegisterCallback<PointerUpEvent>(evt => mouseDown = false);
 
             selectedBorder = slot.Q<VisualElement>("selectedBorder");
             slot.RegisterCallback<PointerDownEvent>(evt =>
@@ -111,7 +98,7 @@ namespace src.AssetsInventory.slots
 
         public void SetGridPosition(int index, int itemsInARow)
         {
-            Utils.SetGridPosition(slot, size, index, itemsInARow);
+            GridUtils.SetChildPosition(slot, size, index, itemsInARow);
         }
 
         protected void LoadImage(string url)
@@ -157,6 +144,7 @@ namespace src.AssetsInventory.slots
         {
             leftAction.tooltip = tooltip;
             leftAction.style.backgroundImage = Background.FromSprite(background);
+            leftAction.clickable = new Clickable(() => { });
             leftAction.clickable.clicked += () => action?.Invoke();
             leftAction.AddManipulator(new ToolTipManipulator(assetsInventory.GetTooltipRoot()));
         }
@@ -165,12 +153,13 @@ namespace src.AssetsInventory.slots
         {
             leftAction.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
-        
+
         public void ConfigRightAction(string tooltip = null, Sprite background = null,
             Action action = null)
         {
             rightAction.tooltip = tooltip;
             rightAction.style.backgroundImage = Background.FromSprite(background);
+            rightAction.clickable = new Clickable(() => { });
             rightAction.clickable.clicked += () => action?.Invoke();
             rightAction.AddManipulator(new ToolTipManipulator(assetsInventory.GetTooltipRoot()));
         }

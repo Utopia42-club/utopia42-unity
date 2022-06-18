@@ -22,14 +22,14 @@ namespace src.MetaBlocks.LinkBlock
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || !GetType().Equals(obj.GetType()))
+            if (obj == null || GetType() != obj.GetType())
                 return false;
 
-            return obj is LinkBlockProperties props &&
-                   url == props.url &&
-                   pos[0] == props.pos[0] &&
-                   pos[1] == props.pos[1] &&
-                   pos[2] == props.pos[2];
+            return obj is LinkBlockProperties props
+                   && url == props.url
+                   && pos?[0] == props.pos?[0]
+                   && pos?[1] == props.pos?[1]
+                   && pos?[2] == props.pos?[2];
         }
 
         public object Clone()

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using src.Canvas;
 using src.Model;
 using src.Utils;
@@ -34,6 +35,8 @@ namespace src
         private bool onlyMetaSelectionActive;
         private bool dragging;
 
+        private int keyboardFrameCounter = 0;
+
         public void Start()
         {
             player = Player.INSTANCE;
@@ -57,6 +60,8 @@ namespace src
             HandleBlockRotation();
             HandleBlockSelection();
             HandleBlockClipboard();
+
+            keyboardFrameCounter++;
         }
 
         private void HandleBlockRotation()
@@ -104,11 +109,20 @@ namespace src
         private void HandleSelectionKeyboardMovement()
         {
             if (!selectionActive || !movingSelectionAllowed || dragging) return;
-            var moveDown = Input.GetButtonDown("Jump") &&
-                           (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-            var moveUp = !moveDown && Input.GetButtonDown("Jump");
 
-            var moveDirection = Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical")
+            var frameCondition = onlyMetaSelectionActive ? keyboardFrameCounter % 5 == 0 : keyboardFrameCounter % 50 == 0;
+
+            var jump = Input.GetButtonDown("Jump") || frameCondition && Input.GetButton("Jump");
+            var horizontal = Input.GetButtonDown("Horizontal") || frameCondition && Input.GetButton("Horizontal");
+            var vertical = Input.GetButtonDown("Vertical") || frameCondition && Input.GetButton("Vertical");
+
+            if (jump || horizontal || vertical) keyboardFrameCounter = 0;
+
+            var moveDown = jump &&
+                           (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            var moveUp = !moveDown && jump;
+
+            var moveDirection = horizontal || vertical
                 ? (transform.forward * player.Vertical + transform.right * player.Horizontal).normalized
                 : Vector3.zero;
             var movement = moveUp || moveDown || moveDirection.magnitude > Player.CastStep;
@@ -140,23 +154,35 @@ namespace src
 
             else if (Input.GetMouseButtonDown(0) && DraggedPosition == null)
             {
-                DraggedPosition = player.FocusedFocusable switch
-                {
-                    MetaFocusable metaFocusable => metaFocusable.GetBlockPosition(),
-                    ChunkFocusable => player.PossiblePlaceBlockPosInt,
-                    _ => null
-                };
+                if (player.FocusedFocusable is not MetaFocusable metaFocusable) return; // TODO ?
+
+                DraggedPosition = metaFocusable.GetBlockPosition();
+
+                if (DraggedPosition.HasValue)
+                    DraggedPosition = new Vector3(DraggedPosition.Value.x, World.INSTANCE.GetSelectionMinPoint().y,
+                        DraggedPosition.Value.z);
             }
 
             else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&
                      player.FocusedFocusable is ChunkFocusable &&
                      player.CanEdit(player.PossiblePlaceBlockPosInt, out _, true))
             {
+                var minY = World.INSTANCE.GetSelectionMinPoint().y;
                 if (onlyMetaSelectionActive)
-                    World.INSTANCE.MoveMetaSelection(player.PossiblePlaceMetaBlockPos, DraggedPosition.Value);
+                {
+                    var pos = player.PossiblePlaceMetaBlockPos;
+                    if (pos.y > minY)
+                        pos.y += pos.y - minY;
+                    World.INSTANCE.MoveMetaSelection(pos, DraggedPosition.Value);
+                }
                 else
-                    World.INSTANCE.MoveSelection(player.PossiblePlaceBlockPosInt,
+                {
+                    var pos = player.PossiblePlaceBlockPosInt;
+                    if (pos.y > minY)
+                        pos.y += pos.y - Mathf.FloorToInt(minY);
+                    World.INSTANCE.MoveSelection(pos,
                         Vectors.TruncateFloor(DraggedPosition.Value));
+                }
             }
         }
 
@@ -219,9 +245,9 @@ namespace src
                 }
             }
 
-            if (player.CtrlDown) return;
+            if (player.CtrlDown || selectionActive) return;
 
-            if (Input.GetMouseButtonDown(0) && !selectionActive)
+            if (Input.GetMouseButtonDown(0))
             {
                 if (player.HammerMode)
                     DeleteBlock();
@@ -271,9 +297,7 @@ namespace src
             {
                 ExitSelectionMode();
             }
-            else if (Input.GetKeyDown(KeyCode.C) &&
-                     (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
+            else if (Input.GetKeyDown(KeyCode.C) && player.CtrlDown)
             {
                 World.INSTANCE.ResetClipboard();
                 ExitSelectionMode();
@@ -296,25 +320,31 @@ namespace src
                      !selectionActive)
             {
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();
-                var conflictWithPlayer = false;
-                var currVox = Vectors.TruncateFloor(transform.position);
+                var minIntPoint = Vectors.TruncateFloor(minPoint);
                 ClearSelection();
-                foreach (var pos in World.INSTANCE.GetClipboardWorldPositions())
-                {
-                    var newPosition = pos - minPoint + player.PossiblePlaceBlockPosInt;
-                    if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
-                        currVox.Equals(newPosition - Vector3Int.up))
-                    {
-                        conflictWithPlayer = true;
-                        break;
-                    }
-                }
 
-                if (!conflictWithPlayer)
+                if (!onlyMetaSelectionActive)
                 {
-                    World.INSTANCE.PasteClipboard(player.PossiblePlaceBlockPosInt - minPoint);
-                    PrepareForClipboardMovement(SelectionMode.Clipboard);
+                    var conflictWithPlayer = false;
+                    var currVox = Vectors.TruncateFloor(transform.position);
+                    foreach (var pos in World.INSTANCE.ClipboardVoxelPositions)
+                    {
+                        var newPosition = pos - minIntPoint + player.PossiblePlaceBlockPosInt;
+                        if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
+                            currVox.Equals(newPosition - Vector3Int.up))
+                        {
+                            conflictWithPlayer = true;
+                            break;
+                        }
+                    }
+
+                    if (!conflictWithPlayer)
+                        World.INSTANCE.PasteClipboard(player.PossiblePlaceBlockPosInt - minIntPoint);
                 }
+                else
+                    World.INSTANCE.PasteClipboard(player.PossiblePlaceMetaBlockPos - minPoint);
+
+                PrepareForClipboardMovement(SelectionMode.Clipboard);
             }
         }
 
@@ -368,9 +398,7 @@ namespace src
             {
                 if (Input.GetKeyDown(KeyCode.H))
                     SetBlockSelectionSnack(!help);
-                if (Input.GetKeyDown(KeyCode.V) &&
-                    !(Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)))
+                if (Input.GetKeyDown(KeyCode.V) && !player.CtrlDown)
                 {
                     movingSelectionAllowed = !movingSelectionAllowed;
                     SetBlockSelectionSnack(help);
@@ -474,20 +502,18 @@ namespace src
         private void AfterAddHighlight(bool setSnack = true)
         {
             var total = World.INSTANCE.TotalBlocksSelected;
-            switch (total)
-            {
-                case 0:
-                    ExitSelectionMode();
-                    break;
-                case 1:
-                    if (setSnack)
-                    {
-                        movingSelectionAllowed = false;
-                        SetBlockSelectionSnack();
-                    }
 
-                    selectedBlocksCountTextContainer.gameObject.SetActive(true);
-                    break;
+            if (total == 0)
+                ExitSelectionMode();
+            else
+            {
+                if (setSnack)
+                {
+                    movingSelectionAllowed = false;
+                    SetBlockSelectionSnack();
+                }
+
+                selectedBlocksCountTextContainer.gameObject.SetActive(true);
             }
 
             UpdateCountMsg();

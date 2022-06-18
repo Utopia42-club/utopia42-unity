@@ -1,48 +1,87 @@
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
+using System;
+using System.Collections.Generic;
+using UnityEngine.UIElements;
 
 namespace src.MetaBlocks.LinkBlock
 {
-    public class LinkBlockEditor : MonoBehaviour
+    public class LinkBlockEditor
     {
-        public static readonly string PREFAB = "MetaBlocks/LinkBlockEditor";
+        private readonly DropdownField typeField;
+        private readonly TextField urlField;
+        private readonly VisualElement positionBox;
+        private readonly TextField xField;
+        private readonly TextField yField;
+        private readonly TextField zField;
 
-        public Dropdown type;
-        public InputField url;
-        public InputField x;
-        public InputField y;
-        public InputField z;
-        public GameObject gameLinkEditor;
-        public GameObject webLinkEditor;
-
-
-        private void Update()
+        public LinkBlockEditor(Action<LinkBlockProperties> onSave)
         {
-            webLinkEditor.SetActive(type.value == 0);
-            gameLinkEditor.SetActive(type.value == 1);
+            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/LinkBlockEditor",
+                "Link Block Properties", () =>
+                {
+                    onSave(GetValue());
+                    PropertyEditor.INSTANCE.Hide();
+                });
+
+            typeField = root.Q<DropdownField>("type");
+            typeField.choices = new List<string> {"Web Link", "Game Link"};
+            typeField.index = 0;
+            urlField = root.Q<TextField>("url");
+            positionBox = root.Q<VisualElement>("position");
+            xField = root.Q<TextField>("x");
+            yField = root.Q<TextField>("y");
+            zField = root.Q<TextField>("z");
+
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(urlField);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(xField);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(yField);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(zField);
+
+            typeField.RegisterValueChangedCallback(evt => UpdateFieldsVisibility());
+            UpdateFieldsVisibility();
         }
 
+        private void UpdateFieldsVisibility()
+        {
+            switch (typeField.index)
+            {
+                case 0:
+                    urlField.style.display = DisplayStyle.Flex;
+                    positionBox.style.display = DisplayStyle.None;
+                    break;
+                case 1:
+                    urlField.style.display = DisplayStyle.None;
+                    positionBox.style.display = DisplayStyle.Flex;
+                    break;
+                default:
+                    urlField.style.display = DisplayStyle.None;
+                    positionBox.style.display = DisplayStyle.None;
+                    break;
+            }
+        }
 
         public LinkBlockProperties GetValue()
         {
-            int value = type.value;
+            var value = typeField.index;
 
             if (value == 0)
             {
-                if (HasValue(url))
+                if (HasValue(urlField))
                 {
-                    var props = new LinkBlockProperties();
-                    props.url = url.text;
+                    var props = new LinkBlockProperties
+                    {
+                        url = urlField.text
+                    };
                     return props;
                 }
             }
             else
             {
-                if (HasValue(x) && HasValue(y) && HasValue(z))
+                if (HasValue(xField) && HasValue(yField) && HasValue(zField))
                 {
-                    var props = new LinkBlockProperties();
-                    props.pos = new int[] {int.Parse(x.text), int.Parse(y.text), int.Parse(z.text)};
+                    var props = new LinkBlockProperties
+                    {
+                        pos = new[] {int.Parse(xField.text), int.Parse(yField.text), int.Parse(zField.text)}
+                    };
                     return props;
                 }
             }
@@ -52,26 +91,31 @@ namespace src.MetaBlocks.LinkBlock
 
         public void SetValue(LinkBlockProperties value)
         {
-            type.value = (value == null || value.pos != null) ? 1 : 0;
-            url.text = value == null ? "" : value.url;
+            typeField.index = (value == null || value.pos != null) ? 1 : 0;
+            urlField.value = value == null ? "" : value.url;
             bool noPos = value == null || value.pos == null;
             if (noPos)
             {
-                x.text = null;
-                y.text = null;
-                z.text = null;
+                xField.value = null;
+                yField.value = null;
+                zField.value = null;
             }
             else
             {
-                x.text = value.pos[0].ToString();
-                y.text = value.pos[1].ToString();
-                z.text = value.pos[2].ToString();
+                xField.value = value.pos[0].ToString();
+                yField.value = value.pos[1].ToString();
+                zField.value = value.pos[2].ToString();
             }
         }
 
-        private bool HasValue(InputField f)
+        public void Show()
         {
-            return f.text != null && f.text.Length > 0;
+            PropertyEditor.INSTANCE.Show();
+        }
+
+        private bool HasValue(TextField f)
+        {
+            return !string.IsNullOrEmpty(f.text);
         }
     }
 }

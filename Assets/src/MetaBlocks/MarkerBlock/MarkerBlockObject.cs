@@ -98,30 +98,21 @@ namespace src.MetaBlocks.MarkerBlock
         {
             throw new NotImplementedException();
         }
-
+        
         private void EditProps()
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("Marker Block Properties")
-                .WithContent(MarkerBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<MarkerBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props == null ? null : props as MarkerBlockProperties);
-            dialog.WithAction("OK", () =>
+            var editor = new MarkerBlockEditor((value) =>
             {
-                var value = editor.GetValue();
                 var props = new MarkerBlockProperties(Block.GetProps() as MarkerBlockProperties);
                 if (value != null)
                     props.name = value.name;
                 if (props.IsEmpty()) props = null;
                 Block.SetProps(props, land);
-                manager.CloseDialog(dialog);
             });
+            editor.SetValue(Block.GetProps() as MarkerBlockProperties);
+            editor.Show();
         }
-
+        
         private void DestroyPlaceHolder(bool immediate = true)
         {
             if (placeHolder == null) return;

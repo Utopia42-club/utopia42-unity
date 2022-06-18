@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using src.Canvas;
 using src.Model;
 using src.Utils;
@@ -16,6 +17,7 @@ namespace src.MetaBlocks
         protected bool canEdit;
         public State State { get; protected set; }
         protected SnackItem snackItem;
+
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
 
         protected void Start()
@@ -105,7 +107,7 @@ namespace src.MetaBlocks
                 InLand(new Vector3(max.x, max.y, min.z)) &&
                 InLand(new Vector3(max.x, max.y, max.z));
         }
-
+        
         private bool InLand(Vector3 p)
         {
             if (Block.land == null)
@@ -118,7 +120,7 @@ namespace src.MetaBlocks
 
         protected internal void UpdateState(State state)
         {
-            this.State = state;
+            State = state;
             stateChange.Invoke(state);
         }
 
@@ -132,7 +134,7 @@ namespace src.MetaBlocks
             gameObjectTransform.localPosition = highlightChunkTransform.transform.localPosition + localPos.position;
             Initialize(block, null);
 
-            stateChange.AddListener(state =>
+            stateChange.AddListener((state) =>
             {
                 if (goRef == null) return;
                 if (state != State.Ok)
@@ -152,6 +154,34 @@ namespace src.MetaBlocks
                 foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())
                     renderer.enabled = false;
             });
+        }
+
+        public virtual float? GetCenterY(out float? height)
+        {
+            var renderers = gameObject.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return height = null;
+
+            float
+                minY = float.PositiveInfinity,
+                maxY = float.NegativeInfinity;
+            foreach (var child in renderers)
+            {
+                var bounds = child.bounds;
+                var min = bounds.min;
+                var max = bounds.max;
+
+                if (min.y < minY) minY = min.y;
+                if (max.y > maxY) maxY = max.y;
+            }
+
+            height = maxY - minY;
+            return (minY + maxY) / 2;
+        }
+
+        public float? GetHeight()
+        {
+            GetCenterY(out var h);
+            return h;
         }
 
         protected abstract void DoInitialize();
@@ -191,37 +221,33 @@ namespace src.MetaBlocks
             highlightBox.gameObject.SetActive(active);
         }
 
-        protected static void DeepDestroy3DObject(GameObject go, bool immediate = true, bool ignoreShared = false)
+        protected static void DeepDestroy3DObject(GameObject go, bool immediate = true)
         {
-            if (!ignoreShared)
+            foreach (var renderer in go.GetComponentsInChildren<Renderer>())
+            foreach (var mat in renderer.sharedMaterials)
             {
-                foreach (var renderer in go.GetComponentsInChildren<Renderer>())
-                foreach (var mat in renderer.sharedMaterials)
+                if (mat == null) continue;
+                if (immediate)
                 {
-                    if (mat == null) continue;
-                    if (immediate)
-                    {
-                        DestroyImmediate(mat.mainTexture);
-                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
-                            DestroyImmediate(mat);
-                    }
-                    else
-                    {
-                        Destroy(mat.mainTexture);
-                        if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
-                            Destroy(mat);
-                    }
+                    DestroyImmediate(mat.mainTexture);
+                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        DestroyImmediate(mat);
                 }
-
-                foreach (var meshFilter in go.GetComponentsInChildren<MeshFilter>())
+                else
                 {
-                    if (immediate)
-                        DestroyImmediate(meshFilter.sharedMesh);
-                    else
-                        Destroy(meshFilter.sharedMesh);
+                    Destroy(mat.mainTexture);
+                    if (!mat.Equals(World.INSTANCE.SelectedBlock) && !mat.Equals(World.INSTANCE.HighlightBlock))
+                        Destroy(mat);
                 }
             }
 
+            foreach (var meshFilter in go.GetComponentsInChildren<MeshFilter>())
+            {
+                if (immediate)
+                    DestroyImmediate(meshFilter.sharedMesh);
+                else
+                    Destroy(meshFilter.sharedMesh);
+            }
 
             if (immediate)
                 DestroyImmediate(go.gameObject);

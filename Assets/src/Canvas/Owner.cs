@@ -45,8 +45,10 @@ namespace src.Canvas
                 if (changed || !view.activeSelf && currentWallet != null)
                     OnOwnerChanged();
 
-                if (Input.GetButtonDown("Profile") && currentWallet != null &&
-                    !profileLoader.IsWalletLoading(currentWallet))
+                if (Input.GetButtonDown("Profile")
+                    && currentWallet != null
+                    && !profileLoader.IsWalletLoading(currentWallet)
+                    && !manager.IsUiEngaged())
                     manager.ShowProfile(currentProfile, currentLand);
             }
             else

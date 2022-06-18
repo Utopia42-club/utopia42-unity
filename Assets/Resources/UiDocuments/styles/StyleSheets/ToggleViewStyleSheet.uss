@@ -1,0 +1,62 @@
+﻿.unity-toggle {
+    margin: 0;
+}
+
+.unity-toggle__label {
+    padding: 0;
+}
+
+.unity-toggle__input {
+    flex-direction: row;
+    flex-basis: auto;
+}
+
+.unity-toggle__text {
+    margin: 0 0 0 10px;
+    align-self: center;
+    color: var(--color-text);
+    font-size: 15px;
+}
+
+.unity-toggle__checkmark {
+    padding-top: 0;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    align-self: center;
+    border-width: 1px;
+    border-radius: 3px;
+    border-color: var(--color-primary-lighter);
+    background-image: none;
+    background-color: var(--color-background-dark);
+}
+
+.unity-toggle > .unity-toggle__input:hover > .unity-toggle__checkmark,
+.unity-toggle > .unity-toggle__input:focus > .unity-toggle__checkmark {
+    border-color: var(--color-primary);
+}
+
+.unity-toggle > .unity-toggle__input:checked > .unity-toggle__checkmark {
+    background-image: url('/Assets/Resources/Icons/checkmark.png');
+    -unity-background-image-tint-color: var(--color-text);
+}
+
+.unity-toggle > .unity-toggle__input:active > .unity-toggle__checkmark {
+    background-image: url('/Assets/Resources/Icons/checkmark.png');
+    -unity-background-image-tint-color: var(--color-text);
+}
+
+.unity-toggle > .unity-toggle__input:hover:checked > .unity-toggle__checkmark {
+    background-image: url('/Assets/Resources/Icons/checkmark.png');
+    -unity-background-image-tint-color: var(--color-text);
+}
+
+.unity-toggle > .unity-toggle__input:focus:checked > .unity-toggle__checkmark {
+    background-image: url('/Assets/Resources/Icons/checkmark.png');
+    -unity-background-image-tint-color: var(--color-text);
+}
+
+.unity-toggle > .unity-toggle__input:hover:active > .unity-toggle__checkmark {
+    background-image: url('/Assets/Resources/Icons/checkmark.png');
+    -unity-background-image-tint-color: var(--color-text);
+}

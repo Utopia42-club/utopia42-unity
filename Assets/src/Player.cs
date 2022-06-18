@@ -32,6 +32,7 @@ namespace src
         [SerializeField] private Transform placeBlock;
         [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] public GameObject avatarPrefab;
+
         public BlockType SelectedBlockType { private set; get; }
 
         private bool sprinting;
@@ -92,6 +93,8 @@ namespace src
             {
                 if (state == GameManager.State.PLAYING)
                     hitCollider = null;
+                else
+                    HideCursors();
             });
 
             avatar = Instantiate(avatarPrefab, gameObject.transform);
@@ -147,8 +150,9 @@ namespace src
 
         private void GetInputs()
         {
-            CtrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                       Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
+            if (GameManager.INSTANCE.IsUiEngaged())
+                return;
+            CtrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
 
@@ -302,7 +306,7 @@ namespace src
 
             if (BlockSelectionController.INSTANCE.DraggedPosition != null)
                 HideCursors();
-            else if (HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
+            else if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
             {
                 highlightBlock.position = PossibleHighlightBlockPosInt;
                 highlightBlock.gameObject.SetActive(true);
@@ -310,17 +314,20 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.SetActive(false);
             }
-            else if (!CtrlDown && !selectionActive && PreparedMetaBlock != null && CanEdit(PossiblePlaceBlockPosInt, out placeLand))
+            else if (!CtrlDown && !selectionActive && PreparedMetaBlock != null &&
+                     CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
                 HideBlockCursors();
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.gameObject.SetActive(false);
                 PreparedMetaBlock.SetActive(true);
-                var mp = PreparedMetaBlock.type.GetPutPosition(blockHitPoint);
                 if (PreparedMetaBlock.blockObject == null)
-                    PreparedMetaBlock.RenderAt(null, mp.ToWorld(), null);
+                {
+                    var pos = PreparedMetaBlock.type.GetPlaceHolderPutPosition(blockHitPoint).ToWorld();
+                    PreparedMetaBlock.RenderAt(null, pos, null);
+                }
                 else
-                    PreparedMetaBlock.UpdateWorldPosition(mp.ToWorld());
+                    PreparedMetaBlock.UpdateWorldPosition(new MetaPosition(blockHitPoint).ToWorld());
             }
             else if (!CtrlDown && !selectionActive && SelectedBlockType is MetaBlockType metaBlockType &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
@@ -328,7 +335,7 @@ namespace src
                 HideBlockCursors();
                 if (MetaBlockPlaceHolder != null)
                 {
-                    var mp = metaBlockType.GetPutPosition(blockHitPoint);
+                    var mp = metaBlockType.GetPlaceHolderPutPosition(blockHitPoint);
                     if (chunk.GetMetaAt(mp) == null)
                     {
                         MetaBlockPlaceHolder.transform.position = mp.ToWorld();
@@ -497,25 +504,27 @@ namespace src
 
             var glbUrl = slotInfo.asset?.glbUrl;
 
-            
+
             if (glbUrl != null)
             {
                 var props = (TdObjectBlockProperties) PreparedMetaBlock?.GetProps();
                 if (props != null && props.url.Equals(glbUrl)) return;
-                
+
                 PreparedMetaBlock?.DestroyView();
                 PreparedMetaBlock = new MetaBlock(Blocks.TdObjectBlockType, null, new TdObjectBlockProperties
                 {
                     url = glbUrl,
                     type = TdObjectBlockProperties.TdObjectType.GLB
-                });
+                }, true);
 
                 return;
             }
 
-
             if (slotInfo.block != null)
             {
+                PreparedMetaBlock?.DestroyView();
+                PreparedMetaBlock = null;
+                
                 SelectedBlockType = slotInfo.block;
                 if (SelectedBlockType is MetaBlockType metaBlockType)
                 {
@@ -529,9 +538,6 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.SetActive(false);
                 placeBlock.gameObject.SetActive(true);
-                
-                PreparedMetaBlock?.DestroyView();
-                PreparedMetaBlock = null;
             }
         }
 

@@ -165,26 +165,17 @@ namespace src.MetaBlocks.ImageBlock
 
         private void EditProps()
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("Image Block Properties")
-                .WithContent(MediaBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<MediaBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props as MediaBlockProperties);
-            dialog.WithAction("OK", () =>
+            var editor = new MediaBlockEditor((value) =>
             {
-                var value = editor.GetValue();
                 var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
 
                 props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
                 Block.SetProps(props, land);
-                manager.CloseDialog(dialog);
             });
+            editor.SetValue(Block.GetProps() as MediaBlockProperties);
+            editor.Show();
         }
 
         protected override void OnDestroy()

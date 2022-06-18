@@ -16,14 +16,16 @@ namespace src.MetaBlocks
         public readonly Land land;
         public readonly MetaBlockType type;
         private object properties;
-        
+        public bool IsCursor { private set; get; } = false;
+
         public bool IsActive => blockObject.gameObject.activeSelf;
 
-        public MetaBlock(MetaBlockType type, Land land, object properties)
+        public MetaBlock(MetaBlockType type, Land land, object properties, bool isCursor = false)
         {
             this.type = type;
             this.land = land;
             this.properties = properties;
+            this.IsCursor = isCursor;
         }
 
         public void RenderAt(Transform parent, Vector3 position, Chunk chunk)
@@ -67,7 +69,7 @@ namespace src.MetaBlocks
 
         public void SetActive(bool active)
         {
-            if(blockObject != null)
+            if (blockObject != null)
                 blockObject.gameObject.SetActive(active);
         }
 
@@ -125,15 +127,24 @@ namespace src.MetaBlocks
             blockObject = (MetaBlockObject) gameObject.AddComponent(type.componentType);
             blockObject.LoadSelectHighlight(this, highlightChunkTransform, localPos, onLoad);
         }
-        public void UpdateWorldPosition(Vector3 pos)
+
+        public void UpdateWorldPosition(Vector3 raycastHitPoint)
         {
+            if (blockObject == null)
+            {
+                Debug.LogWarning(
+                    "Cannot move uninitialized metablock");
+                return;
+            }
             if (blockObject.chunk != null || land != null)
             {
                 Debug.LogWarning(
                     "Can not update the world position of a metablock that already belongs to a land/chunk");
                 return;
             }
-            blockObject.gameObject.transform.position = pos;
+
+            var height = blockObject.GetHeight();
+            blockObject.gameObject.transform.position = raycastHitPoint + (height.HasValue ? height.Value / 2 : 0) * Vector3.up;
         }
     }
 }

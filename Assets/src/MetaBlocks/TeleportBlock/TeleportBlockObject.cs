@@ -39,22 +39,13 @@ namespace src.MetaBlocks.TeleportBlock
 
         private void EditProps()
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("Teleport Block Properties")
-                .WithContent(TeleportBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<TeleportBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props as TeleportBlockProperties);
-            dialog.WithAction("OK", () =>
+            var editor = new TeleportBlockEditor((value) =>
             {
-                var value = editor.GetValue();
                 Block.SetProps(value, land);
-                manager.CloseDialog(dialog);
                 if (snackItem != null) SetupDefaultSnack();
             });
+            editor.SetValue(Block.GetProps() as TeleportBlockProperties);
+            editor.Show();
         }
 
         protected virtual void RenderPortal()

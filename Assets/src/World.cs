@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using src.MetaBlocks;
+using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -40,8 +41,6 @@ namespace src
         private List<Chunk> chunkRequests = new List<Chunk>();
 
         public GameObject debugScreen;
-        public GameObject inventory;
-        public GameObject cursorSlot;
         public Player player;
         private VoxelPosition firstSelectedPosition;
         public VoxelPosition LastSelectedPosition { get; private set; }
@@ -66,25 +65,18 @@ namespace src
 
         public bool ClipboardEmpty => clipboard.Count + metaClipboard.Count == 0;
 
-        public List<Vector3Int> GetClipboardWorldPositions()
-        {
-            var positions = clipboard.Select(vp => vp.ToWorld()).ToList();
-            positions.AddRange(metaClipboard.Select(mp => mp.ToVoxelPosition().ToWorld()).ToList());
-            return positions;
-        }
+        public List<Vector3Int> ClipboardVoxelPositions => clipboard.Select(vp => vp.ToWorld()).ToList();
 
         public bool SelectionDisplaced =>
             metaOffset != Vector3.zero ||
             HighlightOffset != Vector3Int.zero ||
             highlightChunks.Values.Any(highlightChunk => highlightChunk.SelectionDisplaced);
 
+        public TdObjectBytesCache TdObjectCache { private set; get; }
+
         private void Start()
         {
-            GameManager.INSTANCE.stateChange.AddListener(state =>
-            {
-                inventory.SetActive(state == GameManager.State.INVENTORY);
-                cursorSlot.SetActive(state == GameManager.State.INVENTORY);
-            });
+            TdObjectCache = gameObject.AddComponent<TdObjectBytesCache>();
         }
 
         private void Update()
@@ -465,7 +457,7 @@ namespace src
                 highlight.transform.position += v;
                 return;
             }
-            
+
             var oldOffset = metaOffset;
             metaOffset = v - referencePosition.Value;
             highlight.transform.position = (highlight.transform.position - oldOffset) + metaOffset;
@@ -529,12 +521,23 @@ namespace src
             }
         }
 
-        public Vector3Int GetClipboardMinPoint()
+        public Vector3 GetClipboardMinPoint()
         {
-            var minX = int.MaxValue;
-            var minY = int.MaxValue;
-            var minZ = int.MaxValue;
-            foreach (var pos in GetClipboardWorldPositions())
+            return GetMinPoint(ClipboardVoxelPositions, metaClipboard.ToList());
+        }
+
+        public Vector3 GetSelectionMinPoint()
+        {
+            return GetMinPoint(GetSelectedBlocksPositions().Select(vp => vp.ToWorld()).ToList(),
+                GetSelectedMetaBlocksPositions());
+        }
+
+        private Vector3 GetMinPoint(List<Vector3Int> vps, List<MetaPosition> mps)
+        {
+            var minX = float.MaxValue;
+            var minY = float.MaxValue;
+            var minZ = float.MaxValue;
+            foreach (var pos in vps)
             {
                 if (pos.x < minX)
                     minX = pos.x;
@@ -544,15 +547,35 @@ namespace src
                     minZ = pos.z;
             }
 
-            return new Vector3Int(minX, minY, minZ);
+            foreach (var mp in mps)
+            {
+                var pos = mp.ToWorld();
+                var meta = GetChunkIfInited(mp.chunk)?.GetMetaAt(mp)?.blockObject;
+                if (meta != null)
+                {
+                    var centerY = meta.GetCenterY(out var height);
+                    if (centerY.HasValue && height.HasValue)
+                        pos.y = centerY.Value - height.Value / 2;
+                }
+
+                if (pos.x < minX)
+                    minX = pos.x;
+                if (pos.y < minY)
+                    minY = pos.y;
+                if (pos.z < minZ)
+                    minZ = pos.z;
+            }
+
+
+            return new Vector3(minX, minY, minZ);
         }
 
-        public void PasteClipboard(Vector3Int offset)
+        public void PasteClipboard(Vector3 offset)
         {
             StartCoroutine(PasteClipboardCoroutine(offset));
         }
 
-        private IEnumerator PasteClipboardCoroutine(Vector3Int offset)
+        private IEnumerator PasteClipboardCoroutine(Vector3 offset)
         {
             ClearHighlights();
             yield return AddHighlights(clipboard.ToList(), Vector3Int.zero, null);
@@ -561,7 +584,7 @@ namespace src
             if (clipboard.Count == 0)
                 MoveMetaSelection(offset, null);
             else
-                MoveSelection(offset, null);
+                MoveSelection(Vectors.TruncateFloor(offset), null);
         }
 
         private Chunk PopRequest()

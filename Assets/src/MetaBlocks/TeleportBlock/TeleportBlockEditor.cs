@@ -1,17 +1,30 @@
-using src.Model;
-using UnityEngine;
-using UnityEngine.UI;
+using System;
+using UnityEngine.UIElements;
 
 namespace src.MetaBlocks.TeleportBlock
 {
-    public class TeleportBlockEditor : MonoBehaviour
+    public class TeleportBlockEditor
     {
-        public static readonly string PREFAB = "MetaBlocks/TeleportBlockEditor";
+        private TextField posX;
+        private TextField posY;
+        private TextField posZ;
 
-        [SerializeField] public InputField posX;
-        [SerializeField] public InputField posY;
-        [SerializeField] public InputField posZ;
-
+        public TeleportBlockEditor(Action<TeleportBlockProperties> onSave)
+        {
+            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/TeleportBlockEditor",
+                "Teleport Block Properties", () =>
+                {
+                    onSave(GetValue());
+                    PropertyEditor.INSTANCE.Hide();
+                });
+            posX = root.Q<TextField>("x");
+            posY = root.Q<TextField>("y");
+            posZ = root.Q<TextField>("z");
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(posX);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(posY);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(posZ);
+        }
+        
         public TeleportBlockProperties GetValue()
         {
             if (HasValue(posX) && HasValue(posY) && HasValue(posZ))
@@ -35,15 +48,20 @@ namespace src.MetaBlocks.TeleportBlock
 
             if (value.destination != null)
             {
-                posX.text = value.destination[0].ToString();
-                posY.text = value.destination[1].ToString();
-                posZ.text = value.destination[2].ToString();
+                posX.value = value.destination[0].ToString();
+                posY.value = value.destination[1].ToString();
+                posZ.value = value.destination[2].ToString();
             }
         }
 
-        private bool HasValue(InputField f)
+        public void Show()
         {
-            return f.text != null && f.text.Length > 0;
+            PropertyEditor.INSTANCE.Show();
+        }
+
+        private bool HasValue(TextField f)
+        {
+            return !string.IsNullOrEmpty(f.text);
         }
     }
 }

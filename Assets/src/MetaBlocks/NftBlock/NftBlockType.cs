@@ -19,7 +19,7 @@ namespace src.MetaBlocks.NftBlock
             return container;
         }
         
-        public override MetaPosition GetPutPosition(Vector3 purePosition)
+        public override MetaPosition GetPlaceHolderPutPosition(Vector3 purePosition)
         {
             var pos = Player.INSTANCE.transform.forward.z > 0
                 ? purePosition - ImageBlockType.Gap * Vector3.forward

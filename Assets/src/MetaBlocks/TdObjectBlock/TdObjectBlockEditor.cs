@@ -1,25 +1,54 @@
+using System;
+using System.Collections.Generic;
 using src.Model;
-using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace src.MetaBlocks.TdObjectBlock
 {
-    public class TdObjectBlockEditor : MonoBehaviour
+    public class TdObjectBlockEditor
     {
-        public static readonly string PREFAB = "MetaBlocks/TdObjectBlockEditor";
-        [SerializeField] public InputField url;
+        private TextField url;
 
-        [SerializeField] public InputField scaleX;
-        [SerializeField] public InputField scaleY;
-        [SerializeField] public InputField scaleZ;
+        private TextField scaleX;
+        private TextField scaleY;
+        private TextField scaleZ;
 
-        [SerializeField] public InputField rotationX;
-        [SerializeField] public InputField rotationY;
-        [SerializeField] public InputField rotationZ;
+        private TextField rotationX;
+        private TextField rotationY;
+        private TextField rotationZ;
 
-        [SerializeField] public Toggle detectCollision;
-        [SerializeField] public Dropdown type;
+        private Toggle detectCollision;
+        private DropdownField type;
+        
+        public TdObjectBlockEditor(Action<TdObjectBlockProperties> onSave)
+        {
+            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/TdObjectBlockEditor",
+                "3D Block Properties", () =>
+                {
+                    onSave(GetValue());
+                    PropertyEditor.INSTANCE.Hide();
+                });
 
+            url = root.Q<TextField>("url");
+            rotationX = root.Q<TextField>("rotationX");
+            rotationY = root.Q<TextField>("rotationY");
+            rotationZ = root.Q<TextField>("rotationZ");
+            scaleX = root.Q<TextField>("scaleX");
+            scaleY = root.Q<TextField>("scaleY");
+            scaleZ = root.Q<TextField>("scaleZ");
+            detectCollision = root.Q<Toggle>("collisionDetect");
+            type = root.Q<DropdownField>("type");
+            type.choices = new List<string> {"OBJ (zip)", "GLB"};
+            type.index = 0;
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(url);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(scaleX);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(scaleY);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(scaleZ);
+        }
+        
         public TdObjectBlockProperties GetValue()
         {
             if (HasValue(url) && HasValue(scaleX) && HasValue(scaleY) && HasValue(scaleZ)
@@ -31,8 +60,8 @@ namespace src.MetaBlocks.TdObjectBlock
                     float.Parse(scaleZ.text));
                 props.rotation = new SerializableVector3(float.Parse(rotationX.text), float.Parse(rotationY.text),
                     float.Parse(rotationZ.text));
-                props.detectCollision = detectCollision.isOn;
-                props.type = type.value == 0
+                props.detectCollision = detectCollision.value;
+                props.type = type.index == 0
                     ? TdObjectBlockProperties.TdObjectType.OBJ
                     : TdObjectBlockProperties.TdObjectType.GLB;
                 return props;
@@ -45,40 +74,45 @@ namespace src.MetaBlocks.TdObjectBlock
         {
             if (value == null)
             {
-                url.text = "";
-                scaleX.text = "1";
-                scaleY.text = "1";
-                scaleZ.text = "1";
-                rotationX.text = "0";
-                rotationY.text = "0";
-                rotationZ.text = "0";
-                detectCollision.isOn = true;
-                type.value = 0;
+                url.value = "";
+                scaleX.value = "1";
+                scaleY.value = "1";
+                scaleZ.value = "1";
+                rotationX.value = "0";
+                rotationY.value = "0";
+                rotationZ.value = "0";
+                detectCollision.value = true;
+                type.index = 0;
                 return;
             }
 
-            url.text = value.url == null ? "" : value.url;
+            url.value = value.url == null ? "" : value.url;
             if (value.scale != null)
             {
-                scaleX.text = value.scale.x.ToString();
-                scaleY.text = value.scale.y.ToString();
-                scaleZ.text = value.scale.z.ToString();
+                scaleX.value = value.scale.x.ToString();
+                scaleY.value = value.scale.y.ToString();
+                scaleZ.value = value.scale.z.ToString();
             }
 
             if (value.rotation != null)
             {
-                rotationX.text = value.rotation.x.ToString();
-                rotationY.text = value.rotation.y.ToString();
-                rotationZ.text = value.rotation.z.ToString();
+                rotationX.value = value.rotation.x.ToString();
+                rotationY.value = value.rotation.y.ToString();
+                rotationZ.value = value.rotation.z.ToString();
             }
 
-            detectCollision.isOn = value.detectCollision;
-            type.value = value.type == TdObjectBlockProperties.TdObjectType.OBJ ? 0 : 1;
+            detectCollision.value = value.detectCollision;
+            type.index = value.type == TdObjectBlockProperties.TdObjectType.OBJ ? 0 : 1;
         }
 
-        private bool HasValue(InputField f)
+        public void Show()
         {
-            return f.text != null && f.text.Length > 0;
+            PropertyEditor.INSTANCE.Show();
+        }
+
+        private bool HasValue(TextField f)
+        {
+            return !string.IsNullOrEmpty(f.text);
         }
     }
 }

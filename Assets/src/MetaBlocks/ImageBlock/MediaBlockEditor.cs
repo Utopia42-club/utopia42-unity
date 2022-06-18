@@ -1,23 +1,45 @@
+using System;
 using src.Model;
-using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace src.MetaBlocks.ImageBlock
 {
-    public class MediaBlockEditor : MonoBehaviour
+    public class MediaBlockEditor
     {
-        public static readonly string PREFAB = "MetaBlocks/MediaBlockEditor";
         public static readonly int DEFAULT_DIMENSION = 3;
-        [SerializeField] public InputField url;
 
-        [SerializeField] public InputField rotationX;
-        [SerializeField] public InputField rotationY;
-        [SerializeField] public InputField rotationZ;
+        private TextField url;
+        private TextField rotationX;
+        private TextField rotationY;
+        private TextField rotationZ;
+        private TextField width;
+        private TextField height;
+        private Toggle detectCollision;
 
-        [SerializeField] public InputField width;
-        [SerializeField] public InputField height;
 
-        [SerializeField] public Toggle detectCollision;
+        public MediaBlockEditor(Action<MediaBlockProperties> onSave)
+        {
+            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/MediaBlockEditor",
+                "Media Block Properties", () =>
+                {
+                    onSave(GetValue());
+                    PropertyEditor.INSTANCE.Hide();
+                });
+
+            url = root.Q<TextField>("url");
+            rotationX = root.Q<TextField>("x");
+            rotationY = root.Q<TextField>("y");
+            rotationZ = root.Q<TextField>("z");
+            width = root.Q<TextField>("w");
+            height = root.Q<TextField>("h");
+            detectCollision = root.Q<Toggle>("collisionDetect");
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(url);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(width);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(height);
+        }
 
         public MediaBlockProperties GetValue()
         {
@@ -29,7 +51,7 @@ namespace src.MetaBlocks.ImageBlock
                     float.Parse(rotationZ.text)),
                 width = HasValue(width) ? int.Parse(width.text) : DEFAULT_DIMENSION,
                 height = HasValue(height) ? int.Parse(height.text) : DEFAULT_DIMENSION,
-                detectCollision = detectCollision.isOn
+                detectCollision = detectCollision.value
             };
         }
 
@@ -37,35 +59,40 @@ namespace src.MetaBlocks.ImageBlock
         {
             if (value?.rotation == null)
             {
-                rotationX.text = "0";
-                rotationY.text = "0";
-                rotationZ.text = "0";
+                rotationX.value = "0";
+                rotationY.value = "0";
+                rotationZ.value = "0";
             }
             else
             {
-                rotationX.text = value.rotation.x.ToString();
-                rotationY.text = value.rotation.y.ToString();
-                rotationZ.text = value.rotation.z.ToString();
+                rotationX.value = value.rotation.x.ToString();
+                rotationY.value = value.rotation.y.ToString();
+                rotationZ.value = value.rotation.z.ToString();
             }
 
             if (value == null)
             {
-                url.text = "";
-                width.text = DEFAULT_DIMENSION.ToString();
-                height.text = DEFAULT_DIMENSION.ToString();
-                detectCollision.isOn = true;
+                url.value = "";
+                width.value = DEFAULT_DIMENSION.ToString();
+                height.value = DEFAULT_DIMENSION.ToString();
+                detectCollision.value = true;
                 return;
             }
 
-            url.text = value.url;
-            width.text = value.width.ToString();
-            height.text = value.height.ToString();
-            detectCollision.isOn = value.detectCollision;
+            url.value = value.url;
+            width.value = value.width.ToString();
+            height.value = value.height.ToString();
+            detectCollision.value = value.detectCollision;
+        }
+        
+        public void Show()
+        {
+            PropertyEditor.INSTANCE.Show();
         }
 
-        private bool HasValue(InputField f)
+        private bool HasValue(TextField f)
         {
-            return f.text != null && f.text.Length > 0;
+            return !string.IsNullOrEmpty(f.text);
         }
     }
 }

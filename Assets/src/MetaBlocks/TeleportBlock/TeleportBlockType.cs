@@ -21,7 +21,7 @@ namespace src.MetaBlocks.TeleportBlock
             return go;
         }
 
-        public override MetaPosition GetPutPosition(Vector3 purePosition)
+        public override MetaPosition GetPlaceHolderPutPosition(Vector3 purePosition)
         {
             return new MetaPosition(purePosition + (LocalScale - Gap) * Vector3.up);
         }

@@ -13,6 +13,7 @@ namespace src.MetaBlocks.TdObjectBlock
     public class TdObjectBlockObject : MetaBlockObject
     {
         public const ulong DownloadLimitMb = 10;
+        private const float GroundGap = 0.2f;
 
         private GameObject objContainer;
         public GameObject Obj { private set; get; }
@@ -25,8 +26,6 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private ObjectScaleRotationController scaleRotationController;
         private Transform selectHighlight;
-
-        public bool hasClone = false;
 
         public override void OnDataUpdate()
         {
@@ -156,19 +155,23 @@ namespace src.MetaBlocks.TdObjectBlock
         protected override void OnStateChanged(State state)
         {
             ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
-            if (state == State.Ok) return;
+            if (state == State.Ok)
+            {
+                if (Block.IsCursor && objCollider != null)
+                    DestroyImmediate(objCollider);
+                return;
+            }
 
             // setting place holder
-            hasClone = false;
             DestroyObject();
             ResetContainer();
-            Obj = Block.type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), true);
+            Obj = Block.type.CreatePlaceHolder(MetaBlockState.IsErrorState(state), !Block.IsCursor);
             Obj.transform.SetParent(objContainer.transform, false);
             Obj.SetActive(true);
             objCollider = Obj.GetComponentInChildren<Collider>();
             Obj.transform.SetParent(objContainer.transform, false);
 
-            if (chunk == null) return;
+            if (chunk == null || objCollider == null) return;
             objFocusable = objCollider.gameObject.AddComponent<TdObjectFocusable>();
             objFocusable.Initialize(this);
         }
@@ -210,31 +213,16 @@ namespace src.MetaBlocks.TdObjectBlock
             }
             else
             {
+                UpdateState(State.Loading);
                 var reinitialize = !currentUrl.Equals("") || p.initialScale == 0;
                 currentUrl = p.url;
 
-                var go = TdObjectCache.GetAsset(this);
-                if (go != null)
+                CreateGameObject(p.url, p.type, loadedGo =>
                 {
-                    hasClone = true;
                     LoadGameObject(scale, rotation, initialPosition, p.initialScale,
-                        p.detectCollision, p.type, reinitialize, go);
-                }
-                else
-                {
-                    UpdateState(State.Loading);
-                    hasClone = false;
-                    StartCoroutine(LoadBytes(p.url, p.type, loadedGo =>
-                    {
-                        LoadGameObject(scale, rotation, initialPosition, p.initialScale,
-                            p.detectCollision, p.type, reinitialize, loadedGo);
-                    }));
-                }
+                        p.detectCollision, p.type, reinitialize, loadedGo);
+                });
             }
-        }
-
-        private void SetPlaceHolder(bool error)
-        {
         }
 
         private void ResetContainer()
@@ -337,7 +325,6 @@ namespace src.MetaBlocks.TdObjectBlock
                 detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
 
             UpdateState(State.Ok);
-            TdObjectCache.Add(this);
             // chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position))); // TODO: fix on focus
         }
 
@@ -351,7 +338,7 @@ namespace src.MetaBlocks.TdObjectBlock
 
             if (Obj != null)
             {
-                DeepDestroy3DObject(Obj, immediate, TdObjectCache.HasClone(this));
+                DeepDestroy3DObject(Obj, immediate);
                 Obj = null;
             }
 
@@ -376,73 +363,52 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void EditProps()
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("3D Object Properties")
-                .WithContent(TdObjectBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<TdObjectBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props == null ? null : props as TdObjectBlockProperties);
-            dialog.WithAction("OK", () =>
+            var editor = new TdObjectBlockEditor((value) =>
             {
-                var value = editor.GetValue();
                 var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
                 props.UpdateProps(value);
 
                 if (props.IsEmpty()) props = null;
 
                 Block.SetProps(props, land);
-                manager.CloseDialog(dialog);
+            });
+            editor.SetValue(Block.GetProps() as TdObjectBlockProperties);
+            editor.Show();
+        }
+
+        private void CreateGameObject(string url, TdObjectBlockProperties.TdObjectType type,
+            Action<GameObject> onSuccess)
+        {
+            World.INSTANCE.TdObjectCache.GetBytes(url, (bytes, state) =>
+            {
+                if (state.HasValue)
+                {
+                    UpdateState(state.Value);
+                    return;
+                }
+
+                Action onFailure = () => { UpdateState(State.InvalidData); };
+                switch (type)
+                {
+                    case TdObjectBlockProperties.TdObjectType.OBJ:
+                        ObjLoader.INSTANCE.InitTask(bytes, onSuccess, onFailure);
+                        break;
+                    case TdObjectBlockProperties.TdObjectType.GLB:
+                        GlbLoader.InitTask(bytes, onSuccess, onFailure);
+                        break;
+                    default:
+                        onFailure.Invoke();
+                        break;
+                }
             });
         }
 
-        private IEnumerator LoadBytes(string url, TdObjectBlockProperties.TdObjectType type,
-            Action<GameObject> onSuccess)
+        public override float? GetCenterY(out float? height)
         {
-            using var webRequest = UnityWebRequest.Get(url);
-            var op = webRequest.SendWebRequest();
-
-            while (!op.isDone)
-            {
-                if (webRequest.downloadedBytes > DownloadLimitMb * 1000000)
-                    break;
-                yield return null;
-            }
-
-            switch (webRequest.result)
-            {
-                case UnityWebRequest.Result.InProgress:
-                    UpdateState(State.SizeLimit);
-                    break;
-                case UnityWebRequest.Result.ConnectionError:
-                    Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
-                    UpdateState(State.ConnectionError);
-                    break;
-                case UnityWebRequest.Result.DataProcessingError:
-                case UnityWebRequest.Result.ProtocolError:
-                    Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
-                    UpdateState(State.InvalidUrlOrData);
-                    break;
-                case UnityWebRequest.Result.Success:
-                    Action onFailure = () => { UpdateState(State.InvalidData); };
-
-                    switch (type)
-                    {
-                        case TdObjectBlockProperties.TdObjectType.OBJ:
-                            ObjLoader.INSTANCE.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
-                            break;
-                        case TdObjectBlockProperties.TdObjectType.GLB:
-                            GlbLoader.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
-                            break;
-                        default:
-                            onFailure.Invoke();
-                            break;
-                    }
-
-                    break;
-            }
+            var centerY = base.GetCenterY(out height);
+            if (height.HasValue)
+                height = height.Value + GroundGap;
+            return centerY;
         }
 
         protected override void OnDestroy()

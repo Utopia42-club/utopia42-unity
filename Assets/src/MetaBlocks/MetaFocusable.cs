@@ -1,4 +1,5 @@
 using src.MetaBlocks;
+using src.Model;
 using src.Utils;
 using UnityEngine;
 
@@ -34,7 +35,7 @@ namespace src
         
         public override Vector3? GetBlockPosition()
         {
-            return MetaBlockObject.transform.position;
+            return new MetaPosition(MetaBlockObject.transform.position).ToWorld();
         }
 
         public MetaBlock GetBlock()
