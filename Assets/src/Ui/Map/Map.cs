@@ -8,7 +8,7 @@ namespace src.Ui.Map
         private readonly VisualElement lands;
         private readonly MapViewportController viewportController;
 
-        public Map() : base("UiDocuments/Map/Map")
+        public Map() : base("UiDocuments/Map/Map", true)
         {
             lands = this.Q("Lands");
             var grid = new MapGrid();
