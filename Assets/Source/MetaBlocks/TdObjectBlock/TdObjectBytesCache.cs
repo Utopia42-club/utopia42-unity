@@ -56,7 +56,8 @@ namespace Source.MetaBlocks.TdObjectBlock
         {
             StartCoroutine(LoadBytes(url, (bytes, state) =>
             {
-                AddBytes(url, bytes);
+                if (bytes != null)
+                    AddBytes(url, bytes);
                 queue.Remove(url, out var actions);
                 while (!actions.IsEmpty)
                     if (actions.TryDequeue(out var action))
