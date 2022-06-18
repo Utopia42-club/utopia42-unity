@@ -25,6 +25,7 @@
     border-radius: var(--default-border-radius);
     border-color: var(--color-primary-lighter);
     background-color: var(--color-background-dark);
+    padding: 8px;
 }
 
 .unity-base-text-field__input--single-line {

@@ -5,7 +5,6 @@
     <ui:VisualElement name="tabPane" style="flex-grow: 1; flex-shrink: 1; width: 100%; align-items: stretch; right: auto; position: relative; height: 100%; justify-content: center; transition-property: visibility; transition-duration: 200ms;">
         <ui:VisualElement name="root" style="flex-grow: 1; flex-shrink: 1; width: 100%; align-items: stretch; right: 0; position: absolute; height: 100%;">
             <ui:VisualElement name="tabs" style="height: 10%; flex-direction: row; justify-content: center;" />
-            <ui:VisualElement name="breadcrumb" class="tabBody" style="height: 6%; flex-direction: row; display: none;" />
             <ui:VisualElement name="tabBody" class="tabBody" style="align-items: center;" />
             <ui:Instance template="Loading" name="tabPaneLoadingLayer" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none;" />
         </ui:VisualElement>

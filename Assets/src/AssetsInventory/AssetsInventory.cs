@@ -94,9 +94,7 @@ namespace src.AssetsInventory
             s.width = 350;
             inventory.Add(tabPane.VisualElement());
             inventoryLoadingLayer = root.Q<VisualElement>("tabPaneLoadingLayer");
-
-            breadcrumb = root.Q("breadcrumb");
-
+            
             handyPanel = root.Q<VisualElement>("handyPanel");
             handyBar = handyPanel.Q<ScrollView>("handyBar");
             UiUtils.Utils.IncreaseScrollSpeed(handyBar, 600);
@@ -426,8 +424,9 @@ namespace src.AssetsInventory
 
         private void OpenAssetsTab()
         {
-            breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
             tabPane.OpenTab(0);
+            breadcrumb = tabPane.GetTabBody().Q("breadcrumb");
+            breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
         }
 
         private VisualElement CreateCategoriesListItem(Category category)
