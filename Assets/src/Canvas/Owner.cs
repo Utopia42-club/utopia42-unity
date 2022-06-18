@@ -38,7 +38,6 @@ namespace src.Canvas
         {
             if (manager.GetState() == GameManager.State.PLAYING)
             {
-                var assetsInventory = AssetsInventory.AssetsInventory.INSTANCE;
                 var player = Player.INSTANCE;
                 var changed = IsLandChanged(player.GetPosition());
                 if (changed)

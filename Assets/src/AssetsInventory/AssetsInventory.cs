@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using src.AssetsInventory.Models;
 using src.AssetsInventory.slots;
@@ -13,7 +12,6 @@ using src.UiUtils;
 using src.Utils;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 
 namespace src.AssetsInventory

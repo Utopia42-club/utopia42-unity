@@ -40,8 +40,6 @@ namespace src
         private List<Chunk> chunkRequests = new List<Chunk>();
 
         public GameObject debugScreen;
-        public GameObject inventory;
-        public GameObject cursorSlot;
         public Player player;
         private VoxelPosition firstSelectedPosition;
         public VoxelPosition LastSelectedPosition { get; private set; }
@@ -72,15 +70,6 @@ namespace src
             metaOffset != Vector3.zero ||
             HighlightOffset != Vector3Int.zero ||
             highlightChunks.Values.Any(highlightChunk => highlightChunk.SelectionDisplaced);
-
-        private void Start()
-        {
-            GameManager.INSTANCE.stateChange.AddListener(state =>
-            {
-                inventory.SetActive(state == GameManager.State.INVENTORY);
-                cursorSlot.SetActive(state == GameManager.State.INVENTORY);
-            });
-        }
 
         private void Update()
         {

@@ -1,6 +1,6 @@
 using System;
 
-namespace src.AssetsInventory
+namespace src.UiUtils
 {
     public class TabConfiguration
     {

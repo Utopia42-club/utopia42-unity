@@ -75,14 +75,10 @@ namespace src
                     SetState(State.SETTINGS);
                 else if (Input.GetButtonDown("Map"))
                     SetState(State.MAP);
-                else if (Input.GetButtonDown("Inventory"))
-                    SetState(State.INVENTORY);
             }
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
                 SetState(State.PLAYING);
             else if (Input.GetButtonDown("Map") && state == State.MAP)
-                SetState(State.PLAYING);
-            else if (Input.GetButtonDown("Inventory") && state == State.INVENTORY)
                 SetState(State.PLAYING);
         }
 
@@ -268,7 +264,6 @@ namespace src
                     SetState(State.PLAYING);
                     break;
                 case State.SETTINGS:
-                case State.INVENTORY:
                 case State.FREEZE:
                     SetState(State.PLAYING);
                     break;
@@ -621,7 +616,7 @@ namespace src
             SETTINGS,
             PLAYING,
             MAP,
-            INVENTORY,
+            INVENTORY, //FIXME Remove !
             HELP,
             DIALOG,
             PROFILE_DIALOG,
@@ -633,12 +628,6 @@ namespace src
         {
             SetState(State.LOADING);
             Loading.INSTANCE.ShowConnectionError();
-        }
-
-        public void OpenInventory()
-        {
-            if (state == State.PLAYING)
-                SetState(State.INVENTORY);
         }
 
         public int EngageUi()
