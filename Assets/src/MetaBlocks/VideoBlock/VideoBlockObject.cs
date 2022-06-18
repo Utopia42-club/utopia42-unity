@@ -187,28 +187,19 @@ namespace src.MetaBlocks.VideoBlock
 
         private void EditProps()
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("Video Block Properties")
-                .WithContent(VideoBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<VideoBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props as VideoBlockProperties);
-            dialog.WithAction("OK", () =>
+            var editor = new VideoBlockEditor((value) =>
             {
-                var value = editor.GetValue();
                 var props = new VideoBlockProperties(Block.GetProps() as VideoBlockProperties);
 
                 props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
                 Block.SetProps(props, land);
-                manager.CloseDialog(dialog);
             });
+            editor.SetValue(Block.GetProps() as VideoBlockProperties);
+            editor.Show();
         }
-
+        
         protected override void OnDestroy()
         {
             DestroyVideo(false);

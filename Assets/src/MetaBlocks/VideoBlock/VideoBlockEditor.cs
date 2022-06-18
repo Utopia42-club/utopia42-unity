@@ -1,23 +1,48 @@
+using System;
 using src.MetaBlocks.ImageBlock;
 using src.Model;
-using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace src.MetaBlocks.VideoBlock
 {
-    public class VideoBlockEditor : MonoBehaviour
+    public class VideoBlockEditor
     {
-        public static readonly string PREFAB = "MetaBlocks/VideoBlockEditor";
-        [SerializeField] private InputField url;
+        private TextField url;
 
-        [SerializeField] public InputField rotationX;
-        [SerializeField] public InputField rotationY;
-        [SerializeField] public InputField rotationZ;
+        private TextField rotationX;
+        private TextField rotationY;
+        private TextField rotationZ;
 
-        [SerializeField] private InputField width;
-        [SerializeField] private InputField height;
-        [SerializeField] private InputField previewTime;
-        [SerializeField] public Toggle detectCollision;
+        private TextField width;
+        private TextField height;
+        private TextField previewTime;
+        private Toggle detectCollision;
+
+        public VideoBlockEditor(Action<VideoBlockProperties> onSave)
+        {
+            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/VideoBlockEditor",
+                "Video Block Properties", () =>
+                {
+                    onSave(GetValue());
+                    PropertyEditor.INSTANCE.Hide();
+                });
+
+            url = root.Q<TextField>("url");
+            rotationX = root.Q<TextField>("x");
+            rotationY = root.Q<TextField>("y");
+            rotationZ = root.Q<TextField>("z");
+            width = root.Q<TextField>("w");
+            height = root.Q<TextField>("h");
+            previewTime = root.Q<TextField>("previewTime");
+            detectCollision = root.Q<Toggle>("collisionDetect");
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(url);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(width);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(height);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(previewTime);
+        }
 
         public VideoBlockProperties GetValue()
         {
@@ -31,7 +56,7 @@ namespace src.MetaBlocks.VideoBlock
                 width = HasValue(width) ? int.Parse(width.text) : MediaBlockEditor.DEFAULT_DIMENSION,
                 height = HasValue(height) ? int.Parse(height.text) : MediaBlockEditor.DEFAULT_DIMENSION,
                 previewTime = HasValue(previewTime) ? float.Parse(previewTime.text) : 0f,
-                detectCollision = detectCollision.isOn
+                detectCollision = detectCollision.value
             };
         }
 
@@ -39,37 +64,42 @@ namespace src.MetaBlocks.VideoBlock
         {
             if (value?.rotation == null)
             {
-                rotationX.text = "0";
-                rotationY.text = "0";
-                rotationZ.text = "0";
+                rotationX.value = "0";
+                rotationY.value = "0";
+                rotationZ.value = "0";
             }
             else
             {
-                rotationX.text = value.rotation.x.ToString();
-                rotationY.text = value.rotation.y.ToString();
-                rotationZ.text = value.rotation.z.ToString();
+                rotationX.value = value.rotation.x.ToString();
+                rotationY.value = value.rotation.y.ToString();
+                rotationZ.value = value.rotation.z.ToString();
             }
 
             if (value == null)
             {
-                url.text = "";
-                width.text = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
-                height.text = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
-                previewTime.text = "0";
-                detectCollision.isOn = true;
+                url.value = "";
+                width.value = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
+                height.value = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
+                previewTime.value = "0";
+                detectCollision.value = true;
                 return;
             }
 
-            url.text = value.url;
-            width.text = value.width.ToString();
-            height.text = value.height.ToString();
-            previewTime.text = value.previewTime.ToString();
-            detectCollision.isOn = value.detectCollision;
+            url.value = value.url;
+            width.value = value.width.ToString();
+            height.value = value.height.ToString();
+            previewTime.value = value.previewTime.ToString();
+            detectCollision.value = value.detectCollision;
+        }
+        
+        public void Show()
+        {
+            PropertyEditor.INSTANCE.Show();
         }
 
-        private bool HasValue(InputField f)
+        private bool HasValue(TextField f)
         {
-            return f.text != null && f.text.Length > 0;
+            return !string.IsNullOrEmpty(f.text);
         }
     }
 }

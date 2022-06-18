@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="MediaBlockEditor" src="project://database/Assets/Resources/UiDocuments/PropertyEditors/MediaBlockEditor.uxml?fileID=9197481963319205126&amp;guid=0ac4442073f6078438568d3c54a665f8&amp;type=3#MediaBlockEditor" />
+    <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <ui:VisualElement name="propertyEditor" style="flex-grow: 1; flex-shrink: 1; align-items: stretch; justify-content: center;">
+        <ui:Instance template="MediaBlockEditor" name="MediaBlockEditor" style="margin-bottom: 2px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
+        <ui:TextField picking-mode="Ignore" label="Preview time:" name="previewTime" class="utopia-field" style="margin-left: 0; margin-right: 4px; width: 61%;" />
+    </ui:VisualElement>
+</ui:UXML>

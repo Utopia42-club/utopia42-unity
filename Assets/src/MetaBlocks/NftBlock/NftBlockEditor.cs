@@ -1,23 +1,48 @@
+using System;
 using src.MetaBlocks.ImageBlock;
 using src.Model;
-using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace src.MetaBlocks.NftBlock
 {
-    public class NftBlockEditor : MonoBehaviour
+    public class NftBlockEditor
     {
-        public static readonly string PREFAB = "MetaBlocks/NftBlockEditor";
-        [SerializeField] public InputField collection;
-        [SerializeField] public InputField tokenId;
+        private TextField collection;
+        private TextField tokenId;
 
-        [SerializeField] public InputField rotationX;
-        [SerializeField] public InputField rotationY;
-        [SerializeField] public InputField rotationZ;
+        private TextField rotationX;
+        private TextField rotationY;
+        private TextField rotationZ;
 
-        [SerializeField] public InputField width;
-        [SerializeField] public InputField height;
-        [SerializeField] public Toggle detectCollision;
+        private TextField width;
+        private TextField height;
+        private Toggle detectCollision;
+
+        public NftBlockEditor(Action<NftBlockProperties> onSave)
+        {
+            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/NftBlockEditor",
+                "NFT Block Properties", () =>
+                {
+                    onSave(GetValue());
+                    PropertyEditor.INSTANCE.Hide();
+                });
+
+            collection = root.Q<TextField>("collection");
+            tokenId = root.Q<TextField>("tokenId");
+            rotationX = root.Q<TextField>("x");
+            rotationY = root.Q<TextField>("y");
+            rotationZ = root.Q<TextField>("z");
+            width = root.Q<TextField>("w");
+            height = root.Q<TextField>("h");
+            detectCollision = root.Q<Toggle>("collisionDetect");
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(collection);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(tokenId);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(width);
+            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(height);
+        }
 
         public NftBlockProperties GetValue()
         {
@@ -31,7 +56,7 @@ namespace src.MetaBlocks.NftBlock
                     float.Parse(rotationZ.text)),
                 width = HasValue(width) ? int.Parse(width.text) : MediaBlockEditor.DEFAULT_DIMENSION,
                 height = HasValue(height) ? int.Parse(height.text) : MediaBlockEditor.DEFAULT_DIMENSION,
-                detectCollision = detectCollision.isOn
+                detectCollision = detectCollision.value
             };
         }
 
@@ -39,37 +64,42 @@ namespace src.MetaBlocks.NftBlock
         {
             if (value?.rotation == null)
             {
-                rotationX.text = "0";
-                rotationY.text = "0";
-                rotationZ.text = "0";
+                rotationX.value = "0";
+                rotationY.value = "0";
+                rotationZ.value = "0";
             }
             else
             {
-                rotationX.text = value.rotation.x.ToString();
-                rotationY.text = value.rotation.y.ToString();
-                rotationZ.text = value.rotation.z.ToString();
+                rotationX.value = value.rotation.x.ToString();
+                rotationY.value = value.rotation.y.ToString();
+                rotationZ.value = value.rotation.z.ToString();
             }
 
             if (value == null)
             {
-                collection.text = "";
-                tokenId.text = "";
-                width.text = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
-                height.text = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
-                detectCollision.isOn = true;
+                collection.value = "";
+                tokenId.value = "";
+                width.value = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
+                height.value = MediaBlockEditor.DEFAULT_DIMENSION.ToString();
+                detectCollision.value = true;
                 return;
             }
 
-            collection.text = value.collection;
-            tokenId.text = value.tokenId.ToString();
-            width.text = value.width.ToString();
-            height.text = value.height.ToString();
-            detectCollision.isOn = value.detectCollision;
+            collection.value = value.collection;
+            tokenId.value = value.tokenId.ToString();
+            width.value = value.width.ToString();
+            height.value = value.height.ToString();
+            detectCollision.value = value.detectCollision;
         }
 
-        private bool HasValue(InputField f)
+        public void Show()
         {
-            return f.text != null && f.text.Length > 0;
+            PropertyEditor.INSTANCE.Show();
+        }
+
+        private bool HasValue(TextField f)
+        {
+            return !string.IsNullOrEmpty(f.text);
         }
     }
 }

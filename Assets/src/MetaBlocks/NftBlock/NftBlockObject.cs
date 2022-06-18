@@ -107,26 +107,17 @@ namespace src.MetaBlocks.NftBlock
 
         private void EditProps()
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("NFT Block Properties")
-                .WithContent(NftBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<NftBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props as NftBlockProperties);
-            dialog.WithAction("OK", () =>
+            var editor = new NftBlockEditor((value) =>
             {
-                var value = editor.GetValue();
                 var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
 
                 props.UpdateProps(value);
                 if (props.IsEmpty()) props = null;
 
                 Block.SetProps(props, land);
-                manager.CloseDialog(dialog);
             });
+            editor.SetValue(Block.GetProps() as NftBlockProperties);
+            editor.Show();
         }
 
         private void OpenLink()

@@ -24,6 +24,7 @@ namespace src.MetaBlocks.LinkBlock
 
             typeField = root.Q<DropdownField>("type");
             typeField.choices = new List<string> {"Web Link", "Game Link"};
+            typeField.index = 0;
             urlField = root.Q<TextField>("url");
             positionBox = root.Q<VisualElement>("position");
             xField = root.Q<TextField>("x");

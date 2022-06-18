@@ -178,8 +178,6 @@ namespace src.MetaBlocks.ImageBlock
             editor.Show();
         }
 
-        
-
         protected override void OnDestroy()
         {
             DestroyImage(false);

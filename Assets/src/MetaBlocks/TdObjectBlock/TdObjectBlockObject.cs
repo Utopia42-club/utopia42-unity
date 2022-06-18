@@ -388,26 +388,17 @@ namespace src.MetaBlocks.TdObjectBlock
 
         private void EditProps()
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("3D Object Properties")
-                .WithContent(TdObjectBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<TdObjectBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props == null ? null : props as TdObjectBlockProperties);
-            dialog.WithAction("OK", () =>
+            var editor = new TdObjectBlockEditor((value) =>
             {
-                var value = editor.GetValue();
                 var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
                 props.UpdateProps(value);
 
                 if (props.IsEmpty()) props = null;
 
                 Block.SetProps(props, land);
-                manager.CloseDialog(dialog);
             });
+            editor.SetValue(Block.GetProps() as TdObjectBlockProperties);
+            editor.Show();
         }
 
         private IEnumerator LoadBytes(string url, TdObjectBlockProperties.TdObjectType type,
