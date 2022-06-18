@@ -223,7 +223,7 @@ namespace Source
         // ReSharper disable Unity.PerformanceAnalysis
         private void DetectFocus()
         {
-            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 20))
+            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
             {
                 var focusable = raycastHit.collider.GetComponent<Focusable>();
                 if (hitCollider == raycastHit.collider &&
