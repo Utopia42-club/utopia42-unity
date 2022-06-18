@@ -217,20 +217,11 @@ namespace src.MetaBlocks.TdObjectBlock
                 var reinitialize = !currentUrl.Equals("") || p.initialScale == 0;
                 currentUrl = p.url;
 
-                var go = TdObjectCache.GetAsset(this);
-                if (go != null)
+                CreateGameObject(p.url, p.type, loadedGo =>
                 {
                     LoadGameObject(scale, rotation, initialPosition, p.initialScale,
-                        p.detectCollision, p.type, reinitialize, go);
-                }
-                else
-                {
-                    StartCoroutine(LoadBytes(p.url, p.type, loadedGo =>
-                    {
-                        LoadGameObject(scale, rotation, initialPosition, p.initialScale,
-                            p.detectCollision, p.type, reinitialize, loadedGo);
-                    }));
-                }
+                        p.detectCollision, p.type, reinitialize, loadedGo);
+                });
             }
         }
 
@@ -334,7 +325,6 @@ namespace src.MetaBlocks.TdObjectBlock
                 detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
 
             UpdateState(State.Ok);
-            TdObjectCache.Add(this);
             // chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position))); // TODO: fix on focus
         }
 
@@ -386,51 +376,31 @@ namespace src.MetaBlocks.TdObjectBlock
             editor.Show();
         }
 
-        private IEnumerator LoadBytes(string url, TdObjectBlockProperties.TdObjectType type,
+        private void CreateGameObject(string url, TdObjectBlockProperties.TdObjectType type,
             Action<GameObject> onSuccess)
         {
-            using var webRequest = UnityWebRequest.Get(url);
-            var op = webRequest.SendWebRequest();
-
-            while (!op.isDone)
+            World.INSTANCE.TdObjectCache.GetBytes(url, (bytes, state) =>
             {
-                if (webRequest.downloadedBytes > DownloadLimitMb * 1000000)
-                    break;
-                yield return null;
-            }
+                if (state.HasValue)
+                {
+                    UpdateState(state.Value);
+                    return;
+                }
 
-            switch (webRequest.result)
-            {
-                case UnityWebRequest.Result.InProgress:
-                    UpdateState(State.SizeLimit);
-                    break;
-                case UnityWebRequest.Result.ConnectionError:
-                    Debug.LogError($"Get for {url} caused Error: {webRequest.error}");
-                    UpdateState(State.ConnectionError);
-                    break;
-                case UnityWebRequest.Result.DataProcessingError:
-                case UnityWebRequest.Result.ProtocolError:
-                    Debug.LogError($"Get for {url} caused HTTP Error: {webRequest.error}");
-                    UpdateState(State.InvalidUrlOrData);
-                    break;
-                case UnityWebRequest.Result.Success:
-                    Action onFailure = () => { UpdateState(State.InvalidData); };
-
-                    switch (type)
-                    {
-                        case TdObjectBlockProperties.TdObjectType.OBJ:
-                            ObjLoader.INSTANCE.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
-                            break;
-                        case TdObjectBlockProperties.TdObjectType.GLB:
-                            GlbLoader.InitTask(webRequest.downloadHandler.data, onSuccess, onFailure);
-                            break;
-                        default:
-                            onFailure.Invoke();
-                            break;
-                    }
-
-                    break;
-            }
+                Action onFailure = () => { UpdateState(State.InvalidData); };
+                switch (type)
+                {
+                    case TdObjectBlockProperties.TdObjectType.OBJ:
+                        ObjLoader.INSTANCE.InitTask(bytes, onSuccess, onFailure);
+                        break;
+                    case TdObjectBlockProperties.TdObjectType.GLB:
+                        GlbLoader.InitTask(bytes, onSuccess, onFailure);
+                        break;
+                    default:
+                        onFailure.Invoke();
+                        break;
+                }
+            });
         }
 
         public override float? GetCenterY(out float? height)

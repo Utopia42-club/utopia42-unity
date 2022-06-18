@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace src.MetaBlocks.TdObjectBlock
 {
-    public static class TdObjectCache
+    public static class TdObjectCacheDeprecated
     {
         private static readonly Dictionary<Key, List<TdObjectBlockObject>> Assets = new();
 
@@ -58,7 +58,7 @@ namespace src.MetaBlocks.TdObjectBlock
                     else
                     {
                         renderer.sharedMaterials[i] = mat;
-                        if(mat.mainTexture != null)
+                        if (mat.mainTexture != null)
                             renderer.sharedMaterials[i].mainTexture = Object.Instantiate(mat.mainTexture);
                     }
                 }

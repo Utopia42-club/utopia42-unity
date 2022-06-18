@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using src.MetaBlocks;
+using src.MetaBlocks.TdObjectBlock;
 using src.Model;
 using src.Service;
 using src.Utils;
@@ -70,6 +71,13 @@ namespace src
             metaOffset != Vector3.zero ||
             HighlightOffset != Vector3Int.zero ||
             highlightChunks.Values.Any(highlightChunk => highlightChunk.SelectionDisplaced);
+
+        public TdObjectBytesCache TdObjectCache { private set; get; }
+
+        private void Start()
+        {
+            TdObjectCache = gameObject.AddComponent<TdObjectBytesCache>();
+        }
 
         private void Update()
         {
