@@ -13,6 +13,7 @@ namespace src.MetaBlocks.TdObjectBlock
     public class TdObjectBlockObject : MetaBlockObject
     {
         public const ulong DownloadLimitMb = 10;
+        private const float GroundGap = 0.2f;
 
         private GameObject objContainer;
         public GameObject Obj { private set; get; }
@@ -158,17 +159,6 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 if (Block.IsCursor && objCollider != null)
                     DestroyImmediate(objCollider);
-
-                var newMinGlobalY = GetMinGlobalY(Obj);
-                if (Block.IsCursor)
-                {
-                    var delta = newMinGlobalY - MinGlobalY;
-                    if (Mathf.Abs(delta) > 0.001)
-                        DeltaY = newMinGlobalY - MinGlobalY;
-                }
-
-                MinGlobalY = newMinGlobalY;
-
                 return;
             }
 
@@ -181,7 +171,6 @@ namespace src.MetaBlocks.TdObjectBlock
             objCollider = Obj.GetComponentInChildren<Collider>();
             Obj.transform.SetParent(objContainer.transform, false);
 
-            MinGlobalY = GetMinGlobalY(Obj);
             if (chunk == null || objCollider == null) return;
             objFocusable = objCollider.gameObject.AddComponent<TdObjectFocusable>();
             objFocusable.Initialize(this);
@@ -243,10 +232,6 @@ namespace src.MetaBlocks.TdObjectBlock
                     }));
                 }
             }
-        }
-
-        private void SetPlaceHolder(bool error)
-        {
         }
 
         private void ResetContainer()
@@ -446,6 +431,14 @@ namespace src.MetaBlocks.TdObjectBlock
 
                     break;
             }
+        }
+
+        public override float? GetCenterY(out float? height)
+        {
+            var centerY = base.GetCenterY(out height);
+            if (height.HasValue)
+                height = height.Value + GroundGap;
+            return centerY;
         }
 
         protected override void OnDestroy()

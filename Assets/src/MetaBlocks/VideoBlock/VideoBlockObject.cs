@@ -78,8 +78,9 @@ namespace src.MetaBlocks.VideoBlock
                 ? MediaBlockEditor.DEFAULT_DIMENSION
                 : (error ? Math.Min(props.height, MediaBlockEditor.DEFAULT_DIMENSION) : props.height);
 
-            CreateVideoFace(gameObject.transform, width, height, rotation,
-                out videoContainer, out var go, out var r, true).PlaceHolderInit(r, error);
+            video = CreateVideoFace(gameObject.transform, width, height, rotation,
+                out videoContainer, out var go, out var r, true);
+            video.PlaceHolderInit(r, error);
             go.AddComponent<MetaFocusable>().Initialize(this);
         }
 

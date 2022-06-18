@@ -128,8 +128,14 @@ namespace src.MetaBlocks
             blockObject.LoadSelectHighlight(this, highlightChunkTransform, localPos, onLoad);
         }
 
-        public void UpdateWorldPosition(Vector3 pos)
+        public void UpdateWorldPosition(Vector3 raycastHitPoint)
         {
+            if (blockObject == null)
+            {
+                Debug.LogWarning(
+                    "Cannot move uninitialized metablock");
+                return;
+            }
             if (blockObject.chunk != null || land != null)
             {
                 Debug.LogWarning(
@@ -137,7 +143,8 @@ namespace src.MetaBlocks
                 return;
             }
 
-            blockObject.gameObject.transform.position = pos - blockObject.DeltaY * Vector3.up;
+            var height = blockObject.GetHeight();
+            blockObject.gameObject.transform.position = raycastHitPoint + (height.HasValue ? height.Value / 2 : 0) * Vector3.up;
         }
     }
 }

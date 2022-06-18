@@ -98,9 +98,7 @@ namespace src
 
         private bool IsControlKeyDown()
         {
-            return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl)
-                                                         || Input.GetKeyDown(KeyCode.LeftCommand) ||
-                                                         Input.GetKeyDown(KeyCode.RightCommand);
+            return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
         }
 
         public bool IsWorldInited()

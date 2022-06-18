@@ -70,9 +70,7 @@ namespace src.Canvas.Map
                 {
                     if (Input.GetMouseButtonDown(0))
                     {
-                        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)
-                                                              || Input.GetKey(KeyCode.LeftCommand)
-                                                              || Input.GetKey(KeyCode.RightCommand))
+                        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
                             StartDraw(realPosition);
                         else
                             StartDrag(mousePosInt);
