@@ -1,4 +1,5 @@
-﻿using UnityEngine.UIElements;
+﻿using System;
+using UnityEngine.UIElements;
 
 namespace src.AssetsInventory
 {
@@ -16,7 +17,13 @@ namespace src.AssetsInventory
 
         public static void SetContainerSize(VisualElement container, int size)
         {
-            container.style.height = 90 * (size / 3 + 1);
+            container.style.height = 90 * DivideRoundingUp(size, 3);
+        }
+        
+        private static int DivideRoundingUp(int x, int y)
+        {
+            var quotient = Math.DivRem(x, y, out var remainder);
+            return remainder == 0 ? quotient : quotient + 1;
         }
     }
 }

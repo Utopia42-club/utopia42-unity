@@ -22,7 +22,6 @@ namespace src.AssetsInventory
         private static readonly string HANDY_SLOTS_KEY = "HANDY_SLOTS";
 
         private VisualElement root;
-        private VisualElement inventoryLoadingLayer;
         private VisualElement inventory;
         private VisualElement handyPanel;
         private Button openCloseInvButton;
@@ -93,8 +92,7 @@ namespace src.AssetsInventory
             s.height = new StyleLength(new Length(95, LengthUnit.Percent));
             s.width = 350;
             inventory.Add(tabPane.VisualElement());
-            inventoryLoadingLayer = root.Q<VisualElement>("tabPaneLoadingLayer");
-            
+
             handyPanel = root.Q<VisualElement>("handyPanel");
             handyBar = handyPanel.Q<ScrollView>("handyBar");
             UiUtils.Utils.IncreaseScrollSpeed(handyBar, 600);
@@ -148,14 +146,15 @@ namespace src.AssetsInventory
             {
                 limit = 100
             };
-            ShowInventoryLoadingLayer(true);
+            var loadingId = LoadingLayer.Show(tabPane.VisualElement());
             StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
             {
                 foreach (var pack in packs)
                     this.packs[pack.id] = pack;
-            }, () => ShowInventoryLoadingLayer(false)));
+                LoadingLayer.Hide(loadingId);
+            }, () => LoadingLayer.Hide(loadingId)));
 
-            ShowInventoryLoadingLayer(true);
+            var loadingId2 = LoadingLayer.Show(tabPane.VisualElement());
             StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
             {
                 var scrollView = tabPane.GetTabBody().Q<ScrollView>("categories");
@@ -165,9 +164,8 @@ namespace src.AssetsInventory
                 scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
                 foreach (var category in categories)
                     scrollView.Add(CreateCategoriesListItem(category));
-
-                ShowInventoryLoadingLayer(false);
-            }, () => { ShowInventoryLoadingLayer(false); }));
+                LoadingLayer.Hide(loadingId2);
+            }, () => LoadingLayer.Hide(loadingId2)));
 
             var searchField = tabPane.GetTabBody().Q<TextField>("searchField");
 
@@ -189,7 +187,6 @@ namespace src.AssetsInventory
             yield return new WaitForSeconds(0.6f);
             filterText = value;
         }
-
 
         private void SetupBlocksTab()
         {
@@ -240,7 +237,7 @@ namespace src.AssetsInventory
             }, () =>
             {
                 //TODO: show error snack
-            });
+            }, true);
         }
 
         private void Update()
@@ -300,23 +297,17 @@ namespace src.AssetsInventory
                 OpenAssetsTab();
         }
 
-        private void ShowInventoryLoadingLayer(bool show)
+        private void LoadFavoriteItems(Action onDone = null, Action onFail = null, bool forFavoritesTab = false)
         {
-            inventoryLoadingLayer.style.display =
-                show ? new StyleEnum<DisplayStyle>(DisplayStyle.Flex) : new StyleEnum<DisplayStyle>(DisplayStyle.None);
-        }
-
-        private void LoadFavoriteItems(Action onDone = null, Action onFail = null)
-        {
-            ShowInventoryLoadingLayer(true);
+            var loadingId = LoadingLayer.Show(forFavoritesTab ? tabPane.VisualElement() : handyPanel);
             StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
             {
                 favoriteItems = favItems;
                 onDone?.Invoke();
-                ShowInventoryLoadingLayer(false);
+                LoadingLayer.Hide(loadingId);
             }, () =>
             {
-                ShowInventoryLoadingLayer(false);
+                LoadingLayer.Hide(loadingId);
                 onFail?.Invoke();
             }, this));
         }
@@ -453,7 +444,7 @@ namespace src.AssetsInventory
                     searchTerms = new Dictionary<string, object> {{"category", category.id}}
                 };
                 var scrollView = CreateAssetsScrollView(searchCriteria);
-                SetAssetsTabContent(scrollView, OpenAssetsTab, "Categories");
+                SetAssetsTabContent(scrollView, OpenAssetsTab, category.name);
             };
             return container;
         }
@@ -473,76 +464,89 @@ namespace src.AssetsInventory
             var scrollView = new ScrollView(ScrollViewMode.Vertical)
             {
                 scrollDecelerationRate = 0.135f,
-                verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible
+                verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible,
+                horizontalScrollerVisibility = ScrollerVisibility.Hidden
             };
-            scrollView.RegisterCallback<WheelEvent>(evt => { evt.StopPropagation(); });
             UiUtils.Utils.IncreaseScrollSpeed(scrollView, 600);
-            scrollView.AddToClassList("utopia-scrollView");
             var ss = scrollView.style;
             ss.height = new StyleLength(new Length(90, LengthUnit.Percent));
             ss.width = new StyleLength(new Length(90, LengthUnit.Percent));
             ss.flexGrow = 1;
 
-            if (isSearchResult)
-            {
-                ShowInventoryLoadingLayer(true);
-                StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
-                {
-                    var assetGroups = GroupAssetsByPack(assets);
-                    foreach (var assetGroup in assetGroups)
-                    {
-                        var foldout = CreatePackFoldout(packs[assetGroup.Key].name);
-                        PopulatePackFoldoutWithAssets(foldout, assetGroup.Value);
-                        scrollView.Add(foldout);
-                    }
+            searchCriteria.limit = 20;
 
-                    ShowInventoryLoadingLayer(false);
-                }, () => ShowInventoryLoadingLayer(false), this));
-            }
-            else
+            foreach (var pack in packs)
             {
-                foreach (var pack in packs)
+                var foldout = CreatePackFoldout(pack.Value.name);
+                foldout.SetValueWithoutNotify(false);
+                foldout.RegisterValueChangedCallback(evt =>
                 {
-                    var foldout = CreatePackFoldout(pack.Value.name);
-                    foldout.SetValueWithoutNotify(false);
-                    foldout.RegisterValueChangedCallback(evt =>
-                    {
-                        foldout.contentContainer.Clear();
-                        if (evt.newValue)
-                        {
-                            if (searchCriteria.searchTerms.ContainsKey("pack"))
-                                searchCriteria.searchTerms.Remove("pack");
-                            searchCriteria.searchTerms.Add("pack", pack.Key);
-                            ShowInventoryLoadingLayer(true);
-                            StartCoroutine(restClient.GetAllAssets(searchCriteria, assets =>
-                            {
-                                PopulatePackFoldoutWithAssets(foldout, assets);
-                                ShowInventoryLoadingLayer(false);
-                            }, () => ShowInventoryLoadingLayer(false), this));
-                        }
-                    });
-                    scrollView.Add(foldout);
-                }
+                    Debug.Log("ValueChangeCallBack");
+                    foldout.contentContainer.Clear();
+                    foldout.contentContainer.Add(new VisualElement()); // Slots container
+                    if (searchCriteria.searchTerms.ContainsKey("pack"))
+                        searchCriteria.searchTerms.Remove("pack");
+                    searchCriteria.searchTerms.Add("pack", pack.Key);
+                    var loadMore
+                        = Resources.Load<VisualTreeAsset>("UiDocuments/LoadMoreButton")
+                            .CloneTree();
+                    var loadMoreButton = loadMore.Q<Button>();
+                    loadMoreButton.clickable.clicked += () => LoadAPageOfAssetsIntoFoldout(foldout, searchCriteria);
+                    foldout.contentContainer.Add(loadMore);
+                    if (evt.newValue)
+                        LoadAPageOfAssetsIntoFoldout(foldout, searchCriteria);
+                });
+                if (isSearchResult)
+                    foldout.schedule.Execute(() => foldout.value = true);
+
+                scrollView.Add(foldout);
             }
 
             return scrollView;
         }
 
-        private void PopulatePackFoldoutWithAssets(Foldout foldout, List<Asset> assets)
+        private void LoadAPageOfAssetsIntoFoldout(Foldout foldout, SearchCriteria searchCriteria)
         {
+            searchCriteria.limit = 15;
+            var content = foldout.contentContainer.Children().First();
+            if (content.childCount > 0)
+            {
+                var slot = content.ElementAt(content.childCount - 1).userData as AssetInventorySlot;
+                searchCriteria.lastId = slot.GetSlotInfo().asset.id.Value;
+            }
+            else
+            {
+                searchCriteria.lastId = null;
+            }
+
+            var loadingId = LoadingLayer.Show(tabPane.VisualElement());
+            StartCoroutine(restClient.GetAssets(searchCriteria, assets =>
+            {
+                AddAssetsToFoldout(foldout, assets);
+                LoadingLayer.Hide(loadingId);
+            }, () => LoadingLayer.Hide(loadingId)));
+        }
+
+        private void AddAssetsToFoldout(Foldout foldout, List<Asset> assets)
+        {
+            var content = foldout.contentContainer.Children().First();
+            var count = content.childCount;
             var size = assets.Count;
-            for (var i = 0; i < size; i++)
+            for (var i = count; i < count + size; i++)
             {
                 var slot = new AssetInventorySlot();
-                var slotInfo = new SlotInfo(assets[i]);
+                var slotInfo = new SlotInfo(assets[i - count]);
                 slot.SetSlotInfo(slotInfo);
                 slot.SetSize(80);
                 slot.SetGridPosition(i, 3);
                 SetupFavoriteAction(slot);
-                foldout.contentContainer.Add(slot.VisualElement());
+                slot.VisualElement().userData = slot;
+                content.Add(slot.VisualElement());
             }
 
-            foldout.contentContainer.style.height = 90 * (size / 3 + 1);
+            var total = size + count;
+            GridUtils.SetContainerSize(content, total);
+            foldout.contentContainer.style.height = content.style.height.value.value + 45;
         }
 
         private void SetupFavoriteAction(BaseInventorySlot slot)
@@ -629,7 +633,7 @@ namespace src.AssetsInventory
         public void AddToFavorites(BaseInventorySlot slot)
         {
             var slotInfo = slot.GetSlotInfo();
-            ShowInventoryLoadingLayer(true);
+            var loadingId = LoadingLayer.Show(tabPane.VisualElement());
             var favoriteItem = new FavoriteItem
             {
                 asset = slotInfo.asset,
@@ -637,31 +641,31 @@ namespace src.AssetsInventory
             };
             StartCoroutine(restClient.CreateFavoriteItem(favoriteItem, item =>
                 {
-                    ShowInventoryLoadingLayer(false);
+                    LoadingLayer.Hide(loadingId);
                     favoriteItems.Add(item);
                     SetupFavoriteAction(slot);
                 },
                 () =>
                 {
-                    ShowInventoryLoadingLayer(false);
+                    LoadingLayer.Hide(loadingId);
                     //TODO a toast?
                 }));
         }
 
         public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot, Action onDone = null)
         {
-            ShowInventoryLoadingLayer(true);
+            var loadingId = LoadingLayer.Show(tabPane.VisualElement());
             StartCoroutine(restClient.DeleteFavoriteItem(favoriteItem.id.Value,
                 () =>
                 {
-                    ShowInventoryLoadingLayer(false);
+                    LoadingLayer.Hide(loadingId);
                     favoriteItems.Remove(favoriteItem);
                     SetupFavoriteAction(slot);
                     onDone?.Invoke();
                     //TODO a toast?
                 }, () =>
                 {
-                    ShowInventoryLoadingLayer(false);
+                    LoadingLayer.Hide(loadingId);
                     //TODO a toast?
                 }));
         }
