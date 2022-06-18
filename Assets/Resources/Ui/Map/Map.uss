@@ -1,0 +1,63 @@
+* {
+    --map-background: rgb(236, 240, 241);
+    --map-land-background: rgb(149, 165, 166);
+    --map-owned-land-color: rgb(22, 160, 133);
+    --map-grid-origin-color: rgb(192, 57, 43);
+    --map-grid-line-width: 1px;
+    --map-grid-line-color: rgba(41, 128, 185, 0.4);
+    --map-minor-grid-line-color: rgba(41, 128, 185, 0.1);
+}
+
+#Root {
+    background-color: var(--map-background);
+    width: 100%;
+    height: 100%;
+}
+
+.map-subgrid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.map-grid {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.map-vertical-grid-line {
+    border-left-color: var(--map-grid-line-color);
+    border-left-width: var(--map-grid-line-width);
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+}
+
+.map-vertical-grid-line > .minor-grid-line {
+    border-left-color: var(--map-minor-grid-line-color);
+    border-left-width: var(--map-grid-line-width);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+
+.map-horizontal-grid-line {
+    border-top-color: var(--map-grid-line-color);
+    border-top-width: var(--map-grid-line-width);
+    position: absolute;
+    left: -10%;
+    right: -10%;
+}
+.map-horizontal-grid-line > .minor-grid-line {
+    border-top-color: var(--map-minor-grid-line-color);
+    border-top-width: var(--map-grid-line-width);
+    position: absolute;
+    left: 0;
+    right: 0;
+}
+
