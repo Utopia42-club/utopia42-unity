@@ -35,6 +35,8 @@ namespace src
         private bool onlyMetaSelectionActive;
         private bool dragging;
 
+        private int keyboardFrameCounter = 0;
+
         public void Start()
         {
             player = Player.INSTANCE;
@@ -58,6 +60,8 @@ namespace src
             HandleBlockRotation();
             HandleBlockSelection();
             HandleBlockClipboard();
+
+            keyboardFrameCounter++;
         }
 
         private void HandleBlockRotation()
@@ -105,11 +109,20 @@ namespace src
         private void HandleSelectionKeyboardMovement()
         {
             if (!selectionActive || !movingSelectionAllowed || dragging) return;
-            var moveDown = Input.GetButtonDown("Jump") &&
-                           (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-            var moveUp = !moveDown && Input.GetButtonDown("Jump");
 
-            var moveDirection = Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical")
+            var frameCondition = onlyMetaSelectionActive ? keyboardFrameCounter % 5 == 0 : keyboardFrameCounter % 50 == 0;
+
+            var jump = Input.GetButtonDown("Jump") || frameCondition && Input.GetButton("Jump");
+            var horizontal = Input.GetButtonDown("Horizontal") || frameCondition && Input.GetButton("Horizontal");
+            var vertical = Input.GetButtonDown("Vertical") || frameCondition && Input.GetButton("Vertical");
+
+            if (jump || horizontal || vertical) keyboardFrameCounter = 0;
+
+            var moveDown = jump &&
+                           (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            var moveUp = !moveDown && jump;
+
+            var moveDirection = horizontal || vertical
                 ? (transform.forward * player.Vertical + transform.right * player.Horizontal).normalized
                 : Vector3.zero;
             var movement = moveUp || moveDown || moveDirection.magnitude > Player.CastStep;
@@ -142,11 +155,12 @@ namespace src
             else if (Input.GetMouseButtonDown(0) && DraggedPosition == null)
             {
                 if (player.FocusedFocusable is not MetaFocusable metaFocusable) return; // TODO ?
-                
+
                 DraggedPosition = metaFocusable.GetBlockPosition();
 
                 if (DraggedPosition.HasValue)
-                    DraggedPosition = new Vector3(DraggedPosition.Value.x, World.INSTANCE.GetSelectionMinPoint().y, DraggedPosition.Value.z);
+                    DraggedPosition = new Vector3(DraggedPosition.Value.x, World.INSTANCE.GetSelectionMinPoint().y,
+                        DraggedPosition.Value.z);
             }
 
             else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&
