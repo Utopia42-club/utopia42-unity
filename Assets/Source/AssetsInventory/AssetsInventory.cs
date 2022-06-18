@@ -10,6 +10,7 @@ using Source.MetaBlocks;
 using Source.Model;
 using Source.UiUtils;
 using Source.Utils;
+using src.UiUtils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
@@ -24,6 +25,7 @@ namespace Source.AssetsInventory
         private VisualElement root;
         private VisualElement inventory;
         private VisualElement handyPanel;
+        private VisualElement handyPanelRoot;
         private Button openCloseInvButton;
         private ScrollView handyBar;
 
@@ -93,6 +95,7 @@ namespace Source.AssetsInventory
             s.width = 350;
             inventory.Add(tabPane.VisualElement());
 
+            handyPanelRoot = root.Q<VisualElement>("handyPanelRoot");
             handyPanel = root.Q<VisualElement>("handyPanel");
             handyBar = handyPanel.Q<ScrollView>("handyBar");
             UiUtils.Utils.IncreaseScrollSpeed(handyBar, 600);
@@ -146,7 +149,7 @@ namespace Source.AssetsInventory
             {
                 limit = 100
             };
-            var loadingId = LoadingLayer.Show(tabPane.VisualElement());
+            var loadingId = LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
             {
                 foreach (var pack in packs)
@@ -154,7 +157,7 @@ namespace Source.AssetsInventory
                 LoadingLayer.Hide(loadingId);
             }, () => LoadingLayer.Hide(loadingId)));
 
-            var loadingId2 = LoadingLayer.Show(tabPane.VisualElement());
+            var loadingId2 = LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
             {
                 var scrollView = tabPane.GetTabBody().Q<ScrollView>("categories");
@@ -299,7 +302,7 @@ namespace Source.AssetsInventory
 
         private void LoadFavoriteItems(Action onDone = null, Action onFail = null, bool forFavoritesTab = false)
         {
-            var loadingId = LoadingLayer.Show(forFavoritesTab ? tabPane.VisualElement() : handyPanel);
+            var loadingId = LoadingLayer.Show(forFavoritesTab ? inventory : handyPanelRoot);
             StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
             {
                 favoriteItems = favItems;
@@ -519,7 +522,7 @@ namespace Source.AssetsInventory
                 searchCriteria.lastId = null;
             }
 
-            var loadingId = LoadingLayer.Show(tabPane.VisualElement());
+            var loadingId = LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetAssets(searchCriteria, assets =>
             {
                 AddAssetsToFoldout(foldout, assets);
@@ -633,7 +636,7 @@ namespace Source.AssetsInventory
         public void AddToFavorites(BaseInventorySlot slot)
         {
             var slotInfo = slot.GetSlotInfo();
-            var loadingId = LoadingLayer.Show(tabPane.VisualElement());
+            var loadingId = LoadingLayer.Show(inventory);
             var favoriteItem = new FavoriteItem
             {
                 asset = slotInfo.asset,
@@ -654,7 +657,7 @@ namespace Source.AssetsInventory
 
         public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot, Action onDone = null)
         {
-            var loadingId = LoadingLayer.Show(tabPane.VisualElement());
+            var loadingId = LoadingLayer.Show(inventory);
             StartCoroutine(restClient.DeleteFavoriteItem(favoriteItem.id.Value,
                 () =>
                 {
