@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/UiDocuments/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
+    <ui:VisualElement name="Root">
+        <ui:VisualElement name="Lands" style="width: auto; height: auto; position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
+            <ui:VisualElement style="position: absolute; left: 10px; top: 10px; right: 0; bottom: 0; width: 100px; height: 100px; background-color: rgb(183, 0, 0);" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
