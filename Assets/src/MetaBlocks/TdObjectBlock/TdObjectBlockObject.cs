@@ -13,6 +13,7 @@ namespace src.MetaBlocks.TdObjectBlock
     public class TdObjectBlockObject : MetaBlockObject
     {
         public const ulong DownloadLimitMb = 10;
+        private const float GroundGap = 0.2f;
 
         private GameObject objContainer;
         public GameObject Obj { private set; get; }
@@ -233,10 +234,6 @@ namespace src.MetaBlocks.TdObjectBlock
             }
         }
 
-        private void SetPlaceHolder(bool error)
-        {
-        }
-
         private void ResetContainer()
         {
             objContainer = new GameObject("3d object container");
@@ -443,6 +440,14 @@ namespace src.MetaBlocks.TdObjectBlock
 
                     break;
             }
+        }
+
+        public override float? GetCenterY(out float? height)
+        {
+            var centerY = base.GetCenterY(out height);
+            if (height.HasValue)
+                height = height.Value + GroundGap;
+            return centerY;
         }
 
         protected override void OnDestroy()

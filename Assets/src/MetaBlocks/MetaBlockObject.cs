@@ -156,7 +156,7 @@ namespace src.MetaBlocks
             });
         }
 
-        public float? GetCenterY(out float? height)
+        public virtual float? GetCenterY(out float? height)
         {
             var renderers = gameObject.GetComponentsInChildren<Renderer>();
             if (renderers.Length == 0) return height = null;
