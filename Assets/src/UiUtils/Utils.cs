@@ -37,5 +37,16 @@ namespace src.UiUtils
                     textField.SetValueWithoutNotify(placeHolder);
             });
         }
+        
+        public static void IncreaseScrollSpeed(ScrollView scrollView, float factor)
+        {
+            //Workaround to increase scroll speed...
+            //There is this issue that verticalPageSize has no effect on speed
+            scrollView.RegisterCallback<WheelEvent>((evt) =>
+            {
+                scrollView.scrollOffset = new Vector2(0, scrollView.scrollOffset.y + factor * evt.delta.y);
+                evt.StopPropagation();
+            });
+        }
     }
 }

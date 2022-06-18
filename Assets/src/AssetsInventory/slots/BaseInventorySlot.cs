@@ -98,7 +98,7 @@ namespace src.AssetsInventory.slots
 
         public void SetGridPosition(int index, int itemsInARow)
         {
-            Utils.SetGridPosition(slot, size, index, itemsInARow);
+            GridUtils.SetChildPosition(slot, size, index, itemsInARow);
         }
 
         protected void LoadImage(string url)
