@@ -158,17 +158,6 @@ namespace src.MetaBlocks.TdObjectBlock
             {
                 if (Block.IsCursor && objCollider != null)
                     DestroyImmediate(objCollider);
-
-                var newMinGlobalY = GetMinGlobalY(Obj);
-                if (Block.IsCursor && MinGlobalY.HasValue)
-                {
-                    var delta = newMinGlobalY - MinGlobalY.Value;
-                    if (Mathf.Abs(delta) > 0.001)
-                        DeltaY = delta;
-                }
-
-                MinGlobalY = newMinGlobalY;
-
                 return;
             }
 
@@ -181,7 +170,6 @@ namespace src.MetaBlocks.TdObjectBlock
             objCollider = Obj.GetComponentInChildren<Collider>();
             Obj.transform.SetParent(objContainer.transform, false);
 
-            MinGlobalY = GetMinGlobalY(Obj);
             if (chunk == null || objCollider == null) return;
             objFocusable = objCollider.gameObject.AddComponent<TdObjectFocusable>();
             objFocusable.Initialize(this);

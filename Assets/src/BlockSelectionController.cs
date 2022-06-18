@@ -142,29 +142,30 @@ namespace src
             else if (Input.GetMouseButtonDown(0) && DraggedPosition == null)
             {
                 if (player.FocusedFocusable is not MetaFocusable metaFocusable) return; // TODO ?
-                var pos = metaFocusable.GetBlockPosition();
-                var minY = metaFocusable.MinY();
-                if (pos.HasValue)
-                    DraggedPosition = new Vector3(pos.Value.x, minY ?? pos.Value.y, pos.Value.z);
+                
+                DraggedPosition = metaFocusable.GetBlockPosition();
+
+                if (DraggedPosition.HasValue)
+                    DraggedPosition = new Vector3(DraggedPosition.Value.x, World.INSTANCE.GetSelectionMinPoint().y, DraggedPosition.Value.z);
             }
 
             else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&
                      player.FocusedFocusable is ChunkFocusable &&
                      player.CanEdit(player.PossiblePlaceBlockPosInt, out _, true))
             {
-                var metaMinY = World.INSTANCE.GetMetaSelectionMinY();
+                var minY = World.INSTANCE.GetSelectionMinPoint().y;
                 if (onlyMetaSelectionActive)
                 {
                     var pos = player.PossiblePlaceMetaBlockPos;
-                    if (metaMinY.HasValue && pos.y > metaMinY)
-                        pos.y += pos.y - metaMinY.Value;
+                    if (pos.y > minY)
+                        pos.y += pos.y - minY;
                     World.INSTANCE.MoveMetaSelection(pos, DraggedPosition.Value);
                 }
                 else
                 {
                     var pos = player.PossiblePlaceBlockPosInt;
-                    if (metaMinY.HasValue && pos.y > metaMinY)
-                        pos.y += pos.y - Mathf.FloorToInt(metaMinY.Value);
+                    if (pos.y > minY)
+                        pos.y += pos.y - Mathf.FloorToInt(minY);
                     World.INSTANCE.MoveSelection(pos,
                         Vectors.TruncateFloor(DraggedPosition.Value));
                 }
@@ -305,30 +306,31 @@ namespace src
                      !selectionActive)
             {
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();
-                var conflictWithPlayer = false;
-                var currVox = Vectors.TruncateFloor(transform.position);
+                var minIntPoint = Vectors.TruncateFloor(minPoint);
                 ClearSelection();
-                foreach (var pos in World.INSTANCE.GetClipboardWorldPositions())
-                {
-                    var newPosition = pos - minPoint + player.PossiblePlaceBlockPosInt;
-                    if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
-                        currVox.Equals(newPosition - Vector3Int.up))
-                    {
-                        conflictWithPlayer = true;
-                        break;
-                    }
-                }
 
-                if (!conflictWithPlayer)
+                if (!onlyMetaSelectionActive)
                 {
-                    var metaMinY = World.INSTANCE.GetMetaClipboardMinY();
-                    // if (minPoint == null)
-                    //     minPoint = Vector3Int.zero;
-                    if (metaMinY.HasValue && minPoint.y > metaMinY.Value)
-                        minPoint = new Vector3Int(minPoint.x, Mathf.FloorToInt(metaMinY.Value), minPoint.z);
-                    World.INSTANCE.PasteClipboard(player.PossiblePlaceBlockPosInt - minPoint);
-                    PrepareForClipboardMovement(SelectionMode.Clipboard);
+                    var conflictWithPlayer = false;
+                    var currVox = Vectors.TruncateFloor(transform.position);
+                    foreach (var pos in World.INSTANCE.ClipboardVoxelPositions)
+                    {
+                        var newPosition = pos - minIntPoint + player.PossiblePlaceBlockPosInt;
+                        if (currVox.Equals(newPosition) || currVox.Equals(newPosition + Vector3Int.up) ||
+                            currVox.Equals(newPosition - Vector3Int.up))
+                        {
+                            conflictWithPlayer = true;
+                            break;
+                        }
+                    }
+
+                    if (!conflictWithPlayer)
+                        World.INSTANCE.PasteClipboard(player.PossiblePlaceBlockPosInt - minIntPoint);
                 }
+                else
+                    World.INSTANCE.PasteClipboard(player.PossiblePlaceMetaBlockPos - minPoint);
+
+                PrepareForClipboardMovement(SelectionMode.Clipboard);
             }
         }
 

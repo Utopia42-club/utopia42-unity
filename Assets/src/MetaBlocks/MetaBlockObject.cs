@@ -17,10 +17,9 @@ namespace src.MetaBlocks
         protected bool canEdit;
         public State State { get; protected set; }
         protected SnackItem snackItem;
+
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
-        public float? MinGlobalY { get; protected set; }
-        public float DeltaY { get; protected set; } = 0;
-        
+
         protected void Start()
         {
             canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
@@ -108,20 +107,7 @@ namespace src.MetaBlocks
                 InLand(new Vector3(max.x, max.y, min.z)) &&
                 InLand(new Vector3(max.x, max.y, max.z));
         }
-
-        protected static float GetMinGlobalY(GameObject go)
-        {
-            return go.GetComponentsInChildren<Renderer>().Select(GetMinGlobalY).Prepend(float.MaxValue).Min();
-        }
-
-        protected static float GetMinGlobalY(Renderer renderer)
-        {
-            var bounds = renderer.bounds;
-            var center = bounds.center;
-            var size = bounds.size;
-            return (center - size * 0.5f).y;
-        }
-
+        
         private bool InLand(Vector3 p)
         {
             if (Block.land == null)
@@ -168,6 +154,34 @@ namespace src.MetaBlocks
                 foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())
                     renderer.enabled = false;
             });
+        }
+
+        public float? GetCenterY(out float? height)
+        {
+            var renderers = gameObject.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return height = null;
+
+            float
+                minY = float.PositiveInfinity,
+                maxY = float.NegativeInfinity;
+            foreach (var child in renderers)
+            {
+                var bounds = child.bounds;
+                var min = bounds.min;
+                var max = bounds.max;
+
+                if (min.y < minY) minY = min.y;
+                if (max.y > maxY) maxY = max.y;
+            }
+
+            height = maxY - minY;
+            return (minY + maxY) / 2;
+        }
+
+        public float? GetHeight()
+        {
+            GetCenterY(out var h);
+            return h;
         }
 
         protected abstract void DoInitialize();

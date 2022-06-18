@@ -321,13 +321,13 @@ namespace src
                 if (MetaBlockPlaceHolder != null)
                     MetaBlockPlaceHolder.gameObject.SetActive(false);
                 PreparedMetaBlock.SetActive(true);
-                var pos = PreparedMetaBlock.type.GetPlaceHolderPutPosition(blockHitPoint).ToWorld();
                 if (PreparedMetaBlock.blockObject == null)
                 {
+                    var pos = PreparedMetaBlock.type.GetPlaceHolderPutPosition(blockHitPoint).ToWorld();
                     PreparedMetaBlock.RenderAt(null, pos, null);
                 }
                 else
-                    PreparedMetaBlock.UpdateWorldPosition(pos);
+                    PreparedMetaBlock.UpdateWorldPosition(new MetaPosition(blockHitPoint).ToWorld());
             }
             else if (!CtrlDown && !selectionActive && SelectedBlockType is MetaBlockType metaBlockType &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))

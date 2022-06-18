@@ -66,44 +66,7 @@ namespace src
 
         public bool ClipboardEmpty => clipboard.Count + metaClipboard.Count == 0;
 
-        public List<Vector3Int> GetClipboardWorldPositions()
-        {
-            var positions = clipboard.Select(vp => vp.ToWorld()).ToList();
-            positions.AddRange(metaClipboard.Select(mp => mp.ToVoxelPosition().ToWorld()).ToList());
-            return positions;
-        }
-
-        public float? GetMetaClipboardMinY()
-        {
-            if (metaClipboard == null || metaClipboard.Count == 0) return null;
-            var minY = float.MaxValue;
-            foreach (var mp in metaClipboard)
-            {
-                var chunk = GetChunkIfInited(mp.chunk);
-                if (chunk == null) return null;
-                var metaBlock = chunk.GetMetaAt(mp)?.blockObject;
-                if (metaBlock == null || !metaBlock.MinGlobalY.HasValue) return null;
-                if (minY > metaBlock.MinGlobalY) minY = metaBlock.MinGlobalY.Value;
-            }
-
-            return minY;
-        }
-
-        public float? GetMetaSelectionMinY()
-        {
-            var minY = float.MaxValue;
-            foreach (var (key, value) in highlightChunks)
-            foreach (var mp in value.HighlightedMetaLocalPositions)
-            {
-                var chunk = GetChunkIfInited(key);
-                if (chunk == null) return null;
-                var metaBlock = chunk.GetMetaAt(new MetaPosition(key, mp))?.blockObject;
-                if (metaBlock == null || !metaBlock.MinGlobalY.HasValue) return null;
-                if (minY > metaBlock.MinGlobalY) minY = metaBlock.MinGlobalY.Value;
-            }
-
-            return minY;
-        }
+        public List<Vector3Int> ClipboardVoxelPositions => clipboard.Select(vp => vp.ToWorld()).ToList();
 
         public bool SelectionDisplaced =>
             metaOffset != Vector3.zero ||
@@ -561,15 +524,23 @@ namespace src
             }
         }
 
-        public Vector3Int GetClipboardMinPoint()
+        public Vector3 GetClipboardMinPoint()
         {
-            var positions = GetClipboardWorldPositions();
-            // if (positions.Count == 0) return null;
-            
-            var minX = int.MaxValue;
-            var minY = int.MaxValue;
-            var minZ = int.MaxValue;
-            foreach (var pos in positions)
+            return GetMinPoint(ClipboardVoxelPositions, metaClipboard.ToList());
+        }
+
+        public Vector3 GetSelectionMinPoint()
+        {
+            return GetMinPoint(GetSelectedBlocksPositions().Select(vp => vp.ToWorld()).ToList(),
+                GetSelectedMetaBlocksPositions());
+        }
+
+        private Vector3 GetMinPoint(List<Vector3Int> vps, List<MetaPosition> mps)
+        {
+            var minX = float.MaxValue;
+            var minY = float.MaxValue;
+            var minZ = float.MaxValue;
+            foreach (var pos in vps)
             {
                 if (pos.x < minX)
                     minX = pos.x;
@@ -579,15 +550,35 @@ namespace src
                     minZ = pos.z;
             }
 
-            return new Vector3Int(minX, minY, minZ);
+            foreach (var mp in mps)
+            {
+                var pos = mp.ToWorld();
+                var meta = GetChunkIfInited(mp.chunk)?.GetMetaAt(mp)?.blockObject;
+                if (meta != null)
+                {
+                    var centerY = meta.GetCenterY(out var height);
+                    if (centerY.HasValue && height.HasValue)
+                        pos.y = centerY.Value - height.Value / 2;
+                }
+
+                if (pos.x < minX)
+                    minX = pos.x;
+                if (pos.y < minY)
+                    minY = pos.y;
+                if (pos.z < minZ)
+                    minZ = pos.z;
+            }
+
+
+            return new Vector3(minX, minY, minZ);
         }
 
-        public void PasteClipboard(Vector3Int offset)
+        public void PasteClipboard(Vector3 offset)
         {
             StartCoroutine(PasteClipboardCoroutine(offset));
         }
 
-        private IEnumerator PasteClipboardCoroutine(Vector3Int offset)
+        private IEnumerator PasteClipboardCoroutine(Vector3 offset)
         {
             ClearHighlights();
             yield return AddHighlights(clipboard.ToList(), Vector3Int.zero, null);
@@ -596,7 +587,7 @@ namespace src
             if (clipboard.Count == 0)
                 MoveMetaSelection(offset, null);
             else
-                MoveSelection(offset, null);
+                MoveSelection(Vectors.TruncateFloor(offset), null);
         }
 
         private Chunk PopRequest()
