@@ -27,7 +27,7 @@ namespace Source.MetaBlocks.NftBlock
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (canEdit)
+                if (CanEdit)
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                     {
@@ -39,11 +39,6 @@ namespace Source.MetaBlocks.NftBlock
                             EditProps();
                         }
                     }
-
-                    if (Input.GetButtonDown("Delete"))
-                    {
-                        World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
-                    }
                 }
 
                 if (Input.GetKeyDown(KeyCode.O))
@@ -54,10 +49,11 @@ namespace Source.MetaBlocks.NftBlock
         protected override List<string> GetSnackLines()
         {
             var lines = new List<string>();
-            if (canEdit)
+            if (CanEdit)
             {
                 lines.Add("Press Z for details");
-                lines.Add("Press Del to delete");
+                if (Player.INSTANCE.HammerMode)
+                    lines.Add("Press Del to delete");
             }
 
             var props = Block.GetProps();

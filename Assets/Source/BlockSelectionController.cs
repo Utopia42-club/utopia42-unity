@@ -270,7 +270,7 @@ namespace Source
                         player.PreparedMetaBlock.type, player.PreparedMetaBlock.GetProps(), player.placeLand);
                 }
             }
-            else if (Input.GetMouseButtonDown(1))
+            else if (player.HammerMode && Input.GetButtonDown("Delete"))
                 DeleteBlock();
         }
 

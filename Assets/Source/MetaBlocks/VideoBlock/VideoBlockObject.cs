@@ -30,7 +30,7 @@ namespace Source.MetaBlocks.VideoBlock
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (canEdit)
+                if (CanEdit)
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                     {
@@ -41,11 +41,6 @@ namespace Source.MetaBlocks.VideoBlock
                         {
                             EditProps();
                         }
-                    }
-
-                    if (Input.GetButtonDown("Delete"))
-                    {
-                        World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
                     }
                 }
 
@@ -95,10 +90,11 @@ namespace Source.MetaBlocks.VideoBlock
                     lines.Add("Press P to play");
             }
 
-            if (canEdit)
+            if (CanEdit)
             {
                 lines.Add("Press Z for details");
-                lines.Add("Press Del to delete");
+                if (Player.INSTANCE.HammerMode)
+                    lines.Add("Press Del to delete");
             }
 
             var line = MetaBlockState.ToString(State, "video");

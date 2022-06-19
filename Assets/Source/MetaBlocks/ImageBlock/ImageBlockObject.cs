@@ -29,7 +29,7 @@ namespace Source.MetaBlocks.ImageBlock
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (!canEdit) return;
+                if (!CanEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
                     if (PropertyEditor.INSTANCE.ReferenceObjectID == GetInstanceID() &&
@@ -39,11 +39,6 @@ namespace Source.MetaBlocks.ImageBlock
                     {
                         EditProps();
                     }
-                }
-
-                if (Input.GetButtonDown("Delete"))
-                {
-                    World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
                 }
             });
         }
@@ -165,10 +160,11 @@ namespace Source.MetaBlocks.ImageBlock
         protected virtual List<string> GetSnackLines()
         {
             var lines = new List<string>();
-            if (canEdit)
+            if (CanEdit)
             {
                 lines.Add("Press Z for details");
-                lines.Add("Press DEL to delete object");
+                if(Player.INSTANCE.HammerMode)
+                    lines.Add("Press DEL to delete object");
             }
 
             var line = MetaBlockState.ToString(State, "image");
