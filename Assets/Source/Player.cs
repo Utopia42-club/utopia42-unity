@@ -88,6 +88,7 @@ namespace Source
 
         private void Start()
         {
+            NeutralMode = true;
             blockSelectionController = GetComponent<BlockSelectionController>();
 
             Snack.INSTANCE.ShowObject("Owner", null);

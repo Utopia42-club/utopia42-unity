@@ -11,7 +11,6 @@ namespace Source
 {
     public class BlockSelectionController : MonoBehaviour
     {
-        [SerializeField] private float selectionRotationSensitivity = 0.3f;
         [SerializeField] private TextMeshProUGUI selectedBlocksCountText;
         [SerializeField] private RectTransform selectedBlocksCountTextContainer;
 
@@ -57,54 +56,11 @@ namespace Source
 
             HandleSelectionKeyboardMovement();
             HandleSelectionMouseMovement();
-            // HandleBlockRotation();
             HandleBlockSelection();
             HandleBlockClipboard();
 
             keyboardFrameCounter++;
         }
-
-        // private void HandleBlockRotation()
-        // {
-        //     if (dragging || !selectionActive || metaSelectionActive || rotationMode == Input.GetKey(KeyCode.R)) return;
-        //     rotationMode = !rotationMode;
-        //     if (!rotationMode)
-        //         mouseLook.RemoveRotationTarget();
-        //     else if (selectionActive &&
-        //              !World.INSTANCE
-        //                  .OnlyMetaSelectionActive) // multiple selection rotation is not support for meta selection only
-        //         mouseLook.SetRotationTarget(RotateSelection);
-        // }
-
-        // private void RotateSelection(Vector3 rotation)
-        // {
-        //     rotationSum += rotation;
-        //     var absY = Mathf.Abs(rotationSum.y);
-        //     var absX = Mathf.Abs(rotationSum.x);
-        //
-        //     if (Mathf.Max(absX, absY) < selectionRotationSensitivity * 90)
-        //         return;
-        //
-        //     Vector3 rotationAxis = default;
-        //     if (absY > absX)
-        //     {
-        //         rotationAxis = rotationSum.y > 0 ? Vector3.up : Vector3.down;
-        //     }
-        //     else
-        //     {
-        //         var right = transform.right;
-        //         Vector3 axis = default;
-        //         if (Mathf.Abs(right.x) > Mathf.Abs(right.z))
-        //             axis = right.x < 0 ? Vector3.left : Vector3.right;
-        //         else
-        //             axis = right.z < 0 ? Vector3.back : Vector3.forward;
-        //
-        //         rotationAxis = rotationSum.x > 0 ? axis : -axis;
-        //     }
-        //
-        //     World.INSTANCE.RotateSelection(rotationAxis);
-        //     rotationSum = Vector3.zero;
-        // }
 
         private void HandleSelectionKeyboardMovement()
         {
@@ -521,6 +477,7 @@ namespace Source
                 }
 
                 selectedBlocksCountTextContainer.gameObject.SetActive(true);
+                PropertyEditor.INSTANCE.Hide();
             }
 
             UpdateCountMsg();
