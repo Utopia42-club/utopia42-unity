@@ -16,7 +16,11 @@
     --color-primary-darker: rgb(42, 60, 77);
     --color-primary-lighter: rgb(76, 97, 118);
 
-    --color-danger: rgb(216, 116, 116);
+    --color-secondary: rgb(220, 119, 119);
+    --color-secondary-darker: rgb(180, 98, 98);
+    --color-secondary-lighter: rgb(220, 139, 139);
+    
+    --color-danger: rgb(217, 70, 70);
     --color-warn: rgb(174, 177, 28);
 
     --default-border-radius: 7px;

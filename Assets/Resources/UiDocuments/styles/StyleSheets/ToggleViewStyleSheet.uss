@@ -19,13 +19,11 @@
 }
 
 .unity-toggle__checkmark {
-    padding-top: 0;
-    width: 24px;
-    height: 24px;
-    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
     align-self: center;
     border-width: 1px;
-    border-radius: 3px;
+    border-radius: var(--default-border-radius);
     border-color: var(--color-primary-lighter);
     background-image: none;
     background-color: var(--color-background-dark);

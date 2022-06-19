@@ -8,7 +8,7 @@
 .tab-button {
     background-color: rgba(0, 0, 0, 0);
     -unity-font-style: bold;
-    color: rgb(255, 255, 255);
+    color: var(--color-text);
     border-left-width: 0;
     border-right-width: 0;
     border-top-width: 0;
@@ -20,10 +20,10 @@
     border-top-right-radius: 4px;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
-    background-color: rgb(52, 73, 94);
+    background-color: var(--color-primary-darker);
 }
 
 .selected-tab {
-    border-bottom-color: rgb(220, 119, 119);
+    border-bottom-color: var(--color-secondary);
     border-bottom-width: 4px;
 }

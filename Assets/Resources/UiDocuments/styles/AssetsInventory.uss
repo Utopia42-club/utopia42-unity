@@ -3,17 +3,11 @@
     transition-duration: 200ms;
     transition-delay: 10ms;
     transition-property: padding;
-    padding-left: 3px;
-    padding-right: 3px;
-    padding-top: 3px;
-    padding-bottom: 3px;
+    padding: 3px;
 }
 
 .slot-container:hover {
-    padding-left: 0px;
-    padding-right: 0px;
-    padding-top: 0px;
-    padding-bottom: 0px;
+    padding: 0;
 }
 
 .handy-bar {
@@ -24,4 +18,9 @@
     padding-bottom: 3px;
     border-bottom-width: 1px;
     border-color: var(--color-text-darker);
+}
+
+.selected-slot-border {
+    border-width: 5px;
+    border-color: var(--color-secondary);
 }
