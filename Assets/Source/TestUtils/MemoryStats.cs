@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using Unity.Profiling;
 using UnityEngine;
@@ -13,17 +14,16 @@ namespace Source.TestUtils
         private ProfilerRecorder textureMemoryRecorder;
         private ProfilerRecorder meshMemoryRecorder;
 
-        private void OnEnable()
+        private void Enable()
         {
             totalReservedMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Total Reserved Memory");
             gcReservedMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Reserved Memory");
             systemUsedMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "System Used Memory");
             textureMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Texture Memory");
             meshMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Mesh Memory");
-            
         }
 
-        private void OnDisable()
+        private void Disable()
         {
             totalReservedMemoryRecorder.Dispose();
             gcReservedMemoryRecorder.Dispose();
@@ -32,8 +32,22 @@ namespace Source.TestUtils
             meshMemoryRecorder.Dispose();
         }
 
+        private void Start()
+        {
+            Enable();
+            Disable();
+        }
+
         private void Update()
         {
+            if (Input.GetKeyDown(KeyCode.BackQuote))
+            {
+                if (totalReservedMemoryRecorder.Valid)
+                    Disable();
+                else
+                    Enable();
+            }
+
             var sb = new StringBuilder(800);
             if (totalReservedMemoryRecorder.Valid)
                 sb.AppendLine($"Total Reserved Memory: {Mathf.Floor(totalReservedMemoryRecorder.LastValue / 1000000)}");
@@ -50,7 +64,8 @@ namespace Source.TestUtils
 
         private void OnGUI()
         {
-            GUI.TextArea(new Rect(10, 30, 250, 80), statsText);
+            if(totalReservedMemoryRecorder.Valid)
+                GUI.TextArea(new Rect(10, 30, 250, 80), statsText);
         }
     }
 }

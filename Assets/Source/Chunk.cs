@@ -64,7 +64,7 @@ namespace Source
             meshRenderer = chunkObject.AddComponent<MeshRenderer>();
             meshCollider = chunkObject.AddComponent<MeshCollider>();
             var focusable = chunkObject.AddComponent<ChunkFocusable>();
-            focusable.Initialize(this);
+            focusable.Initialize();
 
             meshRenderer.sharedMaterials = new[]
                 {world.Material, new Material(Shader.Find("Particles/Standard Surface"))};

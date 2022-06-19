@@ -48,7 +48,7 @@ namespace Source.MetaBlocks.LinkBlock
             var lines = new List<string>();
             if (CanEdit)
             {
-                lines.Add("Press Z for details");
+                lines.Add("Press E for details");
                 if (Player.INSTANCE.HammerMode)
                     lines.Add("Press Del to delete");
             }
@@ -97,15 +97,12 @@ namespace Source.MetaBlocks.LinkBlock
             {
                 if (CanEdit)
                 {
-                    if (Input.GetKeyDown(KeyCode.Z))
+                    if (Input.GetKeyDown(KeyCode.E))
                     {
-                        if (PropertyEditor.INSTANCE.ReferenceObjectID == GetInstanceID() &&
-                            PropertyEditor.INSTANCE.IsActive)
-                            PropertyEditor.INSTANCE.Hide();
-                        else
-                        {
+                        if (!PropertyEditor.INSTANCE.IsActive)
                             EditProps();
-                        }
+                        else
+                            PropertyEditor.INSTANCE.Hide();
                     }
                 }
 

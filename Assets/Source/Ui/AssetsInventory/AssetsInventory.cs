@@ -270,8 +270,7 @@ namespace Source.Ui.AssetsInventory
                 filterText = null;
             }
 
-            // if (selectedHandySlotIndex != -1 && (Input.GetButtonDown("Clear slot selection") || Input.GetMouseButtonDown(1)))
-            if (selectedHandySlotIndex != -1 && Input.GetButtonDown("Clear slot selection"))
+            if (selectedSlot != null && (Input.GetButtonDown("Clear slot selection") || Input.GetMouseButtonDown(1)) && !Player.INSTANCE.SelectionActiveBeforeAtFrameBeginning)
                 SelectSlot(null);
 
             if (handyBar.childCount == 0 || !MouseLook.INSTANCE.cursorLocked)

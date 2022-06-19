@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Source.Canvas;
+using Source.MetaBlocks;
 using Source.Model;
 using Source.Utils;
 using TMPro;
@@ -209,7 +210,8 @@ namespace Source
             {
                 if (player.HammerMode)
                     DeleteBlock();
-                else if (player.PlaceBlock.gameObject.activeSelf)
+                else if (player.PlaceBlock.gameObject.activeSelf && player.SelectedBlockType != null &&
+                         player.SelectedBlockType is not MetaBlockType)
                 {
                     World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PossiblePlaceBlockPosInt),
                         player.SelectedBlockType);
@@ -251,7 +253,7 @@ namespace Source
         private void HandleBlockClipboard()
         {
             if (dragging) return;
-            if (Input.GetKeyDown(KeyCode.X))
+            if (Input.GetKeyDown(KeyCode.X) || Input.GetMouseButtonDown(1))
             {
                 ExitSelectionMode();
             }

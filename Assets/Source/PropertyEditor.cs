@@ -24,6 +24,12 @@ public class PropertyEditor : MonoBehaviour
         SetActive(false);
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.E) && IsActive && Player.INSTANCE.FocusedFocusable == null)
+            Hide();
+    }
+
     public void Show()
     {
         SetActive(true);
