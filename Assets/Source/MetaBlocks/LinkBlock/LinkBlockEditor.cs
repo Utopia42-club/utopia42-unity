@@ -13,14 +13,14 @@ namespace Source.MetaBlocks.LinkBlock
         private readonly TextField yField;
         private readonly TextField zField;
 
-        public LinkBlockEditor(Action<LinkBlockProperties> onSave)
+        public LinkBlockEditor(Action<LinkBlockProperties> onSave, int instanceID)
         {
             var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/LinkBlockEditor",
                 "Link Block Properties", () =>
                 {
                     onSave(GetValue());
                     PropertyEditor.INSTANCE.Hide();
-                });
+                }, instanceID);
 
             typeField = root.Q<DropdownField>("type");
             typeField.choices = new List<string> {"Web Link", "Game Link"};

@@ -32,8 +32,13 @@ namespace Source.MetaBlocks.MarkerBlock
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
-                    UnFocus();
-                    EditProps();
+                    if (PropertyEditor.INSTANCE.ReferenceObjectID == GetInstanceID() &&
+                        PropertyEditor.INSTANCE.IsActive)
+                        PropertyEditor.INSTANCE.Hide();
+                    else
+                    {
+                        EditProps();
+                    }
                 }
 
                 if (Input.GetButtonDown("Delete"))
@@ -98,7 +103,7 @@ namespace Source.MetaBlocks.MarkerBlock
                     props.name = value.name;
                 if (props.IsEmpty()) props = null;
                 Block.SetProps(props, land);
-            });
+            }, GetInstanceID());
             editor.SetValue(Block.GetProps() as MarkerBlockProperties);
             editor.Show();
         }

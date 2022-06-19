@@ -35,7 +35,7 @@ namespace Source
 
         public void PlaceHolderInit(MeshRenderer renderer, bool error)
         {
-            renderer.sharedMaterial.mainTexture = Blocks.VideoBlockType.GetIcon(error).texture;
+            renderer.sharedMaterial.mainTexture = Blocks.Video.GetIcon(error).texture;
         }
 
         private void Mute(bool m)

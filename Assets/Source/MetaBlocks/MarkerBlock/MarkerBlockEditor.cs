@@ -7,14 +7,14 @@ namespace Source.MetaBlocks.MarkerBlock
     {
         private TextField name;
 
-        public MarkerBlockEditor(Action<MarkerBlockProperties> onSave)
+        public MarkerBlockEditor(Action<MarkerBlockProperties> onSave, int instanceID)
         {
             var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/MarkerBlockEditor",
                 "Marker Block Properties", () =>
                 {
                     onSave(GetValue());
                     PropertyEditor.INSTANCE.Hide();
-                });
+                }, instanceID);
             name = root.Q<TextField>("name");
             UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(name);
         }

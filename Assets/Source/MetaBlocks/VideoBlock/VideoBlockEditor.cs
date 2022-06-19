@@ -18,14 +18,14 @@ namespace Source.MetaBlocks.VideoBlock
         private TextField previewTime;
         private Toggle detectCollision;
 
-        public VideoBlockEditor(Action<VideoBlockProperties> onSave)
+        public VideoBlockEditor(Action<VideoBlockProperties> onSave, int instanceID)
         {
             var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/VideoBlockEditor",
                 "Video Block Properties", () =>
                 {
                     onSave(GetValue());
                     PropertyEditor.INSTANCE.Hide();
-                });
+                }, instanceID);
 
             url = root.Q<TextField>("url");
             rotationX = root.Q<TextField>("x");

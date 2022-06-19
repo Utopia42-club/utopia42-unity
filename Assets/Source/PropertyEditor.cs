@@ -14,7 +14,9 @@ public class PropertyEditor : MonoBehaviour
     private Button cancelAction;
     private Button saveAction;
     private UnityAction<bool> focusListener;
-
+    public int ReferenceObjectID { private set; get; }
+    public bool IsActive => root.style.display != DisplayStyle.None; // TODO ?
+    
     private void Start()
     {
         instance = this;
@@ -26,7 +28,7 @@ public class PropertyEditor : MonoBehaviour
         SetActive(true);
     }
 
-    public VisualElement Setup(string uxmlPath, string header, Action onSave)
+    public VisualElement Setup(string uxmlPath, string header, Action onSave, int referenceObjectID)
     {
         root = GetComponent<UIDocument>().rootVisualElement;
         body = root.Q<VisualElement>("body");
@@ -53,6 +55,7 @@ public class PropertyEditor : MonoBehaviour
             root.SetEnabled(!locked);
         };
         MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(focusListener);
+        ReferenceObjectID = referenceObjectID;
         return editor;
     }
 

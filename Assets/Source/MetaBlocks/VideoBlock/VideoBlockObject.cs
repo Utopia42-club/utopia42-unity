@@ -34,8 +34,13 @@ namespace Source.MetaBlocks.VideoBlock
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                     {
-                        UnFocus();
-                        EditProps();
+                        if (PropertyEditor.INSTANCE.ReferenceObjectID == GetInstanceID() &&
+                            PropertyEditor.INSTANCE.IsActive)
+                            PropertyEditor.INSTANCE.Hide();
+                        else
+                        {
+                            EditProps();
+                        }
                     }
 
                     if (Input.GetButtonDown("Delete"))
@@ -208,7 +213,7 @@ namespace Source.MetaBlocks.VideoBlock
                 if (props.IsEmpty()) props = null;
 
                 Block.SetProps(props, land);
-            });
+            }, GetInstanceID());
             editor.SetValue(Block.GetProps() as VideoBlockProperties);
             editor.Show();
         }

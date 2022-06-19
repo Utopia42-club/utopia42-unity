@@ -17,8 +17,7 @@ namespace Source.Utils
     {
         private static readonly Dictionary<uint, BlockType> TYPES = new Dictionary<uint, BlockType>();
         public static readonly BlockType AIR;
-        public static MetaBlockType TdObjectBlockType => TYPES[34] as MetaBlockType; 
-        public static MetaBlockType VideoBlockType => TYPES[32] as MetaBlockType; 
+        public static readonly MetaBlockType Image, Link, Marker, Nft, TdObject, Teleport, Video;
 
         static Blocks()
         {
@@ -53,14 +52,14 @@ namespace Source.Utils
             TYPES[28] = new BlockType(28, "red_wool", true, 26, 26, 26, 26, 26, 26);
             TYPES[29] = new BlockType(29, "snow", true, 28, 28, 28, 28, 28, 28);
             TYPES[30] = new BlockType(30, "stone_bricks", true, 30, 30, 30, 30, 30, 30);
-            TYPES[31] = new ImageBlockType(31);
-            TYPES[32] = new VideoBlockType(32);
-            TYPES[33] = new LinkBlockType(33);
-            TYPES[34] = new TdObjectBlockType(34);
-            TYPES[35] = new MarkerBlockType(35);
+            TYPES[31] = Image = new ImageBlockType(31);
+            TYPES[32] = Video = new VideoBlockType(32);
+            TYPES[33] = Link = new LinkBlockType(33);
+            TYPES[34] = TdObject = new TdObjectBlockType(34);
+            TYPES[35] = Marker = new MarkerBlockType(35);
             // TYPES[36] = new LightBlockType(36);
-            TYPES[37] = new NftBlockType(37);
-            TYPES[38] = new TeleportBlockType(38);
+            TYPES[37] = Nft = new NftBlockType(37);
+            TYPES[38] = Teleport = new TeleportBlockType(38);
         }
 
 

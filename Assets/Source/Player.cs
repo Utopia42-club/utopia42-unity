@@ -513,7 +513,7 @@ namespace Source
                 if (props != null && props.url.Equals(glbUrl)) return;
 
                 PreparedMetaBlock?.DestroyView();
-                PreparedMetaBlock = new MetaBlock(Blocks.TdObjectBlockType, null, new TdObjectBlockProperties
+                PreparedMetaBlock = new MetaBlock(Blocks.TdObject, null, new TdObjectBlockProperties
                 {
                     url = glbUrl,
                     type = TdObjectBlockProperties.TdObjectType.GLB

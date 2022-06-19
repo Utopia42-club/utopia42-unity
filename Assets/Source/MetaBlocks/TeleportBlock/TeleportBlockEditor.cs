@@ -9,14 +9,14 @@ namespace Source.MetaBlocks.TeleportBlock
         private TextField posY;
         private TextField posZ;
 
-        public TeleportBlockEditor(Action<TeleportBlockProperties> onSave)
+        public TeleportBlockEditor(Action<TeleportBlockProperties> onSave, int instanceID)
         {
             var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/TeleportBlockEditor",
                 "Teleport Block Properties", () =>
                 {
                     onSave(GetValue());
                     PropertyEditor.INSTANCE.Hide();
-                });
+                }, instanceID);
             posX = root.Q<TextField>("x");
             posY = root.Q<TextField>("y");
             posZ = root.Q<TextField>("z");

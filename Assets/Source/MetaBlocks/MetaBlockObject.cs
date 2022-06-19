@@ -211,6 +211,10 @@ namespace Source.MetaBlocks
             UnFocus();
             Block?.OnObjectDestroyed();
             stateChange.RemoveAllListeners();
+
+            if (PropertyEditor.INSTANCE.ReferenceObjectID == GetInstanceID() &&
+                PropertyEditor.INSTANCE.IsActive)
+                PropertyEditor.INSTANCE.Hide();
         }
 
         protected static void AdjustHighlightBox(Transform highlightBox, BoxCollider referenceCollider, bool active)

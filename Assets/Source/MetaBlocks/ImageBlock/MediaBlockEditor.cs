@@ -17,14 +17,14 @@ namespace Source.MetaBlocks.ImageBlock
         private Toggle detectCollision;
 
 
-        public MediaBlockEditor(Action<MediaBlockProperties> onSave)
+        public MediaBlockEditor(Action<MediaBlockProperties> onSave, int instanceID)
         {
             var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/MediaBlockEditor",
                 "Media Block Properties", () =>
                 {
                     onSave(GetValue());
                     PropertyEditor.INSTANCE.Hide();
-                });
+                }, instanceID);
 
             url = root.Q<TextField>("url");
             rotationX = root.Q<TextField>("x");

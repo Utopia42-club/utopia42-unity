@@ -20,14 +20,14 @@ namespace Source.MetaBlocks.TdObjectBlock
         private Toggle detectCollision;
         private DropdownField type;
         
-        public TdObjectBlockEditor(Action<TdObjectBlockProperties> onSave)
+        public TdObjectBlockEditor(Action<TdObjectBlockProperties> onSave, int instanceID)
         {
             var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/TdObjectBlockEditor",
                 "3D Block Properties", () =>
                 {
                     onSave(GetValue());
                     PropertyEditor.INSTANCE.Hide();
-                });
+                }, instanceID);
 
             url = root.Q<TextField>("url");
             rotationX = root.Q<TextField>("rotationX");

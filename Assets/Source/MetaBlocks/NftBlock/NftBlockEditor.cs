@@ -18,14 +18,14 @@ namespace Source.MetaBlocks.NftBlock
         private TextField height;
         private Toggle detectCollision;
 
-        public NftBlockEditor(Action<NftBlockProperties> onSave)
+        public NftBlockEditor(Action<NftBlockProperties> onSave, int instanceID)
         {
             var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/NftBlockEditor",
                 "NFT Block Properties", () =>
                 {
                     onSave(GetValue());
                     PropertyEditor.INSTANCE.Hide();
-                });
+                }, instanceID);
 
             collection = root.Q<TextField>("collection");
             tokenId = root.Q<TextField>("tokenId");

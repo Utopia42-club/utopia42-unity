@@ -28,8 +28,13 @@ namespace Source.MetaBlocks.TeleportBlock
                 if (!canEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
-                    UnFocus();
-                    EditProps();
+                    if (PropertyEditor.INSTANCE.ReferenceObjectID == GetInstanceID() &&
+                        PropertyEditor.INSTANCE.IsActive)
+                        PropertyEditor.INSTANCE.Hide();
+                    else
+                    {
+                        EditProps();
+                    }
                 }
 
                 if (Input.GetButtonDown("Delete"))
@@ -43,7 +48,7 @@ namespace Source.MetaBlocks.TeleportBlock
             {
                 Block.SetProps(value, land);
                 if (snackItem != null) SetupDefaultSnack();
-            });
+            }, GetInstanceID());
             editor.SetValue(Block.GetProps() as TeleportBlockProperties);
             editor.Show();
         }
