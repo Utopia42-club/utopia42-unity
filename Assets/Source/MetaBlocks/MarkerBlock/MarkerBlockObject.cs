@@ -27,7 +27,7 @@ namespace Source.MetaBlocks.MarkerBlock
                 snackItem = null;
             }
 
-            if (!canEdit) return;
+            if (!CanEdit) return;
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
@@ -40,9 +40,6 @@ namespace Source.MetaBlocks.MarkerBlock
                         EditProps();
                     }
                 }
-
-                if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
         }
 
@@ -63,11 +60,11 @@ namespace Source.MetaBlocks.MarkerBlock
 
         protected virtual List<string> GetSnackLines()
         {
-            return new List<string>
-            {
-                "Press Z for details",
-                "Press DEL to delete object"
-            };
+            var lines = new List<string>();
+            lines.Add("Press Z for details");
+            if(Player.INSTANCE.HammerMode)
+                lines.Add("Press DEL to delete object");
+            return lines;
         }
 
         public override void ShowFocusHighlight()

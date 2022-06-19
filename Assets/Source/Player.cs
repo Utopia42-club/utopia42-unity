@@ -56,10 +56,11 @@ namespace Source
         public MetaBlock PreparedMetaBlock { private set; get; }
         public GameObject MetaBlockPlaceHolder { private set; get; }
         public bool HammerMode { get; private set; } = true;
+        private bool NeutralMode { get; set; } = true;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
 
-        public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
+        public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON || NeutralMode;
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
 
@@ -87,6 +88,7 @@ namespace Source
 
         private void Start()
         {
+            NeutralMode = true;
             blockSelectionController = GetComponent<BlockSelectionController>();
 
             Snack.INSTANCE.ShowObject("Owner", null);
@@ -150,13 +152,18 @@ namespace Source
                     world.OnPlayerChunkChanged(currChunk);
                 }
             }
+
+            if ((NeutralMode || !HammerMode) && FocusedFocusable == null && Input.GetButtonDown("Delete"))
+            {
+                Ui.AssetsInventory.AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
+            }
         }
 
         private void SetPlaceBlockVisibility()
         {
             var r = placeBlock.GetComponentInChildren<Renderer>();
             if (r != null)
-                r.enabled = !CtrlDown;
+                r.enabled = !CtrlDown && !World.INSTANCE.SelectionActive;
         }
 
         private void GetInputs()
@@ -190,8 +197,7 @@ namespace Source
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             UpdatePlayerPosition();
-            if (!ChangeForbidden)
-                DetectFocus();
+            DetectFocus();
         }
 
         private void UpdatePlayerPosition()
@@ -312,6 +318,7 @@ namespace Source
             PossiblePlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
             PossibleHighlightBlockPosInt = Vectors.FloorToInt(blockHitPoint + epsilon);
             PossiblePlaceMetaBlockPos = new MetaPosition(blockHitPoint).ToWorld();
+            if (ChangeForbidden) return;
 
             var selectionActive = World.INSTANCE.SelectionActive;
 
@@ -488,11 +495,20 @@ namespace Source
 
         private void OnSelectedAssetChanged(SlotInfo slotInfo)
         {
-            if (ChangeForbidden) return;
-
             SelectedBlockType = null;
 
             if (slotInfo == null)
+            {
+                NeutralMode = true;
+                HideCursors();
+                PreparedMetaBlock?.DestroyView();
+                return;
+            }
+
+            NeutralMode = false;
+            if (ChangeForbidden) return;
+
+            if (slotInfo.asset == null && slotInfo.block == null)
             {
                 if (HammerMode == false)
                 {
@@ -554,7 +570,6 @@ namespace Source
 
         public void InitOnSelectedAssetChanged()
         {
-            HammerMode = true;
             Ui.AssetsInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
         }
     }

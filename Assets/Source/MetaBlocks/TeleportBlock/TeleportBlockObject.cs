@@ -25,7 +25,7 @@ namespace Source.MetaBlocks.TeleportBlock
             var props = (TeleportBlockProperties) Block.GetProps();
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (!canEdit) return;
+                if (!CanEdit) return;
                 if (Input.GetKeyDown(KeyCode.Z))
                 {
                     if (PropertyEditor.INSTANCE.ReferenceObjectID == GetInstanceID() &&
@@ -36,9 +36,6 @@ namespace Source.MetaBlocks.TeleportBlock
                         EditProps();
                     }
                 }
-
-                if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
         }
 
@@ -81,9 +78,10 @@ namespace Source.MetaBlocks.TeleportBlock
         protected virtual List<string> GetSnackLines()
         {
             var lines = new List<string>();
-            if (!canEdit) return lines;
+            if (!CanEdit) return lines;
             lines.Add("Press Z for details");
-            lines.Add("Press Del to delete");
+            if (Player.INSTANCE.HammerMode)
+                lines.Add("Press Del to delete");
             return lines;
         }
 

@@ -14,7 +14,8 @@ namespace Source.MetaBlocks
         public bool Started { get; private set; } = false;
         public Chunk chunk;
         protected Land land;
-        protected bool canEdit;
+        private bool canEditPosition;
+        protected bool CanEdit => canEditPosition && !Player.INSTANCE.ChangeForbidden;
         public State State { get; protected set; }
         protected SnackItem snackItem;
 
@@ -22,7 +23,7 @@ namespace Source.MetaBlocks
 
         protected void Start()
         {
-            canEdit = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
+            canEditPosition = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
             stateChange.AddListener(OnStateChanged);
             gameObject.name = Block.type.name + " block object";
             Started = true;
@@ -39,7 +40,7 @@ namespace Source.MetaBlocks
         public void Focus()
         {
             SetupDefaultSnack();
-            if (!canEdit) return;
+            if (!CanEdit) return;
             ShowFocusHighlight();
         }
 

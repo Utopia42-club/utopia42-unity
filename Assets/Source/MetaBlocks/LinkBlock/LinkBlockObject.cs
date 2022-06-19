@@ -46,10 +46,11 @@ namespace Source.MetaBlocks.LinkBlock
         protected virtual List<string> GetSnackLines()
         {
             var lines = new List<string>();
-            if (canEdit)
+            if (CanEdit)
             {
                 lines.Add("Press Z for details");
-                lines.Add("Press Del to delete");
+                if (Player.INSTANCE.HammerMode)
+                    lines.Add("Press Del to delete");
             }
 
             var props = (LinkBlockProperties) Block.GetProps();
@@ -94,7 +95,7 @@ namespace Source.MetaBlocks.LinkBlock
             var props = (LinkBlockProperties) Block.GetProps();
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (canEdit)
+                if (CanEdit)
                 {
                     if (Input.GetKeyDown(KeyCode.Z))
                     {
@@ -106,9 +107,6 @@ namespace Source.MetaBlocks.LinkBlock
                             EditProps();
                         }
                     }
-
-                    if (Input.GetButtonDown("Delete"))
-                        GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
                 }
 
                 if (props != null && !props.IsEmpty() && Input.GetKeyDown(KeyCode.O))

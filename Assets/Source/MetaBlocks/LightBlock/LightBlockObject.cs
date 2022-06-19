@@ -97,7 +97,7 @@ namespace Source.MetaBlocks.LightBlock
             return new List<string>
             {
                 "Press Z for details",
-                "Press DEL to delete object"
+                "Press DEL to delete object" // TODO
             };
         }
 
@@ -122,13 +122,11 @@ namespace Source.MetaBlocks.LightBlock
                 snackItem = null;
             }
 
-            if (!canEdit) return;
+            if (!CanEdit) return;
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.Z))
                     EditProps();
-                if (Input.GetButtonDown("Delete"))
-                    GetChunk().DeleteMeta(new MetaPosition(transform.localPosition));
             });
         }
 
