@@ -22,6 +22,11 @@ namespace Source.AssetsInventory.Models
         {
         }
 
+        public bool IsEmpty()
+        {
+            return asset == null && block == null;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj == this) return true;

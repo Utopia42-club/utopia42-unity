@@ -24,6 +24,6 @@
 }
 
 .selected-tab {
-    border-bottom-color: rgba(220, 119, 119, 255);
+    border-bottom-color: rgb(220, 119, 119);
     border-bottom-width: 4px;
 }

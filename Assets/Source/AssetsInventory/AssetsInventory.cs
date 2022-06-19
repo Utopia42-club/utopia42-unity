@@ -27,13 +27,14 @@ namespace Source.AssetsInventory
         private VisualElement handyPanel;
         private VisualElement handyPanelRoot;
         private Button openCloseInvButton;
+        private VisualElement hammerModeArea;
         private ScrollView handyBar;
 
         private Sprite closeIcon;
         private Sprite openIcon;
-
         private Sprite addToFavoriteIcon;
         private Sprite removeFromFavoriteIcon;
+        private Sprite hammerIcon;
 
         private readonly AssetsRestClient restClient = new();
         private readonly Dictionary<int, Pack> packs = new();
@@ -54,6 +55,7 @@ namespace Source.AssetsInventory
         private bool firstTime = true;
         private int selectedHandySlotIndex = -1;
         private UnityAction<bool> focusListener;
+        private SimpleInventorySlot hammerSlot;
 
         void Start()
         {
@@ -62,6 +64,8 @@ namespace Source.AssetsInventory
 
             addToFavoriteIcon = Resources.Load<Sprite>("Icons/whiteHeart");
             removeFromFavoriteIcon = Resources.Load<Sprite>("Icons/redHeart");
+
+            hammerIcon = Resources.Load<Sprite>("Icons/hammer");
 
             GameManager.INSTANCE.stateChange.AddListener(_ => UpdateVisibility());
             Player.INSTANCE.viewModeChanged.AddListener(_ => UpdateVisibility());
@@ -101,6 +105,14 @@ namespace Source.AssetsInventory
             UiUtils.Utils.IncreaseScrollSpeed(handyBar, 600);
             openCloseInvButton = handyPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
+
+            hammerModeArea = handyPanel.Q<VisualElement>("hammerModeArea");
+            hammerSlot = new SimpleInventorySlot();
+            hammerSlot.HideSlotBackground();
+            hammerSlot.SetBackground(hammerIcon);
+            hammerSlot.SetSlotInfo(new SlotInfo());
+            hammerSlot.SetSize(80, 10);
+            hammerModeArea.Add(hammerSlot.VisualElement());
 
             handyBarSlots.Clear();
             handyBar.Clear();
@@ -518,9 +530,7 @@ namespace Source.AssetsInventory
                 searchCriteria.lastId = slot.GetSlotInfo().asset.id.Value;
             }
             else
-            {
                 searchCriteria.lastId = null;
-            }
 
             var loadingId = LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetAssets(searchCriteria, assets =>
@@ -697,15 +707,45 @@ namespace Source.AssetsInventory
             slot.SetSelected(true);
             var slotInfo = slot.GetSlotInfo();
             selectedSlotChanged.Invoke(slotInfo);
-            if (addToHandyPanel)
-                AddToHandyPanel(slotInfo);
-            else // from handy bar itself
+            if (!slotInfo.IsEmpty())
             {
-                for (var i = 0; i < handyBarSlots.Count; i++)
+                if (addToHandyPanel)
+                    AddToHandyPanel(slotInfo);
+                else // from handy bar itself
                 {
-                    if (handyBarSlots[i] == slot)
+                    for (var i = 0; i < handyBarSlots.Count; i++)
                     {
-                        selectedHandySlotIndex = i;
+                        if (handyBarSlots[i] == slot)
+                        {
+                            selectedHandySlotIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                selectedHandySlotIndex = -1;
+            }
+        }
+
+        public void SelectSlotInfo(SlotInfo slotInfo)
+        {
+            if (slotInfo == null)
+            {
+                SelectSlot(null);
+            }
+            else if (slotInfo.IsEmpty())
+            {
+                SelectSlot(hammerSlot);
+            }
+            else
+            {
+                foreach (var handyBarSlot in handyBarSlots)
+                {
+                    if (Equals(handyBarSlot.GetSlotInfo(), slotInfo))
+                    {
+                        SelectSlot(handyBarSlot);
                         break;
                     }
                 }
