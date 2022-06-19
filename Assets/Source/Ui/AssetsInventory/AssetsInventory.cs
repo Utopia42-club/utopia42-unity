@@ -8,6 +8,7 @@ using Source.MetaBlocks;
 using Source.Model;
 using Source.Ui.AssetsInventory.Models;
 using Source.Ui.AssetsInventory.slots;
+using Source.Ui.TabPane;
 using Source.Ui.Utils;
 using Source.Utils;
 using UnityEngine;
@@ -503,7 +504,18 @@ namespace Source.Ui.AssetsInventory
                 foldout.RegisterValueChangedCallback(evt =>
                 {
                     foldout.contentContainer.Clear();
+                    var label = new Label("No items found")
+                    {
+                        style =
+                        {
+                            unityTextAlign = TextAnchor.MiddleCenter,
+                            width = new StyleLength(new Length(100, LengthUnit.Percent)),
+                            display = new StyleEnum<DisplayStyle>(DisplayStyle.None)
+                        }
+                    };
+                    foldout.contentContainer.Add(label);
                     foldout.contentContainer.Add(new VisualElement()); // Slots container
+
                     if (searchCriteria.searchTerms.ContainsKey("pack"))
                         searchCriteria.searchTerms.Remove("pack");
                     searchCriteria.searchTerms.Add("pack", pack.Key);
@@ -528,7 +540,7 @@ namespace Source.Ui.AssetsInventory
         private void LoadAPageOfAssetsIntoFoldout(Foldout foldout, SearchCriteria searchCriteria)
         {
             searchCriteria.limit = 15;
-            var content = foldout.contentContainer.Children().First();
+            var content = foldout.contentContainer.Children().ElementAt(1);
             if (content.childCount > 0)
             {
                 var slot = content.ElementAt(content.childCount - 1).userData as AssetInventorySlot;
@@ -540,14 +552,20 @@ namespace Source.Ui.AssetsInventory
             var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetAssets(searchCriteria, assets =>
             {
-                AddAssetsToFoldout(foldout, assets);
+                var empty = content.childCount == 0 && assets.Count == 0;
+                foldout.contentContainer.Children().ElementAt(0).style.display =
+                    new StyleEnum<DisplayStyle>(empty ? DisplayStyle.Flex : DisplayStyle.None);
+                if (!empty)
+                    AddAssetsToFoldout(foldout, assets);
+                else
+                    foldout.contentContainer.style.height = 75;
                 LoadingLayer.LoadingLayer.Hide(loadingId);
             }, () => LoadingLayer.LoadingLayer.Hide(loadingId)));
         }
 
         private void AddAssetsToFoldout(Foldout foldout, List<Asset> assets)
         {
-            var content = foldout.contentContainer.Children().First();
+            var content = foldout.contentContainer.Children().ElementAt(1);
             var count = content.childCount;
             var size = assets.Count;
             for (var i = count; i < count + size; i++)

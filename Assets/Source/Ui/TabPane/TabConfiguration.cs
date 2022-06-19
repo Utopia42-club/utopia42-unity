@@ -1,6 +1,6 @@
 using System;
 
-namespace Source.Ui.Utils
+namespace Source.Ui.TabPane
 {
     public class TabConfiguration
     {
