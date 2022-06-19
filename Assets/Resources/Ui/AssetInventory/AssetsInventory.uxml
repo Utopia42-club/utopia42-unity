@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Resources/UiDocuments/styles/tab-menu.uss?fileID=7433441132597879392&amp;guid=48a311b4a4965de0d946fc2aead50834&amp;type=3#tab-menu" />
-    <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
-    <Style src="project://database/Assets/Resources/UiDocuments/styles/AssetsInventory.uss?fileID=7433441132597879392&amp;guid=cb2dc14ae923fe41b9bb557470ffb356&amp;type=3#AssetsInventory" />
+    <Style src="project://database/Assets/Resources/Ui/TebPane/tab-pane.uss?fileID=7433441132597879392&amp;guid=48a311b4a4965de0d946fc2aead50834&amp;type=3#tab-pane" />
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/AssetInventory/AssetsInventory.uss?fileID=7433441132597879392&amp;guid=cb2dc14ae923fe41b9bb557470ffb356&amp;type=3#AssetsInventory" />
     <ui:VisualElement name="inventoryContainer" style="flex-grow: 0; justify-content: center; align-items: flex-end; width: 470px; height: 100%; right: 0; position: absolute;">
         <ui:VisualElement name="inventory" class="utopia-panel" style="flex-grow: 1; flex-shrink: 1; width: 350px; align-items: stretch; right: 5px; position: absolute; height: 90%; justify-content: center; transition-property: visibility; transition-duration: 200ms;" />
     </ui:VisualElement>
