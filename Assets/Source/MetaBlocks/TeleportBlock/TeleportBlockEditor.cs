@@ -11,7 +11,7 @@ namespace Source.MetaBlocks.TeleportBlock
 
         public TeleportBlockEditor(Action<TeleportBlockProperties> onSave, int instanceID)
         {
-            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/TeleportBlockEditor",
+            var root = PropertyEditor.INSTANCE.Setup("Ui/PropertyEditors/TeleportBlockEditor",
                 "Teleport Block Properties", () =>
                 {
                     onSave(GetValue());

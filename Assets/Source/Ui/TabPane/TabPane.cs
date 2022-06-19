@@ -16,7 +16,7 @@ namespace Source.UiUtils
         public TabPane(List<TabConfiguration> tabConfigs)
         {
             this.tabConfigs = tabConfigs;
-            root = Resources.Load<VisualTreeAsset>("UiDocuments/TabPane").CloneTree();
+            root = Resources.Load<VisualTreeAsset>("Ui/TebPane/TabPane").CloneTree();
             tabBody = root.Q<VisualElement>("tabBody");
             tabButtonsArea = root.Q<VisualElement>("tabs");
             for (var ind = 0; ind < tabConfigs.Count; ind++)

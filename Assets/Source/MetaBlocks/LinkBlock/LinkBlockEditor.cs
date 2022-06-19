@@ -15,7 +15,7 @@ namespace Source.MetaBlocks.LinkBlock
 
         public LinkBlockEditor(Action<LinkBlockProperties> onSave, int instanceID)
         {
-            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/LinkBlockEditor",
+            var root = PropertyEditor.INSTANCE.Setup("Ui/PropertyEditors/LinkBlockEditor",
                 "Link Block Properties", () =>
                 {
                     onSave(GetValue());

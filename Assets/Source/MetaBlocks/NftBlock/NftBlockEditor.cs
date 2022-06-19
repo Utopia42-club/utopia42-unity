@@ -20,7 +20,7 @@ namespace Source.MetaBlocks.NftBlock
 
         public NftBlockEditor(Action<NftBlockProperties> onSave, int instanceID)
         {
-            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/NftBlockEditor",
+            var root = PropertyEditor.INSTANCE.Setup("Ui/PropertyEditors/NftBlockEditor",
                 "NFT Block Properties", () =>
                 {
                     onSave(GetValue());

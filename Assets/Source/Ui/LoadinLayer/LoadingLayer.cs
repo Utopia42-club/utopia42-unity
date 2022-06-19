@@ -22,7 +22,7 @@ namespace src.UiUtils
                 }
             }
 
-            var layer = Resources.Load<VisualTreeAsset>("UiDocuments/Loading").CloneTree();
+            var layer = Resources.Load<VisualTreeAsset>("Ui/LoadingLayer/Loading").CloneTree();
             var s = layer.style;
             s.position = Position.Absolute;
             s.top = s.left = s.right = s.bottom = 0;

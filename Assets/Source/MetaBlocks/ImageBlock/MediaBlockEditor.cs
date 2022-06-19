@@ -19,7 +19,7 @@ namespace Source.MetaBlocks.ImageBlock
 
         public MediaBlockEditor(Action<MediaBlockProperties> onSave, int instanceID)
         {
-            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/MediaBlockEditor",
+            var root = PropertyEditor.INSTANCE.Setup("Ui/PropertyEditors/MediaBlockEditor",
                 "Media Block Properties", () =>
                 {
                     onSave(GetValue());

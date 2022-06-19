@@ -89,9 +89,9 @@ namespace Source.AssetsInventory
 
             var tabConfigurations = new List<TabConfiguration>
             {
-                new("Assets", "UiDocuments/AssetsTab", SetupAssetsTab),
-                new("Blocks", "UiDocuments/BlocksTab", SetupBlocksTab),
-                new("Favorites", "UiDocuments/FavoritesTab", SetupFavoritesTab)
+                new("Assets", "Ui/AssetInventory/AssetsTab", SetupAssetsTab),
+                new("Blocks", "Ui/AssetInventory/BlocksTab", SetupBlocksTab),
+                new("Favorites", "Ui/AssetInventory/FavoritesTab", SetupFavoritesTab)
             };
             tabPane = new TabPane(tabConfigurations);
             var s = tabPane.VisualElement().style;
@@ -339,7 +339,7 @@ namespace Source.AssetsInventory
         private Foldout CreateColorBlocksFoldout()
         {
             var foldout = CreatePackFoldout("Color Blocks");
-            var colorBlockCreator = Resources.Load<VisualTreeAsset>("UiDocuments/ColorBlockCreator").CloneTree();
+            var colorBlockCreator = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/ColorBlockCreator").CloneTree();
             var colorPickerToggle = colorBlockCreator.Q<Button>();
             colorPickerToggle.style.height = 70;
             colorPickerToggle.clickable.clicked += () => colorSlotPicker.ToggleColorPicker();
@@ -438,7 +438,7 @@ namespace Source.AssetsInventory
         private VisualElement CreateCategoriesListItem(Category category)
         {
             var container = new VisualElement();
-            var categoryButton = Resources.Load<VisualTreeAsset>("UiDocuments/CategoryButton").CloneTree();
+            var categoryButton = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/CategoryButton").CloneTree();
             container.style.paddingTop = container.style.paddingBottom = 3;
             container.Add(categoryButton);
 
@@ -496,14 +496,13 @@ namespace Source.AssetsInventory
                 foldout.SetValueWithoutNotify(false);
                 foldout.RegisterValueChangedCallback(evt =>
                 {
-                    Debug.Log("ValueChangeCallBack");
                     foldout.contentContainer.Clear();
                     foldout.contentContainer.Add(new VisualElement()); // Slots container
                     if (searchCriteria.searchTerms.ContainsKey("pack"))
                         searchCriteria.searchTerms.Remove("pack");
                     searchCriteria.searchTerms.Add("pack", pack.Key);
                     var loadMore
-                        = Resources.Load<VisualTreeAsset>("UiDocuments/LoadMoreButton")
+                        = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/LoadMoreButton")
                             .CloneTree();
                     var loadMoreButton = loadMore.Q<Button>();
                     loadMoreButton.clickable.clicked += () => LoadAPageOfAssetsIntoFoldout(foldout, searchCriteria);
@@ -617,7 +616,7 @@ namespace Source.AssetsInventory
             else
             {
                 breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
-                var backButton = Resources.Load<VisualTreeAsset>("UiDocuments/BackButton")
+                var backButton = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/BackButton")
                     .CloneTree();
                 backButton.Q<Label>("label").text = backButtonText;
                 backButton.Q<Button>().clickable.clicked += onBack;

@@ -20,7 +20,7 @@ namespace Source.MetaBlocks.VideoBlock
 
         public VideoBlockEditor(Action<VideoBlockProperties> onSave, int instanceID)
         {
-            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/VideoBlockEditor",
+            var root = PropertyEditor.INSTANCE.Setup("Ui/PropertyEditors/VideoBlockEditor",
                 "Video Block Properties", () =>
                 {
                     onSave(GetValue());

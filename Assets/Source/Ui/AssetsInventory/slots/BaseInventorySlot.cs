@@ -31,7 +31,7 @@ namespace Source.AssetsInventory.slots
         public BaseInventorySlot()
         {
             assetsInventory = AssetsInventory.INSTANCE;
-            slot = Resources.Load<VisualTreeAsset>("UiDocuments/InventorySlot").CloneTree();
+            slot = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/InventorySlot").CloneTree();
             slotIcon = slot.Q<VisualElement>("slotIcon");
             leftAction = slot.Q<Button>("leftAction");
             rightAction = slot.Q<Button>("rightAction");

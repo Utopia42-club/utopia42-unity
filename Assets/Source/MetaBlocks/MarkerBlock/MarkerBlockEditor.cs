@@ -9,7 +9,7 @@ namespace Source.MetaBlocks.MarkerBlock
 
         public MarkerBlockEditor(Action<MarkerBlockProperties> onSave, int instanceID)
         {
-            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/MarkerBlockEditor",
+            var root = PropertyEditor.INSTANCE.Setup("Ui/PropertyEditors/MarkerBlockEditor",
                 "Marker Block Properties", () =>
                 {
                     onSave(GetValue());

@@ -22,7 +22,7 @@ namespace Source.MetaBlocks.TdObjectBlock
         
         public TdObjectBlockEditor(Action<TdObjectBlockProperties> onSave, int instanceID)
         {
-            var root = PropertyEditor.INSTANCE.Setup("UiDocuments/PropertyEditors/TdObjectBlockEditor",
+            var root = PropertyEditor.INSTANCE.Setup("Ui/PropertyEditors/TdObjectBlockEditor",
                 "3D Block Properties", () =>
                 {
                     onSave(GetValue());
