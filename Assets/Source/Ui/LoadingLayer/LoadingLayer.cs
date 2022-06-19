@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace src.UiUtils
+namespace Source.Ui.LoadingLayer
 {
     public class LoadingLayer
     {

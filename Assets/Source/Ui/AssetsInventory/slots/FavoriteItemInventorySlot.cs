@@ -1,9 +1,9 @@
-using Source.AssetsInventory.Models;
+using Source.Ui.AssetsInventory.Models;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.AssetsInventory.slots
+namespace Source.Ui.AssetsInventory.slots
 {
     public class FavoriteItemInventorySlot : InventorySlotWrapper
     {
@@ -34,7 +34,7 @@ namespace Source.AssetsInventory.slots
             currentSlot.ConfigLeftAction("Delete", Resources.Load<Sprite>("Icons/close"),
                 () => currentSlot.assetsInventory.RemoveFromFavorites(favoriteItem, currentSlot, () =>
                 {
-                    AssetsInventory.INSTANCE.ReloadTab();
+                    Ui.AssetsInventory.AssetsInventory.INSTANCE.ReloadTab();
                 }));
             currentSlot.slot.RegisterCallback<MouseEnterEvent>(evt => currentSlot.SetLeftActionVisible(true));
             currentSlot.slot.RegisterCallback<MouseLeaveEvent>(evt => currentSlot.SetLeftActionVisible(false));

@@ -3,19 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Source.AssetsInventory.Models;
-using Source.AssetsInventory.slots;
 using Source.Canvas;
 using Source.MetaBlocks;
 using Source.Model;
-using Source.UiUtils;
+using Source.Ui.AssetsInventory.Models;
+using Source.Ui.AssetsInventory.slots;
+using Source.Ui.Utils;
 using Source.Utils;
-using src.UiUtils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
 
-namespace Source.AssetsInventory
+namespace Source.Ui.AssetsInventory
 {
     public class AssetsInventory : MonoBehaviour
     {
@@ -49,7 +48,7 @@ namespace Source.AssetsInventory
         [SerializeField] private ColorSlotPicker colorSlotPicker;
         private Foldout colorBlocksFoldout;
         private List<FavoriteItem> favoriteItems;
-        private TabPane tabPane;
+        private TabPane.TabPane tabPane;
         private VisualElement breadcrumb;
         private VisualElement inventoryContainer;
         private bool firstTime = true;
@@ -93,7 +92,7 @@ namespace Source.AssetsInventory
                 new("Blocks", "Ui/AssetInventory/BlocksTab", SetupBlocksTab),
                 new("Favorites", "Ui/AssetInventory/FavoritesTab", SetupFavoritesTab)
             };
-            tabPane = new TabPane(tabConfigurations);
+            tabPane = new TabPane.TabPane(tabConfigurations);
             var s = tabPane.VisualElement().style;
             s.height = new StyleLength(new Length(95, LengthUnit.Percent));
             s.width = 350;
@@ -102,7 +101,7 @@ namespace Source.AssetsInventory
             handyPanelRoot = root.Q<VisualElement>("handyPanelRoot");
             handyPanel = root.Q<VisualElement>("handyPanel");
             handyBar = handyPanel.Q<ScrollView>("handyBar");
-            UiUtils.Utils.IncreaseScrollSpeed(handyBar, 600);
+            Utils.Utils.IncreaseScrollSpeed(handyBar, 600);
             openCloseInvButton = handyPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
 
@@ -161,31 +160,31 @@ namespace Source.AssetsInventory
             {
                 limit = 100
             };
-            var loadingId = LoadingLayer.Show(inventory);
+            var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
             {
                 foreach (var pack in packs)
                     this.packs[pack.id] = pack;
-                LoadingLayer.Hide(loadingId);
-            }, () => LoadingLayer.Hide(loadingId)));
+                LoadingLayer.LoadingLayer.Hide(loadingId);
+            }, () => LoadingLayer.LoadingLayer.Hide(loadingId)));
 
-            var loadingId2 = LoadingLayer.Show(inventory);
+            var loadingId2 = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
             {
                 var scrollView = tabPane.GetTabBody().Q<ScrollView>("categories");
                 scrollView.Clear();
-                UiUtils.Utils.IncreaseScrollSpeed(scrollView, 600);
+                Utils.Utils.IncreaseScrollSpeed(scrollView, 600);
                 scrollView.mode = ScrollViewMode.Vertical;
                 scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
                 foreach (var category in categories)
                     scrollView.Add(CreateCategoriesListItem(category));
-                LoadingLayer.Hide(loadingId2);
-            }, () => LoadingLayer.Hide(loadingId2)));
+                LoadingLayer.LoadingLayer.Hide(loadingId2);
+            }, () => LoadingLayer.LoadingLayer.Hide(loadingId2)));
 
             var searchField = tabPane.GetTabBody().Q<TextField>("searchField");
 
-            UiUtils.Utils.SetPlaceHolderForTextField(searchField, "Search");
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
+            Utils.Utils.SetPlaceHolderForTextField(searchField, "Search");
+            Utils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
 
             IEnumerator searchCoroutine = null;
             searchField.RegisterValueChangedCallback(evt =>
@@ -207,7 +206,7 @@ namespace Source.AssetsInventory
         {
             var scrollView = tabPane.GetTabBody().Q<ScrollView>("blockPacks");
             scrollView.Clear();
-            UiUtils.Utils.IncreaseScrollSpeed(scrollView, 600);
+            Utils.Utils.IncreaseScrollSpeed(scrollView, 600);
             scrollView.mode = ScrollViewMode.Vertical;
             scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
 
@@ -314,15 +313,15 @@ namespace Source.AssetsInventory
 
         private void LoadFavoriteItems(Action onDone = null, Action onFail = null, bool forFavoritesTab = false)
         {
-            var loadingId = LoadingLayer.Show(forFavoritesTab ? inventory : handyPanelRoot);
+            var loadingId = LoadingLayer.LoadingLayer.Show(forFavoritesTab ? inventory : handyPanelRoot);
             StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
             {
                 favoriteItems = favItems;
                 onDone?.Invoke();
-                LoadingLayer.Hide(loadingId);
+                LoadingLayer.LoadingLayer.Hide(loadingId);
             }, () =>
             {
-                LoadingLayer.Hide(loadingId);
+                LoadingLayer.LoadingLayer.Hide(loadingId);
                 onFail?.Invoke();
             }, this));
         }
@@ -482,7 +481,7 @@ namespace Source.AssetsInventory
                 verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible,
                 horizontalScrollerVisibility = ScrollerVisibility.Hidden
             };
-            UiUtils.Utils.IncreaseScrollSpeed(scrollView, 600);
+            Utils.Utils.IncreaseScrollSpeed(scrollView, 600);
             var ss = scrollView.style;
             ss.height = new StyleLength(new Length(90, LengthUnit.Percent));
             ss.width = new StyleLength(new Length(90, LengthUnit.Percent));
@@ -531,12 +530,12 @@ namespace Source.AssetsInventory
             else
                 searchCriteria.lastId = null;
 
-            var loadingId = LoadingLayer.Show(inventory);
+            var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetAssets(searchCriteria, assets =>
             {
                 AddAssetsToFoldout(foldout, assets);
-                LoadingLayer.Hide(loadingId);
-            }, () => LoadingLayer.Hide(loadingId)));
+                LoadingLayer.LoadingLayer.Hide(loadingId);
+            }, () => LoadingLayer.LoadingLayer.Hide(loadingId)));
         }
 
         private void AddAssetsToFoldout(Foldout foldout, List<Asset> assets)
@@ -645,7 +644,7 @@ namespace Source.AssetsInventory
         public void AddToFavorites(BaseInventorySlot slot)
         {
             var slotInfo = slot.GetSlotInfo();
-            var loadingId = LoadingLayer.Show(inventory);
+            var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
             var favoriteItem = new FavoriteItem
             {
                 asset = slotInfo.asset,
@@ -653,31 +652,31 @@ namespace Source.AssetsInventory
             };
             StartCoroutine(restClient.CreateFavoriteItem(favoriteItem, item =>
                 {
-                    LoadingLayer.Hide(loadingId);
+                    LoadingLayer.LoadingLayer.Hide(loadingId);
                     favoriteItems.Add(item);
                     SetupFavoriteAction(slot);
                 },
                 () =>
                 {
-                    LoadingLayer.Hide(loadingId);
+                    LoadingLayer.LoadingLayer.Hide(loadingId);
                     //TODO a toast?
                 }));
         }
 
         public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot, Action onDone = null)
         {
-            var loadingId = LoadingLayer.Show(inventory);
+            var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.DeleteFavoriteItem(favoriteItem.id.Value,
                 () =>
                 {
-                    LoadingLayer.Hide(loadingId);
+                    LoadingLayer.LoadingLayer.Hide(loadingId);
                     favoriteItems.Remove(favoriteItem);
                     SetupFavoriteAction(slot);
                     onDone?.Invoke();
                     //TODO a toast?
                 }, () =>
                 {
-                    LoadingLayer.Hide(loadingId);
+                    LoadingLayer.LoadingLayer.Hide(loadingId);
                     //TODO a toast?
                 }));
         }

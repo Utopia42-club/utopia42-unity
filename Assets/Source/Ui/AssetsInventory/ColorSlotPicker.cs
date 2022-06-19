@@ -2,51 +2,54 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ColorSlotPicker : MonoBehaviour
+namespace Source.Ui.AssetsInventory
 {
-    [SerializeField] private FlexibleColorPicker picker;
-    [SerializeField] private GameObject colorPickerPanel;
-    [SerializeField] private Image colorBlockImage;
-    [SerializeField] private Button addColorBlockButton;
-    [SerializeField] private Button closeButton;
-
-    private Action<Color> onColorCreated;
-
-    void Start()
+    public class ColorSlotPicker : MonoBehaviour
     {
-        addColorBlockButton.onClick.AddListener(() =>
+        [SerializeField] private FlexibleColorPicker picker;
+        [SerializeField] private GameObject colorPickerPanel;
+        [SerializeField] private Image colorBlockImage;
+        [SerializeField] private Button addColorBlockButton;
+        [SerializeField] private Button closeButton;
+
+        private Action<Color> onColorCreated;
+
+        void Start()
         {
-            onColorCreated?.Invoke(picker.color);
-            ToggleColorPicker();
-        });
+            addColorBlockButton.onClick.AddListener(() =>
+            {
+                onColorCreated?.Invoke(picker.color);
+                ToggleColorPicker();
+            });
 
-        closeButton.onClick.AddListener(ToggleColorPicker);
-    }
+            closeButton.onClick.AddListener(ToggleColorPicker);
+        }
 
-    void Update()
-    {
-        if (picker != null)
-            colorBlockImage.color = picker.color;
-    }
+        void Update()
+        {
+            if (picker != null)
+                colorBlockImage.color = picker.color;
+        }
 
-    private void OnDisable()
-    {
-        if (colorPickerPanel.activeSelf)
-            ToggleColorPicker();
-    }
+        private void OnDisable()
+        {
+            if (colorPickerPanel.activeSelf)
+                ToggleColorPicker();
+        }
 
-    public void SetOnColorCreated(Action<Color> onColorCreated)
-    {
-        this.onColorCreated = onColorCreated;
-    }
+        public void SetOnColorCreated(Action<Color> onColorCreated)
+        {
+            this.onColorCreated = onColorCreated;
+        }
 
-    public void ToggleColorPicker()
-    {
-        colorPickerPanel.SetActive(!colorPickerPanel.activeSelf);
-    }
+        public void ToggleColorPicker()
+        {
+            colorPickerPanel.SetActive(!colorPickerPanel.activeSelf);
+        }
 
-    public bool IsOpen()
-    {
-        return colorPickerPanel.activeSelf;
+        public bool IsOpen()
+        {
+            return colorPickerPanel.activeSelf;
+        }
     }
 }

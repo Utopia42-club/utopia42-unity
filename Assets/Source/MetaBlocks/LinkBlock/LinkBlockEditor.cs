@@ -31,10 +31,10 @@ namespace Source.MetaBlocks.LinkBlock
             yField = root.Q<TextField>("y");
             zField = root.Q<TextField>("z");
 
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(urlField);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(xField);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(yField);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(zField);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(urlField);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(xField);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(yField);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(zField);
 
             typeField.RegisterValueChangedCallback(evt => UpdateFieldsVisibility());
             UpdateFieldsVisibility();

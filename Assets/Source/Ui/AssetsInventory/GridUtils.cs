@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine.UIElements;
 
-namespace Source.AssetsInventory
+namespace Source.Ui.AssetsInventory
 {
     public class GridUtils
     {

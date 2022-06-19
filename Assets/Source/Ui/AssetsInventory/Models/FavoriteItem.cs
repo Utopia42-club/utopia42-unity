@@ -1,6 +1,6 @@
 using Source.Utils;
 
-namespace Source.AssetsInventory.Models
+namespace Source.Ui.AssetsInventory.Models
 {
     public class FavoriteItem
     {

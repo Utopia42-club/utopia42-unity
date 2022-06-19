@@ -2,12 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Source.AssetsInventory.Models;
 using Source.Canvas;
 using Source.MetaBlocks;
 using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
 using Source.Service;
+using Source.Ui.AssetsInventory.Models;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -555,7 +555,7 @@ namespace Source
         public void InitOnSelectedAssetChanged()
         {
             HammerMode = true;
-            AssetsInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
+            Ui.AssetsInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
         }
     }
 }

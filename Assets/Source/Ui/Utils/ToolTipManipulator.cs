@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using Source.Canvas;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.Canvas
+namespace Source.Ui.Utils
 {
     public class ToolTipManipulator : Manipulator
     {

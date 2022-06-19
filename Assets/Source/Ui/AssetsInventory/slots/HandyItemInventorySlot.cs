@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.AssetsInventory.slots
+namespace Source.Ui.AssetsInventory.slots
 {
     public class HandyItemInventorySlot : InventorySlotWrapper
     {

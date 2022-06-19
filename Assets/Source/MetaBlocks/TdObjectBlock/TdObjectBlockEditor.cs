@@ -40,13 +40,13 @@ namespace Source.MetaBlocks.TdObjectBlock
             type = root.Q<DropdownField>("type");
             type.choices = new List<string> {"OBJ (zip)", "GLB"};
             type.index = 0;
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(url);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(scaleX);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(scaleY);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(scaleZ);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(url);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(scaleX);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(scaleY);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(scaleZ);
         }
         
         public TdObjectBlockProperties GetValue()

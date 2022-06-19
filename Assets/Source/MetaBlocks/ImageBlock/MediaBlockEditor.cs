@@ -33,12 +33,12 @@ namespace Source.MetaBlocks.ImageBlock
             width = root.Q<TextField>("w");
             height = root.Q<TextField>("h");
             detectCollision = root.Q<Toggle>("collisionDetect");
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(url);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(width);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(height);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(url);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(width);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(height);
         }
 
         public MediaBlockProperties GetValue()

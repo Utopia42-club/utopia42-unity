@@ -1,9 +1,9 @@
 using System;
-using Source.AssetsInventory.Models;
+using Source.Ui.AssetsInventory.Models;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.AssetsInventory.slots
+namespace Source.Ui.AssetsInventory.slots
 {
     public class ColorBlockInventorySlot : BlockInventorySlot
     {

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UIElements;
 
-namespace Source.Canvas
+namespace Source.Ui.Utils
 {
     public class UiImageLoader
     {

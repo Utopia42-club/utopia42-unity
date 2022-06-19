@@ -1,16 +1,18 @@
-using Source;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class FocusLayer : MonoBehaviour
+namespace Source.Ui.FocusLayer
 {
-    private void Start()
+    public class FocusLayer : MonoBehaviour
     {
-        var root = GetComponent<UIDocument>().rootVisualElement;
-        root.RegisterCallback<PointerDownEvent>(evt =>
+        private void Start()
         {
-            if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
-                MouseLook.INSTANCE.LockCursor();
-        });
+            var root = GetComponent<UIDocument>().rootVisualElement;
+            root.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING)
+                    MouseLook.INSTANCE.LockCursor();
+            });
+        }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.UiUtils
+namespace Source.Ui.Utils
 {
     public class Utils
     {

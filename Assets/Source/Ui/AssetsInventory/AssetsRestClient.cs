@@ -1,15 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Source.AssetsInventory.Models;
-using Source.Model;
 using Source.Service;
+using Source.Ui.AssetsInventory.Models;
 using Source.Utils;
 using UnityEngine;
-using UnityEngine.Networking;
 
-namespace Source.AssetsInventory
+namespace Source.Ui.AssetsInventory
 {
     public class AssetsRestClient
     {

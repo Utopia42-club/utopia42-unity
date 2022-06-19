@@ -20,9 +20,9 @@ namespace Source.MetaBlocks.TeleportBlock
             posX = root.Q<TextField>("x");
             posY = root.Q<TextField>("y");
             posZ = root.Q<TextField>("z");
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(posX);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(posY);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(posZ);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(posX);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(posY);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(posZ);
         }
         
         public TeleportBlockProperties GetValue()

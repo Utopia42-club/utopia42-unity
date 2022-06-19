@@ -1,7 +1,7 @@
-using Source.AssetsInventory.Models;
+using Source.Ui.AssetsInventory.Models;
 using UnityEngine.UIElements;
 
-namespace Source.AssetsInventory.slots
+namespace Source.Ui.AssetsInventory.slots
 {
     public class InventorySlotWrapper : InventorySlot
     {

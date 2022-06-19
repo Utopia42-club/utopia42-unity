@@ -1,4 +1,4 @@
-namespace Source.AssetsInventory.slots
+namespace Source.Ui.AssetsInventory.slots
 {
     public class SimpleInventorySlot : BaseInventorySlot
     {

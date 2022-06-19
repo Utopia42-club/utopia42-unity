@@ -16,7 +16,7 @@ namespace Source.MetaBlocks.MarkerBlock
                     PropertyEditor.INSTANCE.Hide();
                 }, instanceID);
             name = root.Q<TextField>("name");
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(name);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(name);
         }
 
 

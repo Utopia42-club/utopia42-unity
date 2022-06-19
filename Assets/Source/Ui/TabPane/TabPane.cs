@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.UiUtils
+namespace Source.Ui.TabPane
 {   
     public class TabPane
     {

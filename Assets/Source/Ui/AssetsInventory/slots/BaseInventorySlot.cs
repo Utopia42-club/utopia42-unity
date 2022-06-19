@@ -1,11 +1,12 @@
 using System;
 using System.Collections;
-using Source.AssetsInventory.Models;
 using Source.Canvas;
+using Source.Ui.AssetsInventory.Models;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.AssetsInventory.slots
+namespace Source.Ui.AssetsInventory.slots
 {
     public abstract class BaseInventorySlot : InventorySlot
     {
@@ -13,7 +14,7 @@ namespace Source.AssetsInventory.slots
 
         public readonly VisualElement slot;
         public readonly VisualElement slotIcon;
-        public readonly AssetsInventory assetsInventory;
+        public readonly Ui.AssetsInventory.AssetsInventory assetsInventory;
 
         protected readonly Button leftAction;
         protected readonly Button rightAction;
@@ -30,7 +31,7 @@ namespace Source.AssetsInventory.slots
 
         public BaseInventorySlot()
         {
-            assetsInventory = AssetsInventory.INSTANCE;
+            assetsInventory = Ui.AssetsInventory.AssetsInventory.INSTANCE;
             slot = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/InventorySlot").CloneTree();
             slotIcon = slot.Q<VisualElement>("slotIcon");
             leftAction = slot.Q<Button>("leftAction");

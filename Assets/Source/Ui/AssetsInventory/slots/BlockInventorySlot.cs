@@ -1,6 +1,6 @@
-using Source.AssetsInventory.Models;
+using Source.Ui.AssetsInventory.Models;
 
-namespace Source.AssetsInventory.slots
+namespace Source.Ui.AssetsInventory.slots
 {
     public class BlockInventorySlot : BaseInventorySlot
     {

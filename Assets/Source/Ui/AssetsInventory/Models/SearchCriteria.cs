@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Source.AssetsInventory.Models
+namespace Source.Ui.AssetsInventory.Models
 {
     public class SearchCriteria
     {

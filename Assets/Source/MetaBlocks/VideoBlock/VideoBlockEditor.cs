@@ -35,13 +35,13 @@ namespace Source.MetaBlocks.VideoBlock
             height = root.Q<TextField>("h");
             previewTime = root.Q<TextField>("previewTime");
             detectCollision = root.Q<Toggle>("collisionDetect");
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(url);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(width);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(height);
-            UiUtils.Utils.RegisterUiEngagementCallbacksForTextField(previewTime);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(url);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(width);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(height);
+            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(previewTime);
         }
 
         public VideoBlockProperties GetValue()
