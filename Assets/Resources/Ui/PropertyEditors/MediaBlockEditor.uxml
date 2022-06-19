@@ -17,6 +17,6 @@
                 <ui:TextField picking-mode="Ignore" label="H" name="h" class="utopia-field" style="flex-grow: 1;" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Toggle label="Detect Collision:" name="collisionDetect" style="margin-top: 2px; align-items: center;" />
+        <ui:Toggle label="Detect Collision" name="collisionDetect" style="margin-top: 2px; align-items: center;" />
     </ui:VisualElement>
 </ui:UXML>
