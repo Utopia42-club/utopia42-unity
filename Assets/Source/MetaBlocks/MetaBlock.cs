@@ -89,43 +89,51 @@ namespace Source.MetaBlocks
         }
 
         public void CreateSelectHighlight(Transform highlightChunkTransform, MetaLocalPosition localPos,
-            Action<GameObject> onLoad, out GameObject referenceGo)
+            Action<GameObject> onLoad, out Action cleanUpAction)
         {
-            referenceGo = null;
+            Action cleanUpActionA = null, cleanUpActionB = null;
+            cleanUpAction = () =>
+            {
+                cleanUpActionA?.Invoke();
+                cleanUpActionB?.Invoke();
+            };
+
             if (blockObject != null)
             {
                 var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
                 if (go != null)
                 {
                     onLoad(go);
-                    if (blockObject.State is State.Loading or State.LoadingMetadata)
+
+                    void CallBack(State state)
                     {
-                        void CallBack(State state)
-                        {
-                            if (state is State.Loading or State.LoadingMetadata) return;
-                            if (state == State.Ok &&
-                                go != null) // go != null (go is not destroyed) is needed to check if the object has been deselected
-                            {
-                                var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
-                                if (go != null) onLoad(go);
-                            }
-
-                            blockObject.stateChange.RemoveListener(CallBack);
-                        }
-
-                        blockObject.stateChange.AddListener(CallBack);
+                        var go = blockObject.CreateSelectHighlight(highlightChunkTransform);
+                        if (go != null) onLoad(go);
                     }
+
+                    blockObject.stateChange.AddListener(CallBack);
+                    cleanUpActionA = () =>
+                    {
+                        if(blockObject != null)
+                            blockObject.stateChange.RemoveListener(CallBack);
+                    };
 
                     return;
                 }
             }
 
-            var gameObject = referenceGo = new GameObject
+            var gameObject = new GameObject
             {
                 name = "Temp game object"
             };
             blockObject = (MetaBlockObject) gameObject.AddComponent(type.componentType);
             blockObject.LoadSelectHighlight(this, highlightChunkTransform, localPos, onLoad);
+
+            cleanUpActionB = () =>
+            {
+                if (gameObject != null)
+                    Object.DestroyImmediate(gameObject);
+            };
         }
 
         public void UpdateWorldPosition(Vector3 raycastHitPoint)
@@ -136,6 +144,7 @@ namespace Source.MetaBlocks
                     "Cannot move uninitialized metablock");
                 return;
             }
+
             if (blockObject.chunk != null || land != null)
             {
                 Debug.LogWarning(
@@ -144,7 +153,8 @@ namespace Source.MetaBlocks
             }
 
             var height = blockObject.GetHeight();
-            blockObject.gameObject.transform.position = raycastHitPoint + (height.HasValue ? height.Value / 2 : 0) * Vector3.up;
+            blockObject.gameObject.transform.position =
+                raycastHitPoint + (height.HasValue ? height.Value / 2 : 0) * Vector3.up;
         }
     }
 }

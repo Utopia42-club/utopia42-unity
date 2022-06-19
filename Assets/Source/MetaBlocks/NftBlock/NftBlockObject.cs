@@ -13,6 +13,8 @@ namespace Source.MetaBlocks.NftBlock
     public class NftBlockObject : ImageBlockObject
     {
         private NftMetadata metadata = new NftMetadata();
+        private string currentCollection = "";
+        private long currentTokenId = 0;
 
         public override void OnDataUpdate()
         {
@@ -33,12 +35,6 @@ namespace Source.MetaBlocks.NftBlock
                         EditProps();
                     }
 
-                    if (Input.GetKeyDown(KeyCode.V) && State != State.Empty)
-                    {
-                        UnFocus();
-                        GameManager.INSTANCE.ToggleMovingObjectState(this);
-                    }
-
                     if (Input.GetButtonDown("Delete"))
                     {
                         World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
@@ -56,8 +52,6 @@ namespace Source.MetaBlocks.NftBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                if (State != State.Empty)
-                    lines.Add("Press V to edit rotation");
                 lines.Add("Press Del to delete");
             }
 
@@ -94,6 +88,16 @@ namespace Source.MetaBlocks.NftBlock
                 UpdateState(State.Empty);
                 return;
             }
+
+            if (currentCollection.Equals(props.collection) && currentTokenId == props.tokenId &&
+                !MetaBlockState.IsErrorState(State) && State != State.Empty)
+            {
+                Reload(props.width, props.height, props.rotation.ToVector3(), props.detectCollision);
+                return;
+            }
+
+            currentCollection = props.collection;
+            currentTokenId = props.tokenId;
 
             UpdateState(State.LoadingMetadata);
             StartCoroutine(GetMetadata(props.collection, props.tokenId, md =>
@@ -134,18 +138,22 @@ namespace Source.MetaBlocks.NftBlock
                 , onSuccess, onFailure);
         }
 
-        public override void ExitMovingState()
+        public override Transform GetRotationTarget(out Action afterRotated)
         {
-            var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
-            if (image == null) return;
-            props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
-            Block.SetProps(props, land);
+            if (MetaBlockState.IsErrorState(State) || State == State.Empty)
+            {
+                afterRotated = null;
+                return null;
+            }
 
-            if (snackItem != null) SetupDefaultSnack();
-            if (scaleRotationController == null) return;
-            scaleRotationController.Detach();
-            DestroyImmediate(scaleRotationController);
-            scaleRotationController = null;
+            afterRotated = () =>
+            {
+                var props = new NftBlockProperties(Block.GetProps() as NftBlockProperties);
+                if (image == null) return;
+                props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
+                Block.SetProps(props, land);
+            };
+            return imageContainer.transform;
         }
     }
 }

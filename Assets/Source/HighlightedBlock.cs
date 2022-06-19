@@ -22,13 +22,13 @@ namespace Source
             return highlightedBlock;
         }
 
-        public void Rotate(Vector3 center, Vector3 axis, Vector3Int chunkPosition)
-        {
-            var currentPosition = CurrentPosition + chunkPosition + World.INSTANCE.HighlightOffset;
-            var rotatedVector = Quaternion.AngleAxis(90, axis) *
-                                (currentPosition + 0.5f * Vector3.one - center);
-            var newPosition = Vectors.TruncateFloor(center + rotatedVector - 0.5f * Vector3.one);
-            Offset = Offset + newPosition - currentPosition;
-        }
+        // public void Rotate(Vector3 center, Vector3 axis, Vector3Int chunkPosition)
+        // {
+        //     var currentPosition = CurrentPosition + chunkPosition + World.INSTANCE.HighlightOffset;
+        //     var rotatedVector = Quaternion.AngleAxis(90, axis) *
+        //                         (currentPosition + 0.5f * Vector3.one - center);
+        //     var newPosition = Vectors.TruncateFloor(center + rotatedVector - 0.5f * Vector3.one);
+        //     Offset = Offset + newPosition - currentPosition;
+        // }
     }
 }

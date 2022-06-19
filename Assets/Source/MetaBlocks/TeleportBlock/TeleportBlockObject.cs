@@ -135,13 +135,5 @@ namespace Source.MetaBlocks.TeleportBlock
             highlight.SetParent(parent, true);
             return highlight.gameObject;
         }
-
-        public override void SetToMovingState()
-        {
-        }
-
-        public override void ExitMovingState()
-        {
-        }
     }
 }

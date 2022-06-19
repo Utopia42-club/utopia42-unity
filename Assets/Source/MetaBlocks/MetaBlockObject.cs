@@ -107,7 +107,7 @@ namespace Source.MetaBlocks
                 InLand(new Vector3(max.x, max.y, min.z)) &&
                 InLand(new Vector3(max.x, max.y, max.z));
         }
-        
+
         private bool InLand(Vector3 p)
         {
             if (Block.land == null)
@@ -188,14 +188,23 @@ namespace Source.MetaBlocks
 
         public abstract void OnDataUpdate();
 
-        public abstract void SetToMovingState();
-        public abstract void ExitMovingState();
-
         protected abstract void SetupDefaultSnack();
 
         public abstract void ShowFocusHighlight();
 
         public abstract void RemoveFocusHighlight();
+
+        public virtual Transform GetRotationTarget(out Action afterRotated)
+        {
+            afterRotated = null;
+            return null;
+        }
+
+        public virtual Transform GetScaleTarget(out Action afterScaled)
+        {
+            afterScaled = null;
+            return null;
+        }
 
         protected virtual void OnDestroy()
         {

@@ -24,7 +24,6 @@ namespace Source.MetaBlocks.TdObjectBlock
 
         private string currentUrl = "";
 
-        private ObjectScaleRotationController scaleRotationController;
         private Transform selectHighlight;
 
         public override void OnDataUpdate()
@@ -87,22 +86,6 @@ namespace Source.MetaBlocks.TdObjectBlock
             return clone;
         }
 
-        public override void ExitMovingState()
-        {
-            var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
-            if (objContainer == null || State != State.Ok) return;
-            props.rotation = new SerializableVector3(objContainer.transform.eulerAngles);
-            props.scale = new SerializableVector3(objContainer.transform.localScale);
-            Block.SetProps(props, land);
-
-            if (snackItem != null) SetupDefaultSnack();
-            if (scaleRotationController == null) return;
-            scaleRotationController.Detach();
-            DestroyImmediate(scaleRotationController);
-            scaleRotationController = null;
-        }
-
-
         protected override void SetupDefaultSnack()
         {
             if (snackItem != null) snackItem.Remove();
@@ -116,12 +99,6 @@ namespace Source.MetaBlocks.TdObjectBlock
                     EditProps();
                 }
 
-                if (Input.GetKeyDown(KeyCode.V) && State == State.Ok)
-                {
-                    UnFocus();
-                    GameManager.INSTANCE.ToggleMovingObjectState(this);
-                }
-
                 if (Input.GetButtonDown("Delete"))
                 {
                     World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
@@ -129,27 +106,40 @@ namespace Source.MetaBlocks.TdObjectBlock
             });
         }
 
-        public override void SetToMovingState()
+        public override Transform GetScaleTarget(out Action afterScaled)
         {
-            if (snackItem != null)
+            if (State != State.Ok)
             {
-                snackItem.Remove();
-                snackItem = null;
+                afterScaled = null;
+                return null;
             }
 
-            if (scaleRotationController == null)
+            afterScaled = () =>
             {
-                scaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
-                scaleRotationController.Attach(objContainer.transform, objContainer.transform);
+                var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
+                if (objContainer == null || State != State.Ok) return;
+                props.scale = new SerializableVector3(objContainer.transform.localScale);
+                Block.SetProps(props, land);
+            };
+            return objContainer.transform;
+        }
+
+        public override Transform GetRotationTarget(out Action afterRotated)
+        {
+            if (State != State.Ok)
+            {
+                afterRotated = null;
+                return null;
             }
 
-            snackItem = Snack.INSTANCE.ShowLines(scaleRotationController.EditModeSnackLines, () =>
+            afterRotated = () =>
             {
-                if (Input.GetKeyDown(KeyCode.X))
-                {
-                    GameManager.INSTANCE.ToggleMovingObjectState(this);
-                }
-            });
+                var props = new TdObjectBlockProperties(Block.GetProps() as TdObjectBlockProperties);
+                if (objContainer == null || State != State.Ok) return;
+                props.rotation = new SerializableVector3(objContainer.transform.eulerAngles);
+                Block.SetProps(props, land);
+            };
+            return objContainer.transform;
         }
 
         protected override void OnStateChanged(State state)
@@ -182,8 +172,6 @@ namespace Source.MetaBlocks.TdObjectBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                if (State == State.Ok)
-                    lines.Add("Press V to move object");
                 lines.Add("Press DEL to delete object");
             }
 

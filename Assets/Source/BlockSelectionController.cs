@@ -19,9 +19,7 @@ namespace Source
         private Player player;
         private SnackItem snackItem;
 
-        private Vector3 rotationSum = Vector3.zero;
         private bool movingSelectionAllowed = false;
-        private bool rotationMode = false;
         public SelectionMode selectionMode { private set; get; } = SelectionMode.Default;
         public Vector3? DraggedPosition { get; private set; }
         private bool KeepSourceAfterSelectionMovement => selectionMode != SelectionMode.Default;
@@ -57,60 +55,61 @@ namespace Source
 
             HandleSelectionKeyboardMovement();
             HandleSelectionMouseMovement();
-            HandleBlockRotation();
+            // HandleBlockRotation();
             HandleBlockSelection();
             HandleBlockClipboard();
 
             keyboardFrameCounter++;
         }
 
-        private void HandleBlockRotation()
-        {
-            if (dragging || !selectionActive || metaSelectionActive || rotationMode == Input.GetKey(KeyCode.R)) return;
-            rotationMode = !rotationMode;
-            if (!rotationMode)
-                mouseLook.RemoveRotationTarget();
-            else if (selectionActive &&
-                     !World.INSTANCE
-                         .OnlyMetaSelectionActive) // multiple selection rotation is not support for meta selection only
-                mouseLook.SetRotationTarget(RotateSelection);
-        }
+        // private void HandleBlockRotation()
+        // {
+        //     if (dragging || !selectionActive || metaSelectionActive || rotationMode == Input.GetKey(KeyCode.R)) return;
+        //     rotationMode = !rotationMode;
+        //     if (!rotationMode)
+        //         mouseLook.RemoveRotationTarget();
+        //     else if (selectionActive &&
+        //              !World.INSTANCE
+        //                  .OnlyMetaSelectionActive) // multiple selection rotation is not support for meta selection only
+        //         mouseLook.SetRotationTarget(RotateSelection);
+        // }
 
-        private void RotateSelection(Vector3 rotation)
-        {
-            rotationSum += rotation;
-            var absY = Mathf.Abs(rotationSum.y);
-            var absX = Mathf.Abs(rotationSum.x);
-
-            if (Mathf.Max(absX, absY) < selectionRotationSensitivity * 90)
-                return;
-
-            Vector3 rotationAxis = default;
-            if (absY > absX)
-            {
-                rotationAxis = rotationSum.y > 0 ? Vector3.up : Vector3.down;
-            }
-            else
-            {
-                var right = transform.right;
-                Vector3 axis = default;
-                if (Mathf.Abs(right.x) > Mathf.Abs(right.z))
-                    axis = right.x < 0 ? Vector3.left : Vector3.right;
-                else
-                    axis = right.z < 0 ? Vector3.back : Vector3.forward;
-
-                rotationAxis = rotationSum.x > 0 ? axis : -axis;
-            }
-
-            World.INSTANCE.RotateSelection(rotationAxis);
-            rotationSum = Vector3.zero;
-        }
+        // private void RotateSelection(Vector3 rotation)
+        // {
+        //     rotationSum += rotation;
+        //     var absY = Mathf.Abs(rotationSum.y);
+        //     var absX = Mathf.Abs(rotationSum.x);
+        //
+        //     if (Mathf.Max(absX, absY) < selectionRotationSensitivity * 90)
+        //         return;
+        //
+        //     Vector3 rotationAxis = default;
+        //     if (absY > absX)
+        //     {
+        //         rotationAxis = rotationSum.y > 0 ? Vector3.up : Vector3.down;
+        //     }
+        //     else
+        //     {
+        //         var right = transform.right;
+        //         Vector3 axis = default;
+        //         if (Mathf.Abs(right.x) > Mathf.Abs(right.z))
+        //             axis = right.x < 0 ? Vector3.left : Vector3.right;
+        //         else
+        //             axis = right.z < 0 ? Vector3.back : Vector3.forward;
+        //
+        //         rotationAxis = rotationSum.x > 0 ? axis : -axis;
+        //     }
+        //
+        //     World.INSTANCE.RotateSelection(rotationAxis);
+        //     rotationSum = Vector3.zero;
+        // }
 
         private void HandleSelectionKeyboardMovement()
         {
             if (!selectionActive || !movingSelectionAllowed || dragging) return;
 
-            var frameCondition = onlyMetaSelectionActive ? keyboardFrameCounter % 5 == 0 : keyboardFrameCounter % 50 == 0;
+            var frameCondition =
+                onlyMetaSelectionActive ? keyboardFrameCounter % 5 == 0 : keyboardFrameCounter % 50 == 0;
 
             var jump = Input.GetButtonDown("Jump") || frameCondition && Input.GetButton("Jump");
             var horizontal = Input.GetButtonDown("Horizontal") || frameCondition && Input.GetButton("Horizontal");
@@ -188,7 +187,7 @@ namespace Source
 
         private void HandleBlockSelection()
         {
-            if (dragging || rotationMode || !mouseLook.cursorLocked) return;
+            if (dragging || World.INSTANCE.ObjectScaleRotationController.Active || !mouseLook.cursorLocked) return;
 
             var selectVoxel = !World.INSTANCE.SelectionDisplaced && selectionMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
@@ -426,10 +425,15 @@ namespace Source
                 lines.Add("CTRL+CLICK : select/unselect block");
                 lines.Add(
                     "CTRL+SHIFT+CLICK : select/unselect all blocks between the last selected block and current block");
-                if (!metaSelectionActive)
+                if (metaSelectionActive)
                 {
-                    lines.Add("R + horizontal mouse movement : rotate around y axis");
-                    lines.Add("R + vertical mouse movement : rotate around player right axis");
+                    lines.AddRange(new[]
+                    {
+                        "] : scale 3d objects up",
+                        "[ : scale 3d objects down",
+                        "R + horizontal mouse movement : rotate objects around y axis",
+                        "R + vertical mouse movement : rotate objects around player right axis",
+                    });
                 }
             }
             else

@@ -88,16 +88,6 @@ namespace Source.MetaBlocks.LinkBlock
             return go;
         }
 
-        public override void SetToMovingState()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void ExitMovingState()
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void SetupDefaultSnack()
         {
             if (snackItem != null) snackItem.Remove();

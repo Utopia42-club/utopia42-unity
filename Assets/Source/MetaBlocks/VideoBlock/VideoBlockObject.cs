@@ -11,7 +11,8 @@ namespace Source.MetaBlocks.VideoBlock
     {
         private VideoFace video;
         private GameObject videoContainer;
-        private ObjectScaleRotationController scaleRotationController;
+        private string currentUrl = "";
+        private float currentPreviewTime = 0;
 
         public override void OnDataUpdate()
         {
@@ -35,12 +36,6 @@ namespace Source.MetaBlocks.VideoBlock
                     {
                         UnFocus();
                         EditProps();
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.V) && State != State.Empty)
-                    {
-                        UnFocus();
-                        GameManager.INSTANCE.ToggleMovingObjectState(this);
                     }
 
                     if (Input.GetButtonDown("Delete"))
@@ -98,8 +93,6 @@ namespace Source.MetaBlocks.VideoBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                if (State != State.Empty)
-                    lines.Add("Press V to edit rotation");
                 lines.Add("Press Del to delete");
             }
 
@@ -111,7 +104,6 @@ namespace Source.MetaBlocks.VideoBlock
 
         private void RenderFace()
         {
-            DestroyVideo();
             AddFace((VideoBlockProperties) Block.GetProps());
         }
 
@@ -147,6 +139,16 @@ namespace Source.MetaBlocks.VideoBlock
                 return;
             }
 
+            if (currentUrl.Equals(props.url) && Math.Abs(currentPreviewTime - props.previewTime) < 0.001 &&
+                !MetaBlockState.IsErrorState(State) && State != State.Empty)
+            {
+                Reload(props.width, props.height, props.rotation.ToVector3(), props.detectCollision);
+                return;
+            }
+
+            currentUrl = props.url;
+            currentPreviewTime = props.previewTime;
+            DestroyVideo();
             video = CreateVideoFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(),
                 out videoContainer, out var go, out var meshRenderer, true);
 
@@ -161,6 +163,16 @@ namespace Source.MetaBlocks.VideoBlock
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
             go.AddComponent<MetaFocusable>().Initialize(this);
+        }
+
+        private void Reload(int width, int height, Vector3 rotation, bool detectCollision)
+        {
+            videoContainer.transform.localScale = new Vector3(width, height, 1);
+            videoContainer.transform.eulerAngles = rotation;
+            video.gameObject.layer = detectCollision
+                ? LayerMask.NameToLayer("Default")
+                : LayerMask.NameToLayer("3DColliderOff");
+            UpdateState(State);
         }
 
         public static VideoFace CreateVideoFace(Transform transform, int width, int height, Vector3 rotation,
@@ -200,7 +212,7 @@ namespace Source.MetaBlocks.VideoBlock
             editor.SetValue(Block.GetProps() as VideoBlockProperties);
             editor.Show();
         }
-        
+
         protected override void OnDestroy()
         {
             DestroyVideo(false);
@@ -240,41 +252,22 @@ namespace Source.MetaBlocks.VideoBlock
             return go;
         }
 
-        public override void SetToMovingState()
+        public override Transform GetRotationTarget(out Action afterRotated)
         {
-            if (snackItem != null)
+            if (MetaBlockState.IsErrorState(State) || State == State.Empty)
             {
-                snackItem.Remove();
-                snackItem = null;
+                afterRotated = null;
+                return null;
             }
 
-            if (scaleRotationController == null)
+            afterRotated = () =>
             {
-                scaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
-                scaleRotationController.Attach(null, videoContainer.transform);
-            }
-
-            snackItem = Snack.INSTANCE.ShowLines(scaleRotationController.EditModeSnackLines, () =>
-            {
-                if (Input.GetKeyDown(KeyCode.X))
-                {
-                    GameManager.INSTANCE.ToggleMovingObjectState(this);
-                }
-            });
-        }
-
-        public override void ExitMovingState()
-        {
-            var props = new VideoBlockProperties(Block.GetProps() as VideoBlockProperties);
-            if (video == null) return;
-            props.rotation = new SerializableVector3(videoContainer.transform.eulerAngles);
-            Block.SetProps(props, land);
-
-            if (snackItem != null) SetupDefaultSnack();
-            if (scaleRotationController == null) return;
-            scaleRotationController.Detach();
-            DestroyImmediate(scaleRotationController);
-            scaleRotationController = null;
+                var props = new VideoBlockProperties(Block.GetProps() as VideoBlockProperties);
+                if (video == null) return;
+                props.rotation = new SerializableVector3(videoContainer.transform.eulerAngles);
+                Block.SetProps(props, land);
+            };
+            return videoContainer.transform;
         }
     }
 }

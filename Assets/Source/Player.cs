@@ -61,6 +61,8 @@ namespace Source
 
         public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
 
+        private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
+
         [SerializeField] private Vector3 firstPersonCameraPosition;
         [SerializeField] private Vector3 thirdPersonCameraPosition;
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
@@ -223,7 +225,7 @@ namespace Source
         // ReSharper disable Unity.PerformanceAnalysis
         private void DetectFocus()
         {
-            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
+            if (!DisableRaycast && Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
             {
                 var focusable = raycastHit.collider.GetComponent<Focusable>();
                 if (hitCollider == raycastHit.collider &&

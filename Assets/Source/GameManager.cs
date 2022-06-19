@@ -474,20 +474,6 @@ namespace Source
             }));
         }
 
-        public void ToggleMovingObjectState(MetaBlockObject metaBlockObject)
-        {
-            if (GetState() == State.PLAYING)
-            {
-                SetState(State.MOVING_OBJECT);
-                metaBlockObject.SetToMovingState();
-            }
-            else if (GetState() == State.MOVING_OBJECT)
-            {
-                SetState(State.PLAYING);
-                metaBlockObject.ExitMovingState();
-            }
-        }
-
         public void ShowProfile(Profile profile, Land currentLand)
         {
             if (GetState() == State.PLAYING || GetState() == State.SETTINGS)

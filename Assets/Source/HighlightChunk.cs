@@ -116,13 +116,13 @@ namespace Source
             return highlightedMetaBlocks.Remove(localPos);
         }
 
-        public void Rotate(Vector3 center, Vector3 axis)
-        {
-            foreach (var highlightedBlock in highlightedBlocks.Values)
-                highlightedBlock.Rotate(center, axis, Position);
-            foreach (var highlightedBlock in highlightedMetaBlocks.Values)
-                highlightedBlock.Rotate(center, axis, Position);
-        }
+        // public void Rotate(Vector3 center, Vector3 axis)
+        // {
+        //     foreach (var highlightedBlock in highlightedBlocks.Values)
+        //         highlightedBlock.Rotate(center, axis, Position);
+        //     foreach (var highlightedBlock in highlightedMetaBlocks.Values)
+        //         highlightedBlock.Rotate(center, axis, Position);
+        // }
 
         public Vector3Int? GetRotationOffset(Vector3Int localPos)
         {

@@ -114,16 +114,6 @@ namespace Source.MetaBlocks.LightBlock
             return null;
         }
 
-        public override void SetToMovingState()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void ExitMovingState()
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void SetupDefaultSnack()
         {
             if (snackItem != null)

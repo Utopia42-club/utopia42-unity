@@ -89,16 +89,6 @@ namespace Source.MetaBlocks.MarkerBlock
             return go;
         }
 
-        public override void SetToMovingState()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void ExitMovingState()
-        {
-            throw new NotImplementedException();
-        }
-        
         private void EditProps()
         {
             var editor = new MarkerBlockEditor((value) =>

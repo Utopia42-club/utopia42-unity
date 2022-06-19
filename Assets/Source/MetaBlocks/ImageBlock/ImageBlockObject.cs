@@ -11,7 +11,7 @@ namespace Source.MetaBlocks.ImageBlock
     {
         protected GameObject image;
         protected GameObject imageContainer;
-        protected ObjectScaleRotationController scaleRotationController;
+        private string currentUrl = "";
 
         public override void OnDataUpdate()
         {
@@ -36,12 +36,6 @@ namespace Source.MetaBlocks.ImageBlock
                     EditProps();
                 }
 
-                if (Input.GetKeyDown(KeyCode.V) && State != State.Empty)
-                {
-                    UnFocus();
-                    GameManager.INSTANCE.ToggleMovingObjectState(this);
-                }
-
                 if (Input.GetButtonDown("Delete"))
                 {
                     World.INSTANCE.TryDeleteMeta(new MetaPosition(transform.position));
@@ -51,7 +45,6 @@ namespace Source.MetaBlocks.ImageBlock
 
         protected virtual void RenderFace()
         {
-            DestroyImage();
             AddFace((MediaBlockProperties) Block.GetProps());
         }
 
@@ -87,6 +80,14 @@ namespace Source.MetaBlocks.ImageBlock
                 return;
             }
 
+            if (currentUrl.Equals(props.url) && !MetaBlockState.IsErrorState(State) && State != State.Empty)
+            {
+                Reload(props.width, props.height, props.rotation.ToVector3(), props.detectCollision);
+                return;
+            }
+
+            currentUrl = props.url;
+            DestroyImage();
             var imgFace = CreateImageFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(),
                 out imageContainer, out image, out var meshRenderer, true);
 
@@ -101,6 +102,16 @@ namespace Source.MetaBlocks.ImageBlock
                 ? LayerMask.NameToLayer("Default")
                 : LayerMask.NameToLayer("3DColliderOff");
             image.AddComponent<MetaFocusable>().Initialize(this);
+        }
+
+        protected void Reload(int width, int height, Vector3 rotation, bool detectCollision)
+        {
+            imageContainer.transform.localScale = new Vector3(width, height, 1);
+            imageContainer.transform.eulerAngles = rotation;
+            image.layer = detectCollision
+                ? LayerMask.NameToLayer("Default")
+                : LayerMask.NameToLayer("3DColliderOff");
+            UpdateState(State);
         }
 
         internal static ImageFace CreateImageFace(Transform transform, int width, int height, Vector3 rotation,
@@ -152,8 +163,6 @@ namespace Source.MetaBlocks.ImageBlock
             if (canEdit)
             {
                 lines.Add("Press Z for details");
-                if (State != State.Empty)
-                    lines.Add("Press V to edit rotation");
                 lines.Add("Press DEL to delete object");
             }
 
@@ -216,41 +225,22 @@ namespace Source.MetaBlocks.ImageBlock
             return go;
         }
 
-        public override void SetToMovingState()
+        public override Transform GetRotationTarget(out Action afterRotated)
         {
-            if (snackItem != null)
+            if (MetaBlockState.IsErrorState(State) || State == State.Empty)
             {
-                snackItem.Remove();
-                snackItem = null;
+                afterRotated = null;
+                return null;
             }
 
-            if (scaleRotationController == null)
+            afterRotated = () =>
             {
-                scaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
-                scaleRotationController.Attach(null, imageContainer.transform);
-            }
-
-            snackItem = Snack.INSTANCE.ShowLines(scaleRotationController.EditModeSnackLines, () =>
-            {
-                if (Input.GetKeyDown(KeyCode.X))
-                {
-                    GameManager.INSTANCE.ToggleMovingObjectState(this);
-                }
-            });
-        }
-
-        public override void ExitMovingState()
-        {
-            var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
-            if (image == null) return;
-            props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
-            Block.SetProps(props, land);
-
-            if (snackItem != null) SetupDefaultSnack();
-            if (scaleRotationController == null) return;
-            scaleRotationController.Detach();
-            DestroyImmediate(scaleRotationController);
-            scaleRotationController = null;
+                var props = new MediaBlockProperties(Block.GetProps() as MediaBlockProperties);
+                if (image == null) return;
+                props.rotation = new SerializableVector3(imageContainer.transform.eulerAngles);
+                Block.SetProps(props, land);
+            };
+            return imageContainer.transform;
         }
     }
 }

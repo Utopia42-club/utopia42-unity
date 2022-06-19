@@ -73,10 +73,12 @@ namespace Source
             highlightChunks.Values.Any(highlightChunk => highlightChunk.SelectionDisplaced);
 
         public TdObjectBytesCache TdObjectCache { private set; get; }
+        public ObjectScaleRotationController ObjectScaleRotationController { private set; get; }
 
         private void Start()
         {
             TdObjectCache = gameObject.AddComponent<TdObjectBytesCache>();
+            ObjectScaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
         }
 
         private void Update()
@@ -336,6 +338,7 @@ namespace Source
             metaOffset = Vector3.zero;
             firstSelectedPosition = null;
             LastSelectedPosition = null;
+            ObjectScaleRotationController.DetachAll();
         }
 
         public void RemoveSelectedBlocks(bool ignoreUnmovedBlocks = false)
@@ -487,19 +490,19 @@ namespace Source
             return firstSelectedPosition.ToWorld() + HighlightOffset + rotationOffset.Value + 0.5f * Vector3.one;
         }
 
-        public void RotateSelection(Vector3 axis)
-        {
-            var center = GetSelectionRotationCenter();
-            if (!center.HasValue) return;
-
-            foreach (var highlightChunk in highlightChunks.Values.Where(highlightChunk => highlightChunk != null))
-            {
-                highlightChunk.Rotate(center.Value, axis);
-                highlightChunksToRedraw.Enqueue(highlightChunk);
-            }
-
-            RedrawChangedHighlightChunks();
-        }
+        // public void RotateSelection(Vector3 axis)
+        // {
+        //     var center = GetSelectionRotationCenter();
+        //     if (!center.HasValue) return;
+        //
+        //     foreach (var highlightChunk in highlightChunks.Values.Where(highlightChunk => highlightChunk != null))
+        //     {
+        //         highlightChunk.Rotate(center.Value, axis);
+        //         highlightChunksToRedraw.Enqueue(highlightChunk);
+        //     }
+        //
+        //     RedrawChangedHighlightChunks();
+        // }
 
         public void ResetClipboard()
         {
