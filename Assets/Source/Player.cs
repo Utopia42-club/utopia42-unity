@@ -131,6 +131,8 @@ namespace Source
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             GetInputs();
+            SetPlaceBlockVisibility();
+
             if (!ChangeForbidden)
                 blockSelectionController.DoUpdate();
 
@@ -148,6 +150,13 @@ namespace Source
                     world.OnPlayerChunkChanged(currChunk);
                 }
             }
+        }
+
+        private void SetPlaceBlockVisibility()
+        {
+            var r = placeBlock.GetComponentInChildren<Renderer>();
+            if (r != null)
+                r.enabled = !CtrlDown;
         }
 
         private void GetInputs()
@@ -526,7 +535,7 @@ namespace Source
             {
                 PreparedMetaBlock?.DestroyView();
                 PreparedMetaBlock = null;
-                
+
                 SelectedBlockType = slotInfo.block;
                 if (SelectedBlockType is MetaBlockType metaBlockType)
                 {
