@@ -1,12 +1,10 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Template name="Loading" src="project://database/Assets/Resources/UiDocuments/Loading.uxml?fileID=9197481963319205126&amp;guid=f5421483ece561649b18897010b9151c&amp;type=3#Loading" />
-    <Style src="project://database/Assets/Resources/UiDocuments/styles/tab-menu.uss?fileID=7433441132597879392&amp;guid=48a311b4a4965de0d946fc2aead50834&amp;type=3#tab-menu" />
-    <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/TebPane/tab-pane.uss?fileID=7433441132597879392&amp;guid=48a311b4a4965de0d946fc2aead50834&amp;type=3#tab-pane" />
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
     <ui:VisualElement name="tabPane" style="flex-grow: 1; flex-shrink: 1; width: 100%; align-items: stretch; right: auto; position: relative; height: 100%; justify-content: center; transition-property: visibility; transition-duration: 200ms;">
         <ui:VisualElement name="root" style="flex-grow: 1; flex-shrink: 1; width: 100%; align-items: stretch; right: 0; position: absolute; height: 100%;">
             <ui:VisualElement name="tabs" style="height: 10%; flex-direction: row; justify-content: center;" />
             <ui:VisualElement name="tabBody" class="tabBody" style="align-items: center;" />
-            <ui:Instance template="Loading" name="tabPaneLoadingLayer" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

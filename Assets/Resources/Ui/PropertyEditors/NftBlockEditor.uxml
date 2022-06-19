@@ -1,23 +1,23 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
     <ui:VisualElement name="propertyEditor" style="flex-grow: 1; flex-shrink: 1; align-items: stretch; justify-content: center;">
-        <ui:TextField picking-mode="Ignore" label="Collection:" name="collection" password="false" class="utopia-field" style="margin-left: 0;" />
-        <ui:TextField picking-mode="Ignore" label="Token ID:" value="filler text" name="tokenId" class="utopia-field" style="margin-left: 0;" />
-        <ui:VisualElement name="rotation" style="flex-direction: row; justify-content: flex-start; width: 100%; align-items: stretch;">
-            <ui:Label text="Rotation: " display-tooltip-when-elided="true" name="rotationLabel" />
+        <ui:TextField picking-mode="Ignore" label="Collection" name="collection" password="false" class="utopia-field" />
+        <ui:TextField picking-mode="Ignore" label="Token ID" value="filler text" name="tokenId" class="utopia-field" />
+        <ui:VisualElement name="rotation" class="utopia-fields-group" style="flex-direction: column; justify-content: flex-start; align-items: stretch;">
+            <ui:Label text="Rotation" display-tooltip-when-elided="true" name="rotationLabel" class="utopia-fields-group__label" />
             <ui:VisualElement name="rotationFields" style="flex-direction: row; flex-wrap: nowrap; flex-grow: 1;">
-                <ui:TextField picking-mode="Ignore" label="X:" name="x" class="utopia-field" style="flex-grow: 1;" />
-                <ui:TextField picking-mode="Ignore" label="Y:" name="y" class="utopia-field" style="flex-grow: 1;" />
-                <ui:TextField picking-mode="Ignore" label="Z:" name="z" class="utopia-field" style="flex-grow: 1;" />
+                <ui:TextField picking-mode="Ignore" label="X" name="x" class="utopia-field" style="flex-grow: 1;" />
+                <ui:TextField picking-mode="Ignore" label="Y" name="y" class="utopia-field" style="flex-grow: 1;" />
+                <ui:TextField picking-mode="Ignore" label="Z" name="z" class="utopia-field" style="flex-grow: 1;" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="dimension" style="flex-direction: row; justify-content: flex-start; width: 100%; align-items: stretch;">
-            <ui:Label text="Dimension: " display-tooltip-when-elided="false" name="dimenionLabel" />
+        <ui:VisualElement name="dimension" class="utopia-fields-group" style="flex-direction: column; justify-content: flex-start; align-items: stretch;">
+            <ui:Label text="Dimension" display-tooltip-when-elided="false" name="dimenionLabel" class="utopia-fields-group__label" />
             <ui:VisualElement name="dimenionFields" style="flex-direction: row; flex-wrap: nowrap; flex-grow: 1;">
-                <ui:TextField picking-mode="Ignore" label="W:" name="w" class="utopia-field" style="flex-grow: 1;" />
-                <ui:TextField picking-mode="Ignore" label="H:" name="h" class="utopia-field" style="flex-grow: 1; align-items: center;" />
+                <ui:TextField picking-mode="Ignore" label="W" name="w" class="utopia-field" style="flex-grow: 1;" />
+                <ui:TextField picking-mode="Ignore" label="H" name="h" class="utopia-field" style="flex-grow: 1;" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Toggle label="Detect Collision:" name="collisionDetect" style="margin-top: 2px; align-items: center;" />
+        <ui:Toggle label="Detect Collision" name="collisionDetect" style="margin-top: 2px; align-items: center;" />
     </ui:VisualElement>
 </ui:UXML>

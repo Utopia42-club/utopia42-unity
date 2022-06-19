@@ -1,9 +1,11 @@
 ﻿.unity-toggle {
-    margin: 0;
+    margin: 3px;
 }
 
 .unity-toggle__label {
     padding: 0;
+    padding-right: 5px;
+    font-size: var(--default-font-size);
 }
 
 .unity-toggle__input {
