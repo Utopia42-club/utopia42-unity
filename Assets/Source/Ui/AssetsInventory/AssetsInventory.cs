@@ -150,7 +150,12 @@ namespace Source.Ui.AssetsInventory
                         foreach (var favoriteItem in favoriteItems)
                             AddToHandyPanel(favoriteItem.ToSlotInfo());
                     }
-                }); // FIXME: what to do on error?
+                    SelectSlot(null);
+                }, () =>
+                {
+                    SelectSlot(null);
+                    // FIXME: what to do on error?
+                });
         }
 
         private void SetupAssetsTab()
