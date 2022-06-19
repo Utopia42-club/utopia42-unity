@@ -10,5 +10,7 @@ namespace Source
         public abstract void UnFocus();
         
         public abstract Vector3? GetBlockPosition();
+
+        public abstract bool IsSelected();
     }
 }
