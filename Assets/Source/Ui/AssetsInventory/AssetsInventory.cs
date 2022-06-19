@@ -94,8 +94,9 @@ namespace Source.Ui.AssetsInventory
             };
             tabPane = new TabPane.TabPane(tabConfigurations);
             var s = tabPane.VisualElement().style;
-            s.height = new StyleLength(new Length(95, LengthUnit.Percent));
-            s.width = 350;
+            s.paddingBottom = s.paddingTop = 6;
+            s.flexGrow = 1;
+            s.width = new StyleLength(new Length(100, LengthUnit.Percent));
             inventory.Add(tabPane.VisualElement());
 
             handyPanelRoot = root.Q<VisualElement>("handyPanelRoot");
@@ -150,6 +151,7 @@ namespace Source.Ui.AssetsInventory
                         foreach (var favoriteItem in favoriteItems)
                             AddToHandyPanel(favoriteItem.ToSlotInfo());
                     }
+
                     SelectSlot(null);
                 }, () =>
                 {
