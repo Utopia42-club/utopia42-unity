@@ -1,4 +1,5 @@
 using Source.MetaBlocks;
+using Source.Model;
 using Source.Utils;
 using UnityEngine;
 
@@ -29,6 +30,11 @@ namespace Source
         {
             if (!Player.INSTANCE.HighlightBlock.gameObject.activeSelf) return null;
             return Player.INSTANCE.PossibleHighlightBlockPosInt;
+        }
+
+        public override bool IsSelected()
+        {
+            return World.INSTANCE.IsSelected(new VoxelPosition(Player.INSTANCE.PossibleHighlightBlockPosInt));
         }
     }
 }

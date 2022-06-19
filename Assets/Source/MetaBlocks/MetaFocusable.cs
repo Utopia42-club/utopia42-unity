@@ -1,3 +1,4 @@
+using System;
 using Source.MetaBlocks;
 using Source.Model;
 using Source.Utils;
@@ -36,6 +37,11 @@ namespace Source
         public override Vector3? GetBlockPosition()
         {
             return new MetaPosition(MetaBlockObject.transform.position).ToWorld();
+        }
+
+        public override bool IsSelected()
+        {
+            return World.INSTANCE.IsSelected(new MetaPosition(MetaBlockObject.transform.position));
         }
 
         public MetaBlock GetBlock()

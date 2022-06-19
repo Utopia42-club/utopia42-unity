@@ -400,6 +400,16 @@ namespace Source
             return result;
         }
 
+        public bool IsSelected(VoxelPosition vp)
+        {
+            return highlightChunks.TryGetValue(vp.chunk, out var chunk) && chunk.Contains(vp.local);
+        }
+        
+        public bool IsSelected(MetaPosition mp)
+        {
+            return highlightChunks.TryGetValue(mp.chunk, out var chunk) && chunk.Contains(mp.local);
+        }
+
         public List<MetaPosition> GetSelectedMetaBlocksPositions()
         {
             var result = new List<MetaPosition>();

@@ -31,6 +31,7 @@ namespace Source
         private bool selectionActive;
         private bool metaSelectionActive;
         private bool onlyMetaSelectionActive;
+        private bool selectionDisplaced;
         private bool dragging;
 
         private int keyboardFrameCounter = 0;
@@ -51,6 +52,7 @@ namespace Source
             selectionActive = World.INSTANCE.SelectionActive;
             metaSelectionActive = World.INSTANCE.MetaSelectionActive;
             onlyMetaSelectionActive = World.INSTANCE.OnlyMetaSelectionActive;
+            selectionDisplaced = World.INSTANCE.SelectionDisplaced;
             dragging = DraggedPosition.HasValue;
 
             HandleSelectionKeyboardMovement();
@@ -151,15 +153,16 @@ namespace Source
                 DraggedPosition = null;
             }
 
-            else if (Input.GetMouseButtonDown(0) && DraggedPosition == null)
+            else if (Input.GetMouseButtonDown(0) && DraggedPosition == null && !selectionDisplaced)
             {
-                if (player.FocusedFocusable is not MetaFocusable metaFocusable) return; // TODO ?
+                if (player.FocusedFocusable != null && player.FocusedFocusable.IsSelected())
+                {
+                    DraggedPosition = player.FocusedFocusable.GetBlockPosition();
 
-                DraggedPosition = metaFocusable.GetBlockPosition();
-
-                if (DraggedPosition.HasValue)
-                    DraggedPosition = new Vector3(DraggedPosition.Value.x, World.INSTANCE.GetSelectionMinPoint().y,
-                        DraggedPosition.Value.z);
+                    if (DraggedPosition.HasValue)
+                        DraggedPosition = new Vector3(DraggedPosition.Value.x, World.INSTANCE.GetSelectionMinPoint().y,
+                            DraggedPosition.Value.z);
+                }
             }
 
             else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&
@@ -189,7 +192,7 @@ namespace Source
         {
             if (dragging || World.INSTANCE.ObjectScaleRotationController.Active || !mouseLook.cursorLocked) return;
 
-            var selectVoxel = !World.INSTANCE.SelectionDisplaced && selectionMode == SelectionMode.Default &&
+            var selectVoxel = !selectionDisplaced && selectionMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
                               Input.GetMouseButtonDown(0) && player.CtrlDown;
 
