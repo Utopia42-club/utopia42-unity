@@ -12,9 +12,9 @@
 
 .unity-base-text-field {
     white-space: nowrap;
-    --unity-selection-color: var(--color-text-darker);
-    --unity-cursor-color: var(--color-text);
-    color: var(--color-text);
+    --unity-selection-color: var(--text-darker-color);
+    --unity-cursor-color: var(--text-color);
+    color: var(--text-color);
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
@@ -22,25 +22,25 @@
     border-width: 1px;
     border-radius: var(--default-border-radius);
     border-color: var(--default-border-color);
-    background-color: var(--color-background-dark);
+    background-color: var(--dark-background-color);
     padding: 2px;
     margin: 3px;
 }
 
 .unity-text-element {
-    color: var(--color-text);
+    color: var(--text-color);
 }
 
 .unity-base-text-field:hover {
-    border-color: var(--color-primary-lighter);
+    border-color: var(--lighter-primary-color);
 }
 
 .unity-base-text-field:focus {
-    border-color: var(--color-primary-lighter);
+    border-color: var(--lighter-primary-color);
 }
 
 .unity-base-text-field:focus > .unity-base-field__label {
-    color: var(--color-secondary);
+    color: var(--secondary-color);
 }
 
 .unity-base-text-field__input {

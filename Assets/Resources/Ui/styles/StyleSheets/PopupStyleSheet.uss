@@ -5,7 +5,7 @@
     border-width: 1px;
     border-radius: var(--default-border-radius);
     border-color: var(--default-border-color);
-    background-color: var(--color-background-dark);
+    background-color: var(--dark-background-color);
     padding: 2px;
     margin: 3px;
 }
@@ -28,7 +28,7 @@
 }
 
 .unity-popup-field:hover .unity-popup-field__input {
-    border-color: var(--color-primary-darker);
+    border-color: var(--darker-primary-color);
 }
 
 .unity-base-popup-field__text {
@@ -41,7 +41,7 @@
     width: 20px;
     height: 20px;
     background-image: url('/Assets/Resources/Icons/dropdown.png');
-    -unity-background-image-tint-color: var(--color-text-darker);
+    -unity-background-image-tint-color: var(--text-darker-color);
     margin-top: 4px;
     margin-bottom: 4px;
 }

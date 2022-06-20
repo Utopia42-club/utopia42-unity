@@ -100,6 +100,8 @@ namespace Source.Ui.Map
             {
                 this.subgrid = subgrid;
                 AddToClassList(subgrid.vertical ? "map-vertical-grid-line" : "map-horizontal-grid-line");
+                if (index == 0)
+                    AddToClassList("map-origin-grid-line");
                 const int minorTickSize = (int) TickSize / 5;
                 for (int i = 1; i < 6; i++)
                 {

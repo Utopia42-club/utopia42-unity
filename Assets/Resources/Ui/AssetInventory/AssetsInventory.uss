@@ -17,10 +17,10 @@
 .hammer-mode-area {
     padding-bottom: 3px;
     border-bottom-width: 1px;
-    border-color: var(--color-text-darker);
+    border-color: var(--text-darker-color);
 }
 
 .selected-slot-border {
     border-width: 5px;
-    border-color: var(--color-secondary);
+    border-color: var(--secondary-color);
 }

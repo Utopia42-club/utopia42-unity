@@ -61,3 +61,11 @@
     right: 0;
 }
 
+.map-origin-grid-line{
+    border-color: var(--map-grid-origin-color);
+}
+
+.map-mouse-label{
+    color: var(--primary-color);
+    
+}

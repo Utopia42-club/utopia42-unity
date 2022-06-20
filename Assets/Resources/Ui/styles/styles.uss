@@ -6,29 +6,29 @@
 @import "StyleSheets/FoldoutStyleSheet.uss";
 
 :root {
-    --color-text-darker: rgb(172, 172, 172);
-    --color-text: rgb(240, 240, 240);
+    --text-darker-color: rgb(172, 172, 172);
+    --text-color: rgb(240, 240, 240);
 
-    --color-background-dark: rgb(24, 36, 48);
-    --color-background-dark-lit: rgba(24, 36, 48, 0.7);
+    --dark-background-color: rgb(24, 36, 48);
+    /*--dark-background-color-lit: rgba(24, 36, 48, 0.7);*/
 
-    --color-primary: rgb(52, 73, 94);
-    --color-primary-darker: rgb(42, 60, 77);
-    --color-primary-lighter: rgb(76, 97, 118);
+    --primary-color: rgb(52, 73, 94);
+    --darker-primary-color: rgb(42, 60, 77);
+    --lighter-primary-color: rgb(76, 97, 118);
 
-    --color-secondary: rgb(52, 152, 219);
-    --color-secondary-darker: rgba(52, 152, 219, 0.78);
-    --color-secondary-lighter: rgb(91, 162, 210);
+    --secondary-color: rgb(52, 152, 219);
+    --darker-secondary-color: rgba(52, 152, 219, 0.78);
+    --lighter-secondary-color: rgb(91, 162, 210);
 
-    --color-accent: rgb(220, 119, 119);
-    --color-accent-darker: rgb(180, 98, 98);
-    --color-accent-lighter: rgb(220, 139, 139);
+    --accent-color: rgb(220, 119, 119);
+    --darkeraccent-color: rgb(180, 98, 98);
+    --lighter-accent-color: rgb(220, 139, 139);
     
-    --color-danger: rgb(217, 70, 70);
-    --color-warn: rgb(174, 177, 28);
+    --danger-color: rgb(217, 70, 70);
+    --warn-color: rgb(174, 177, 28);
 
     --default-border-radius: 7px;
-    --default-border-color: var(--color-primary-lighter);
+    --default-border-color: var(--lighter-primary-color);
     
     --default-font-size: 14px;
     --small-font-size: 11px;
@@ -36,13 +36,13 @@
 
 .utopia-button {
     border-radius: var(--default-border-radius);
-    border-color: var(--color-primary-lighter);
-    background-color: var(--color-primary);
+    border-color: var(--lighter-primary-color);
+    background-color: var(--primary-color);
 }
 
 .utopia-button:hover,
 .utopia-button:active {
-    border-color: var(--color-primary-darker);
+    border-color: var(--darker-primary-color);
 }
 
 
@@ -55,7 +55,7 @@
 }
 
 .utopia-panel {
-    background-color: var(--color-background-dark);
+    background-color: var(--dark-background-color);
     border-radius: var(--default-border-radius);
 }
 
@@ -65,7 +65,7 @@
 .utopia-toggle-button {
     background-color: rgba(0, 0, 0, 0);
     -unity-font-style: bold;
-    color: var(--color-text);
+    color: var(--text-color);
     border-width: 0;
 }
 
@@ -74,11 +74,11 @@
     border-top-right-radius: 4px;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
-    background-color: var(--color-primary);
+    background-color: var(--primary-color);
 }
 
 .selected-utopia-toggle-button {
-    background-color: var(--color-primary-lighter);
+    background-color: var(--lighter-primary-color);
 }
 
 .utopia-fields-group{

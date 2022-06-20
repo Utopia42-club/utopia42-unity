@@ -25,23 +25,23 @@
 
 .unity-base-slider__drag-container {
     width: 12px;
-    background-color: var(--color-primary);
+    background-color: var(--primary-color);
     border-radius: var(--default-border-radius);
 }
 
 .unity-base-slider__dragger {
     width: 6px;
-    background-color: var(--color-primary-darker);
+    background-color: var(--darker-primary-color);
     border-radius: var(--default-border-radius);
 }
 
 .unity-base-slider__dragger-border {
     width: 6px;
-    background-color: var(--color-primary-darker);
+    background-color: var(--darker-primary-color);
 }
 
 .unity-base-slider__tracker {
     width: 12px;
-    background-color: var(--color-primary-lighter);
+    background-color: var(--lighter-primary-color);
     border-radius: var(--default-border-radius);
 }

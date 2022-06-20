@@ -7,12 +7,15 @@ namespace Source.Ui.Map
     {
         private readonly VisualElement lands;
         private readonly MapViewportController viewportController;
+        private readonly VisualElement root;
 
         public Map() : base(true)
         {
-            lands = this.Q("Lands");
+            root = this.Q("Root");
+            root.Add(lands = new MapLandLayer());
             var grid = new MapGrid();
-            Add(grid);
+            root.Add(grid);
+
             viewportController = new MapViewportController(this, e =>
             {
                 lands.transform.position = new Vector3(-e.rect.x, -e.rect.y, 0);
@@ -23,12 +26,13 @@ namespace Source.Ui.Map
 
         internal Vector2 ScreenToUtopia(Vector2 pos)
         {
-            return lands.WorldToLocal(pos);
+            var local = lands.WorldToLocal(pos);
+            return new Vector2(local.x, -local.y);
         }
 
         internal Vector2 UtopiaToScreen(Vector2 pos)
         {
-            return lands.LocalToWorld(pos);
+            return lands.LocalToWorld(new Vector2(pos.x, -pos.y));
         }
     }
 }
