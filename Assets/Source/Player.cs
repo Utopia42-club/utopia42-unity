@@ -131,6 +131,7 @@ namespace Source
             });
 
             HammerMode = false;
+            world.UpdateHighlightBlockColor(false);
         }
 
         private void Update()
@@ -488,6 +489,7 @@ namespace Source
             HideCursors();
             SelectedBlockType = slotInfo?.block;
             HammerMode = false;
+            world.UpdateHighlightBlockColor(false);
             PreparedMetaBlock?.DestroyView();
             PreparedMetaBlock = null;
             if (ChangeForbidden) return; // TODO ?
@@ -506,6 +508,7 @@ namespace Source
             if (slotInfo is {asset: null, block: null})
             {
                 HammerMode = true;
+                world.UpdateHighlightBlockColor(true);
                 return;
             }
 

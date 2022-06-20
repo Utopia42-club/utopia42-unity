@@ -176,9 +176,9 @@ namespace Source
 
             var selectVoxel = !selectionDisplaced && SMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
-                              Input.GetMouseButtonDown(0) && player.CtrlDown;
+                              Input.GetMouseButtonDown(0);
 
-            var multipleSelect = selectVoxel && selectionActive &&
+            var multipleSelect = selectVoxel && player.CtrlDown && selectionActive &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) &&
                                  World.INSTANCE.LastSelectedPosition != null;
 
@@ -210,6 +210,8 @@ namespace Source
             }
             else if (selectVoxel)
             {
+                if (!player.CtrlDown)
+                    ExitSelectionMode();
                 if (player.FocusedFocusable == null) // should never happen
                 {
                     if (player.HighlightBlock.gameObject.activeSelf)
