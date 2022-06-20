@@ -94,11 +94,11 @@ namespace Source.Ui.AssetsInventory
                 new("Favorites", "Ui/AssetInventory/FavoritesTab", SetupFavoritesTab)
             };
             tabPane = new TabPane.TabPane(tabConfigurations);
-            var s = tabPane.VisualElement().style;
+            var s = tabPane.style;
             s.paddingBottom = s.paddingTop = 6;
             s.flexGrow = 1;
             s.width = new StyleLength(new Length(100, LengthUnit.Percent));
-            inventory.Add(tabPane.VisualElement());
+            inventory.Add(tabPane);
 
             handyPanelRoot = root.Q<VisualElement>("handyPanelRoot");
             handyPanel = root.Q<VisualElement>("handyPanel");
@@ -131,6 +131,8 @@ namespace Source.Ui.AssetsInventory
             {
                 root.focusable = !locked;
                 root.SetEnabled(!locked);
+                if (inventoryContainer.style.visibility == Visibility.Visible)
+                    ToggleInventory();
             };
             MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(focusListener);
         }
@@ -190,7 +192,7 @@ namespace Source.Ui.AssetsInventory
             }, () => LoadingLayer.LoadingLayer.Hide(loadingId2)));
 
             var searchField = tabPane.GetTabBody().Q<TextField>("searchField");
-
+            searchField.multiline = false;
             Utils.Utils.SetPlaceHolderForTextField(searchField, "Search");
             Utils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
 
@@ -270,7 +272,8 @@ namespace Source.Ui.AssetsInventory
                 filterText = null;
             }
 
-            if (selectedSlot != null && (Input.GetButtonDown("Clear slot selection") || Input.GetMouseButtonDown(1)) && !Player.INSTANCE.SelectionActiveBeforeAtFrameBeginning)
+            if (selectedSlot != null && (Input.GetButtonDown("Clear slot selection") || Input.GetMouseButtonDown(1)) &&
+                !Player.INSTANCE.SelectionActiveBeforeAtFrameBeginning)
                 SelectSlot(null);
 
             if (handyBar.childCount == 0 || !MouseLook.INSTANCE.cursorLocked)
@@ -278,10 +281,8 @@ namespace Source.Ui.AssetsInventory
 
             var mouseDelta = Input.mouseScrollDelta.y;
             var inc = Input.GetButtonDown("Change Block") || mouseDelta <= -0.1;
-            var dec = (
-                          Input.GetButtonDown("Change Block") &&
-                          (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-                      )
+            var dec = Input.GetButtonDown("Change Block") &&
+                      (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                       || mouseDelta >= 0.1;
             if (!dec && !inc)
                 return;

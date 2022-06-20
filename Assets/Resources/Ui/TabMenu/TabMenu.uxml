@@ -1,16 +1,4 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="styles/styles.uss" />
-    <Style src="styles/tab-menu.uss" />
-    <ui:VisualElement name="toolbar" style="height: 54px; justify-content: center; background-color: rgb(52, 73, 94); align-items: center; display: flex; visibility: visible; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; flex-direction: row;">
-        <ui:VisualElement name="tabs" style="height: 53px; width: 435px; flex-direction: row; background-color: rgba(255, 255, 255, 0); align-items: stretch; justify-content: center;">
-            <ui:Button text="Settings" display-tooltip-when-elided="true" name="settings-tab" class="utopia-button toolbar-button" />
-            <ui:Button text="Map" display-tooltip-when-elided="true" name="map-tab" class="utopia-button toolbar-button" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement name="right-actions" style="position: absolute; right: 10px; top: 0; justify-content: center; height: 54px;">
-        <ui:Button display-tooltip-when-elided="false" enable-rich-text="true" name="close-button" class="utopia-button toolbar-button" style="height: 35px; width: 35px; position: relative; top: auto; left: auto; -unity-background-scale-mode: scale-to-fit; -unity-slice-left: 0; -unity-slice-top: 0; -unity-slice-right: 0; -unity-slice-bottom: 0; right: auto;" />
-    </ui:VisualElement>
-    <ui:VisualElement name="left-actions" style="position: absolute; right: auto; top: 0; justify-content: center; height: 54px; left: 10px;">
-        <ui:Button display-tooltip-when-elided="false" enable-rich-text="true" name="side-panel-button" class="utopia-button toolbar-button" style="height: 35px; width: 35px; position: relative; top: auto; left: auto; -unity-background-scale-mode: scale-to-fit; -unity-slice-left: 0; -unity-slice-top: 0; -unity-slice-right: 0; -unity-slice-bottom: 0; right: auto;" />
-    </ui:VisualElement>
+    <ui:Template name="TabPane" src="project://database/Assets/Resources/Ui/TebPane/TabPane.uxml?fileID=9197481963319205126&amp;guid=7b4b0cb57005248ca8e178aa969f953f&amp;type=3#TabPane" />
+    <ui:Instance template="TabPane" name="TabPane" style="flex-grow: 1; width: 100%; height: 100%;" />
 </ui:UXML>

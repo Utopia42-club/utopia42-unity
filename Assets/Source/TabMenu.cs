@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Source;
 using Source.Canvas.Map;
+using Source.Ui.TabPane;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -19,6 +20,7 @@ public class TabMenu : MonoBehaviour
     private Button sidePanelButton;
 
     public bool isMouseDown;
+    private TabPane tabPane;
 
     private void Start()
     {
@@ -28,16 +30,8 @@ public class TabMenu : MonoBehaviour
     void OnEnable()
     {
         root = GetComponent<UIDocument>().rootVisualElement;
-        root.RegisterCallback<PointerDownEvent>(evt =>
-        {
-            isMouseDown = true;
-        });
+        tabPane = root.Q<TabPane>();
         
-        root.RegisterCallback<PointerUpEvent>(evt =>
-        {
-            isMouseDown = false;
-        });
-
         tabs = new List<Button>();
         _gameManager = GameManager.INSTANCE;
 
