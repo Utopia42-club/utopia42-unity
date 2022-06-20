@@ -24,13 +24,12 @@ namespace Source
         public Vector3? DraggedPosition { get; private set; }
         private bool KeepSourceAfterSelectionMovement => selectionMode != SelectionMode.Default;
         public bool PlayerMovementAllowed => !selectionActive || !movingSelectionAllowed;
-        public bool Dragging => DraggedPosition != null;
         private Transform transform => Player.INSTANCE.transform; // TODO
         private bool selectionActive;
         private bool metaSelectionActive;
         private bool onlyMetaSelectionActive;
         private bool selectionDisplaced;
-        private bool dragging;
+        public bool Dragging => DraggedPosition.HasValue;
         private int keyboardFrameCounter = 0;
 
         public void Start()
@@ -50,7 +49,6 @@ namespace Source
             metaSelectionActive = World.INSTANCE.MetaSelectionActive;
             onlyMetaSelectionActive = World.INSTANCE.OnlyMetaSelectionActive;
             selectionDisplaced = World.INSTANCE.SelectionDisplaced;
-            dragging = DraggedPosition.HasValue;
 
             HandleSelectionKeyboardMovement();
             HandleSelectionMouseMovement();
@@ -62,7 +60,7 @@ namespace Source
 
         private void HandleSelectionKeyboardMovement()
         {
-            if (!selectionActive || !movingSelectionAllowed || dragging) return;
+            if (!selectionActive || !movingSelectionAllowed || Dragging) return;
 
             var frameCondition =
                 onlyMetaSelectionActive ? keyboardFrameCounter % 5 == 0 : keyboardFrameCounter % 50 == 0;
@@ -102,9 +100,8 @@ namespace Source
             if (!selectionActive || player.CtrlDown) return;
             if (Input.GetMouseButtonUp(0) && DraggedPosition != null)
             {
-                ConfirmMove();
-                ReSelectSelection();
                 DraggedPosition = null;
+                PrepareForSelectionMovement(SelectionMode.Default);
             }
 
             else if (Input.GetMouseButtonDown(0) && DraggedPosition == null && !selectionDisplaced)
@@ -114,8 +111,10 @@ namespace Source
                     DraggedPosition = player.FocusedFocusable.GetBlockPosition();
 
                     if (DraggedPosition.HasValue)
+                    {
                         DraggedPosition = new Vector3(DraggedPosition.Value.x, World.INSTANCE.GetSelectionMinPoint().y,
                             DraggedPosition.Value.z);
+                    }
                 }
             }
 
@@ -144,7 +143,7 @@ namespace Source
 
         private void HandleBlockSelection()
         {
-            if (dragging || World.INSTANCE.ObjectScaleRotationController.Active || !mouseLook.cursorLocked) return;
+            if (Dragging || World.INSTANCE.ObjectScaleRotationController.Active || !mouseLook.cursorLocked) return;
 
             var selectVoxel = !selectionDisplaced && selectionMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
@@ -249,15 +248,14 @@ namespace Source
 
         private void HandleBlockClipboard()
         {
-            if (dragging) return;
+            if (Dragging) return;
             if (Input.GetKeyDown(KeyCode.X) || Input.GetMouseButtonDown(1))
             {
                 ExitSelectionMode();
             }
-            else if (Input.GetKeyDown(KeyCode.C) && player.CtrlDown)
+            else if (Input.GetKeyDown(KeyCode.C) && player.CtrlDown && !selectionDisplaced)
             {
                 World.INSTANCE.ResetClipboard();
-                ExitSelectionMode();
             }
 
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
@@ -274,7 +272,7 @@ namespace Source
             else if (Input.GetKeyDown(KeyCode.V) && player.CtrlDown &&
                      player.PlaceBlock.gameObject.activeSelf &&
                      !World.INSTANCE.ClipboardEmpty &&
-                     !selectionActive)
+                     !Dragging)
             {
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();
                 var minIntPoint = Vectors.TruncateFloor(minPoint);
@@ -301,11 +299,11 @@ namespace Source
                 else
                     World.INSTANCE.PasteClipboard(player.PossiblePlaceMetaBlockPos - minPoint);
 
-                PrepareForClipboardMovement(SelectionMode.Clipboard);
+                PrepareForSelectionMovement(SelectionMode.Clipboard);
             }
         }
 
-        private void PrepareForClipboardMovement(SelectionMode mode)
+        private void PrepareForSelectionMovement(SelectionMode mode)
         {
             selectionMode = mode;
             movingSelectionAllowed = true;
@@ -441,7 +439,7 @@ namespace Source
             {
                 if (!result.ContainsValue(true)) return;
                 AfterAddHighlight(false);
-                PrepareForClipboardMovement(SelectionMode.Preview);
+                PrepareForSelectionMovement(SelectionMode.Preview);
             }));
         }
 
