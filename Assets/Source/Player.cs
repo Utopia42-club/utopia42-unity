@@ -47,6 +47,7 @@ namespace Source
         private RaycastHit raycastHit;
         private CharacterController characterController;
         private BlockSelectionController blockSelectionController;
+        private Renderer placeBlockRenderer;
         public bool CtrlDown { private set; get; }
         private Vector3Int playerPos;
         private AvatarController avatarController;
@@ -55,12 +56,13 @@ namespace Source
 
         public MetaBlock PreparedMetaBlock { private set; get; }
         public GameObject MetaBlockPlaceHolder { private set; get; }
+
         public bool HammerMode { get; private set; } = true;
-        private bool NeutralMode { get; set; } = true;
+        public bool SelectionActiveBeforeAtFrameBeginning { get; private set; } = true;
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
 
-        public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON || NeutralMode;
+        public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
 
@@ -88,15 +90,15 @@ namespace Source
 
         private void Start()
         {
-            NeutralMode = true;
             blockSelectionController = GetComponent<BlockSelectionController>();
+            placeBlockRenderer = placeBlock.GetComponentInChildren<Renderer>();
 
             Snack.INSTANCE.ShowObject("Owner", null);
 
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING)
-                    hitCollider = null;
+                    ResetRaycastMemory();
                 else
                     HideCursors();
             });
@@ -125,18 +127,24 @@ namespace Source
                     }
                 }
 
-                hitCollider = null;
+                ResetRaycastMemory();
             });
+
+            HammerMode = false;
         }
 
         private void Update()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
+            SelectionActiveBeforeAtFrameBeginning = World.INSTANCE.SelectionActive;
             GetInputs();
-            SetPlaceBlockVisibility();
 
             if (!ChangeForbidden)
+            {
                 blockSelectionController.DoUpdate();
+                if (!HammerMode && Input.GetButtonDown("Delete") && !SelectionActiveBeforeAtFrameBeginning)
+                    Ui.AssetsInventory.AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
+            }
 
             if (lastChunk == null)
             {
@@ -152,18 +160,6 @@ namespace Source
                     world.OnPlayerChunkChanged(currChunk);
                 }
             }
-
-            if ((NeutralMode || !HammerMode) && FocusedFocusable == null && Input.GetButtonDown("Delete"))
-            {
-                Ui.AssetsInventory.AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
-            }
-        }
-
-        private void SetPlaceBlockVisibility()
-        {
-            var r = placeBlock.GetComponentInChildren<Renderer>();
-            if (r != null)
-                r.enabled = !CtrlDown && !World.INSTANCE.SelectionActive;
         }
 
         private void GetInputs()
@@ -240,35 +236,35 @@ namespace Source
         // ReSharper disable Unity.PerformanceAnalysis
         private void DetectFocus()
         {
-            if (!DisableRaycast && Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
+            if (DisableRaycast)
+            {
+                ResetRaycastMemory();
+                return;
+            }
+
+            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
             {
                 var focusable = raycastHit.collider.GetComponent<Focusable>();
-                if (hitCollider == raycastHit.collider &&
-                    focusable != null && focusable is MetaFocusable) return;
                 hitCollider = raycastHit.collider;
                 if (focusable != null)
                 {
-                    if (FocusedFocusable != null)
+                    if (focusable != FocusedFocusable && FocusedFocusable != null)
                         FocusedFocusable.UnFocus();
                     focusable.Focus(raycastHit.point);
                     FocusedFocusable = focusable;
-                    if (focusable is MetaFocusable)
-                        HideCursors();
                     return;
                 }
             }
             else
                 HideCursors();
 
-            if (FocusedFocusable != null)
-                FocusedFocusable.UnFocus();
-            FocusedFocusable = null;
-            hitCollider = null;
+            ResetRaycastMemory();
         }
 
         private void HideBlockCursors()
         {
             highlightBlock.gameObject.SetActive(false);
+            placeBlockRenderer.enabled = false;
             placeBlock.gameObject.SetActive(false);
         }
 
@@ -312,32 +308,27 @@ namespace Source
             return viewMode;
         }
 
-        public void PlaceCursorBlocks(Vector3 blockHitPoint, Chunk chunk)
+        public void PlaceCursors(Vector3 blockHitPoint) 
         {
+            if (ChangeForbidden) return;
             var epsilon = cam.forward * CastStep;
             PossiblePlaceBlockPosInt = Vectors.FloorToInt(blockHitPoint - epsilon);
             PossibleHighlightBlockPosInt = Vectors.FloorToInt(blockHitPoint + epsilon);
             PossiblePlaceMetaBlockPos = new MetaPosition(blockHitPoint).ToWorld();
-            if (ChangeForbidden) return;
 
             var selectionActive = World.INSTANCE.SelectionActive;
+            var selectionDisplaced = World.INSTANCE.SelectionDisplaced;
 
-            if (BlockSelectionController.INSTANCE.DraggedPosition != null)
-                HideCursors();
-            else if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
+            HideCursors();
+            if (BlockSelectionController.INSTANCE.Dragging) return;
+            if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _) && !selectionActive && FocusedFocusable is ChunkFocusable)
             {
                 highlightBlock.position = PossibleHighlightBlockPosInt;
                 highlightBlock.gameObject.SetActive(true);
-                placeBlock.gameObject.SetActive(false);
-                if (MetaBlockPlaceHolder != null)
-                    MetaBlockPlaceHolder.SetActive(false);
             }
             else if (!CtrlDown && !selectionActive && PreparedMetaBlock != null &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
-                HideBlockCursors();
-                if (MetaBlockPlaceHolder != null)
-                    MetaBlockPlaceHolder.gameObject.SetActive(false);
                 PreparedMetaBlock.SetActive(true);
                 if (PreparedMetaBlock.blockObject == null)
                 {
@@ -350,11 +341,13 @@ namespace Source
             else if (!CtrlDown && !selectionActive && SelectedBlockType is MetaBlockType metaBlockType &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
-                HideBlockCursors();
                 if (MetaBlockPlaceHolder != null)
                 {
                     var mp = metaBlockType.GetPlaceHolderPutPosition(blockHitPoint);
-                    if (chunk.GetMetaAt(mp) == null)
+                    var c = World.INSTANCE.GetChunkIfInited(mp.chunk);
+                    if (c == null)
+                        Debug.LogWarning("Null chunk!"); // should not happen
+                    else if (c.GetMetaAt(mp) == null)
                     {
                         MetaBlockPlaceHolder.transform.position = mp.ToWorld();
                         MetaBlockPlaceHolder.gameObject.SetActive(true);
@@ -365,27 +358,23 @@ namespace Source
             }
             else
             {
-                if (CanEdit(PossibleHighlightBlockPosInt, out highlightLand))
+                if (FocusedFocusable is ChunkFocusable && CanEdit(PossibleHighlightBlockPosInt, out highlightLand) && !selectionDisplaced)
                 {
                     highlightBlock.position = PossibleHighlightBlockPosInt;
                     highlightBlock.gameObject.SetActive(true);
                 }
-                else
-                    highlightBlock.gameObject.SetActive(false);
 
                 var currVox = Vectors.FloorToInt(GetPosition());
-                if (PossiblePlaceBlockPosInt != currVox && PossiblePlaceBlockPosInt != currVox + Vector3Int.up &&
+                if (PossiblePlaceBlockPosInt != currVox &&
+                    PossiblePlaceBlockPosInt != currVox + Vector3Int.up &&
                     CanEdit(PossiblePlaceBlockPosInt, out placeLand))
                 {
                     placeBlock.position = PossiblePlaceBlockPosInt;
                     placeBlock.gameObject.SetActive(true);
-                }
-                else
-                    placeBlock.gameObject.SetActive(false);
 
-                if (MetaBlockPlaceHolder != null)
-                    MetaBlockPlaceHolder.gameObject.SetActive(false);
-                PreparedMetaBlock?.SetActive(false);
+                    if (!CtrlDown && !selectionActive && SelectedBlockType != null && SelectedBlockType is not MetaBlockType)
+                        placeBlockRenderer.enabled = true;
+                }
             }
         }
 
@@ -495,77 +484,41 @@ namespace Source
 
         private void OnSelectedAssetChanged(SlotInfo slotInfo)
         {
-            SelectedBlockType = null;
-
-            if (slotInfo == null)
-            {
-                NeutralMode = true;
-                HideCursors();
-                PreparedMetaBlock?.DestroyView();
-                return;
-            }
-
-            NeutralMode = false;
-            if (ChangeForbidden) return;
-
-            if (slotInfo.asset == null && slotInfo.block == null)
-            {
-                if (HammerMode == false)
-                {
-                    placeBlock.gameObject.SetActive(false);
-                    if (MetaBlockPlaceHolder != null)
-                        MetaBlockPlaceHolder.gameObject.SetActive(false);
-                }
-
-                if (PreparedMetaBlock != null)
-                {
-                    PreparedMetaBlock.DestroyView();
-                    PreparedMetaBlock = null;
-                }
-
-                HammerMode = true;
-                return;
-            }
-
+            ResetRaycastMemory();
+            HideCursors();
+            SelectedBlockType = slotInfo?.block;
             HammerMode = false;
+            PreparedMetaBlock?.DestroyView();
+            PreparedMetaBlock = null;
+            if (ChangeForbidden) return; // TODO ?
 
-            var glbUrl = slotInfo.asset?.glbUrl;
-
-
+            var glbUrl = slotInfo?.asset?.glbUrl;
             if (glbUrl != null)
             {
-                var props = (TdObjectBlockProperties) PreparedMetaBlock?.GetProps();
-                if (props != null && props.url.Equals(glbUrl)) return;
-
-                PreparedMetaBlock?.DestroyView();
                 PreparedMetaBlock = new MetaBlock(Blocks.TdObject, null, new TdObjectBlockProperties
                 {
                     url = glbUrl,
                     type = TdObjectBlockProperties.TdObjectType.GLB
                 }, true);
-
                 return;
             }
 
-            if (slotInfo.block != null)
+            if (slotInfo is {asset: null, block: null})
             {
-                PreparedMetaBlock?.DestroyView();
-                PreparedMetaBlock = null;
-
-                SelectedBlockType = slotInfo.block;
-                if (SelectedBlockType is MetaBlockType metaBlockType)
-                {
-                    HideCursors();
-                    MetaBlockPlaceHolder = metaBlockType.GetPlaceHolder();
-                    if (MetaBlockPlaceHolder != null)
-                        MetaBlockPlaceHolder.SetActive(true);
-                    return;
-                }
-
-                if (MetaBlockPlaceHolder != null)
-                    MetaBlockPlaceHolder.SetActive(false);
-                placeBlock.gameObject.SetActive(true);
+                HammerMode = true;
+                return;
             }
+
+            if (SelectedBlockType is MetaBlockType metaBlockType)
+                MetaBlockPlaceHolder = metaBlockType.GetPlaceHolder();
+        }
+
+        private void ResetRaycastMemory()
+        {
+            if (FocusedFocusable != null)
+                FocusedFocusable.UnFocus();
+            FocusedFocusable = null;
+            hitCollider = null;
         }
 
         public void InitOnSelectedAssetChanged()

@@ -1,5 +1,6 @@
 using System;
 using Source;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
@@ -9,18 +10,24 @@ public class PropertyEditor : MonoBehaviour
     private static PropertyEditor instance;
 
     private VisualElement root;
-    private VisualElement body;
+    private ScrollView body;
     private Label label;
     private Button cancelAction;
     private Button saveAction;
     private UnityAction<bool> focusListener;
     public int ReferenceObjectID { private set; get; }
     public bool IsActive => root.style.display != DisplayStyle.None; // TODO ?
-    
+
     private void Start()
     {
         instance = this;
         SetActive(false);
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.E) && IsActive && Player.INSTANCE.FocusedFocusable == null)
+            Hide();
     }
 
     public void Show()
@@ -31,7 +38,8 @@ public class PropertyEditor : MonoBehaviour
     public VisualElement Setup(string uxmlPath, string header, Action onSave, int referenceObjectID)
     {
         root = GetComponent<UIDocument>().rootVisualElement;
-        body = root.Q<VisualElement>("body");
+        body = root.Q<ScrollView>("body");
+        Utils.IncreaseScrollSpeed(body, 600);
         label = root.Q<Label>("label");
         label.text = header;
         var editor = Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree();
@@ -41,7 +49,7 @@ public class PropertyEditor : MonoBehaviour
         cancelAction = root.Q<Button>("cancel");
         cancelAction.clickable.clicked += Hide;
         saveAction = root.Q<Button>("save");
-        saveAction.clickable = new Clickable(() => {});
+        saveAction.clickable = new Clickable(() => { });
         saveAction.clickable.clicked += onSave;
 
         var locked = MouseLook.INSTANCE.cursorLocked;

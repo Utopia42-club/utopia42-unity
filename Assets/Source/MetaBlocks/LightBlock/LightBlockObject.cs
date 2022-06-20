@@ -96,7 +96,7 @@ namespace Source.MetaBlocks.LightBlock
         {
             return new List<string>
             {
-                "Press Z for details",
+                "Press E for details",
                 "Press DEL to delete object" // TODO
             };
         }
@@ -125,8 +125,11 @@ namespace Source.MetaBlocks.LightBlock
             if (!CanEdit) return;
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (Input.GetKeyDown(KeyCode.Z))
-                    EditProps();
+                if (Input.GetKeyDown(KeyCode.E))
+                    if (!PropertyEditor.INSTANCE.IsActive)
+                        EditProps();
+                    else
+                        PropertyEditor.INSTANCE.Hide();
             });
         }
 

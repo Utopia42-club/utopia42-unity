@@ -7,6 +7,7 @@ using Source.MetaBlocks;
 using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
 using Source.Service;
+using Source.TestUtils;
 using Source.Utils;
 using UnityEngine;
 
@@ -404,7 +405,7 @@ namespace Source
         {
             return highlightChunks.TryGetValue(vp.chunk, out var chunk) && chunk.Contains(vp.local);
         }
-        
+
         public bool IsSelected(MetaPosition mp)
         {
             return highlightChunks.TryGetValue(mp.chunk, out var chunk) && chunk.Contains(mp.local);

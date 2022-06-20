@@ -1,25 +1,20 @@
-using Source.MetaBlocks;
 using Source.Model;
-using Source.Utils;
 using UnityEngine;
 
 namespace Source
 {
     public class ChunkFocusable : Focusable
     {
-        private Chunk chunk;
-
-        public void Initialize(Chunk chunk)
+        public void Initialize()
         {
             if (initialized) return;
-            this.chunk = chunk;
             initialized = true;
         }
 
         public override void Focus(Vector3? point = null)
         {
-            if (!initialized || point == null) return;
-            Player.INSTANCE.PlaceCursorBlocks(point.Value, chunk);
+            if (!initialized || !point.HasValue) return;
+            Player.INSTANCE.PlaceCursors(point.Value);
         }
 
         public override void UnFocus()

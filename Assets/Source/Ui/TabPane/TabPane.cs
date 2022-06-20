@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.TabPane
-{   
-    public class TabPane
+{
+    public class TabPane : UxmlElement
     {
         private readonly TemplateContainer root;
         private readonly List<TabConfiguration> tabConfigs;
@@ -13,13 +12,12 @@ namespace Source.Ui.TabPane
         private int currentTab;
         private readonly VisualElement tabBody;
         private readonly VisualElement tabButtonsArea;
-        
-        public TabPane(List<TabConfiguration> tabConfigs)
+
+        public TabPane(List<TabConfiguration> tabConfigs) : base("Ui/TebPane/TabPane", true)
         {
             this.tabConfigs = tabConfigs;
-            root = Resources.Load<VisualTreeAsset>("Ui/TebPane/TabPane").CloneTree();
-            tabBody = root.Q<VisualElement>("tabBody");
-            tabButtonsArea = root.Q<VisualElement>("tabs");
+            tabBody = this.Q<VisualElement>("tabBody");
+            tabButtonsArea = this.Q<VisualElement>("tabs");
             for (var ind = 0; ind < tabConfigs.Count; ind++)
             {
                 var tabConfig = tabConfigs[ind];
@@ -57,11 +55,6 @@ namespace Source.Ui.TabPane
         public int GetCurrentTab()
         {
             return currentTab;
-        }
-
-        public VisualElement VisualElement()
-        {
-            return root;
         }
     }
 }
