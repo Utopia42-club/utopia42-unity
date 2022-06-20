@@ -23,7 +23,10 @@ namespace Source
         public SelectionMode selectionMode { private set; get; } = SelectionMode.Default;
         public Vector3? DraggedPosition { get; private set; }
         private bool KeepSourceAfterSelectionMovement => selectionMode != SelectionMode.Default;
-        public bool PlayerMovementAllowed => !selectionActive || !movingSelectionAllowed;
+
+        public bool PlayerMovementAllowed => (!selectionActive || !movingSelectionAllowed) &&
+                                             !World.INSTANCE.ObjectScaleRotationController.Active;
+
         private Transform transform => Player.INSTANCE.transform; // TODO
         private bool selectionActive;
         private bool metaSelectionActive;
@@ -387,8 +390,8 @@ namespace Source
                     {
                         "] : scale 3d objects up",
                         "[ : scale 3d objects down",
-                        "R + horizontal mouse movement : rotate objects around y axis",
-                        "R + vertical mouse movement : rotate objects around player right axis",
+                        "R + A/D or horizontal mouse movement : rotate objects around y axis",
+                        "R + W/S or vertical mouse movement : rotate objects around player right axis",
                     });
                 }
             }
