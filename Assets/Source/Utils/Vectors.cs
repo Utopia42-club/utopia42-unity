@@ -25,11 +25,11 @@ namespace Source.Utils
 
         public static Vector3Int TruncateFloor(Vector3 vector, int truncatePrecision = 3, int multiplyPower = 0)
         {
-            var constant = Mathf.Pow(10, truncatePrecision);
+            var scale = Mathf.Pow(10, truncatePrecision);
             var multiply = Mathf.Pow(10, multiplyPower);
-            vector.x = Mathf.Round(vector.x * constant) * multiply / constant;
-            vector.y = Mathf.Round(vector.y * constant) * multiply / constant;
-            vector.z = Mathf.Round(vector.z * constant) * multiply / constant;
+            vector.x = Mathf.Round(vector.x * scale) * multiply / scale;
+            vector.y = Mathf.Round(vector.y * scale) * multiply / scale;
+            vector.z = Mathf.Round(vector.z * scale) * multiply / scale;
             return FloorToInt(vector);
         }
         
@@ -40,10 +40,10 @@ namespace Source.Utils
 
         public static Vector3 Truncate(Vector3 vector, int truncatePrecision = 3)
         {
-            var constant = Mathf.Pow(10, truncatePrecision);
-            vector.x = Mathf.Round(vector.x * constant) / constant;
-            vector.y = Mathf.Round(vector.y * constant) / constant;
-            vector.z = Mathf.Round(vector.z * constant) / constant;
+            var scale = Mathf.Pow(10, truncatePrecision);
+            vector.x = Mathf.Round(vector.x * scale) / scale;
+            vector.y = Mathf.Round(vector.y * scale) / scale;
+            vector.z = Mathf.Round(vector.z * scale) / scale;
             return vector;
         }
 

@@ -30,9 +30,10 @@ namespace Source.Model
             return $"{pos.x}_{pos.y}_{pos.z}";
         }
         
-        public static string FormatKey(Vector3 pos)
+        public static string 
+            FormatKey(Vector3 pos)
         {
-            return $"{pos.x:0.0}_{pos.y:0.0}_{pos.z:0.0}";
+            return $"{pos.x:0.00}_{pos.y:0.00}_{pos.z:0.00}";
         }
     }
 }

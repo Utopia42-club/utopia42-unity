@@ -6,7 +6,8 @@ namespace Source.Model
     public class MetaLocalPosition
     {
         public readonly Vector3 position;
-        private const int Precision = 1; // FormatKey in LandDetails should be adapted in case of a change 
+        private const int Precision = 2; // FormatKey in LandDetails should be adapted in case of a change
+        public const float Step = 0.01f; 
 
         public MetaLocalPosition(float x, float y, float z)
         {
