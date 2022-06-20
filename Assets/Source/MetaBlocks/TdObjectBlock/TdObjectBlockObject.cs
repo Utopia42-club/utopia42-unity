@@ -48,6 +48,13 @@ namespace Source.MetaBlocks.TdObjectBlock
             }
         }
 
+        private void ShowCursorHighlight()
+        {
+            if (objCollider == null) return;
+            if (objCollider is BoxCollider) return;
+            CreateMeshHighlight(World.INSTANCE.SelectedBlock);
+        }
+
         public override void RemoveFocusHighlight()
         {
             if (Player.INSTANCE.RemoveHighlightMesh()) return;
@@ -169,7 +176,7 @@ namespace Source.MetaBlocks.TdObjectBlock
             if (CanEdit)
             {
                 lines.Add("Press E for details");
-                if(Player.INSTANCE.HammerMode)
+                if (Player.INSTANCE.HammerMode)
                     lines.Add("Press DEL to delete object");
             }
 
@@ -309,6 +316,9 @@ namespace Source.MetaBlocks.TdObjectBlock
 
             objCollider.gameObject.layer =
                 detectCollision ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("3DColliderOff");
+
+            if (Block.IsCursor)
+                ShowCursorHighlight();
 
             UpdateState(State.Ok);
             // chunk.UpdateMetaHighlight(new VoxelPosition(Vectors.FloorToInt(transform.position))); // TODO: fix on focus
