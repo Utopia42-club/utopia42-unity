@@ -292,7 +292,7 @@ namespace Source
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
             {
                 ConfirmMove();
-                ExitSelectionMode();
+                ReSelectSelection();
             }
             else if (Input.GetButtonDown("Delete"))
             {
