@@ -39,12 +39,23 @@ namespace Source.Ui.Map
             this.map.RegisterCallback<WheelEvent>(e => Scale(e));
         }
 
+        
+        internal Rect GetRect()
+        {
+            return rect;
+        }
+
+        internal float GetScale()
+        {
+            return scale;
+        }
+        
         private void Scale(WheelEvent e)
         {
             if (e.delta.y == 0) return;
 
-            var multiplier = e.delta.y > 0 ? (float) 0.5 : 2;
-            scale = Mathf.Clamp(scale * multiplier, 0.25f, 4f);
+            var additive = e.delta.y > 0 ? -0.1f : 0.1f;
+            scale = Mathf.Clamp(scale + additive, 0.2f, 5f);
             var mouseBeforeScale = map.ScreenToUtopia(e.mousePosition);
             listener(new ViewportChangeEvent(rect, scale));
             // Change the viewport inorder to maintain local (utopia position) mouse position while scaling 

@@ -13,14 +13,16 @@ namespace Source.Ui.Map
         {
             root = this.Q("Root");
             root.Add(lands = new MapLandLayer());
-            var grid = new MapGrid();
+            var grid = new MapGrid(this);
             root.Add(grid);
+            root.Add(new MapPointerPositionLabel(this));
 
             viewportController = new MapViewportController(this, e =>
             {
                 lands.transform.position = new Vector3(-e.rect.x, -e.rect.y, 0);
                 lands.transform.scale = new Vector3(e.scale, e.scale, 1);
-                grid.UpdateViewport(e);
+                grid.UpdateViewport(e.scale);
+                Debug.Log(e.rect.x / e.scale + ", " + e.rect.y / e.scale);
             });
         }
 

@@ -67,5 +67,8 @@
 
 .map-mouse-label{
     color: var(--primary-color);
-    
+    position: absolute;
+}
+.map-land{
+    background-color: var(--map-land-background);
 }

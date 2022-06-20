@@ -10,6 +10,10 @@ namespace Source.Ui.Map
         public MapLand(Land land)
         {
             AddToClassList("map-land");
+            style.top = 0;
+            style.left = 0;
+            style.width = 100;
+            style.height = 100;
         }
         
         
