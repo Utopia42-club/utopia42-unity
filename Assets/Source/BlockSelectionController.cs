@@ -122,7 +122,7 @@ namespace Source
             }
 
             else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&
-                     player.FocusedFocusable is ChunkFocusable &&
+                     player.FocusedFocusable != null &&
                      player.CanEdit(player.PossiblePlaceBlockPosInt, out _, true))
             {
                 var minY = World.INSTANCE.GetSelectionMinPoint().y;

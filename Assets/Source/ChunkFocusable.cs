@@ -1,6 +1,4 @@
-using Source.MetaBlocks;
 using Source.Model;
-using Source.Utils;
 using UnityEngine;
 
 namespace Source
@@ -15,8 +13,8 @@ namespace Source
 
         public override void Focus(Vector3? point = null)
         {
-            if (!initialized || point == null) return;
-            Player.INSTANCE.PlaceCursorBlocks(point.Value);
+            if (!initialized || !point.HasValue) return;
+            Player.INSTANCE.PlaceCursors(point.Value);
         }
 
         public override void UnFocus()

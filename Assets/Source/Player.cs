@@ -245,19 +245,13 @@ namespace Source
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
             {
                 var focusable = raycastHit.collider.GetComponent<Focusable>();
-                if (hitCollider == raycastHit.collider &&
-                    focusable != null &&
-                    focusable is MetaFocusable // TODO: remove (since the exact hitpoint would matter)
-                   ) return;
                 hitCollider = raycastHit.collider;
                 if (focusable != null)
                 {
-                    if (FocusedFocusable != null)
+                    if (focusable != FocusedFocusable && FocusedFocusable != null)
                         FocusedFocusable.UnFocus();
                     focusable.Focus(raycastHit.point);
                     FocusedFocusable = focusable;
-                    if (focusable is MetaFocusable)
-                        HideCursors();
                     return;
                 }
             }
@@ -314,7 +308,7 @@ namespace Source
             return viewMode;
         }
 
-        public void PlaceCursorBlocks(Vector3 blockHitPoint) // TODO: should also be called in metaFocusable.Focus 
+        public void PlaceCursors(Vector3 blockHitPoint) 
         {
             if (ChangeForbidden) return;
             var epsilon = cam.forward * CastStep;
@@ -327,7 +321,7 @@ namespace Source
 
             HideCursors();
             if (BlockSelectionController.INSTANCE.Dragging) return;
-            if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _) && !selectionActive)
+            if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _) && !selectionActive && FocusedFocusable is ChunkFocusable)
             {
                 highlightBlock.position = PossibleHighlightBlockPosInt;
                 highlightBlock.gameObject.SetActive(true);
@@ -347,7 +341,6 @@ namespace Source
             else if (!CtrlDown && !selectionActive && SelectedBlockType is MetaBlockType metaBlockType &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
-                // HideBlockCursors();
                 if (MetaBlockPlaceHolder != null)
                 {
                     var mp = metaBlockType.GetPlaceHolderPutPosition(blockHitPoint);
@@ -365,7 +358,7 @@ namespace Source
             }
             else
             {
-                if (CanEdit(PossibleHighlightBlockPosInt, out highlightLand) && !selectionDisplaced)
+                if (FocusedFocusable is ChunkFocusable && CanEdit(PossibleHighlightBlockPosInt, out highlightLand) && !selectionDisplaced)
                 {
                     highlightBlock.position = PossibleHighlightBlockPosInt;
                     highlightBlock.gameObject.SetActive(true);

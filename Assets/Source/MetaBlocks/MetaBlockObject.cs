@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Source.Canvas;
 using Source.Model;
 using Source.Utils;
@@ -17,6 +16,7 @@ namespace Source.MetaBlocks
         private bool canEditPosition;
         protected bool CanEdit => canEditPosition && !Player.INSTANCE.ChangeForbidden;
         public State State { get; protected set; }
+        public bool Focused { get; protected set; }
         protected SnackItem snackItem;
 
         public readonly UnityEvent<State> stateChange = new UnityEvent<State>();
@@ -39,6 +39,8 @@ namespace Source.MetaBlocks
 
         public void Focus()
         {
+            if (Focused) return;
+            Focused = true;
             SetupDefaultSnack();
             if (!CanEdit) return;
             ShowFocusHighlight();
@@ -46,6 +48,7 @@ namespace Source.MetaBlocks
 
         public void UnFocus()
         {
+            Focused = false;
             if (snackItem != null)
             {
                 snackItem.Remove();
