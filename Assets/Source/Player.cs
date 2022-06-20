@@ -47,6 +47,7 @@ namespace Source
         private RaycastHit raycastHit;
         private CharacterController characterController;
         private BlockSelectionController blockSelectionController;
+        private Renderer placeBlockRenderer;
         public bool CtrlDown { private set; get; }
         private Vector3Int playerPos;
         private AvatarController avatarController;
@@ -90,6 +91,7 @@ namespace Source
         private void Start()
         {
             blockSelectionController = GetComponent<BlockSelectionController>();
+            placeBlockRenderer = placeBlock.GetComponentInChildren<Renderer>();
 
             Snack.INSTANCE.ShowObject("Owner", null);
 
@@ -136,7 +138,6 @@ namespace Source
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
             SelectionActiveBeforeAtFrameBeginning = World.INSTANCE.SelectionActive;
             GetInputs();
-            SetPlaceBlockVisibility();
 
             if (!ChangeForbidden)
             {
@@ -159,13 +160,6 @@ namespace Source
                     world.OnPlayerChunkChanged(currChunk);
                 }
             }
-        }
-
-        private void SetPlaceBlockVisibility()
-        {
-            var r = placeBlock.GetComponentInChildren<Renderer>();
-            if (r != null)
-                r.enabled = !CtrlDown && SelectedBlockType != null && SelectedBlockType is not MetaBlockType;
         }
 
         private void GetInputs()
@@ -276,6 +270,7 @@ namespace Source
         private void HideBlockCursors()
         {
             highlightBlock.gameObject.SetActive(false);
+            placeBlockRenderer.enabled = false;
             placeBlock.gameObject.SetActive(false);
         }
 
@@ -328,25 +323,17 @@ namespace Source
             PossiblePlaceMetaBlockPos = new MetaPosition(blockHitPoint).ToWorld();
 
             var selectionActive = World.INSTANCE.SelectionActive;
+            var selectionDisplaced = World.INSTANCE.SelectionDisplaced;
 
             HideCursors();
-            // if (BlockSelectionController.INSTANCE.DraggedPosition != null)
-            //     HideCursors();
-            // else 
-            if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _))
+            if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _) && !selectionActive)
             {
                 highlightBlock.position = PossibleHighlightBlockPosInt;
                 highlightBlock.gameObject.SetActive(true);
-                // placeBlock.gameObject.SetActive(false);
-                // if (MetaBlockPlaceHolder != null)
-                //     MetaBlockPlaceHolder.SetActive(false);
             }
             else if (!CtrlDown && !selectionActive && PreparedMetaBlock != null &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
-                // HideBlockCursors();
-                // if (MetaBlockPlaceHolder != null)
-                //     MetaBlockPlaceHolder.gameObject.SetActive(false);
                 PreparedMetaBlock.SetActive(true);
                 if (PreparedMetaBlock.blockObject == null)
                 {
@@ -377,13 +364,11 @@ namespace Source
             }
             else
             {
-                if (CanEdit(PossibleHighlightBlockPosInt, out highlightLand))
+                if (CanEdit(PossibleHighlightBlockPosInt, out highlightLand) && !selectionDisplaced && !BlockSelectionController.INSTANCE.Dragging)
                 {
                     highlightBlock.position = PossibleHighlightBlockPosInt;
                     highlightBlock.gameObject.SetActive(true);
                 }
-                // else
-                //     highlightBlock.gameObject.SetActive(false);
 
                 var currVox = Vectors.FloorToInt(GetPosition());
                 if (!selectionActive && PossiblePlaceBlockPosInt != currVox &&
@@ -392,13 +377,10 @@ namespace Source
                 {
                     placeBlock.position = PossiblePlaceBlockPosInt;
                     placeBlock.gameObject.SetActive(true);
-                }
-                // else
-                //     placeBlock.gameObject.SetActive(false);
 
-                // if (MetaBlockPlaceHolder != null)
-                //     MetaBlockPlaceHolder.gameObject.SetActive(false);
-                // PreparedMetaBlock?.SetActive(false);
+                    if (!CtrlDown && SelectedBlockType != null && SelectedBlockType is not MetaBlockType)
+                        placeBlockRenderer.enabled = true;
+                }
             }
         }
 
@@ -508,6 +490,7 @@ namespace Source
 
         private void OnSelectedAssetChanged(SlotInfo slotInfo)
         {
+            ResetRaycastMemory();
             HideCursors();
             SelectedBlockType = slotInfo?.block;
             HammerMode = false;
@@ -535,7 +518,6 @@ namespace Source
             if (SelectedBlockType is MetaBlockType metaBlockType)
                 MetaBlockPlaceHolder = metaBlockType.GetPlaceHolder();
 
-            ResetRaycastMemory();
         }
 
         private void ResetRaycastMemory()

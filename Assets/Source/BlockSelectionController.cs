@@ -23,17 +23,14 @@ namespace Source
         public SelectionMode selectionMode { private set; get; } = SelectionMode.Default;
         public Vector3? DraggedPosition { get; private set; }
         private bool KeepSourceAfterSelectionMovement => selectionMode != SelectionMode.Default;
-
         public bool PlayerMovementAllowed => !selectionActive || !movingSelectionAllowed;
-
+        public bool Dragging => DraggedPosition != null;
         private Transform transform => Player.INSTANCE.transform; // TODO
-
         private bool selectionActive;
         private bool metaSelectionActive;
         private bool onlyMetaSelectionActive;
         private bool selectionDisplaced;
         private bool dragging;
-
         private int keyboardFrameCounter = 0;
 
         public void Start()
