@@ -1,7 +1,8 @@
+using Source.Ui;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class ToastLayer : MonoBehaviour
+public class ToastLayer : MonoBehaviour, UiProvider
 {
     private static ToastLayer instance;
     private VisualElement root;

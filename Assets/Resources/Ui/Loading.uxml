@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <ui:VisualElement name="layer" class="utopia-background" style="flex-grow: 1; justify-content: center; align-items: center;">
+        <ui:VisualElement name="image" style="background-image: resource(&apos;Icons/logo&apos;); width: 200px; height: 200px; margin-bottom: 10px;" />
+        <ui:Label text="Utopia 42" display-tooltip-when-elided="true" name="label" style="width: 70%; -unity-text-align: upper-center; white-space: normal; font-size: 20px; -unity-font-style: bold;" />
+    </ui:VisualElement>
+</ui:UXML>

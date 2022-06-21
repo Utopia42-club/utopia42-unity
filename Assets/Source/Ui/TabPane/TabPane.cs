@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.TabPane
@@ -12,12 +11,17 @@ namespace Source.Ui.TabPane
         private int currentTab;
         private readonly VisualElement tabBody;
         private readonly VisualElement tabButtonsArea;
+        private readonly VisualElement leftActions;
+        private readonly VisualElement rightActions;
 
         public TabPane(List<TabConfiguration> tabConfigs) : base("Ui/TebPane/TabPane", true)
         {
             this.tabConfigs = tabConfigs;
             tabBody = this.Q<VisualElement>("tabBody");
             tabButtonsArea = this.Q<VisualElement>("tabs");
+            leftActions = this.Q<VisualElement>("leftActions");
+            rightActions = this.Q<VisualElement>("rightActions");
+
             for (var ind = 0; ind < tabConfigs.Count; ind++)
             {
                 var tabConfig = tabConfigs[ind];
@@ -36,7 +40,7 @@ namespace Source.Ui.TabPane
         public void OpenTab(int index)
         {
             var config = tabConfigs[index];
-            var tabBodyContent = Resources.Load<VisualTreeAsset>(config.uxmlPath).CloneTree();
+            var tabBodyContent = config.VisualElement;
             tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
             tabBody.Clear();
             tabBody.Add(tabBodyContent);
@@ -55,6 +59,21 @@ namespace Source.Ui.TabPane
         public int GetCurrentTab()
         {
             return currentTab;
+        }
+
+        public void SetTabButtonsAreaVisibility(bool visible)
+        {
+            tabButtonsArea.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        public void AddLeftAction(VisualElement visualElement)
+        {
+            leftActions.Add(visualElement);
+        }
+
+        public void AddRightAction(VisualElement visualElement)
+        {
+            rightActions.Insert(0, visualElement);
         }
     }
 }

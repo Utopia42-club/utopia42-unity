@@ -19,10 +19,10 @@ namespace Source.Ui.Toaster
             var icon = toast.Q<Image>("icon");
             icon.sprite = type switch
             {
-                ToastType.Info => Resources.Load<Sprite>("Ui/Toaster/Icon/info"),
-                ToastType.Warning => Resources.Load<Sprite>("Ui/Toaster/Icon/warning"),
-                ToastType.Error => Resources.Load<Sprite>("Ui/Toaster/Icon/error"),
-                _ => Resources.Load<Sprite>("Ui/Toaster/Icon/info")
+                ToastType.Info => Resources.Load<Sprite>("Icons/info"),
+                ToastType.Warning => Resources.Load<Sprite>("Icons/warning"),
+                ToastType.Error => Resources.Load<Sprite>("Icons/error"),
+                _ => Resources.Load<Sprite>("Icons/info")
             };
             panel.style.width = msg.text.Length * 10 + 70;
 

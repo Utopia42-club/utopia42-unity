@@ -4,9 +4,8 @@ using UnityEngine.UIElements;
 
 namespace Source.Ui.AssetsInventory.slots
 {
-    public interface InventorySlot : ICloneable
+    public interface InventorySlot : ICloneable, UiProvider
     {
-        public VisualElement VisualElement();
         public void SetSize(int size, int iconMargin);
         public void SetSlotInfo(SlotInfo slotInfo);
         public SlotInfo GetSlotInfo();

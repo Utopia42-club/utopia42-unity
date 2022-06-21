@@ -1,17 +1,25 @@
 using System;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Source.Ui.TabPane
 {
     public class TabConfiguration
     {
         public string name { get; set; }
-        public string uxmlPath { get; set; }
+
+        public VisualElement VisualElement { get; set; }
         public Action onTabOpen { get; set; }
 
-        public TabConfiguration(string name, string uxmlPath, Action onTabOpen)
+        public TabConfiguration(string name, string uxmlPath, Action onTabOpen) :
+            this(name, Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree(), onTabOpen)
+        {
+        }
+
+        public TabConfiguration(string name, VisualElement visualElement, Action onTabOpen)
         {
             this.name = name;
-            this.uxmlPath = uxmlPath;
+            VisualElement = visualElement;
             this.onTabOpen = onTabOpen;
         }
     }

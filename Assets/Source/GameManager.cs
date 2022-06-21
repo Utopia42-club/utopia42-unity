@@ -631,5 +631,17 @@ namespace Source
         {
             return engagedUIs.Count != 0;
         }
+
+        public void Exit()
+        {
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("moveToHome", null);
+            }
+            else
+            {
+                Application.Quit();
+            }
+        }
     }
 }

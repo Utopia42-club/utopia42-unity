@@ -1,6 +1,7 @@
 using System.Linq;
 using Source.Model;
 using Source.Service.Ethereum;
+using Source.Ui;
 using Source.Ui.LoadingLayer;
 using Source.Ui.Toaster;
 using UnityEngine;
@@ -9,28 +10,28 @@ using Position = Source.Model.Position;
 
 namespace Source.Canvas
 {
-    public class NewSettings : MonoBehaviour
+    public class Settings : UxmlElement
     {
         private static readonly string GUEST = "guest";
 
         private GameObject panel;
         private TextField walletField;
         private DropdownField networkField;
-        private Button enterButton;
+        private Button submitButton;
         private Button guestButton;
 
         private Vector3? startingPosition = null;
-        private VisualElement root;
 
-        private void OnEnable()
+        public Settings(MonoBehaviour monoBehaviour): base("Ui/Menu/Settings", true)
         {
-            root = GetComponent<UIDocument>().rootVisualElement;
-            walletField = root.Q<TextField>("wallet");
-            guestButton = root.Q<Button>("enterButton");
-            enterButton = root.Q<Button>("guestButton");
-            networkField = root.Q<DropdownField>("network");
-            var loadingId = LoadingLayer.Show(root);
-            StartCoroutine(EthNetwork.GetNetworks(_ =>
+            walletField = this.Q<TextField>("wallet");
+            guestButton = this.Q<Button>("guestButton");
+            guestButton.clickable.clicked += SetGuest;
+            submitButton = this.Q<Button>("enterButton");
+            submitButton.clickable.clicked += Submit;
+            networkField = this.Q<DropdownField>("network");
+            var loadingId = LoadingLayer.Show(Menu.INSTANCE.VisualElement());
+            monoBehaviour.StartCoroutine(EthNetwork.GetNetworks(_ =>
                 {
                     LoadingLayer.Hide(loadingId);
                     DoStart();
@@ -59,11 +60,11 @@ namespace Source.Canvas
             var manager = GameManager.INSTANCE;
             walletField.RegisterValueChangedCallback(_ => ResetButtonsState());
 
-            manager.stateChange.AddListener(state =>
-            {
-                ResetInputs();
-                gameObject.SetActive(state == GameManager.State.SETTINGS);
-            });
+            // manager.stateChange.AddListener(state =>
+            // {
+            //     ResetInputs();
+            //     gameObject.SetActive(state == GameManager.State.SETTINGS);
+            // });
 
             if (!WebBridge.IsPresent()) return;
 
@@ -78,7 +79,7 @@ namespace Source.Canvas
             });
 
             guestButton.SetEnabled(false);
-            enterButton.SetEnabled(false);
+            submitButton.SetEnabled(false);
             WebBridge.CallAsync<Position>("getStartingPosition", "", (pos) =>
             {
                 if (pos == null)
@@ -86,14 +87,14 @@ namespace Source.Canvas
                 else
                     startingPosition = new Vector3(pos.x, pos.y, pos.z);
                 guestButton.SetEnabled(true);
-                enterButton.SetEnabled(true);
+                submitButton.SetEnabled(true);
             });
         }
 
         private void ResetInputs()
         {
             walletField.value = IsGuest() ? null : WalletId();
-            
+
             var net = Network();
             networkField.value = null;
 
@@ -113,7 +114,7 @@ namespace Source.Canvas
 
         private void ResetButtonsState()
         {
-            enterButton.SetEnabled(!string.IsNullOrEmpty(walletField.text));
+            submitButton.SetEnabled(!string.IsNullOrEmpty(walletField.text));
         }
 
         void Update()
@@ -171,18 +172,6 @@ namespace Source.Canvas
             var net = Network();
             detail.network = net?.id ?? -1;
             return detail;
-        }
-
-        public void Exit()
-        {
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("moveToHome", null);
-            }
-            else
-            {
-                Application.Quit();
-            }
         }
     }
 

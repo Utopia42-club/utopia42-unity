@@ -1,71 +1,88 @@
 using System.Collections.Generic;
 using Source;
-using Source.Canvas.Map;
+using Source.Canvas;
+using Source.Service;
+using Source.Service.Ethereum;
+using Source.Ui;
 using Source.Ui.TabPane;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class Menu : MonoBehaviour
+public class Menu : MonoBehaviour, UiProvider
 {
     private static Menu instance;
-
-    public MapInputManager mapInputManager;
-
     private VisualElement root;
-    private List<Button> tabs;
-    private GameManager _gameManager;
-    private Button mapButton;
-    private Button settingsButton;
-    private Button closeButton;
-    private Button sidePanelButton;
-
-    public bool isMouseDown;
+    private GameManager gameManager;
     private TabPane tabPane;
-
-    private void Start()
-    {
-        instance = this;
-    }
+    private Settings settings;
+    private VisualElement rootPane;
+    private Button exitButton;
+    private Button saveButton;
+    private Button copyLocationButton;
 
     void OnEnable()
     {
+        instance = this;
+        gameManager = GameManager.INSTANCE;
         root = GetComponent<UIDocument>().rootVisualElement;
-        tabPane = root.Q<TabPane>();
+        rootPane = root.Q<VisualElement>("root");
+        settings = new Settings(this);
+        var tabConfigs = new List<TabConfiguration>
+        {
+            new("Settings", settings, () => { }),
+        };
+        tabPane = new TabPane(tabConfigs);
+        rootPane.Add(tabPane);
 
-        tabs = new List<Button>();
-        _gameManager = GameManager.INSTANCE;
+        exitButton = new Button();
+        exitButton.AddToClassList("utopia-button");
+        UiImageLoader.SetBackground(exitButton, Resources.Load<Sprite>("Icons/shutdown"));
+        exitButton.clickable.clicked += () => gameManager.Exit();
+        exitButton.tooltip = "Exit";
+        exitButton.AddManipulator(new ToolTipManipulator(root));
+        tabPane.AddRightAction(exitButton);
 
-        mapButton = root.Q<Button>("map-tab");
-        tabs.Add(mapButton);
-        mapButton.clicked += () => _gameManager.OpenMap();
+        saveButton = new Button();
+        saveButton.AddToClassList("utopia-button");
+        UiImageLoader.SetBackground(saveButton, Resources.Load<Sprite>("Icons/save"));
+        saveButton.clickable.clicked += () => gameManager.Save();
+        saveButton.tooltip = "Save my lands";
+        saveButton.AddManipulator(new ToolTipManipulator(root));
+        saveButton.style.display = DisplayStyle.None;
+        tabPane.AddRightAction(saveButton);
 
-        settingsButton = root.Q<Button>("settings-tab");
-        tabs.Add(settingsButton);
-        settingsButton.clicked += () => _gameManager.OpenSettings();
+        copyLocationButton = new Button();
+        copyLocationButton.AddToClassList("utopia-button");
+        UiImageLoader.SetBackground(copyLocationButton, Resources.Load<Sprite>("Icons/pin"));
+        copyLocationButton.clickable.clicked += () => gameManager.CopyPositionLink();
+        copyLocationButton.tooltip = "Copy current position";
+        copyLocationButton.AddManipulator(new ToolTipManipulator(root));
+        copyLocationButton.style.display = DisplayStyle.None;
+        tabPane.AddRightAction(copyLocationButton);
 
-        closeButton = root.Q<Button>("close-button");
-        closeButton.clicked += () => _gameManager.ReturnToGame();
-
-        sidePanelButton = root.Q<Button>("side-panel-button");
-        sidePanelButton.clicked += () => mapInputManager.ToggleSidePanel();
-        sidePanelButton.visible = _gameManager.GetState() == GameManager.State.MAP;
-
-        _gameManager.stateChange.AddListener(state =>
-            sidePanelButton.SetEnabled(sidePanelButton.visible = state == GameManager.State.MAP));
+        gameManager.stateChange.AddListener(state =>
+        {
+            if (state == GameManager.State.SETTINGS)
+            {
+                var serviceInitialized = EthereumClientService.INSTANCE.IsInited();
+                gameObject.SetActive(true);
+                tabPane.OpenTab(0);
+                tabPane.SetTabButtonsAreaVisibility(serviceInitialized);
+                saveButton.style.display = !Settings.IsGuest() ? DisplayStyle.Flex : DisplayStyle.None;
+                saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
+                copyLocationButton.style.display = serviceInitialized ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
+        });
     }
 
-    public void SelectTabByIndex(int index)
+    public VisualElement VisualElement()
     {
-        tabs.ForEach(button => button.RemoveFromClassList("selected-tab"));
-        tabs[index].AddToClassList("selected-tab");
-    }
-
-    public void SetActionsEnabled(bool e)
-    {
-        closeButton.SetEnabled(e);
-        mapButton.SetEnabled(e);
-        settingsButton.SetEnabled(e);
-        sidePanelButton.SetEnabled(e);
+        return root;
     }
 
     public static Menu INSTANCE => instance;

@@ -131,10 +131,6 @@ namespace Source.Canvas.Map
             gameManager.SetProfileDialogState(false);
             onCloseActions.ForEach(action => action());
             onCloseActions.Clear();
-
-            var tabMenu = Menu.INSTANCE;
-            if (tabMenu != null)
-                tabMenu.SetActionsEnabled(true);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -149,9 +145,6 @@ namespace Source.Canvas.Map
             SetLand(land);
             SetProfile(profile);
             gameManager.SetProfileDialogState(true);
-            var tabMenu = Menu.INSTANCE;
-            if (tabMenu != null)
-                tabMenu.SetActionsEnabled(false);
         }
 
         public void SetProfile(Profile profile)
