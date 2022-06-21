@@ -130,7 +130,8 @@ namespace Source
             if (Input.GetMouseButtonUp(0) && DraggedPosition != null)
             {
                 DraggedPosition = null;
-                PrepareForSelectionMovement(SelectionMode.Default);
+                if (selectionDisplaced)
+                    PrepareForSelectionMovement(SelectionMode.Default);
             }
 
             else if (Input.GetMouseButtonDown(0) && DraggedPosition == null && !selectionDisplaced)
@@ -148,7 +149,7 @@ namespace Source
             }
 
             else if (Input.GetMouseButton(0) && DraggedPosition != null && selectionActive &&
-                     player.FocusedFocusable != null &&
+                     player.FocusedFocusable != null && !player.FocusedFocusable.IsSelected() &&
                      player.CanEdit(player.PossiblePlaceBlockPosInt, out _, true))
             {
                 var minY = World.INSTANCE.GetSelectionMinPoint().y;
@@ -291,8 +292,13 @@ namespace Source
 
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
             {
-                ConfirmMove();
-                ReSelectSelection();
+                if (selectionDisplaced)
+                {
+                    ConfirmMove();
+                    ReSelectSelection();
+                }
+                else
+                    ExitSelectionMode();
             }
             else if (Input.GetButtonDown("Delete"))
             {

@@ -26,6 +26,7 @@ namespace Source
         public static void CreateAndAddToChunk(MetaLocalPosition localPos, HighlightChunk highlightChunk,
             MetaBlock meta, Action<HighlightedMetaBlock> onLoad = null)
         {
+            if (highlightChunk == null) return; // TODO ?
             var highlightedBlock = highlightChunk.gameObject.AddComponent<HighlightedMetaBlock>();
             highlightedBlock.Position = localPos;
             highlightedBlock.transform.SetParent(highlightChunk.transform);
