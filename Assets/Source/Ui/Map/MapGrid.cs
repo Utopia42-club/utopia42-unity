@@ -43,12 +43,22 @@ namespace Source.Ui.Map
                 var tick = (scale < 0.5f ? BaseTickSize * 2 :
                     scale > 2f ? BaseTickSize / 2 :
                     BaseTickSize) * scale;
-                var first = Mathf.Ceil((-origin) / tick) * tick + origin;
-                var count = Mathf.Ceil(size / tick);
+                var first = Mathf.Ceil((-origin) / tick) * tick + origin - tick;
+                var count = Mathf.Ceil(size / tick) + 1;
                 for (var i = 0; i < count; i++)
                 {
                     var pos = first + i * tick;
                     Add(new Line(this, pos, Math.Abs(pos - origin) < 1e-5));
+                    if (tick >= 50)
+                    {
+                        var mtick = tick / 5;
+                        for (var j = 1; j < 5; j++)
+                        {
+                            var l = new Line(this, pos + j * mtick, false);
+                            l.AddToClassList("minor-grid-line");
+                            Add(l);
+                        }
+                    }
                 }
             }
         }

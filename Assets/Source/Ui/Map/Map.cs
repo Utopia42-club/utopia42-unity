@@ -1,4 +1,7 @@
+using Source.Model;
 using UnityEngine;
+using UnityEngine.LowLevel;
+using UnityEngine.PlayerLoop;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.Map
@@ -7,14 +10,13 @@ namespace Source.Ui.Map
     {
         private readonly VisualElement lands;
         private readonly MapViewportController viewportController;
-        private readonly VisualElement root;
 
         public Map() : base(true)
         {
-            root = this.Q("Root");
-            root.Add(lands = new MapLandLayer());
+            var root = this.Q("Root");
             var grid = new MapGrid(this);
             root.Add(grid);
+            root.Add(lands = new MapLandLayer(this));
             root.Add(new MapPointerPositionLabel(this));
 
             viewportController = new MapViewportController(this, e =>
@@ -22,8 +24,12 @@ namespace Source.Ui.Map
                 lands.transform.position = new Vector3(-e.rect.x, -e.rect.y, 0);
                 lands.transform.scale = new Vector3(e.scale, e.scale, 1);
                 grid.UpdateViewport(e.scale);
-                Debug.Log(e.rect.x / e.scale + ", " + e.rect.y / e.scale);
             });
+        }
+
+        internal void MoveTo(Vector2 pos)
+        {
+            viewportController.MoveToPosition(pos);
         }
 
         internal Vector2 ScreenToUtopia(Vector2 pos)
@@ -35,6 +41,10 @@ namespace Source.Ui.Map
         internal Vector2 UtopiaToScreen(Vector2 pos)
         {
             return lands.LocalToWorld(new Vector2(pos.x, -pos.y));
+        }
+
+        public void SubmitDrawing(Land getLand)
+        {
         }
     }
 }

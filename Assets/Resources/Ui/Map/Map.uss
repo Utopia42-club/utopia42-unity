@@ -1,19 +1,24 @@
 * {
-    --map-background: rgb(236, 240, 241);
-    --map-land-background: rgb(149, 165, 166);
-    --map-owned-land-color: rgb(22, 160, 133);
-    --map-grid-origin-color: rgb(192, 57, 43);
+    /*--map-background: rgb(236, 240, 241);*/
+    --map-background: var(--primary-color);
+    /*--map-land-background: rgb(149, 165, 166);*/
+    --map-land-background: var(--secondary-color);
+    --map-owned-land-color: #27ae60;
+    --map-grid-origin-color: #c0392b;
     --map-grid-line-width: 1px;
-    --map-grid-line-color: rgba(41, 128, 185, 0.4);
-    --map-minor-grid-line-color: rgba(41, 128, 185, 0.1);
+    --map-grid-line-color: var(--lighter-primary-color);
+    --map-minor-grid-line-color: var(--darker-primary-color);
 }
 
 #Root {
     background-color: var(--map-background);
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
+.map-grid,
+.map-land-layer,
 .map-subgrid {
     position: absolute;
     top: 0;
@@ -21,14 +26,11 @@
     width: 100%;
     height: 100%;
 }
-
-.map-grid {
-    width: 100%;
-    height: 100%;
+.map-land{
+    background-color: var(--map-land-background);
     position: absolute;
-    top: 0;
-    left: 0;
 }
+
 
 .map-vertical-grid-line {
     border-left-color: var(--map-grid-line-color);
@@ -38,7 +40,7 @@
     bottom: -10%;
 }
 
-.map-vertical-grid-line > .minor-grid-line {
+.map-vertical-grid-line.minor-grid-line {
     border-left-color: var(--map-minor-grid-line-color);
     border-left-width: var(--map-grid-line-width);
     position: absolute;
@@ -53,7 +55,7 @@
     left: -10%;
     right: -10%;
 }
-.map-horizontal-grid-line > .minor-grid-line {
+.map-horizontal-grid-line.minor-grid-line {
     border-top-color: var(--map-minor-grid-line-color);
     border-top-width: var(--map-grid-line-width);
     position: absolute;
@@ -66,9 +68,6 @@
 }
 
 .map-mouse-label{
-    color: var(--primary-color);
+    color: var(--text-color);
     position: absolute;
-}
-.map-land{
-    background-color: var(--map-land-background);
 }

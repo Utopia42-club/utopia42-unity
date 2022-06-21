@@ -21,7 +21,7 @@
     --lighter-secondary-color: rgb(91, 162, 210);
 
     --accent-color: rgb(220, 119, 119);
-    --darkeraccent-color: rgb(180, 98, 98);
+    --darker-accent-color: rgb(180, 98, 98);
     --lighter-accent-color: rgb(220, 139, 139);
     
     --danger-color: rgb(217, 70, 70);

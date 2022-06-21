@@ -6,10 +6,16 @@ namespace Source.Ui.Map
 {
     internal class MapViewportController
     {
+        private readonly float[] scales = new[]
+        {
+            0.25f, 0.33f, 0.50f, 0.67f, 0.75f, 0.8f, 0.9f, 1,
+            1.1f, 1.25f, 1.5f, 1.75f, 2f, 2.5f, 3f, 4f, 5f
+        };
+
         private readonly Map map;
         private readonly Action<ViewportChangeEvent> listener;
         private bool dragging = false;
-        private float scale = 1;
+        private int scaleIndex = 7;
         private Rect rect;
         private Vector2 dragPrevPosition;
 
@@ -36,51 +42,54 @@ namespace Source.Ui.Map
                 this.map.ReleaseMouse();
             });
             this.map.RegisterCallback<GeometryChangedEvent>(e => UpdateSize(e.newRect.width, e.newRect.height));
-            this.map.RegisterCallback<WheelEvent>(e => Scale(e));
+            this.map.RegisterCallback<WheelEvent>(Scale);
         }
 
-        
-        internal Rect GetRect()
-        {
-            return rect;
-        }
-
-        internal float GetScale()
-        {
-            return scale;
-        }
-        
         private void Scale(WheelEvent e)
         {
             if (e.delta.y == 0) return;
 
-            var additive = e.delta.y > 0 ? -0.1f : 0.1f;
-            scale = Mathf.Clamp(scale + additive, 0.2f, 5f);
-            var mouseBeforeScale = map.ScreenToUtopia(e.mousePosition);
-            listener(new ViewportChangeEvent(rect, scale));
-            // Change the viewport inorder to maintain local (utopia position) mouse position while scaling 
-            var post = map.UtopiaToScreen(mouseBeforeScale);
-            var delta = e.mousePosition - post;
-            rect = new Rect(rect.x - delta.x, rect.y - delta.y, rect.width, rect.height);
-            listener(new ViewportChangeEvent(rect, scale));
+            var additive = e.delta.y > 0 ? -1 : 1;
+            var newIdx = scaleIndex + additive;
+            if (newIdx >= 0 && newIdx < scales.Length)
+            {
+                scaleIndex += additive;
+                var scale = scales[scaleIndex];
+                var mouseBeforeScale = map.ScreenToUtopia(e.mousePosition);
+                listener(new ViewportChangeEvent(rect, scale));
+                // Change the viewport inorder to maintain local (utopia position) mouse position while scaling 
+                var post = map.UtopiaToScreen(mouseBeforeScale);
+                var delta = e.mousePosition - post;
+                rect = new Rect(rect.x - delta.x, rect.y - delta.y, rect.width, rect.height);
+                listener(new ViewportChangeEvent(rect, scale));
+            }
         }
 
         private void UpdateSize(float width, float height)
         {
             rect = new Rect(rect.x, rect.y, width, height);
-            listener(new ViewportChangeEvent(rect, scale));
+            listener(new ViewportChangeEvent(rect, scales[scaleIndex]));
         }
 
         private void PointerMoved(PointerMoveEvent e)
         {
-            if (map.HasMouseCapture())
+            if (map.HasMouseCapture() && dragging)
             {
                 e.StopPropagation();
                 var delta = (Vector2) e.position - dragPrevPosition;
                 dragPrevPosition = e.position;
                 rect = new Rect(rect.x - delta.x, rect.y - delta.y, rect.width, rect.height);
-                listener(new ViewportChangeEvent(rect, scale));
+                listener(new ViewportChangeEvent(rect, scales[scaleIndex]));
             }
+        }
+
+        internal void MoveToPosition(Vector2 position)
+        {
+            var currentCenter = map.LocalToWorld(map.contentRect.center);
+            var newCenter = map.UtopiaToScreen(position);
+            var delta = newCenter - currentCenter;
+            rect = new Rect(rect.x + delta.x, rect.y + delta.y, rect.width, rect.height);
+            listener(new ViewportChangeEvent(rect, scales[scaleIndex]));
         }
     }
 
