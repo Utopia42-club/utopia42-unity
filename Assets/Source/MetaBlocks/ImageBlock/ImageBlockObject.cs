@@ -88,7 +88,7 @@ namespace Source.MetaBlocks.ImageBlock
             var imgFace = CreateImageFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(),
                 out imageContainer, out image, out var meshRenderer, true);
 
-            if (!InLand(meshRenderer))
+            if (ExceedsBoundaries)
             {
                 UpdateState(State.OutOfBound);
                 return;

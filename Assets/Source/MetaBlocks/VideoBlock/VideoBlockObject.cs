@@ -150,7 +150,7 @@ namespace Source.MetaBlocks.VideoBlock
             video = CreateVideoFace(gameObject.transform, props.width, props.height, props.rotation.ToVector3(),
                 out videoContainer, out var go, out var meshRenderer, true);
 
-            if (!InLand(meshRenderer))
+            if (ExceedsBoundaries)
             {
                 UpdateState(State.OutOfBound);
                 return;

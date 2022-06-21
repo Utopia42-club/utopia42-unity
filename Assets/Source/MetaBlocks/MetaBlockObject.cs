@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Source.Canvas;
 using Source.Model;
 using Source.Utils;
@@ -15,6 +16,7 @@ namespace Source.MetaBlocks
         protected Land land;
         private bool canEditPosition;
         protected bool CanEdit => canEditPosition && !Player.INSTANCE.ChangeForbidden;
+        protected bool ExceedsBoundaries => !InLand();
         public State State { get; protected set; }
         public bool Focused { get; protected set; }
         protected SnackItem snackItem;
@@ -60,41 +62,17 @@ namespace Source.MetaBlocks
 
         protected abstract void OnStateChanged(State state);
 
-        protected Chunk GetChunk()
-        {
-            return chunk;
-        }
-
-        protected bool InLand(BoxCollider bc) //FIXME rename
+        private bool InLand()
         {
             if (Block.land == null)
                 return true;
-
-            var bcTransform = bc.transform;
-
-            var center = bc.center;
-            var size = bc.size;
-
-            var min = center - size * 0.5f;
-            var max = center + size * 0.5f;
-
-            return
-                InLand(bcTransform.TransformPoint(new Vector3(min.x, min.y, min.z))) &&
-                InLand(bcTransform.TransformPoint(new Vector3(min.x, min.y, max.z))) &&
-                InLand(bcTransform.TransformPoint(new Vector3(min.x, max.y, min.z))) &&
-                InLand(bcTransform.TransformPoint(new Vector3(min.x, max.y, max.z))) &&
-                InLand(bcTransform.TransformPoint(new Vector3(max.x, min.y, min.z))) &&
-                InLand(bcTransform.TransformPoint(new Vector3(max.x, min.y, max.z))) &&
-                InLand(bcTransform.TransformPoint(new Vector3(max.x, max.y, min.z))) &&
-                InLand(bcTransform.TransformPoint(new Vector3(max.x, max.y, max.z)));
+            var renderers = gameObject.GetComponentsInChildren<Renderer>();
+            return renderers.Length == 0 || renderers.All(renderer => InLand(renderer));
         }
 
-        protected bool InLand(MeshRenderer meshRenderer)
+        private bool InLand(Renderer renderer)
         {
-            if (Block.land == null)
-                return true;
-
-            var bounds = meshRenderer.bounds;
+            var bounds = renderer.bounds;
             var center = bounds.center;
             var size = bounds.size;
 
