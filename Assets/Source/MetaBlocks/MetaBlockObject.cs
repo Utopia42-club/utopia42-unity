@@ -199,6 +199,14 @@ namespace Source.MetaBlocks
                 PropertyEditor.INSTANCE.Hide();
         }
 
+        protected void TryOpenEditor(Action onDone)
+        {
+            if (!PropertyEditor.INSTANCE.IsActive)
+                onDone.Invoke();
+            else if(!GameManager.INSTANCE.IsUiEngaged())
+                PropertyEditor.INSTANCE.Hide();
+        }
+
         protected static void AdjustHighlightBox(Transform highlightBox, BoxCollider referenceCollider, bool active)
         {
             var colliderTransform = referenceCollider.transform;

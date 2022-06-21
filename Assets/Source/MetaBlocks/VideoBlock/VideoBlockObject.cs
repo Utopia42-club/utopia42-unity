@@ -30,16 +30,8 @@ namespace Source.MetaBlocks.VideoBlock
 
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (CanEdit)
-                {
-                    if (Input.GetKeyDown(KeyCode.E))
-                    {
-                        if (!PropertyEditor.INSTANCE.IsActive)
-                            EditProps();
-                        else
-                            PropertyEditor.INSTANCE.Hide();
-                    }
-                }
+                if (CanEdit && Input.GetKeyDown(KeyCode.E))
+                    TryOpenEditor(EditProps);
 
                 if (Input.GetKeyDown(KeyCode.P))
                     TogglePlay();

@@ -25,14 +25,8 @@ namespace Source.MetaBlocks.TeleportBlock
             var props = (TeleportBlockProperties) Block.GetProps();
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (!CanEdit) return;
-                if (Input.GetKeyDown(KeyCode.E))
-                {
-                    if (!PropertyEditor.INSTANCE.IsActive)
-                        EditProps();
-                    else
-                        PropertyEditor.INSTANCE.Hide();
-                }
+                if (CanEdit && Input.GetKeyDown(KeyCode.E))
+                    TryOpenEditor(EditProps);
             });
         }
 

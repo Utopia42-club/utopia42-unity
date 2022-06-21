@@ -31,12 +31,7 @@ namespace Source.MetaBlocks.MarkerBlock
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.E))
-                {
-                    if (!PropertyEditor.INSTANCE.IsActive)
-                        EditProps();
-                    else
-                        PropertyEditor.INSTANCE.Hide();
-                }
+                    TryOpenEditor(EditProps);
             });
         }
 
