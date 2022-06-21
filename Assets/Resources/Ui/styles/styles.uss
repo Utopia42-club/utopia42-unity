@@ -8,25 +8,25 @@
 :root {
     --color-text-darker: rgb(172, 172, 172);
     --color-text: rgb(240, 240, 240);
-
+    
     --color-background-dark: rgb(24, 36, 48);
     --color-background-dark-lit: rgba(24, 36, 48, 0.7);
-
+    
     --color-primary: rgb(52, 73, 94);
     --color-primary-darker: rgb(42, 60, 77);
     --color-primary-lighter: rgb(76, 97, 118);
-
+    
     --color-secondary: rgb(52, 152, 219);
     --color-secondary-darker: rgba(52, 152, 219, 0.78);
     --color-secondary-lighter: rgb(91, 162, 210);
-
+    
     --color-accent: rgb(220, 119, 119);
     --color-accent-darker: rgb(180, 98, 98);
     --color-accent-lighter: rgb(220, 139, 139);
     
     --color-danger: rgb(217, 70, 70);
     --color-warn: rgb(174, 177, 28);
-
+    
     --default-border-radius: 7px;
     --default-border-color: var(--color-primary-lighter);
     
@@ -40,11 +40,13 @@
     background-color: var(--color-primary);
 }
 
-.utopia-button:hover,
-.utopia-button:active {
+.utopia-button:hover {
     border-color: var(--color-primary-darker);
 }
 
+.utopia-button:active {
+    border-color: var(--color-primary-darker);
+}
 
 .utopia-action-button {
     width: 40px;
@@ -81,7 +83,7 @@
     background-color: var(--color-primary-lighter);
 }
 
-.utopia-fields-group{
+.utopia-fields-group {
     border-width: 1px;
     border-radius: var(--default-border-radius);
     border-color: var(--default-border-color);
@@ -89,7 +91,7 @@
     margin: 3px;
 }
 
-.utopia-fields-group__label{
+.utopia-fields-group__label {
     min-width: auto;
     margin: 0;
     padding: 0;
@@ -97,6 +99,14 @@
     font-size: var(--small-font-size);
 }
 
-.small-text{
+.small-text {
     font-size: var(--small-font-size);
+}
+
+.utopia-toast {
+    opacity: 0.8;
+}
+
+.utopia-background{
+    background-color: var(--color-background-dark);
 }

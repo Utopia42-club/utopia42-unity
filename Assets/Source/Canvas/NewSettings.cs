@@ -1,64 +1,63 @@
+using System.Linq;
 using Source.Model;
-using Source.Service;
 using Source.Service.Ethereum;
+using Source.Ui.LoadingLayer;
+using Source.Ui.Toaster;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
+using Position = Source.Model.Position;
 
 namespace Source.Canvas
 {
-    public class Settings : MonoBehaviour
+    public class NewSettings : MonoBehaviour
     {
         private static readonly string GUEST = "guest";
-        [SerializeField] private GameObject panel;
-        [SerializeField] private GameObject errorPanel;
-        [SerializeField] private GameObject loadingPanel;
-        [SerializeField] private InputField walletInput;
-        [SerializeField] private Dropdown networkInput;
-        [SerializeField] private Button submitButton;
-        [SerializeField] private Button guestButton;
-        [SerializeField] private Button saveGameButton;
-        [SerializeField] private Button editProfileButton;
-        [SerializeField] private Button helpButton;
-        [SerializeField] private Button positionLinkButton;
-        [SerializeField] private Button pluginsButton;
+
+        private GameObject panel;
+        private TextField walletField;
+        private DropdownField networkField;
+        private Button enterButton;
+        private Button guestButton;
 
         private Vector3? startingPosition = null;
+        private VisualElement root;
 
-        void Start()
+        private void OnEnable()
         {
-            panel.SetActive(false);
-            loadingPanel.SetActive(true);
-            StartCoroutine(EthNetwork.GetNetworks(networks => DoStart(), () =>
-            {
-                errorPanel.SetActive(true);
-                loadingPanel.SetActive(false);
-            }));
-            pluginsButton.interactable = WebBridge.IsPresent();
+            root = GetComponent<UIDocument>().rootVisualElement;
+            walletField = root.Q<TextField>("wallet");
+            guestButton = root.Q<Button>("enterButton");
+            enterButton = root.Q<Button>("guestButton");
+            networkField = root.Q<DropdownField>("network");
+            var loadingId = LoadingLayer.Show(root);
+            StartCoroutine(EthNetwork.GetNetworks(_ =>
+                {
+                    LoadingLayer.Hide(loadingId);
+                    DoStart();
+                },
+                () =>
+                {
+                    ToasterService.Show("Could not load any ETHEREUM networks. Please report the error.",
+                        ToasterService.ToastType.Error, null);
+                    LoadingLayer.Hide(loadingId);
+                }));
         }
 
         private void DoStart()
         {
-            loadingPanel.SetActive(false);
             var nets = EthNetwork.GetNetworksIfPresent();
             if (nets == null || nets.Length == 0)
             {
-                errorPanel.SetActive(true);
+                ToasterService.Show("Could not load any ETHEREUM networks. Please report the error.",
+                    ToasterService.ToastType.Error, null);
                 return;
             }
 
-            panel.SetActive(true);
-
-            foreach (var net in nets)
-                networkInput.options.Add(new Dropdown.OptionData(net.name));
+            networkField.choices = nets.Select(network => network.name).ToList();
 
             ResetInputs();
             var manager = GameManager.INSTANCE;
-            saveGameButton.onClick.AddListener(() => manager.Save());
-            editProfileButton.onClick.AddListener(() => manager.ShowUserProfile());
-            helpButton.onClick.AddListener(() => manager.OpenHelpDialog());
-            walletInput.onEndEdit.AddListener((text) => ResetButtonsState());
-            positionLinkButton.onClick.AddListener(() => manager.CopyPositionLink());
-            pluginsButton.onClick.AddListener(() => manager.OpenPluginsDialog());
+            walletField.RegisterValueChangedCallback(_ => ResetButtonsState());
 
             manager.stateChange.AddListener(state =>
             {
@@ -78,50 +77,43 @@ namespace Source.Canvas
                 }
             });
 
-            guestButton.interactable = false;
-            submitButton.interactable = false;
+            guestButton.SetEnabled(false);
+            enterButton.SetEnabled(false);
             WebBridge.CallAsync<Position>("getStartingPosition", "", (pos) =>
             {
                 if (pos == null)
                     startingPosition = null;
                 else
                     startingPosition = new Vector3(pos.x, pos.y, pos.z);
-                guestButton.interactable = true;
-                submitButton.interactable = true;
+                guestButton.SetEnabled(true);
+                enterButton.SetEnabled(true);
             });
         }
 
         private void ResetInputs()
         {
-            walletInput.text = IsGuest() ? null : WalletId();
+            walletField.value = IsGuest() ? null : WalletId();
+            
             var net = Network();
-            networkInput.value = -1;
+            networkField.value = null;
 
             var nets = EthNetwork.GetNetworksIfPresent();
-            for (int i = 0; i < networkInput.options.Count; i++)
+            for (int i = 0; i < networkField.choices.Count; i++)
             {
                 if (nets[i].Equals(net))
                 {
-                    networkInput.value = i;
+                    networkField.index = i;
                     break;
                 }
             }
 
-            bool serviceInitialized = EthereumClientService.INSTANCE.IsInited();
-            networkInput.interactable = !serviceInitialized;
-            saveGameButton.interactable = !IsGuest() && WorldService.INSTANCE.HasChange();
-            editProfileButton.interactable = !IsGuest();
-
-            saveGameButton.gameObject.SetActive(serviceInitialized);
-            editProfileButton.gameObject.SetActive(serviceInitialized);
-            helpButton.gameObject.SetActive(serviceInitialized);
-            pluginsButton.gameObject.SetActive(serviceInitialized);
-            positionLinkButton.gameObject.SetActive(serviceInitialized);
+            var serviceInitialized = EthereumClientService.INSTANCE.IsInited();
+            networkField.SetEnabled(!serviceInitialized);
         }
 
         private void ResetButtonsState()
         {
-            submitButton.interactable = !string.IsNullOrEmpty(walletInput.text);
+            enterButton.SetEnabled(!string.IsNullOrEmpty(walletField.text));
         }
 
         void Update()
@@ -136,15 +128,15 @@ namespace Source.Canvas
 
         public void Submit()
         {
-            if (string.IsNullOrWhiteSpace(walletInput.text)) return;
-            DoSubmit(walletInput.text);
+            if (string.IsNullOrWhiteSpace(walletField.text)) return;
+            DoSubmit(walletField.text);
         }
 
 
         private void DoSubmit(string walletId)
         {
-            if (networkInput.interactable)
-                PlayerPrefs.SetInt(Keys.NETWORK, EthNetwork.GetNetworksIfPresent()[networkInput.value].id);
+            if (networkField.enabledSelf)
+                PlayerPrefs.SetInt(Keys.NETWORK, EthNetwork.GetNetworksIfPresent()[networkField.index].id);
             else if (Equals(WalletId(), walletId))
             {
                 GameManager.INSTANCE.ExitSettings(startingPosition);
@@ -177,7 +169,7 @@ namespace Source.Canvas
             var detail = new ConnectionDetail();
             detail.wallet = WalletId();
             var net = Network();
-            detail.network = net == null ? -1 : net.id;
+            detail.network = net?.id ?? -1;
             return detail;
         }
 
@@ -192,5 +184,11 @@ namespace Source.Canvas
                 Application.Quit();
             }
         }
+    }
+
+    class Keys
+    {
+        public static readonly string WALLET = "WALLET";
+        public static readonly string NETWORK = "NETWORK";
     }
 }

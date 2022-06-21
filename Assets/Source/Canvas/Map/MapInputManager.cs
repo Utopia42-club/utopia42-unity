@@ -64,7 +64,7 @@ namespace Source.Canvas.Map
             }
 
             // TODO: Remove the null checking after adapting to UI toolkit completely
-            else if (IsInputEnabled() && (TabMenu.INSTANCE == null || !TabMenu.INSTANCE.isMouseDown))
+            else if (IsInputEnabled() && (Menu.INSTANCE == null || !Menu.INSTANCE.isMouseDown))
             {
                 if (!drawing && !dragging)
                 {

@@ -5,9 +5,9 @@ using Source.Ui.TabPane;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class TabMenu : MonoBehaviour
+public class Menu : MonoBehaviour
 {
-    private static TabMenu instance;
+    private static Menu instance;
 
     public MapInputManager mapInputManager;
 
@@ -31,7 +31,7 @@ public class TabMenu : MonoBehaviour
     {
         root = GetComponent<UIDocument>().rootVisualElement;
         tabPane = root.Q<TabPane>();
-        
+
         tabs = new List<Button>();
         _gameManager = GameManager.INSTANCE;
 
@@ -49,7 +49,7 @@ public class TabMenu : MonoBehaviour
         sidePanelButton = root.Q<Button>("side-panel-button");
         sidePanelButton.clicked += () => mapInputManager.ToggleSidePanel();
         sidePanelButton.visible = _gameManager.GetState() == GameManager.State.MAP;
-            
+
         _gameManager.stateChange.AddListener(state =>
             sidePanelButton.SetEnabled(sidePanelButton.visible = state == GameManager.State.MAP));
     }
@@ -68,5 +68,5 @@ public class TabMenu : MonoBehaviour
         sidePanelButton.SetEnabled(e);
     }
 
-    public static TabMenu INSTANCE => instance;
+    public static Menu INSTANCE => instance;
 }

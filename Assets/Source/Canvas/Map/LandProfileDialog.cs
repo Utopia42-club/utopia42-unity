@@ -132,7 +132,7 @@ namespace Source.Canvas.Map
             onCloseActions.ForEach(action => action());
             onCloseActions.Clear();
 
-            var tabMenu = TabMenu.INSTANCE;
+            var tabMenu = Menu.INSTANCE;
             if (tabMenu != null)
                 tabMenu.SetActionsEnabled(true);
         }
@@ -149,7 +149,7 @@ namespace Source.Canvas.Map
             SetLand(land);
             SetProfile(profile);
             gameManager.SetProfileDialogState(true);
-            var tabMenu = TabMenu.INSTANCE;
+            var tabMenu = Menu.INSTANCE;
             if (tabMenu != null)
                 tabMenu.SetActionsEnabled(false);
         }
