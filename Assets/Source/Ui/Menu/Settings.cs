@@ -57,14 +57,7 @@ namespace Source.Canvas
             networkField.choices = nets.Select(network => network.name).ToList();
 
             ResetInputs();
-            var manager = GameManager.INSTANCE;
             walletField.RegisterValueChangedCallback(_ => ResetButtonsState());
-
-            // manager.stateChange.AddListener(state =>
-            // {
-            //     ResetInputs();
-            //     gameObject.SetActive(state == GameManager.State.SETTINGS);
-            // });
 
             if (!WebBridge.IsPresent()) return;
 

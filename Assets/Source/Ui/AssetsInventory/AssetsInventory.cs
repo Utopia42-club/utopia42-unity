@@ -142,6 +142,7 @@ namespace Source.Ui.AssetsInventory
             var active = (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING ||
                           GameManager.INSTANCE.GetState() == GameManager.State.MOVING_OBJECT)
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
+                         && !Settings.IsGuest()
                 ; // && Can Edit Land 
             gameObject.SetActive(active);
             inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !

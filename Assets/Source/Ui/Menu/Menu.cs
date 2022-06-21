@@ -72,9 +72,11 @@ public class Menu : MonoBehaviour, UiProvider
                 saveButton.style.display = !Settings.IsGuest() ? DisplayStyle.Flex : DisplayStyle.None;
                 saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
                 copyLocationButton.style.display = serviceInitialized ? DisplayStyle.Flex : DisplayStyle.None;
+                root.SetEnabled(true);
             }
             else
             {
+                root.SetEnabled(false);
                 gameObject.SetActive(false);
             }
         });
