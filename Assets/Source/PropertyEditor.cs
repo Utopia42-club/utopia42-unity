@@ -26,7 +26,7 @@ public class PropertyEditor : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E) && IsActive && Player.INSTANCE.FocusedFocusable == null)
+        if (!GameManager.INSTANCE.IsUiEngaged() && Input.GetKeyDown(KeyCode.E) && IsActive && Player.INSTANCE.FocusedFocusable == null)
             Hide();
     }
 

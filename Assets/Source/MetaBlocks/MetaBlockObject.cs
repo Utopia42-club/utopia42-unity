@@ -44,7 +44,7 @@ namespace Source.MetaBlocks
             if (Focused) return;
             Focused = true;
             SetupDefaultSnack();
-            if (!CanEdit) return;
+            if (!CanEdit || !Player.INSTANCE.CursorEmpty) return;
             ShowFocusHighlight();
         }
 

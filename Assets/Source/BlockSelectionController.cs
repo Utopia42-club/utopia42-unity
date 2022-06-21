@@ -126,7 +126,7 @@ namespace Source
 
         private void HandleSelectionMouseMovement()
         {
-            if (!selectionActive || player.CtrlDown) return;
+            if (!selectionActive || player.CtrlHeld) return;
             if (Input.GetMouseButtonUp(0) && DraggedPosition != null)
             {
                 DraggedPosition = null;
@@ -175,11 +175,12 @@ namespace Source
         {
             if (Dragging || World.INSTANCE.ObjectScaleRotationController.Active || !mouseLook.cursorLocked) return;
 
-            var selectVoxel = !selectionDisplaced && SMode == SelectionMode.Default &&
+            var selectVoxel = !selectionDisplaced && (player.CtrlHeld || player.CursorEmpty) &&
+                              SMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
                               Input.GetMouseButtonDown(0);
 
-            var multipleSelect = selectVoxel && player.CtrlDown && selectionActive &&
+            var multipleSelect = selectVoxel && player.CtrlHeld && selectionActive &&
                                  (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) &&
                                  World.INSTANCE.LastSelectedPosition != null;
 
@@ -211,7 +212,7 @@ namespace Source
             }
             else if (selectVoxel)
             {
-                if (!player.CtrlDown)
+                if (!player.CtrlHeld)
                     ExitSelectionMode();
                 if (player.FocusedFocusable == null) // should never happen
                 {
@@ -232,32 +233,33 @@ namespace Source
                 }
             }
 
-            if (player.CtrlDown || selectionActive) return;
-
-            if (Input.GetMouseButtonDown(0))
+            else if (!selectionActive && !player.CtrlHeld)
             {
-                if (player.HammerMode)
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (player.HammerMode)
+                        DeleteBlock();
+                    else if (player.PlaceBlock.gameObject.activeSelf && player.SelectedBlockType != null &&
+                             player.SelectedBlockType is not MetaBlockType)
+                    {
+                        World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PossiblePlaceBlockPosInt),
+                            player.SelectedBlockType);
+                    }
+                    else if (player.MetaBlockPlaceHolder != null && player.MetaBlockPlaceHolder.activeSelf)
+                    {
+                        World.INSTANCE.TryPutMeta(new MetaPosition(player.MetaBlockPlaceHolder.transform.position),
+                            player.SelectedBlockType);
+                    }
+                    else if (player.PreparedMetaBlock != null && player.PreparedMetaBlock.IsActive)
+                    {
+                        World.INSTANCE.PutMetaWithProps(
+                            new MetaPosition(player.PreparedMetaBlock.blockObject.transform.position),
+                            player.PreparedMetaBlock.type, player.PreparedMetaBlock.GetProps(), player.placeLand);
+                    }
+                }
+                else if (player.HammerMode && Input.GetButtonDown("Delete"))
                     DeleteBlock();
-                else if (player.PlaceBlock.gameObject.activeSelf && player.SelectedBlockType != null &&
-                         player.SelectedBlockType is not MetaBlockType)
-                {
-                    World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PossiblePlaceBlockPosInt),
-                        player.SelectedBlockType);
-                }
-                else if (player.MetaBlockPlaceHolder != null && player.MetaBlockPlaceHolder.activeSelf)
-                {
-                    World.INSTANCE.TryPutMeta(new MetaPosition(player.MetaBlockPlaceHolder.transform.position),
-                        player.SelectedBlockType);
-                }
-                else if (player.PreparedMetaBlock != null && player.PreparedMetaBlock.IsActive)
-                {
-                    World.INSTANCE.PutMetaWithProps(
-                        new MetaPosition(player.PreparedMetaBlock.blockObject.transform.position),
-                        player.PreparedMetaBlock.type, player.PreparedMetaBlock.GetProps(), player.placeLand);
-                }
             }
-            else if (player.HammerMode && Input.GetButtonDown("Delete"))
-                DeleteBlock();
         }
 
         private void DeleteBlock()
@@ -285,7 +287,7 @@ namespace Source
             {
                 ExitSelectionMode();
             }
-            else if (Input.GetKeyDown(KeyCode.C) && player.CtrlDown && !selectionDisplaced)
+            else if (Input.GetKeyDown(KeyCode.C) && player.CtrlHeld && !selectionDisplaced)
             {
                 World.INSTANCE.ResetClipboard();
             }
@@ -306,7 +308,7 @@ namespace Source
                     World.INSTANCE.RemoveSelectedBlocks();
                 ExitSelectionMode();
             }
-            else if (Input.GetKeyDown(KeyCode.V) && player.CtrlDown &&
+            else if (Input.GetKeyDown(KeyCode.V) && player.CtrlHeld &&
                      player.PlaceBlock.gameObject.activeSelf &&
                      !World.INSTANCE.ClipboardEmpty &&
                      !Dragging)
@@ -390,7 +392,7 @@ namespace Source
             {
                 if (Input.GetKeyDown(KeyCode.H))
                     SetBlockSelectionSnack(!help);
-                if (Input.GetKeyDown(KeyCode.V) && !player.CtrlDown)
+                if (Input.GetKeyDown(KeyCode.V) && !player.CtrlHeld)
                 {
                     movingSelectionAllowed = !movingSelectionAllowed;
                     SetBlockSelectionSnack(help);
