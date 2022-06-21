@@ -15,6 +15,7 @@ namespace Source
 
         public static HighlightedBlock Create(Vector3Int localPos, HighlightChunk highlightChunk, uint blockTypeId)
         {
+            if (highlightChunk == null) return null; // TODO ?
             var highlightedBlock = highlightChunk.gameObject.AddComponent<HighlightedBlock>();
             highlightedBlock.Position = localPos;
             highlightedBlock.BlockTypeId = blockTypeId;

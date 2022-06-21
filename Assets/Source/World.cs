@@ -44,11 +44,14 @@ namespace Source
         public GameObject debugScreen;
         public Player player;
         private VoxelPosition firstSelectedPosition;
+        private readonly Color highlightMatDefaultColor = new Color(0.2f, 0.6f, 0.86f, 0.3f);
+        private readonly Color highlightMatHammerModeColor = new Color(0.85f, 0, 0, 0.4f);
         public VoxelPosition LastSelectedPosition { get; private set; }
         public MetaPosition LastSelectedMetaPosition { get; private set; }
 
         public Material Material => material;
         public Material HighlightBlock => highlightBlock;
+
         public Material SelectedBlock => selectedBlock;
 
         public int TotalBlocksSelected =>
@@ -80,6 +83,11 @@ namespace Source
         {
             TdObjectCache = gameObject.AddComponent<TdObjectBytesCache>();
             ObjectScaleRotationController = gameObject.AddComponent<ObjectScaleRotationController>();
+        }
+        
+        public void UpdateHighlightBlockColor(bool hammerMode)
+        {
+            highlightBlock.color = hammerMode ? highlightMatHammerModeColor : highlightMatDefaultColor;
         }
 
         private void Update()

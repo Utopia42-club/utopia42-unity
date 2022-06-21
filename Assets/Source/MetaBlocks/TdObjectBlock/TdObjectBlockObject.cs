@@ -302,13 +302,13 @@ namespace Source.MetaBlocks.TdObjectBlock
                 if (objCollider is BoxCollider)
                     SetMeshCollider(colliderTransform);
 
-                if (Block.land != null && !InLand(objCollider.GetComponent<MeshRenderer>()))
+                if (ExceedsBoundaries)
                 {
                     UpdateState(State.OutOfBound);
                     return;
                 }
             }
-            else if (Block.land != null && !InLand((BoxCollider) objCollider))
+            else if (ExceedsBoundaries)
             {
                 UpdateState(State.OutOfBound);
                 return;

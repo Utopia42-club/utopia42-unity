@@ -10,7 +10,7 @@
     --text-color: rgb(240, 240, 240);
 
     --dark-background-color: rgb(24, 36, 48);
-    /*--dark-background-color-lit: rgba(24, 36, 48, 0.7);*/
+    --dark-background-color-lit: rgba(24, 36, 48, 0.7);
 
     --primary-color: rgb(52, 73, 94);
     --darker-primary-color: rgb(42, 60, 77);
@@ -40,11 +40,13 @@
     background-color: var(--primary-color);
 }
 
-.utopia-button:hover,
-.utopia-button:active {
+.utopia-button:hover{
     border-color: var(--darker-primary-color);
 }
 
+.utopia-button:active {
+    border-color: var(--darker-primary-color);
+}
 
 .utopia-action-button {
     width: 40px;
@@ -81,7 +83,7 @@
     background-color: var(--lighter-primary-color);
 }
 
-.utopia-fields-group{
+.utopia-fields-group {
     border-width: 1px;
     border-radius: var(--default-border-radius);
     border-color: var(--default-border-color);
@@ -89,7 +91,7 @@
     margin: 3px;
 }
 
-.utopia-fields-group__label{
+.utopia-fields-group__label {
     min-width: auto;
     margin: 0;
     padding: 0;
@@ -97,6 +99,14 @@
     font-size: var(--small-font-size);
 }
 
-.small-text{
+.small-text {
     font-size: var(--small-font-size);
+}
+
+.utopia-toast {
+    opacity: 0.8;
+}
+
+.utopia-background{
+    background-color: var(--dark-background-color);
 }
