@@ -12,7 +12,7 @@ namespace Source.Ui.TabPane
         public Action onTabOpen { get; set; }
 
         public TabConfiguration(string name, string uxmlPath, Action onTabOpen) :
-            this(name, Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree(), onTabOpen)
+            this(name, Utils.Utils.Create(uxmlPath), onTabOpen)
         {
         }
 

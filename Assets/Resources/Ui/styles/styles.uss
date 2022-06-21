@@ -32,6 +32,7 @@
     
     --default-font-size: 14px;
     --small-font-size: 11px;
+    --h1-font-size: 16px;
 }
 
 .utopia-button {
@@ -109,4 +110,13 @@
 
 .utopia-background{
     background-color: var(--dark-background-color);
+}
+
+.utopia-background-tint-color{
+    -unity-background-image-tint-color: var(--primary-color);
+}
+
+.utopia-text-h1{
+    font-size: var(--h1-font-size);
+    -unity-font-style: bold;
 }

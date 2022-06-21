@@ -8,6 +8,7 @@ using Source.MetaBlocks;
 using Source.Model;
 using Source.Ui.AssetsInventory.Models;
 using Source.Ui.AssetsInventory.slots;
+using Source.Ui.Menu;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
 using Source.Utils;
@@ -347,7 +348,7 @@ namespace Source.Ui.AssetsInventory
         private Foldout CreateColorBlocksFoldout()
         {
             var foldout = CreatePackFoldout("Color Blocks");
-            var colorBlockCreator = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/ColorBlockCreator").CloneTree();
+            var colorBlockCreator = Utils.Utils.Create("Ui/AssetInventory/ColorBlockCreator");
             var colorPickerToggle = colorBlockCreator.Q<Button>();
             colorPickerToggle.style.height = 70;
             colorPickerToggle.clickable.clicked += () => colorSlotPicker.ToggleColorPicker();
@@ -446,7 +447,7 @@ namespace Source.Ui.AssetsInventory
         private VisualElement CreateCategoriesListItem(Category category)
         {
             var container = new VisualElement();
-            var categoryButton = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/CategoryButton").CloneTree();
+            var categoryButton = Utils.Utils.Create("Ui/AssetInventory/CategoryButton");
             container.style.paddingTop = container.style.paddingBottom = 3;
             container.Add(categoryButton);
 
@@ -520,9 +521,7 @@ namespace Source.Ui.AssetsInventory
                     if (searchCriteria.searchTerms.ContainsKey("pack"))
                         searchCriteria.searchTerms.Remove("pack");
                     searchCriteria.searchTerms.Add("pack", pack.Key);
-                    var loadMore
-                        = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/LoadMoreButton")
-                            .CloneTree();
+                    var loadMore = Utils.Utils.Create("Ui/AssetInventory/LoadMoreButton");
                     var loadMoreButton = loadMore.Q<Button>();
                     loadMoreButton.clickable.clicked += () => LoadAPageOfAssetsIntoFoldout(foldout, searchCriteria);
                     foldout.contentContainer.Add(loadMore);
@@ -641,8 +640,7 @@ namespace Source.Ui.AssetsInventory
             else
             {
                 breadcrumb.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
-                var backButton = Resources.Load<VisualTreeAsset>("Ui/AssetInventory/BackButton")
-                    .CloneTree();
+                var backButton = Utils.Utils.Create("Ui/AssetInventory/BackButton");
                 backButton.Q<Label>("label").text = backButtonText;
                 backButton.Q<Button>().clickable.clicked += onBack;
                 backButton.style.width = 20 + backButtonText.Length * 10;

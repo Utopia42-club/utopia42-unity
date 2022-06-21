@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Source.Model;
 using Source.Service.Ethereum;
+using Source.Ui.Menu;
 using Source.Utils;
 using TMPro;
 using UnityEngine;

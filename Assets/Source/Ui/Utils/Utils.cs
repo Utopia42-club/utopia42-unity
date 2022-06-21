@@ -37,7 +37,7 @@ namespace Source.Ui.Utils
                     textField.SetValueWithoutNotify(placeHolder);
             });
         }
-        
+
         public static void IncreaseScrollSpeed(ScrollView scrollView, float factor)
         {
             //Workaround to increase scroll speed...
@@ -47,6 +47,11 @@ namespace Source.Ui.Utils
                 scrollView.scrollOffset = new Vector2(0, scrollView.scrollOffset.y + factor * evt.delta.y);
                 evt.StopPropagation();
             });
+        }
+
+        public static VisualElement Create(string uxmlPath)
+        {
+            return Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree();
         }
     }
 }

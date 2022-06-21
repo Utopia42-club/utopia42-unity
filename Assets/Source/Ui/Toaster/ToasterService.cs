@@ -12,7 +12,7 @@ namespace Source.Ui.Toaster
 
         public static void Show(string message, ToastType type, long? duration = 3)
         {
-            var toast = Resources.Load<VisualTreeAsset>("Ui/Toaster/Toast").CloneTree();
+            var toast = Utils.Utils.Create("Ui/Toaster/Toast");
             var panel = toast.Q<VisualElement>("panel");
             var msg = toast.Q<Label>("message");
             msg.text = message;

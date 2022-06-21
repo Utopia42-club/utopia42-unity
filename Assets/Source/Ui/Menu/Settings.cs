@@ -1,14 +1,12 @@
 using System.Linq;
 using Source.Model;
 using Source.Service.Ethereum;
-using Source.Ui;
-using Source.Ui.LoadingLayer;
 using Source.Ui.Toaster;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Position = Source.Model.Position;
 
-namespace Source.Canvas
+namespace Source.Ui.Menu
 {
     public class Settings : UxmlElement
     {
@@ -30,17 +28,17 @@ namespace Source.Canvas
             submitButton = this.Q<Button>("enterButton");
             submitButton.clickable.clicked += Submit;
             networkField = this.Q<DropdownField>("network");
-            var loadingId = LoadingLayer.Show(Menu.INSTANCE.VisualElement());
+            var loadingId = LoadingLayer.LoadingLayer.Show(global::Menu.INSTANCE.VisualElement());
             monoBehaviour.StartCoroutine(EthNetwork.GetNetworks(_ =>
                 {
-                    LoadingLayer.Hide(loadingId);
+                    LoadingLayer.LoadingLayer.Hide(loadingId);
                     DoStart();
                 },
                 () =>
                 {
                     ToasterService.Show("Could not load any ETHEREUM networks. Please report the error.",
                         ToasterService.ToastType.Error, null);
-                    LoadingLayer.Hide(loadingId);
+                    LoadingLayer.LoadingLayer.Hide(loadingId);
                 }));
         }
 

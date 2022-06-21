@@ -4,6 +4,7 @@ using Source.Canvas;
 using Source.Service;
 using Source.Service.Ethereum;
 using Source.Ui;
+using Source.Ui.Menu;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
 using UnityEngine;
@@ -20,6 +21,7 @@ public class Menu : MonoBehaviour, UiProvider
     private Button exitButton;
     private Button saveButton;
     private Button copyLocationButton;
+    private Help help;
 
     void OnEnable()
     {
@@ -28,9 +30,11 @@ public class Menu : MonoBehaviour, UiProvider
         root = GetComponent<UIDocument>().rootVisualElement;
         rootPane = root.Q<VisualElement>("root");
         settings = new Settings(this);
+        help = new Help();
         var tabConfigs = new List<TabConfiguration>
         {
             new("Settings", settings, () => { }),
+            new("Help", help, () => { }),
         };
         tabPane = new TabPane(tabConfigs);
         rootPane.Add(tabPane);
@@ -72,6 +76,13 @@ public class Menu : MonoBehaviour, UiProvider
                 saveButton.style.display = !Settings.IsGuest() ? DisplayStyle.Flex : DisplayStyle.None;
                 saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
                 copyLocationButton.style.display = serviceInitialized ? DisplayStyle.Flex : DisplayStyle.None;
+                root.SetEnabled(true);
+            }
+            else if (state == GameManager.State.HELP)
+            {
+                gameObject.SetActive(true);
+                tabPane.OpenTab(1);
+                tabPane.SetTabButtonsAreaVisibility(true);
                 root.SetEnabled(true);
             }
             else

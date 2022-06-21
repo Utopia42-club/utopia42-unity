@@ -4,16 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Source.Canvas;
 using Source.Canvas.Map;
-using Source.MetaBlocks;
-using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
 using Source.Service;
 using Source.Service.Ethereum;
+using Source.Ui.Menu;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UIElements;
 
 namespace Source
 {
@@ -30,7 +28,6 @@ namespace Source
         private List<Dialog> dialogs = new();
         private bool captureAllKeyboardInputOrig;
 
-        public GameObject helpDialog;
         public Map map;
 
         private bool doubleCtrlTap = false;
@@ -165,7 +162,6 @@ namespace Source
         {
             if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
             {
-                helpDialog.SetActive(true);
                 SetState(State.HELP);
             }
         }
@@ -260,7 +256,6 @@ namespace Source
                         SetState(State.PLAYING);
                     break;
                 case State.HELP:
-                    helpDialog.SetActive(false);
                     SetState(State.PLAYING);
                     break;
                 case State.SETTINGS:

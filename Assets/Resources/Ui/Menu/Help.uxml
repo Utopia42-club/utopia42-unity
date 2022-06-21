@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <ui:VisualElement name="root" style="flex-grow: 1; align-items: center; width: 100%; justify-content: center; flex-direction: row;">
+        <ui:VisualElement name="sections" style="width: 25%; flex-grow: 1;">
+            <ui:Label text="Sections" display-tooltip-when-elided="true" class="utopia-text-h1" style="-unity-font-style: normal;" />
+            <ui:ScrollView name="leftBar" horizontal-scroller-visibility="Hidden" focusable="false" style="flex-grow: 1;" />
+        </ui:VisualElement>
+        <ui:ScrollView name="content" horizontal-scroller-visibility="Hidden" style="flex-grow: 1; width: 75%; padding-left: 10px;" />
+    </ui:VisualElement>
+</ui:UXML>

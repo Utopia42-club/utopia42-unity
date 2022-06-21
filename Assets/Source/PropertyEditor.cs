@@ -42,7 +42,7 @@ public class PropertyEditor : MonoBehaviour
         Utils.IncreaseScrollSpeed(body, 600);
         label = root.Q<Label>("label");
         label.text = header;
-        var editor = Resources.Load<VisualTreeAsset>(uxmlPath).CloneTree();
+        var editor = Utils.Create(uxmlPath);
         body.Clear();
         body.Add(editor);
 
