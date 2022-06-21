@@ -223,7 +223,7 @@ namespace Source
         private void DestroyMeshAndMaterial()
         {
             // Destroy(meshRenderer.sharedMaterial); // Destroying assets not allowed
-            if (meshFilter.sharedMesh == null) return;
+            if (meshFilter == null || meshFilter.sharedMesh == null) return;
             Destroy(meshFilter.sharedMesh);
             meshFilter.sharedMesh = null;
         }
