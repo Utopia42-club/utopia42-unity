@@ -54,6 +54,11 @@ namespace Source
                 if (state != GameManager.State.PLAYING && selectionActive)
                     ExitSelectionMode();
             });
+
+            mouseLook.cursorLockedStateChanged.AddListener(locked =>
+            {
+                if (!locked) StopDragDropProcess();
+            });
         }
 
         public void DoUpdate()
@@ -127,12 +132,8 @@ namespace Source
         private void HandleSelectionMouseMovement()
         {
             if (!selectionActive || player.CtrlHeld) return;
-            if (Input.GetMouseButtonUp(0) && DraggedPosition != null)
-            {
-                DraggedPosition = null;
-                if (selectionDisplaced)
-                    PrepareForSelectionMovement(SelectionMode.Default);
-            }
+            if (Input.GetMouseButtonUp(0))
+                StopDragDropProcess();
 
             else if (Input.GetMouseButtonDown(0) && DraggedPosition == null && !selectionDisplaced)
             {
@@ -169,6 +170,14 @@ namespace Source
                         Vectors.TruncateFloor(DraggedPosition.Value));
                 }
             }
+        }
+
+        private void StopDragDropProcess()
+        {
+            if (!DraggedPosition.HasValue) return;
+            DraggedPosition = null;
+            // if (selectionDisplaced) 
+            //     PrepareForSelectionMovement(SelectionMode.Default); // already happening
         }
 
         private void HandleBlockSelection()
@@ -506,10 +515,11 @@ namespace Source
                 ExitSelectionMode();
             else
             {
-                if (setSnack)
+                if (setSnack) 
                 {
-                    movingSelectionAllowed = false;
-                    SetBlockSelectionSnack();
+                    // movingSelectionAllowed = false; // TODO
+                    // SetBlockSelectionSnack();
+                    PrepareForSelectionMovement(SelectionMode.Default);
                 }
 
                 selectedBlocksCountTextContainer.gameObject.SetActive(true);

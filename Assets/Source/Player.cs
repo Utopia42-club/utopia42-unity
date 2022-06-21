@@ -496,6 +496,7 @@ namespace Source
         {
             ResetRaycastMemory();
             HideCursors();
+            blockSelectionController.ExitSelectionMode();
             SelectedBlockType = slotInfo?.block;
             HammerMode = false;
             world.UpdateHighlightBlockColor(false);
