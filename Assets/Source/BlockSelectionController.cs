@@ -25,14 +25,14 @@ namespace Source
         private Vector3? DraggedPosition { get; set; }
         private bool KeepSourceAfterSelectionMovement => SMode != SelectionMode.Default;
 
-        public bool PlayerMovementAllowed => (!selectionActive || !movingSelectionAllowed) &&
-                                             !World.INSTANCE.ObjectScaleRotationController.Active;
+        public bool PlayerMovementAllowed => (!selectionActive || !movingSelectionAllowed) && !scalingOrRotatingSelection;
 
         private Transform transform => Player.INSTANCE.transform; // TODO
         private bool selectionActive;
         private bool metaSelectionActive;
         private bool onlyMetaSelectionActive;
         private bool selectionDisplaced;
+        private bool scalingOrRotatingSelection;
 
         public bool Dragging => DraggedPosition.HasValue;
 
@@ -83,6 +83,7 @@ namespace Source
             metaSelectionActive = World.INSTANCE.MetaSelectionActive;
             onlyMetaSelectionActive = World.INSTANCE.OnlyMetaSelectionActive;
             selectionDisplaced = World.INSTANCE.SelectionDisplaced;
+            scalingOrRotatingSelection = World.INSTANCE.ObjectScaleRotationController.Active;
 
             horizontal = Input.GetButton("Horizontal");
             vertical = Input.GetButton("Vertical");
@@ -95,7 +96,7 @@ namespace Source
 
         private void HandleSelectionKeyboardMovement(bool fixedRate = false)
         {
-            if (!selectionActive || !movingSelectionAllowed || Dragging)
+            if (!selectionActive || !movingSelectionAllowed || Dragging || scalingOrRotatingSelection)
                 return;
 
             var correctFrame = onlyMetaSelectionActive || keyboardFrameCounter % 9 == 0;
@@ -131,7 +132,7 @@ namespace Source
 
         private void HandleSelectionMouseMovement()
         {
-            if (!selectionActive || player.CtrlHeld) return;
+            if (!selectionActive || player.CtrlHeld || scalingOrRotatingSelection) return;
             if (Input.GetMouseButtonUp(0))
                 StopDragDropProcess();
 
@@ -182,7 +183,7 @@ namespace Source
 
         private void HandleBlockSelection()
         {
-            if (Dragging || World.INSTANCE.ObjectScaleRotationController.Active || !mouseLook.cursorLocked) return;
+            if (Dragging || scalingOrRotatingSelection || !mouseLook.cursorLocked) return;
 
             var selectVoxel = !selectionDisplaced && (player.CtrlHeld || player.CursorEmpty) &&
                               SMode == SelectionMode.Default &&
@@ -291,7 +292,7 @@ namespace Source
 
         private void HandleBlockClipboard()
         {
-            if (Dragging) return;
+            if (Dragging || scalingOrRotatingSelection) return;
             if (Input.GetKeyDown(KeyCode.X) || Input.GetMouseButtonDown(1))
             {
                 ExitSelectionMode();
@@ -515,7 +516,7 @@ namespace Source
                 ExitSelectionMode();
             else
             {
-                if (setSnack) 
+                if (setSnack)
                 {
                     // movingSelectionAllowed = false; // TODO
                     // SetBlockSelectionSnack();
