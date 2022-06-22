@@ -81,7 +81,8 @@ namespace Source
             if (rotationTarget == null)
             {
                 xRotation -= mouseY; // camera's x rotation (look up and down)
-                xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+                var limit = Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON ? 90f : 45f;
+                xRotation = Mathf.Clamp(xRotation, -limit, limit);
                 yRotation += mouseX; // camera's y rotation (look left and right)
                 transform.parent.localRotation = Quaternion.Euler(xRotation, yRotation, 0);
             }
