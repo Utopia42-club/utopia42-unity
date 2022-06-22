@@ -72,6 +72,20 @@ namespace Source
 
         public bool CursorEmpty => CtrlHeld || PreparedMetaBlock == null && SelectedBlockType == null;
 
+        public Vector3 Right => cam.transform.right;
+
+        public Vector3 Forward
+        {
+            get
+            {
+                var v = cam.transform.forward;
+                v.y = 0;
+                return v;
+            }
+        }
+
+        public Vector3 CamPosition => cam.transform.position;
+
         [SerializeField] private Vector3 firstPersonCameraPosition;
         [SerializeField] private Vector3 thirdPersonCameraPosition;
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
@@ -91,7 +105,6 @@ namespace Source
         public Vector3 PossiblePlaceMetaBlockPos { get; private set; }
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
         public Land HighlightLand => highlightLand;
-        public Transform transform => avatar?.transform; // TODO
         public RaycastHit RaycastHit => raycastHit;
 
         private void Start()
@@ -240,7 +253,7 @@ namespace Source
             playerPos = Vectors.TruncateFloor(pos);
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(Settings.WalletId(),
-                new SerializableVector3(pos), 
+                new SerializableVector3(pos),
                 // new SerializableVector3(camContainer.forward), 
                 floating, sprinting));
         }

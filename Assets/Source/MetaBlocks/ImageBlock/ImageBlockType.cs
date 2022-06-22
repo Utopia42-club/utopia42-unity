@@ -21,7 +21,7 @@ namespace Source.MetaBlocks.ImageBlock
 
         public override MetaPosition GetPlaceHolderPutPosition(Vector3 purePosition)
         {
-            var pos = Player.INSTANCE.transform.forward.z > 0
+            var pos = Player.INSTANCE.Forward.z > 0
                 ? purePosition - Gap * Vector3.forward
                 : purePosition + Gap * Vector3.forward;
             pos += 0.5f * MediaBlockEditor.DEFAULT_DIMENSION * Vector3.up;

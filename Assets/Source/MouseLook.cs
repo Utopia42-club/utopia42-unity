@@ -84,7 +84,7 @@ namespace Source
                 var limit = Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON ? 90f : 45f;
                 xRotation = Mathf.Clamp(xRotation, -limit, limit);
                 yRotation += mouseX; // camera's y rotation (look left and right)
-                transform.parent.localRotation = Quaternion.Euler(xRotation, yRotation, 0);
+                transform.parent.localRotation = Quaternion.Euler(xRotation, yRotation % 360, 0);
             }
             else
                 rotationTarget.Invoke(Vector3.up * mouseX + Vector3.right * mouseY);

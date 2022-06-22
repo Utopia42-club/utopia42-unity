@@ -55,7 +55,7 @@ namespace Source.MetaBlocks
                 // target.Rotate(rotation.y * Vector3.up + rotation.x * Player.INSTANCE.avatar.transform.right);
 
                 var up = target.InverseTransformDirection(Vector3.up);
-                var right = target.InverseTransformDirection(Player.INSTANCE.avatar.transform.right);
+                var right = target.InverseTransformDirection(Player.INSTANCE.Right);
                 target.Rotate(rotation.y * up + rotation.x * right);
                 
                 if (action != null)
