@@ -126,10 +126,7 @@ namespace Source.MetaBlocks.LightBlock
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.E))
-                    if (!PropertyEditor.INSTANCE.IsActive)
-                        EditProps();
-                    else
-                        PropertyEditor.INSTANCE.Hide();
+                    TryOpenEditor(EditProps);
             });
         }
 

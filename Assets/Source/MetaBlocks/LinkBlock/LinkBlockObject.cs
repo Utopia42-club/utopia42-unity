@@ -95,17 +95,9 @@ namespace Source.MetaBlocks.LinkBlock
             var props = (LinkBlockProperties) Block.GetProps();
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
-                if (CanEdit)
-                {
-                    if (Input.GetKeyDown(KeyCode.E))
-                    {
-                        if (!PropertyEditor.INSTANCE.IsActive)
-                            EditProps();
-                        else
-                            PropertyEditor.INSTANCE.Hide();
-                    }
-                }
-
+                if (CanEdit && Input.GetKeyDown(KeyCode.E))
+                    TryOpenEditor(EditProps);
+                
                 if (props != null && !props.IsEmpty() && Input.GetKeyDown(KeyCode.O))
                     OpenLink();
             });

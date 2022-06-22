@@ -49,6 +49,7 @@ namespace Source
         private CharacterController characterController;
         private BlockSelectionController blockSelectionController;
         private Renderer placeBlockRenderer;
+        public bool CtrlHeld { private set; get; }
         public bool CtrlDown { private set; get; }
         private Vector3Int playerPos;
         private AvatarController avatarController;
@@ -66,6 +67,8 @@ namespace Source
         public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
+
+        public bool CursorEmpty => CtrlHeld || PreparedMetaBlock == null && SelectedBlockType == null;
 
         [SerializeField] private Vector3 firstPersonCameraPosition;
         [SerializeField] private Vector3 thirdPersonCameraPosition;
@@ -141,6 +144,8 @@ namespace Source
             SelectionActiveBeforeAtFrameBeginning = World.INSTANCE.SelectionActive;
             GetInputs();
 
+            if (CtrlDown) ResetRaycastMemory();
+
             if (!ChangeForbidden)
             {
                 blockSelectionController.DoUpdate();
@@ -168,7 +173,8 @@ namespace Source
         {
             if (GameManager.INSTANCE.IsUiEngaged())
                 return;
-            CtrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            CtrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            CtrlDown = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
 
@@ -310,7 +316,7 @@ namespace Source
             return viewMode;
         }
 
-        public void PlaceCursors(Vector3 blockHitPoint) 
+        public void PlaceCursors(Vector3 blockHitPoint)
         {
             if (ChangeForbidden) return;
             var epsilon = cam.forward * CastStep;
@@ -323,12 +329,13 @@ namespace Source
 
             HideCursors();
             if (BlockSelectionController.INSTANCE.Dragging) return;
-            if (!CtrlDown && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _) && !selectionActive && FocusedFocusable is ChunkFocusable)
+            if (!CtrlHeld && HammerMode && CanEdit(PossibleHighlightBlockPosInt, out _) && !selectionActive &&
+                FocusedFocusable is ChunkFocusable)
             {
                 highlightBlock.position = PossibleHighlightBlockPosInt;
                 highlightBlock.gameObject.SetActive(true);
             }
-            else if (!CtrlDown && !selectionActive && PreparedMetaBlock != null &&
+            else if (!CtrlHeld && !selectionActive && PreparedMetaBlock != null &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
                 PreparedMetaBlock.SetActive(true);
@@ -340,7 +347,7 @@ namespace Source
                 else
                     PreparedMetaBlock.UpdateWorldPosition(new MetaPosition(blockHitPoint).ToWorld());
             }
-            else if (!CtrlDown && !selectionActive && SelectedBlockType is MetaBlockType metaBlockType &&
+            else if (!CtrlHeld && !selectionActive && SelectedBlockType is MetaBlockType metaBlockType &&
                      CanEdit(PossibleHighlightBlockPosInt, out placeLand))
             {
                 if (MetaBlockPlaceHolder != null)
@@ -360,7 +367,8 @@ namespace Source
             }
             else
             {
-                if (FocusedFocusable is ChunkFocusable && CanEdit(PossibleHighlightBlockPosInt, out highlightLand) && !selectionDisplaced)
+                if (FocusedFocusable is ChunkFocusable && CanEdit(PossibleHighlightBlockPosInt, out highlightLand) &&
+                    !selectionDisplaced)
                 {
                     highlightBlock.position = PossibleHighlightBlockPosInt;
                     highlightBlock.gameObject.SetActive(true);
@@ -374,7 +382,8 @@ namespace Source
                     placeBlock.position = PossiblePlaceBlockPosInt;
                     placeBlock.gameObject.SetActive(true);
 
-                    if (!CtrlDown && !selectionActive && SelectedBlockType != null && SelectedBlockType is not MetaBlockType)
+                    if (!CtrlHeld && !selectionActive && SelectedBlockType != null &&
+                        SelectedBlockType is not MetaBlockType)
                         placeBlockRenderer.enabled = true;
                 }
             }
@@ -488,6 +497,7 @@ namespace Source
         {
             ResetRaycastMemory();
             HideCursors();
+            blockSelectionController.ExitSelectionMode();
             SelectedBlockType = slotInfo?.block;
             HammerMode = false;
             world.UpdateHighlightBlockColor(false);

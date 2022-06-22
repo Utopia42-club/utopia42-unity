@@ -44,7 +44,7 @@ namespace Source.MetaBlocks
             if (Focused) return;
             Focused = true;
             SetupDefaultSnack();
-            if (!CanEdit) return;
+            if (!CanEdit || !Player.INSTANCE.CursorEmpty) return;
             ShowFocusHighlight();
         }
 
@@ -196,6 +196,14 @@ namespace Source.MetaBlocks
 
             if (PropertyEditor.INSTANCE.ReferenceObjectID == GetInstanceID() &&
                 PropertyEditor.INSTANCE.IsActive)
+                PropertyEditor.INSTANCE.Hide();
+        }
+
+        protected void TryOpenEditor(Action onDone)
+        {
+            if (!PropertyEditor.INSTANCE.IsActive)
+                onDone.Invoke();
+            else if(!GameManager.INSTANCE.IsUiEngaged())
                 PropertyEditor.INSTANCE.Hide();
         }
 
