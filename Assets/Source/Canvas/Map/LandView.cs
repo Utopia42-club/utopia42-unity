@@ -35,7 +35,7 @@ namespace Source.Canvas.Map
             coordinateLabel.SetText($"({start.x}, {start.z}, {end.x}, {end.z})");
             sizeLabel.SetText(GetLandSize().ToString());
             nftToggle.SetActive(land.isNft);
-            colorImage.color = Colors.GetLandColor(land);
+            colorImage.color = Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR;
         }
 
         private long GetLandSize()

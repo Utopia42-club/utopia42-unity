@@ -16,7 +16,7 @@ public class ProfileDialog : MonoBehaviour
     public TextMeshProUGUI bioLabel;
     public ImageLoader profileImage;
     public GameObject socialLinks;
-    public SocialLink socialLinkPrefab;
+    public SocialLinkk socialLinkPrefab;
     public ActionButton closeButton;
     public GameObject editButton;
     private readonly List<GameObject> links = new List<GameObject>();
@@ -78,7 +78,7 @@ public class ProfileDialog : MonoBehaviour
         {
             foreach (var link in profile.links)
             {
-                SocialLink socialLink = Instantiate(socialLinkPrefab, socialLinks.transform);
+                SocialLinkk socialLink = Instantiate(socialLinkPrefab, socialLinks.transform);
                 socialLink.link = link.link;
                 socialLink.media = link.GetMedia();
                 links.Add(socialLink.gameObject);

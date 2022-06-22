@@ -20,7 +20,7 @@ namespace Source.Canvas.Map
         public TextMeshProUGUI bioLabel;
         public ImageLoader profileImage;
         public GameObject socialLinks;
-        public SocialLink socialLinkPrefab;
+        public SocialLinkk socialLinkPrefab;
         public GameObject editButton;
         private readonly List<GameObject> links = new List<GameObject>();
 
@@ -60,7 +60,7 @@ namespace Source.Canvas.Map
             gameManager.stateGuards.Add(
                 (currentState, nextState) =>
                     !(gameObject.activeSelf
-                      && (currentState == GameManager.State.PROFILE_DIALOG || currentState == GameManager.State.MAP)));
+                      && (currentState == GameManager.State.PROFILE_DIALOG )));
         }
 
         private void Update()
@@ -97,7 +97,7 @@ namespace Source.Canvas.Map
             {
                 pickerInstance = Instantiate(colorPickerPrefab, colorPickerPlaceHolder.transform);
                 picker = pickerInstance.GetComponent<FlexibleColorPicker>();
-                picker.SetColor(Colors.GetLandColor(land));
+                picker.SetColor(Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR);
                 isColorPickerOpen = true;
             }
         }
@@ -188,7 +188,7 @@ namespace Source.Canvas.Map
             transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Settings.WalletId()));
             toggleNftButton.gameObject.SetActive(land.owner.Equals(Settings.WalletId()));
 
-            landColorButtonImage.color = Colors.GetLandColor(land);
+            landColorButtonImage.color = Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR;
 
             if (toggleNftButton.gameObject.activeSelf)
             {

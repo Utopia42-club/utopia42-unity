@@ -56,8 +56,8 @@ namespace Source.Ui.Utils
                     borderBottomRightRadius = 8,
                     borderTopRightRadius = 8,
                     borderTopLeftRadius = 8,
-                    transitionDelay = new List<TimeValue> {new(200, TimeUnit.Millisecond)},
-                    transitionDuration = new List<TimeValue> {new(50, TimeUnit.Millisecond)},
+                    transitionDelay = new List<TimeValue> {new(50, TimeUnit.Millisecond)},
+                    transitionDuration = new List<TimeValue> {new(100, TimeUnit.Millisecond)},
                 }
             };
             element.Add(label);
@@ -65,16 +65,13 @@ namespace Source.Ui.Utils
             element.BringToFront();
             currentTooltip = element;
 
-            GameManager.INSTANCE.StartCoroutine(UpdatePosition(left));
-        }
-
-        private IEnumerator UpdatePosition(float left)
-        {
-            yield return null;
-            var width = element.worldBound.width;
-            while (left + width > rootElement.worldBound.xMax)
-                left -= 1;
-            element.style.left = left;
+            element.RegisterCallback<GeometryChangedEvent>(evt =>
+            {
+                var width = element.worldBound.width;
+                while (left + width > rootElement.worldBound.xMax)
+                    left -= 1;
+                element.style.left = left;
+            });
         }
 
         private void MouseOut(MouseOutEvent e)

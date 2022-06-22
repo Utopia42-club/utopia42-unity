@@ -17,7 +17,7 @@ namespace Source.Canvas.Map
             GameManager.INSTANCE.stateChange.AddListener(
                 state =>
                 {
-                    gameObject.SetActive(state == GameManager.State.MAP);
+                    gameObject.SetActive(false);
                     CloseLandBuyDialogState();
                 }
             );

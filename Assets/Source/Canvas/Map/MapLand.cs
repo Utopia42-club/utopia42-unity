@@ -21,7 +21,7 @@ namespace Source.Canvas.Map
 
         private void RefreshView()
         {
-            GetComponent<Image>().color = Colors.GetLandColor(land);
+            GetComponent<Image>().color = Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR;
         }
 
         public void OnPointerClick(PointerEventData eventData)

@@ -99,7 +99,7 @@ namespace Source.Ui.AssetsInventory.slots
 
         public void SetGridPosition(int index, int itemsInARow)
         {
-            GridUtils.SetChildPosition(slot, size, index, itemsInARow);
+            GridUtils.SetChildPosition(slot, size, size, index, itemsInARow);
         }
 
         protected void LoadImage(string url)

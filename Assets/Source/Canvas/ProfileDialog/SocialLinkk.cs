@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static Source.Model.Profile;
 
-public class SocialLink : MonoBehaviour
+public class SocialLinkk : MonoBehaviour
 {
     private TextMeshProUGUI textMeshPro;
     private Image icon;
@@ -24,11 +24,5 @@ public class SocialLink : MonoBehaviour
         textMeshPro.SetText("<link=" + link + "><u>" + media.GetName() + "</u></link>");
         
         icon.sprite = mediaIcons[media.GetIndex()];
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 }

@@ -23,18 +23,18 @@ namespace Source.Canvas.Map
         void Start()
         {
             var manager = GameManager.INSTANCE;
-            if (manager.GetState() == GameManager.State.MAP)
-                Init();
+            // if (manager.GetState() == GameManager.State.MAP)
+            //     Init();
 
-            manager.stateChange.AddListener(state =>
-            {
-                if (state == GameManager.State.MAP)
-                    Init();
-                else
-                {
-                    DestroyRects();
-                }
-            });
+            // manager.stateChange.AddListener(state =>
+            // {
+            //     if (state == GameManager.State.MAP)
+            //         Init();
+            //     else
+            //     {
+            //         DestroyRects();
+            //     }
+            // });
         }
 
         private void Init()
@@ -98,7 +98,7 @@ namespace Source.Canvas.Map
             outline.effectColor = outlineColor;
             outline.effectDistance = new Vector2(outlineWidth, outlineWidth);
 
-            landObject.GetComponent<Image>().color = Colors.GetLandColor(land);
+            landObject.GetComponent<Image>().color = Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR;
 
             const int nftLogoDefaultSize = 30;
             var nftLogo = landObject.transform.Find("NftLogo").gameObject.GetComponent<Image>();

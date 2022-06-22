@@ -1,18 +1,51 @@
-﻿using Source.Model;
+﻿using System;
+using Source.Canvas;
+using Source.Model;
+using Source.Ui.Menu;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Position = UnityEngine.UIElements.Position;
 
 namespace Source.Ui.Map
 {
     internal class MapLand : VisualElement
     {
         private readonly Land land;
+        private static readonly Sprite nftLogo = Resources.Load<Sprite>("Icons/nft-logo");
+        private readonly Map map;
 
-        public MapLand(Land land)
+        public MapLand(Land land, Map map)
         {
             this.land = land;
+            this.map = map;
+
+            var landColor = Colors.GetLandColor(land);
+            if (landColor != null)
+                style.backgroundColor = new StyleColor(landColor.Value);
+            AddToClassList(Colors.GetLandBorderStyle(land));
             AddToClassList("map-land");
             UpdateRect();
+
+            if (land is {isNft: true})
+            {
+                const int nftLogoDefaultSize = 30;
+                var width = style.width.value.value;
+                var height = style.height.value.value;
+                var visualElement = new VisualElement
+                {
+                    style =
+                    {
+                        width = Math.Min(width - 6, nftLogoDefaultSize), // -6 is for border and position
+                        height = Math.Min(height - 6, nftLogoDefaultSize), // -6 is for border and position
+                        position = new StyleEnum<Position>(Position.Absolute),
+                        bottom = 2,
+                        right = 2
+                    }
+                };
+                UiImageLoader.SetBackground(visualElement, nftLogo);
+                Add(visualElement);
+            }
         }
 
         internal void UpdateRect()

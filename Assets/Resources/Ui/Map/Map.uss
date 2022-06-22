@@ -2,12 +2,16 @@
     /*--map-background: rgb(236, 240, 241);*/
     --map-background: var(--primary-color);
     /*--map-land-background: rgb(149, 165, 166);*/
-    --map-land-background: var(--secondary-color);
-    --map-owned-land-color: #27ae60;
+    --map-land-background: #95A5A6;
     --map-grid-origin-color: #c0392b;
     --map-grid-line-width: 1px;
     --map-grid-line-color: var(--lighter-primary-color);
     --map-minor-grid-line-color: var(--darker-primary-color);
+    
+    --map-owned-land-color: #16A085;
+    --map-others-land-color: #95A5A6;
+    --map-owned-land-nft-color: #F1C40F;
+    --map-others-land-nft-color: #F1C40F;
 }
 
 #Root {
@@ -26,7 +30,8 @@
     width: 100%;
     height: 100%;
 }
-.map-land{
+
+.map-land {
     background-color: var(--map-land-background);
     position: absolute;
 }
@@ -55,6 +60,7 @@
     left: -10%;
     right: -10%;
 }
+
 .map-horizontal-grid-line.minor-grid-line {
     border-top-color: var(--map-minor-grid-line-color);
     border-top-width: var(--map-grid-line-width);
@@ -63,11 +69,31 @@
     right: 0;
 }
 
-.map-origin-grid-line{
+.map-origin-grid-line {
     border-color: var(--map-grid-origin-color);
 }
 
-.map-mouse-label{
+.map-mouse-label {
     color: var(--text-color);
     position: absolute;
+}
+
+.map-owned-land-nft {
+    border-width: 2;
+    border-color: var(--map-owned-land-nft-color);
+}
+
+.map-owned-land {
+    border-width: 2;
+    border-color: var(--map-owned-land-color);
+}
+
+.map-others-land-nft {
+    border-width: 2;
+    border-color: var(--map-others-land-nft-color);
+}
+
+.map-others-land {
+    border-width: 2;
+    border-color: var(--map-others-land-color);
 }

@@ -254,11 +254,11 @@ namespace Source.Ui.AssetsInventory
                 {
                     var favoriteItem = favoriteItems[i];
                     var slot = new FavoriteItemInventorySlot(favoriteItem);
-                    GridUtils.SetChildPosition(slot.VisualElement(), 80, i, 3);
+                    GridUtils.SetChildPosition(slot.VisualElement(), 80, 80, i, 3);
                     container.Add(slot.VisualElement());
                 }
 
-                GridUtils.SetContainerSize(container, favoriteItems.Count);
+                GridUtils.SetContainerSize(container, favoriteItems.Count, 90, 3);
                 scrollView.Add(container);
             }, () =>
             {
@@ -399,7 +399,7 @@ namespace Source.Ui.AssetsInventory
                 foldout.contentContainer.Add(slot.VisualElement());
             }
 
-            GridUtils.SetContainerSize(foldout.contentContainer, size);
+            GridUtils.SetContainerSize(foldout.contentContainer, size, 90, 3);
             return foldout;
         }
 
@@ -581,7 +581,7 @@ namespace Source.Ui.AssetsInventory
             }
 
             var total = size + count;
-            GridUtils.SetContainerSize(content, total);
+            GridUtils.SetContainerSize(content, total, 90, 3);
             foldout.contentContainer.style.height = content.style.height.value.value + 45;
         }
 
