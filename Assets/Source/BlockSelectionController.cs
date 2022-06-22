@@ -108,7 +108,7 @@ namespace Source
             var moveUp = !moveDown && jmp;
 
             var moveDirection = hz || vr
-                ? (player.Forward * player.Vertical + player.Right * player.Horizontal).normalized
+                ? (player.PlayerForward * player.Vertical + player.CamRight * player.Horizontal).normalized
                 : Vector3.zero;
             var movement = moveUp || moveDown || moveDirection.magnitude > Player.CastStep;
 

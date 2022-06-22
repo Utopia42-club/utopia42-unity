@@ -72,9 +72,9 @@ namespace Source
 
         public bool CursorEmpty => CtrlHeld || PreparedMetaBlock == null && SelectedBlockType == null;
 
-        public Vector3 Right => cam.transform.right;
+        public Vector3 CamRight => cam.transform.right;
 
-        public Vector3 Forward
+        public Vector3 PlayerForward
         {
             get
             {
@@ -224,7 +224,7 @@ namespace Source
         {
             if (!blockSelectionController.PlayerMovementAllowed) return;
 
-            var moveDirection = cam.transform.forward * Vertical + cam.transform.right * Horizontal;
+            var moveDirection = PlayerForward * Vertical + CamRight * Horizontal;
 
             var isGrounded = characterController.isGrounded && velocity.y < 0 || floating;
 
@@ -268,7 +268,7 @@ namespace Source
                 return;
             }
 
-            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
+            if (Physics.Raycast(CamPosition, cam.forward, out raycastHit, 40))
             {
                 var focusable = raycastHit.collider.GetComponent<Focusable>();
                 hitCollider = raycastHit.collider;
