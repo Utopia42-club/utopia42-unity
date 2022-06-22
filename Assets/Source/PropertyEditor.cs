@@ -26,7 +26,9 @@ public class PropertyEditor : MonoBehaviour
 
     private void Update()
     {
-        if (!GameManager.INSTANCE.IsUiEngaged() && Input.GetKeyDown(KeyCode.E) && IsActive && Player.INSTANCE.FocusedFocusable == null)
+        var focusable = Player.INSTANCE.FocusedFocusable;
+        if (!GameManager.INSTANCE.IsUiEngaged() && Input.GetKeyDown(KeyCode.E) && IsActive
+            && (focusable == null || focusable is ChunkFocusable or MetaFocusable {Focused: false}))
             Hide();
     }
 

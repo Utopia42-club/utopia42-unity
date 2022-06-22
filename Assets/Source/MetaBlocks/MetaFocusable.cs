@@ -7,7 +7,7 @@ namespace Source
     public class MetaFocusable : Focusable
     {
         public MetaBlockObject MetaBlockObject { protected set; get; }
-
+        public bool Focused => MetaBlockObject.Focused;
         public void Initialize(MetaBlockObject metaBlockObject)
         {
             if (initialized) return;

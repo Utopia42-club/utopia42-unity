@@ -51,6 +51,7 @@ namespace Source
         private Renderer placeBlockRenderer;
         public bool CtrlHeld { private set; get; }
         public bool CtrlDown { private set; get; }
+        public bool CtrlUp { private set; get; }
         private Vector3Int playerPos;
         private AvatarController avatarController;
         [NonSerialized] public GameObject avatar;
@@ -144,7 +145,7 @@ namespace Source
             SelectionActiveBeforeAtFrameBeginning = World.INSTANCE.SelectionActive;
             GetInputs();
 
-            if (CtrlDown) ResetRaycastMemory();
+            if (CtrlDown || CtrlUp) ResetRaycastMemory();
 
             if (!ChangeForbidden)
             {
@@ -175,6 +176,7 @@ namespace Source
                 return;
             CtrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             CtrlDown = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
+            CtrlUp = Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
 
