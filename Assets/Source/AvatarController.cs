@@ -68,10 +68,17 @@ namespace Source
             controller.Move(motion);
         }
 
-        private void LookAt(Vector3 cameraForward)
+        private void UpdateLookDirection()
         {
-            cameraForward.y = 0;
-            transform.rotation = Quaternion.LookRotation(cameraForward);
+            var movement = state.Position() - (lastAnimationState?.Position() ?? state.Position());
+            movement.y = 0;
+            if (movement.magnitude > 0.001)
+                LookAt(movement.normalized);
+        }
+        private void LookAt(Vector3 forward)
+        {
+            forward.y = 0;
+            avatar.transform.rotation = Quaternion.LookRotation(forward);
         }
 
         public void SetPosition(Vector3 target)
@@ -93,8 +100,8 @@ namespace Source
         public void UpdatePlayerState(PlayerState playerState)
         {
             SetPosition(playerState.position.ToVector3());
-            LookAt(playerState.forward.ToVector3());
             state = playerState;
+            UpdateLookDirection();
             if (isAnotherPlayer)
                 UpdateAnimation();
         }
@@ -109,21 +116,31 @@ namespace Source
             updatedTime = Time.time;
             lastAnimationState = state;
 
-            if (state.floating || movement.y != 0 && movement.x == 0 && movement.z == 0)
+            if (state.floating 
+                || movement.y != 0 && movement.x == 0 && movement.z == 0
+                // || Math.Abs(movement.y) > 0.01
+                )
             {
                 animator.SetFloat("X", 0);
                 animator.SetFloat("Z", 0);
                 animator.SetFloat("Floating", state.floating ? 1 : 0);
+                // animator.SetFloat("Floating", 1);
+                
                 // if (movement.y < -0.5f && !floating)
                 //     animator.CrossFade("Falling", 0.05f);
                 return;
             }
 
-            var newX = Vector3.Dot(velocity, Quaternion.Euler(0, 90, 0) * state.Forward());
-            var newY = Vector3.Dot(velocity, state.Forward());
-
-            animator.SetFloat("X", newX);
-            animator.SetFloat("Z", newY);
+            // var newX = Vector3.Dot(velocity, Quaternion.Euler(0, 90, 0) * state.Forward());
+            // var newY = Vector3.Dot(velocity, state.Forward());
+            //
+            // animator.SetFloat("X", newX);
+            // animator.SetFloat("Z", newY);
+            
+            // if(!controller.isGrounded) return;
+            animator.SetFloat("X", 0);
+            animator.SetFloat("Z", Vector3.Dot(velocity, movement.normalized));
+            animator.SetFloat("Floating", 0);
 
             animator.SetFloat("Speed", state.sprint ? 0.9f : 0.1f);
         }
@@ -133,7 +150,9 @@ namespace Source
             animator.CrossFade("Jump", 0.01f);
             if (!isAnotherPlayer)
                 BrowserConnector.INSTANCE.ReportPlayerState(
-                    new PlayerState(Settings.WalletId(), state.position, state.forward, state.sprint, state.floating,
+                    new PlayerState(Settings.WalletId(), state.position,
+                        // state.forward, 
+                        state.sprint, state.floating,
                         true));
         }
 
@@ -167,7 +186,7 @@ namespace Source
             return s1 == null
                    || s2 == null
                    || !Equals(s1.position, s2.position)
-                   || !Equals(s1.forward, s2.forward)
+                   // || !Equals(s1.forward, s2.forward)
                    // || Vector3.Distance(s1.Position(), s2.Position()) > positionChangeThreshold
                    // || Vector3.Distance(s1.Forward(), s2.Forward()) > cameraRotationThreshold
                    || s1.sprint != s2.sprint
@@ -238,12 +257,13 @@ namespace Source
 
             public bool jump;
 
-            public PlayerState(string walletId, SerializableVector3 position, SerializableVector3 forward,
+            public PlayerState(string walletId, SerializableVector3 position,
+                // SerializableVector3 forward,
                 bool floating, bool sprint, bool jump = false)
             {
                 this.walletId = walletId;
                 this.position = position;
-                this.forward = forward;
+                // this.forward = forward;
                 this.floating = floating;
                 this.sprint = sprint;
                 this.jump = jump;
@@ -254,10 +274,10 @@ namespace Source
                 return position.ToVector3();
             }
 
-            public Vector3 Forward()
-            {
-                return forward.ToVector3();
-            }
+            // public Vector3 Forward()
+            // {
+            //     return forward.ToVector3();
+            // }
         }
     }
 }

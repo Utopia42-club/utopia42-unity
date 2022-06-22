@@ -8,8 +8,8 @@ namespace Source
     public class MouseLook : MonoBehaviour
     {
         public float mouseSensitivity = 1;
-        public Player player;
         private float xRotation = 0f;
+        private float yRotation = 0f;
         private Action onUpdate = () => { };
         private Action<Vector3> rotationTarget = null;
         public bool cursorLocked = true;
@@ -80,11 +80,10 @@ namespace Source
 
             if (rotationTarget == null)
             {
-                // camera's x rotation (look up and down)
-                xRotation -= mouseY;
+                xRotation -= mouseY; // camera's x rotation (look up and down)
                 xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-                transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
-                player.avatar.transform.Rotate(Vector3.up * mouseX);
+                yRotation += mouseX; // camera's y rotation (look left and right)
+                transform.parent.localRotation = Quaternion.Euler(xRotation, yRotation, 0);
             }
             else
                 rotationTarget.Invoke(Vector3.up * mouseX + Vector3.right * mouseY);

@@ -23,6 +23,7 @@ namespace Source
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
 
         [SerializeField] private Transform cam;
+        [SerializeField] private Transform camContainer;
         [SerializeField] private World world;
         [SerializeField] public float walkSpeed = 6f;
         [SerializeField] public float sprintSpeed = 12f;
@@ -111,7 +112,7 @@ namespace Source
             avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatarController = avatar.GetComponent<AvatarController>();
             characterController = avatar.GetComponent<CharacterController>();
-            cam.SetParent(avatar.transform);
+            camContainer.SetParent(avatar.transform);
 
             playerPos = Vectors.TruncateFloor(GetPosition());
             StartCoroutine(SavePosition());
@@ -210,7 +211,7 @@ namespace Source
         {
             if (!blockSelectionController.PlayerMovementAllowed) return;
 
-            var moveDirection = avatar.transform.forward * Vertical + avatar.transform.right * Horizontal;
+            var moveDirection = cam.transform.forward * Vertical + cam.transform.right * Horizontal;
 
             var isGrounded = characterController.isGrounded && velocity.y < 0 || floating;
 
@@ -239,7 +240,9 @@ namespace Source
             playerPos = Vectors.TruncateFloor(pos);
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(Settings.WalletId(),
-                new SerializableVector3(pos), new SerializableVector3(cam.forward), floating, sprinting));
+                new SerializableVector3(pos), 
+                // new SerializableVector3(camContainer.forward), 
+                floating, sprinting));
         }
 
 

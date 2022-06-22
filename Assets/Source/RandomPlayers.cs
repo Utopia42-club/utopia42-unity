@@ -23,7 +23,7 @@ public class RandomPlayers : MonoBehaviour
                     players.ReportOtherPlayersState(new AvatarController.PlayerState(
                         i + "",
                         new SerializableVector3(Player.INSTANCE.GetPosition() + (Vector3.one * i * 2)),
-                        new SerializableVector3(Vector3.one),
+                        // new SerializableVector3(Vector3.one),
                         false, false
                     ));
                 }
@@ -51,7 +51,7 @@ public class RandomPlayers : MonoBehaviour
                         new SerializableVector3(player.GetState().Position() + new Vector3(
                             _random.Next(-1, 1), _random.Next(-1, 1), _random.Next(-1, 1)
                         )),
-                        new SerializableVector3(Quaternion.Euler(0, 90, 0) * player.GetState().Forward()),
+                        // new SerializableVector3(Quaternion.Euler(0, 90, 0) * player.GetState().Forward()),
                         false, false
                     )
                 );
