@@ -84,10 +84,9 @@ namespace Source
             }
         }
 
-        public Vector3 CamPosition => cam.transform.position;
-
-        [SerializeField] private Vector3 firstPersonCameraPosition;
-        [SerializeField] private Vector3 thirdPersonCameraPosition;
+        [SerializeField] private float cameraContainerHeight;
+        [SerializeField] private float cameraZOffset;
+        
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
         public UnityEvent<ViewMode> viewModeChanged;
 
@@ -268,7 +267,7 @@ namespace Source
                 return;
             }
 
-            if (Physics.Raycast(CamPosition, cam.forward, out raycastHit, 40))
+            if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
             {
                 var focusable = raycastHit.collider.GetComponent<Focusable>();
                 hitCollider = raycastHit.collider;
@@ -324,7 +323,8 @@ namespace Source
         {
             var isNowFirstPerson = viewMode == ViewMode.FIRST_PERSON;
             viewMode = isNowFirstPerson ? ViewMode.THIRD_PERSON : ViewMode.FIRST_PERSON;
-            cam.localPosition = isNowFirstPerson ? thirdPersonCameraPosition : firstPersonCameraPosition;
+            camContainer.localPosition = cameraContainerHeight * Vector3.up;
+            cam.localPosition = (isNowFirstPerson ? cameraZOffset : 0) * Vector3.back;
             avatarController.SetAvatarBodyDisabled(!isNowFirstPerson);
             viewModeChanged.Invoke(viewMode);
         }

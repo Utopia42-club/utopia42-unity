@@ -329,7 +329,7 @@ namespace Source
                 if (!onlyMetaSelectionActive)
                 {
                     var conflictWithPlayer = false;
-                    var currVox = Vectors.TruncateFloor(player.CamPosition);
+                    var currVox = Vectors.TruncateFloor(player.GetPosition());
                     foreach (var pos in World.INSTANCE.ClipboardVoxelPositions)
                     {
                         var newPosition = pos - minIntPoint + player.PossiblePlaceBlockPosInt;

@@ -19,7 +19,7 @@ namespace Source.TestUtils
             }
 
             UtopiaApi.INSTANCE.PlaceBlocksWithOffset(textAsset.text,
-                Vectors.FloorToInt(Player.INSTANCE.CamPosition) + 5 * Vector3Int.up);
+                Vectors.FloorToInt(Player.INSTANCE.GetPosition()) + 5 * Vector3Int.up);
         }
     }
 }
