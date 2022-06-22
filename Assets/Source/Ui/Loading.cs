@@ -36,13 +36,13 @@ namespace Source.Canvas
         public void UpdateText(string text)
         {
             label.text = text;
-            UiImageLoader.SetBackground(image, utopiaLogo);
+            UiImageUtils.SetBackground(image, utopiaLogo);
         }
 
         public void ShowConnectionError()
         {
             UpdateText("An Error Occured While Querying Blockchain\nTry Again Later");
-            UiImageLoader.SetBackground(image, errorLogo);
+            UiImageUtils.SetBackground(image, errorLogo);
         }
 
         public static Loading INSTANCE => instance;

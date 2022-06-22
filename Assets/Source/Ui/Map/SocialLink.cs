@@ -11,7 +11,7 @@ namespace Source.Ui.Map
             AddToClassList("social-link");  
             var icon = new VisualElement();
             icon.AddToClassList("social-link__icon");
-            UiImageLoader.SetBackground(icon, link.GetMedia().GetIcon());
+            UiImageUtils.SetBackground(icon, link.GetMedia().GetIcon());
             Add(icon);
 
             var label = new Label();

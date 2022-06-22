@@ -112,16 +112,16 @@ public class Menu : MonoBehaviour, UiProvider
     private void CreateActions()
     {
         exitButton = new Button();
-        exitButton.AddToClassList("utopia-button");
-        UiImageLoader.SetBackground(exitButton, Resources.Load<Sprite>("Icons/shutdown"));
+        exitButton.AddToClassList("utopia-button-primary");
+        UiImageUtils.SetBackground(exitButton, Resources.Load<Sprite>("Icons/shutdown"));
         exitButton.clickable.clicked += () => gameManager.Exit();
         exitButton.tooltip = "Exit";
         exitButton.AddManipulator(new ToolTipManipulator(root));
         tabPane.AddRightAction(exitButton);
 
         saveButton = new Button();
-        saveButton.AddToClassList("utopia-button");
-        UiImageLoader.SetBackground(saveButton, Resources.Load<Sprite>("Icons/save"));
+        saveButton.AddToClassList("utopia-button-primary");
+        UiImageUtils.SetBackground(saveButton, Resources.Load<Sprite>("Icons/save"));
         saveButton.clickable.clicked += () => gameManager.Save();
         saveButton.tooltip = "Save my lands";
         saveButton.AddManipulator(new ToolTipManipulator(root));
@@ -129,8 +129,8 @@ public class Menu : MonoBehaviour, UiProvider
         tabPane.AddRightAction(saveButton);
 
         copyLocationButton = new Button();
-        copyLocationButton.AddToClassList("utopia-button");
-        UiImageLoader.SetBackground(copyLocationButton, Resources.Load<Sprite>("Icons/pin"));
+        copyLocationButton.AddToClassList("utopia-button-primary");
+        UiImageUtils.SetBackground(copyLocationButton, Resources.Load<Sprite>("Icons/pin"));
         copyLocationButton.clickable.clicked += () => gameManager.CopyPositionLink();
         copyLocationButton.tooltip = "Copy current position";
         copyLocationButton.AddManipulator(new ToolTipManipulator(root));

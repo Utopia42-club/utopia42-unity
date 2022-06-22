@@ -431,7 +431,8 @@ namespace Source
 
         public Vector3 GetCurrentPosition()
         {
-            return characterController.center;
+            //FIXME gets called from plugin -> Delete after adapting plugin side
+            return GetPosition();
         }
 
         public static Vector3? GetSavedPosition()

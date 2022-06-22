@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 namespace Source.Ui.Utils
 {
-    public class UiImageLoader
+    public class UiImageUtils
     {
         public static IEnumerator LoadImage(string url, Action<Sprite> onSuccess, Action onFail)
         {

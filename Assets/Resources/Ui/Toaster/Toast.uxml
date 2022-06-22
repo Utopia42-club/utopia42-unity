@@ -5,7 +5,7 @@
             <ui:VisualElement name="image" style="background-color: rgba(255, 255, 255, 0); background-image: url(&apos;project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=8228938214290033325&amp;guid=a80665435d1ae52f687d90cdd44fb201&amp;type=3#console.erroricon&apos;); width: 50px; height: 50px;" />
             <ui:Label text="Label" display-tooltip-when-elided="true" name="label" style="flex-grow: 1;" />
             <ui:VisualElement name="close" style="width: 39px; display: none; height: 100%;">
-                <ui:Button display-tooltip-when-elided="true" name="closeButton" class="utopia-button" style="height: 50%; background-image: url(&apos;project://database/Assets/Images/close.png?fileID=2800000&amp;guid=7b0f12ed9e26e9e468679ba09f7c6f94&amp;type=3#close&apos;);" />
+                <ui:Button display-tooltip-when-elided="true" name="closeButton" class="utopia-stroked-button-primary" style="height: 50%; background-image: url(&apos;project://database/Assets/Images/close.png?fileID=2800000&amp;guid=7b0f12ed9e26e9e468679ba09f7c6f94&amp;type=3#close&apos;);" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

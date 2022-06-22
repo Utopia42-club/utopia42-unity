@@ -7,7 +7,7 @@
     --map-grid-line-width: 1px;
     --map-grid-line-color: var(--lighter-primary-color);
     --map-minor-grid-line-color: var(--darker-primary-color);
-    
+
     --map-owned-land-color: #16A085;
     --map-others-land-color: #95A5A6;
     --map-owned-land-nft-color: #F1C40F;
@@ -96,4 +96,10 @@
 .map-others-land {
     border-width: 2;
     border-color: var(--map-others-land-color);
+}
+
+.map-position-indicator {
+    position: absolute;
+    width: 30;
+    height: 30;
 }

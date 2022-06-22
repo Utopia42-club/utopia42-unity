@@ -4,6 +4,7 @@
 @import "StyleSheets/PopupStyleSheet.uss";
 @import "StyleSheets/ToggleViewStyleSheet.uss";
 @import "StyleSheets/FoldoutStyleSheet.uss";
+@import "StyleSheets/UtopiaButtons.uss";
 
 :root {
     --text-darker-color: rgb(172, 172, 172);
@@ -23,38 +24,18 @@
     --accent-color: rgb(220, 119, 119);
     --darker-accent-color: rgb(180, 98, 98);
     --lighter-accent-color: rgb(220, 139, 139);
-    
+
     --danger-color: rgb(217, 70, 70);
     --warn-color: rgb(174, 177, 28);
 
+    --transparent: rgba(0, 0, 0, 0);
+
     --default-border-radius: 7px;
     --default-border-color: var(--lighter-primary-color);
-    
+
     --default-font-size: 14px;
     --small-font-size: 11px;
     --h1-font-size: 16px;
-}
-
-.utopia-button {
-    border-radius: var(--default-border-radius);
-    border-color: var(--lighter-primary-color);
-    background-color: var(--primary-color);
-}
-
-.utopia-button:hover{
-    border-color: var(--darker-primary-color);
-}
-
-.utopia-button:active {
-    border-color: var(--darker-primary-color);
-}
-
-.utopia-action-button {
-    width: 40px;
-    margin-left: 2px;
-    margin-right: 2px;
-    margin-top: 2px;
-    margin-bottom: 2px;
 }
 
 .utopia-panel {
@@ -104,19 +85,23 @@
     font-size: var(--small-font-size);
 }
 
+.left-align-text {
+    -unity-text-align: middle-left;
+}
+
 .utopia-toast {
     opacity: 0.8;
 }
 
-.utopia-background{
+.utopia-background {
     background-color: var(--dark-background-color);
 }
 
-.utopia-background-tint-color{
+.utopia-background-tint-color {
     -unity-background-image-tint-color: var(--primary-color);
 }
 
-.utopia-text-h1{
+.utopia-text-h1 {
     font-size: var(--h1-font-size);
     -unity-font-style: bold;
 }

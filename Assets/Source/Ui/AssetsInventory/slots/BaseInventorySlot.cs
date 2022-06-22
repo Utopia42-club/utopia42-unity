@@ -104,7 +104,7 @@ namespace Source.Ui.AssetsInventory.slots
 
         protected void LoadImage(string url)
         {
-            imageCoroutine = UiImageLoader.SetBackGroundImageFromUrl(url, assetDefaultImage,
+            imageCoroutine = UiImageUtils.SetBackGroundImageFromUrl(url, assetDefaultImage,
                 slotIcon, () => isLoadingImage = false);
             isLoadingImage = true;
             assetsInventory.StartCoroutine(imageCoroutine);
@@ -117,7 +117,7 @@ namespace Source.Ui.AssetsInventory.slots
 
         public void SetBackground(Sprite sprite)
         {
-            UiImageLoader.SetBackground(slotIcon, sprite);
+            UiImageUtils.SetBackground(slotIcon, sprite);
         }
 
         public bool IsLoadingImage()

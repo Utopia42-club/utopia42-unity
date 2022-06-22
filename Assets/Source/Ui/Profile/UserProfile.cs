@@ -31,7 +31,7 @@ namespace Source.Ui.Profile
             {
                 var url = Constants.ApiURL + "/profile/avatar/" + profile.imageUrl;
                 GameManager.INSTANCE.StartCoroutine(
-                    UiImageLoader.SetBackGroundImageFromUrl(url, emptyUserIcon, imageElement));
+                    UiImageUtils.SetBackGroundImageFromUrl(url, emptyUserIcon, imageElement));
             }
 
             nameLabel = this.Q<Label>("name");
@@ -89,8 +89,8 @@ namespace Source.Ui.Profile
                         height = 30
                     }
                 };
-                editButton.AddToClassList("utopia-button");
-                UiImageLoader.SetBackground(editButton, editIcon);
+                editButton.AddToClassList("utopia-button-primary");
+                UiImageUtils.SetBackground(editButton, editIcon);
                 editButton.clickable.clicked += () => GameManager.INSTANCE.EditProfile();
                 Add(editButton);
             }

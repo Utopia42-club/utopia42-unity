@@ -1,7 +1,5 @@
 using Source.Model;
 using UnityEngine;
-using UnityEngine.LowLevel;
-using UnityEngine.PlayerLoop;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.Map
@@ -18,7 +16,8 @@ namespace Source.Ui.Map
             root.Add(grid);
             root.Add(lands = new MapLandLayer(this));
             root.Add(new MapPointerPositionLabel(this));
-
+            // root.Add(new MapPlayerPositionIndicator(this));
+            
             viewportController = new MapViewportController(this, e =>
             {
                 lands.transform.position = new Vector3(-e.rect.x, -e.rect.y, 0);
