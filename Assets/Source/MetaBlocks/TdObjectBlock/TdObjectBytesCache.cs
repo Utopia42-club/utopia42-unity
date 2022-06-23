@@ -10,7 +10,7 @@ namespace Source.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBytesCache : MonoBehaviour
     {
-        private const int DownloadLimitMb = 10;
+        public const int DownloadLimitMb = 10;
         private const int CacheLimitMb = 100;
         private readonly ConcurrentDictionary<string, byte[]> cache = new();
         private readonly ConcurrentDictionary<string, ConcurrentQueue<Action<byte[], State?>>> queue = new();

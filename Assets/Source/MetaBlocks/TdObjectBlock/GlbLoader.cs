@@ -9,12 +9,9 @@ namespace Source.MetaBlocks.TdObjectBlock
 {
     public class GlbLoader : MonoBehaviour
     {
-        private static readonly ImportSettings ImportSettings = new ImportSettings
+        private static readonly ImportSettings ImportSettings = new()
         {
-            animationSettings =
-            {
-                useLegacyClips = true
-            }
+            useLegacyClips = true
         };
 
 
@@ -23,7 +20,7 @@ namespace Source.MetaBlocks.TdObjectBlock
             try
             {
                 var go = Importer.LoadFromBytes(data, ImportSettings, out var clips);
-                
+
                 if (clips.Length > 0)
                 {
                     var anim = go.AddComponent<Animation>();
@@ -33,7 +30,7 @@ namespace Source.MetaBlocks.TdObjectBlock
                     anim.AddClip(clip, clip.name);
                     anim.Play(clip.name);
                 }
-                
+
                 onSuccess.Invoke(go);
             }
             catch
@@ -41,7 +38,5 @@ namespace Source.MetaBlocks.TdObjectBlock
                 onFailure.Invoke();
             }
         }
-
-        public static GlbLoader INSTANCE => GameObject.Find("TdObjectLoader").GetComponent<GlbLoader>();
     }
 }
