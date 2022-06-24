@@ -144,7 +144,7 @@ namespace Source.Canvas
             snackItem = Snack.INSTANCE.ShowLines(new List<string>
             {
                 "esc : unlock the cursor",
-                "ctrl+B : switch between first and third person view"
+                "B : toggle between first and third person view"
             }, () => { });
         }
 
