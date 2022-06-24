@@ -104,8 +104,7 @@ namespace Source
         public Vector3 PossiblePlaceMetaBlockPos { get; private set; }
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
         public Land HighlightLand => highlightLand;
-        public RaycastHit RaycastHit => raycastHit;
-
+        
         private void Start()
         {
             blockSelectionController = GetComponent<BlockSelectionController>();
