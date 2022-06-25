@@ -140,8 +140,7 @@ namespace Source.Ui.AssetsInventory
 
         private void UpdateVisibility()
         {
-            var active = (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING ||
-                          GameManager.INSTANCE.GetState() == GameManager.State.MOVING_OBJECT)
+            var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
                          && !Login.Login.IsGuest()
                 ; // && Can Edit Land 

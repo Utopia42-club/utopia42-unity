@@ -577,7 +577,6 @@ namespace Source
             LOGIN,
             DIALOG,
             PROFILE_DIALOG,
-            MOVING_OBJECT,
             FREEZE
         }
 
