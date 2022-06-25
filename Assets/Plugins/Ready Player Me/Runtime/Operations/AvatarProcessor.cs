@@ -27,7 +27,8 @@ namespace ReadyPlayerMe
         private const string FEMININE_ANIMATION_AVATAR_NAME = "AnimationAvatars/FeminineAnimationAvatar";
 
         // Animation controller
-        private const string ANIMATOR_CONTROLLER_NAME = "Avatar Animator";
+        // private const string ANIMATOR_CONTROLLER_NAME = "Avatar Animator";
+        private const string ANIMATOR_CONTROLLER_NAME = "Animators/StarterAssetsThirdPerson";
 
         // Bone names
         private const string BONE_HIPS = "Hips";

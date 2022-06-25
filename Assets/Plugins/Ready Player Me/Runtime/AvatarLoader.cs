@@ -157,11 +157,12 @@ namespace ReadyPlayerMe
         {
             var name = $"Avatar-{avatarUri.Guid}";
             
-            var oldInstance = GameObject.Find(name);
-            if (oldInstance)
-            {
-                Object.DestroyImmediate(oldInstance);
-            }
+            // TODO: remove old instance?
+            // var oldInstance = GameObject.Find(name);
+            // if (oldInstance)
+            // {
+            //     // Object.DestroyImmediate(oldInstance); 
+            // }
 
             avatar.name = name;
 

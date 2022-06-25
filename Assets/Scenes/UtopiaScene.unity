@@ -776,8 +776,8 @@ MonoBehaviour:
   world: {fileID: 1828913042}
   walkSpeed: 6
   sprintSpeed: 12
-  jumpHeight: 2
-  sprintJumpHeight: 2.5
+  jumpHeight: 1
+  sprintJumpHeight: 1.5
   gravity: -9.8
   highlightBlock: {fileID: 960974167}
   placeBlock: {fileID: 865122078}
