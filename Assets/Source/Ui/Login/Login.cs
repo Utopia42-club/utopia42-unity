@@ -3,6 +3,7 @@ using Source.Model;
 using Source.Service.Ethereum;
 using Source.Ui.Dialog;
 using Source.Ui.Toaster;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Position = Source.Model.Position;
@@ -31,7 +32,9 @@ namespace Source.Ui.Login
             submitButton = root.Q<Button>("enterButton");
             submitButton.clickable.clicked += Submit;
             exitButton = root.Q<Button>("exitButton");
+            exitButton.tooltip = "Exit";
             exitButton.clickable.clicked += () => GameManager.INSTANCE.Exit();
+            exitButton.AddManipulator(new ToolTipManipulator());
             var loadingId = LoadingLayer.LoadingLayer.Show(root);
             StartCoroutine(EthNetwork.GetNetworks(_ =>
                 {
