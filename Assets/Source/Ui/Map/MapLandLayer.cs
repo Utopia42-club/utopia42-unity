@@ -52,6 +52,8 @@ namespace Source.Ui.Map
                 var realPosition = map.ScreenToUtopia(evt.mousePosition);
                 GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
             });
+            var mapPlayerPositionIndicator = new MapPlayerPositionIndicator(map);
+            Add(mapPlayerPositionIndicator);
         }
 
         private void PointerMoved(PointerMoveEvent evt)

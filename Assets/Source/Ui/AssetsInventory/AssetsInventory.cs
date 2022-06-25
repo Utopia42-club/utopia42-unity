@@ -834,11 +834,6 @@ namespace Source.Ui.AssetsInventory
             return selectedSlot.GetSlotInfo();
         }
 
-        public VisualElement GetTooltipRoot()
-        {
-            return root;
-        }
-
         public static AssetsInventory INSTANCE => instance;
 
         public void ReloadTab()

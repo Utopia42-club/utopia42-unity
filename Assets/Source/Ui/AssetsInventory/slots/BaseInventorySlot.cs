@@ -92,7 +92,7 @@ namespace Source.Ui.AssetsInventory.slots
             }
             else if (tooltip != null)
             {
-                toolTipManipulator = new ToolTipManipulator(assetsInventory.GetTooltipRoot());
+                toolTipManipulator = new ToolTipManipulator();
                 slotIcon.AddManipulator(toolTipManipulator);
             }
         }
@@ -147,7 +147,7 @@ namespace Source.Ui.AssetsInventory.slots
             leftAction.style.backgroundImage = Background.FromSprite(background);
             leftAction.clickable = new Clickable(() => { });
             leftAction.clickable.clicked += () => action?.Invoke();
-            leftAction.AddManipulator(new ToolTipManipulator(assetsInventory.GetTooltipRoot()));
+            leftAction.AddManipulator(new ToolTipManipulator());
         }
 
         public void SetLeftActionVisible(bool visible)
@@ -162,7 +162,7 @@ namespace Source.Ui.AssetsInventory.slots
             rightAction.style.backgroundImage = Background.FromSprite(background);
             rightAction.clickable = new Clickable(() => { });
             rightAction.clickable.clicked += () => action?.Invoke();
-            rightAction.AddManipulator(new ToolTipManipulator(assetsInventory.GetTooltipRoot()));
+            rightAction.AddManipulator(new ToolTipManipulator());
         }
 
         public void SetRightActionVisible(bool visible)

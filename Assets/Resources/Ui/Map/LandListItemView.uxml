@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
+    <ui:VisualElement name="root" class="utopia-default-radius utopia-stroked-button-primary" style="flex-direction: row; width: 100%; height: 60px; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px; align-items: center; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px;">
+        <ui:VisualElement name="colorBar" class="utopia-default-radius" style="width: 16px; background-color: rgb(221, 16, 16); height: 100%; margin-right: 5px;" />
+        <ui:VisualElement name="details" style="flex-grow: 1;">
+            <ui:VisualElement name="top" style="flex-grow: 1; flex-direction: row;">
+                <ui:Label text="Land Name" display-tooltip-when-elided="true" name="landNameLabel" class="utopia-text-h1" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; flex-grow: 1; overflow: hidden;" />
+                <ui:VisualElement name="landSize" style="flex-direction: row;">
+                    <ui:VisualElement name="landSizeIcon" style="width: 25px; height: 25px; background-image: url(&apos;project://database/Assets/Images/area.png?fileID=2800000&amp;guid=801807dcff8bd1674aa48995940283aa&amp;type=3#area&apos;);" />
+                    <ui:Label text="12312312311231231231" display-tooltip-when-elided="true" name="landSizeLabel" style="white-space: nowrap; max-width: 95px; overflow: hidden;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="bottom" style="flex-grow: 1; flex-direction: row; align-items: center;">
+                <ui:VisualElement name="mapIcon" style="background-image: url(&apos;project://database/Assets/Images/map.png?fileID=2800000&amp;guid=b3e8b9d1df0be76409ad0fe855fcd484&amp;type=3#map&apos;); width: 25px; height: 25px;" />
+                <ui:Label text="(1200,1231,12312,3213)" display-tooltip-when-elided="true" name="landCordinatesLabel" style="margin-left: 8px; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; display: flex; overflow: hidden;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="nftLogo" style="width: 40px; height: 40px; background-image: resource(&apos;Icons/nft-logo&apos;); display: none;" />
+    </ui:VisualElement>
+</ui:UXML>

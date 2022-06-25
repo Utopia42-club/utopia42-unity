@@ -5,7 +5,7 @@
     border-width: 1px;
     border-radius: var(--default-border-radius);
     border-color: var(--default-border-color);
-    background-color: var(--dark-background-color);
+    background-color: var(--background-color);
     padding: 2px;
     margin: 3px;
 }

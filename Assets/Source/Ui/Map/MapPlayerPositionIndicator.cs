@@ -14,16 +14,14 @@ namespace Source.Ui.Map
             this.map = map;
             AddToClassList("map-position-indicator");
             UiImageUtils.SetBackground(this, icon);
-            UpdatePosition();
+            RegisterCallback<GeometryChangedEvent>(evt => UpdatePosition());
         }
 
         private void UpdatePosition()
         {
             var playerPos = Player.INSTANCE.GetPosition();
-            var screenPos = map.UtopiaToScreen(new Vector2(playerPos.x, playerPos.z));
-            screenPos = map.WorldToLocal(screenPos);
-            style.left = Mathf.Min(map.contentRect.width - contentRect.width - 8, screenPos.x);
-            style.top = Mathf.Max(0, screenPos.y - contentRect.height - 8);
+            style.left = playerPos.x - contentRect.width / 2;
+            style.top = -playerPos.z - contentRect.height / 2;
         }
     }
 }

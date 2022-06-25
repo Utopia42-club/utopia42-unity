@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Source.Model;
+using Source.Ui.Dialog;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,13 +18,19 @@ namespace Source.Ui.Map
             root.Add(grid);
             root.Add(lands = new MapLandLayer(this));
             root.Add(new MapPointerPositionLabel(this));
-            // root.Add(new MapPlayerPositionIndicator(this));
-            
+
             viewportController = new MapViewportController(this, e =>
             {
                 lands.transform.position = new Vector3(-e.rect.x, -e.rect.y, 0);
                 lands.transform.scale = new Vector3(e.scale, e.scale, 1);
                 grid.UpdateViewport(e.scale);
+            });
+
+            root.Add(new MapActionsLayer(this));
+            RegisterCallback<GeometryChangedEvent>(evt =>
+            {
+                var pos = Player.INSTANCE.GetPosition();
+                MoveTo(new Vector2(pos.x, pos.z));
             });
         }
 
@@ -42,8 +50,33 @@ namespace Source.Ui.Map
             return lands.LocalToWorld(new Vector2(pos.x, -pos.y));
         }
 
-        public void SubmitDrawing(Land getLand)
+        public void SubmitDrawing(Land land)
         {
+            var buyDialog = new LandBuyDialog(land);
+            var dialogId = 0;
+            dialogId = DialogService.INSTANCE.Show(
+                new DialogConfig(buyDialog)
+                    .WithWidth(new StyleLength(new Length(300)))
+                    .WithHeight(new StyleLength(new Length(180)))
+                    .WithAction(new DialogAction("Cancel", () => DialogService.INSTANCE.Close(dialogId)))
+                    .WithAction(new DialogAction("Buy",
+                        () =>
+                        {
+                            DialogService.INSTANCE.Close(dialogId);
+                            GameManager.INSTANCE.Buy(new List<Land> {land});
+                        }
+                        , "utopia-stroked-button-secondary"))
+            );
+        }
+
+        public void ZoomIn()
+        {
+            viewportController.ZoomIn();
+        }
+
+        public void ZoomOut()
+        {
+            viewportController.ZoomOut();
         }
     }
 }

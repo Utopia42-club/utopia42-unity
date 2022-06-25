@@ -23,7 +23,7 @@ namespace Source.Ui
         }
 
         public UxmlElement(string resourcePath, bool fillSize)
-            : this(resourcePath, new StyleLength(new Length(100, LengthUnit.Percent)),
+            : this(resourcePath, fillSize, new StyleLength(new Length(100, LengthUnit.Percent)),
                 new StyleLength(new Length(100, LengthUnit.Percent)))
         {
         }

@@ -82,3 +82,9 @@
 .utopia-button-accent:active {
     background-color: var(--darker-accent-color);
 }
+
+.utopia-action-button {
+    padding: 0;
+    width: 30;
+    height: 30;
+}

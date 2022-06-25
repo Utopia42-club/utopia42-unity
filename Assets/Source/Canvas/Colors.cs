@@ -26,6 +26,11 @@ namespace Source.Canvas
             return null;
         }
 
+        public static string ConvertToHex(Color color)
+        {
+            return "#" + ColorUtility.ToHtmlStringRGB(color);
+        }
+
         public static Color? GetLandColor(Land land)
         {
             Color? color = null;
@@ -49,8 +54,10 @@ namespace Source.Canvas
         {
             var owner = land.owner.Equals(Settings.WalletId());
             return owner
-                ? (land.isNft ? "map-owned-land-nft" : "map-owned-land")
-                : (land.isNft ? "map-others-land-nft" : "map-others-land");
+                ? land.isNft ? "map-owned-land-nft" : "map-owned-land"
+                : land.isNft
+                    ? "map-others-land-nft"
+                    : "map-others-land";
         }
     }
 }

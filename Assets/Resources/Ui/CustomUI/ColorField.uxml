@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/CustomUI/ColorField.uss?fileID=7433441132597879392&amp;guid=546e9524d55a4fe58ac7d3e9fcbfce4b&amp;type=3#ColorField" />
+    <ui:VisualElement name="root" class="utopia-fields-group utopia-background" style="flex-direction: column;">
+        <ui:Label text="Label" name="label" class="utopia-fields-group__label" />
+        <ui:VisualElement name="colorPreview" class="utopia-color-field__preview" />
+        <ui:Button display-tooltip-when-elided="true" enable-rich-text="false" name="pickerButton" class="utopia-button-primary" style="background-image: resource(&apos;Icons/color-picker&apos;); position: absolute; right: 5px; top: 10px; width: 30px; height: 30px;" />
+    </ui:VisualElement>
+</ui:UXML>

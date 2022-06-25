@@ -7,6 +7,7 @@ using Source.Canvas.Map;
 using Source.Model;
 using Source.Service;
 using Source.Service.Ethereum;
+using Source.Ui.Dialog;
 using Source.Ui.Menu;
 using Source.Utils;
 using TMPro;
@@ -68,7 +69,7 @@ namespace Source
                     doubleCtrlTap = true;
                     doubleCtrlTapTime = Time.time;
                 }
-                else if (Input.GetButtonDown("Menu"))
+                else if (Input.GetButtonDown("Menu") || Input.GetButtonDown("Map"))
                     SetState(State.MENU);
             }
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.MENU)
@@ -215,6 +216,13 @@ namespace Source
         {
             if (!worldInited)
                 return; //FIXME
+
+            var dialogService = DialogService.INSTANCE;
+            if (dialogService.isAnyDialogOpen())
+            {
+                dialogService.CloseLastOpenedDialog();
+                return;
+            }
 
             switch (state)
             {

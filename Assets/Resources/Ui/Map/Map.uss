@@ -1,17 +1,15 @@
 * {
-    /*--map-background: rgb(236, 240, 241);*/
     --map-background: var(--primary-color);
-    /*--map-land-background: rgb(149, 165, 166);*/
-    --map-land-background: #95A5A6;
-    --map-grid-origin-color: #c0392b;
+    --map-land-background: rgb(149, 165, 166);
+    --map-grid-origin-color: rgb(192, 57, 43);
     --map-grid-line-width: 1px;
     --map-grid-line-color: var(--lighter-primary-color);
     --map-minor-grid-line-color: var(--darker-primary-color);
-
-    --map-owned-land-color: #16A085;
-    --map-others-land-color: #95A5A6;
-    --map-owned-land-nft-color: #F1C40F;
-    --map-others-land-nft-color: #F1C40F;
+    --map-owned-land-color: rgb(22, 160, 133);
+    --map-others-land-color: rgb(149, 165, 166);
+    --map-owned-land-nft-color: rgb(241, 196, 15);
+    --map-others-land-nft-color: rgb(241, 196, 15);
+    --map-default-land-color: var(--map-others-land-color);
 }
 
 #Root {
@@ -21,8 +19,22 @@
     overflow: hidden;
 }
 
-.map-grid,
-.map-land-layer,
+.map-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.map-land-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
 .map-subgrid {
     position: absolute;
     top: 0;
@@ -35,7 +47,6 @@
     background-color: var(--map-land-background);
     position: absolute;
 }
-
 
 .map-vertical-grid-line {
     border-left-color: var(--map-grid-line-color);
@@ -102,4 +113,16 @@
     position: absolute;
     width: 30;
     height: 30;
+}
+
+.map-default-land-background {
+    background-color: var(--map-default-land-color);
+}
+
+.current-location-box:hover {
+    background-color: var(--darker-primary-color);
+}
+
+.map-new-drawing-land{
+    background-color: var(--secondary-color);
 }

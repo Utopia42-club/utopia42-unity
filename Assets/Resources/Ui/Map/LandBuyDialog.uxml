@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
+    <ui:VisualElement name="root">
+        <ui:Label text="You are about to buy the selected land" display-tooltip-when-elided="true" />
+        <ui:VisualElement name="sizeBox" style="flex-direction: row; align-items: center;">
+            <ui:Label text="Size:" display-tooltip-when-elided="true" />
+            <ui:Label text="Label" display-tooltip-when-elided="true" name="sizeLabel" />
+        </ui:VisualElement>
+        <ui:VisualElement name="priceBox" style="align-items: center; flex-direction: row;">
+            <ui:Label text="Price:&#x9;" display-tooltip-when-elided="true" enable-rich-text="true" />
+            <ui:Label text="Label" display-tooltip-when-elided="true" name="priceLabel" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -39,6 +39,7 @@ namespace Source.Ui.Profile
                 nameLabel.text = profile.name;
 
             body = this.Q<ScrollView>("body");
+            Utils.Utils.IncreaseScrollSpeed(body, 600);
             body.Clear();
             if (profile.bio != null)
             {

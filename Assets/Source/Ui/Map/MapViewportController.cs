@@ -48,18 +48,33 @@ namespace Source.Ui.Map
         private void Scale(WheelEvent e)
         {
             if (e.delta.y == 0) return;
+            DoScale(e.mousePosition, e.delta.y <= 0);
+        }
 
-            var additive = e.delta.y > 0 ? -1 : 1;
+        public void ZoomIn()
+        {
+            DoScale(new Vector2(Screen.width / 2, Screen.height / 2), true);
+        }
+
+        public void ZoomOut()
+        {
+            DoScale(new Vector2(Screen.width / 2, Screen.height / 2), false);
+        }
+
+        private void DoScale(Vector2 mousePosition, bool zoomIn)
+        {
+            var additive = zoomIn ? 1 : -1;
             var newIdx = scaleIndex + additive;
+
             if (newIdx >= 0 && newIdx < scales.Length)
             {
                 scaleIndex += additive;
                 var scale = scales[scaleIndex];
-                var mouseBeforeScale = map.ScreenToUtopia(e.mousePosition);
+                var mouseBeforeScale = map.ScreenToUtopia(mousePosition);
                 listener(new ViewportChangeEvent(rect, scale));
                 // Change the viewport inorder to maintain local (utopia position) mouse position while scaling 
                 var post = map.UtopiaToScreen(mouseBeforeScale);
-                var delta = e.mousePosition - post;
+                var delta = mousePosition - post;
                 rect = new Rect(rect.x - delta.x, rect.y - delta.y, rect.width, rect.height);
                 listener(new ViewportChangeEvent(rect, scale));
             }

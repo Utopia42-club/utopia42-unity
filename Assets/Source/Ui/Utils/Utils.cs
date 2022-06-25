@@ -60,7 +60,7 @@ namespace Source.Ui.Utils
         {
             var clicked = 0;
             float clickTime = 0;
-            const float clickDelay = 0.6f;
+            const float clickDelay = 0.5f;
             visualElement.RegisterCallback<MouseDownEvent>(evt =>
             {
                 clicked++;
