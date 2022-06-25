@@ -1,5 +1,4 @@
 ﻿using System;
-using Unity.Plastic.Newtonsoft.Json.Serialization;
 using UnityEngine;
 using UnityEngine.UIElements;
 
