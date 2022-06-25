@@ -9,7 +9,6 @@ using Source.Model;
 using Source.Service;
 using Source.Ui.AssetsInventory.Models;
 using Source.Ui.Login;
-using Source.Ui.Menu;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -24,6 +23,7 @@ namespace Source
         public static readonly Vector3Int ViewDistance = new Vector3Int(5, 5, 5);
 
         [SerializeField] private Transform cam;
+        [SerializeField] private Transform camContainer;
         [SerializeField] private World world;
         [SerializeField] public float walkSpeed = 6f;
         [SerializeField] public float sprintSpeed = 12f;
@@ -72,8 +72,21 @@ namespace Source
 
         public bool CursorEmpty => CtrlHeld || PreparedMetaBlock == null && SelectedBlockType == null;
 
-        [SerializeField] private Vector3 firstPersonCameraPosition;
-        [SerializeField] private Vector3 thirdPersonCameraPosition;
+        public Vector3 CamRight => cam.transform.right;
+
+        public Vector3 PlayerForward
+        {
+            get
+            {
+                var v = cam.transform.forward;
+                v.y = 0;
+                return v;
+            }
+        }
+
+        [SerializeField] private float cameraContainerHeight;
+        [SerializeField] private float cameraZOffset;
+        
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
         public UnityEvent<ViewMode> viewModeChanged;
 
@@ -91,9 +104,7 @@ namespace Source
         public Vector3 PossiblePlaceMetaBlockPos { get; private set; }
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
         public Land HighlightLand => highlightLand;
-        public Transform transform => avatar?.transform; // TODO
-        public RaycastHit RaycastHit => raycastHit;
-
+        
         private void Start()
         {
             blockSelectionController = GetComponent<BlockSelectionController>();
@@ -112,7 +123,7 @@ namespace Source
             avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatarController = avatar.GetComponent<AvatarController>();
             characterController = avatar.GetComponent<CharacterController>();
-            cam.SetParent(avatar.transform);
+            camContainer.SetParent(avatar.transform);
 
             playerPos = Vectors.TruncateFloor(GetPosition());
             StartCoroutine(SavePosition());
@@ -211,7 +222,7 @@ namespace Source
         {
             if (!blockSelectionController.PlayerMovementAllowed) return;
 
-            var moveDirection = avatar.transform.forward * Vertical + avatar.transform.right * Horizontal;
+            var moveDirection = PlayerForward * Vertical + CamRight * Horizontal;
 
             var isGrounded = characterController.isGrounded && velocity.y < 0 || floating;
 
@@ -240,7 +251,9 @@ namespace Source
             playerPos = Vectors.TruncateFloor(pos);
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(Login.WalletId(),
-                new SerializableVector3(pos), new SerializableVector3(cam.forward), floating, sprinting));
+                new SerializableVector3(pos),
+                // new SerializableVector3(camContainer.forward), 
+                floating, sprinting));
         }
 
 
@@ -309,7 +322,8 @@ namespace Source
         {
             var isNowFirstPerson = viewMode == ViewMode.FIRST_PERSON;
             viewMode = isNowFirstPerson ? ViewMode.THIRD_PERSON : ViewMode.FIRST_PERSON;
-            cam.localPosition = isNowFirstPerson ? thirdPersonCameraPosition : firstPersonCameraPosition;
+            camContainer.localPosition = cameraContainerHeight * Vector3.up;
+            cam.localPosition = (isNowFirstPerson ? cameraZOffset : 0) * Vector3.back;
             avatarController.SetAvatarBodyDisabled(!isNowFirstPerson);
             viewModeChanged.Invoke(viewMode);
         }

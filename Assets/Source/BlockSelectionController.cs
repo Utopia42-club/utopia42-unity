@@ -27,7 +27,6 @@ namespace Source
 
         public bool PlayerMovementAllowed => (!selectionActive || !movingSelectionAllowed) && !scalingOrRotatingSelection;
 
-        private Transform transform => Player.INSTANCE.transform; // TODO
         private bool selectionActive;
         private bool metaSelectionActive;
         private bool onlyMetaSelectionActive;
@@ -109,7 +108,7 @@ namespace Source
             var moveUp = !moveDown && jmp;
 
             var moveDirection = hz || vr
-                ? (player.transform.forward * player.Vertical + player.transform.right * player.Horizontal).normalized
+                ? (player.PlayerForward * player.Vertical + player.CamRight * player.Horizontal).normalized
                 : Vector3.zero;
             var movement = moveUp || moveDown || moveDirection.magnitude > Player.CastStep;
 
@@ -330,7 +329,7 @@ namespace Source
                 if (!onlyMetaSelectionActive)
                 {
                     var conflictWithPlayer = false;
-                    var currVox = Vectors.TruncateFloor(transform.position);
+                    var currVox = Vectors.TruncateFloor(player.GetPosition());
                     foreach (var pos in World.INSTANCE.ClipboardVoxelPositions)
                     {
                         var newPosition = pos - minIntPoint + player.PossiblePlaceBlockPosInt;

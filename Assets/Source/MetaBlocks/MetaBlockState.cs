@@ -53,7 +53,7 @@ namespace Source.MetaBlocks
         private static string SizeLimitMsg(string type)
         {
             return
-                $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1) : "")} exceeds the size limit of {TdObjectBlockObject.DownloadLimitMb} MB";
+                $"{type.Substring(0, 1).ToUpper()}{(type.Length > 1 ? type.Substring(1) : "")} exceeds the size limit of {TdObjectBytesCache.DownloadLimitMb} MB";
         }
 
         public static bool IsErrorState(State state)

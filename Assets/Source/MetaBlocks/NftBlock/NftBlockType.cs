@@ -21,7 +21,7 @@ namespace Source.MetaBlocks.NftBlock
         
         public override MetaPosition GetPlaceHolderPutPosition(Vector3 purePosition)
         {
-            var pos = Player.INSTANCE.transform.forward.z > 0
+            var pos = Player.INSTANCE.PlayerForward.z > 0
                 ? purePosition - ImageBlockType.Gap * Vector3.forward
                 : purePosition + ImageBlockType.Gap * Vector3.forward;
             pos += 0.5f * MediaBlockEditor.DEFAULT_DIMENSION * Vector3.up;

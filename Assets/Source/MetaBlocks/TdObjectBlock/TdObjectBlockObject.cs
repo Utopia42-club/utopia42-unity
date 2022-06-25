@@ -12,7 +12,6 @@ namespace Source.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockObject : MetaBlockObject
     {
-        public const ulong DownloadLimitMb = 10;
         private const float GroundGap = 0.2f;
 
         private GameObject objContainer;

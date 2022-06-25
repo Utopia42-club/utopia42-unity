@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Source.Model;
 using Source.Service;
 using Source.Ui.Login;
@@ -17,6 +18,8 @@ namespace Source.Canvas
         public ActionButton openProfileButton;
         [SerializeField] private GameObject view;
         [SerializeField] private ImageLoader profileIcon;
+
+        private SnackItem snackItem; // TODO ?
 
         private GameManager manager;
         private Land prevLand;
@@ -54,7 +57,10 @@ namespace Source.Canvas
                     manager.ShowProfile(currentProfile, currentLand);
             }
             else
-                view.SetActive(false);
+            {
+                // view.SetActive(false);
+                RemoveShortcutsSnack();
+            }
         }
 
         private void OnOwnerChanged()
@@ -71,11 +77,13 @@ namespace Source.Canvas
             {
                 profileIcon.SetUrl(null);
                 currentProfile = null;
-                view.SetActive(false);
+                // view.SetActive(false);
+                RemoveShortcutsSnack();
             }
             else
             {
-                view.SetActive(true);
+                // view.SetActive(true);
+                ShowShortcutsSnack();
                 currentProfile = profile;
                 profileIcon.SetUrl(profile.imageUrl == null
                     ? null
@@ -94,7 +102,8 @@ namespace Source.Canvas
 
         private void LoadProfile()
         {
-            view.SetActive(false);
+            // view.SetActive(false);
+            RemoveShortcutsSnack();
             SetCurrentProfile(Profile.LOADING_PROFILE);
             profileLoader.load(currentWallet, profile =>
             {
@@ -129,7 +138,23 @@ namespace Source.Canvas
             currentWallet = land?.owner;
             return true;
         }
+        
+        private void ShowShortcutsSnack()
+        {
+            snackItem?.Remove();
+            snackItem = Snack.INSTANCE.ShowLines(new List<string>
+            {
+                "esc : unlock the cursor",
+                "B : toggle between first and third person view"
+            }, () => { });
+        }
 
+        private void RemoveShortcutsSnack()
+        {
+            if (snackItem == null) return;
+            snackItem.Remove();
+            snackItem = null;
+        }
 
         public static Owner INSTANCE
         {
