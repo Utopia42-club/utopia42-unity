@@ -7,6 +7,7 @@ using Source.Service;
 using Source.Service.Ethereum;
 using Source.Ui;
 using Source.Ui.LoadingLayer;
+using Source.Ui.Login;
 using Source.Ui.Map;
 using Source.Ui.Menu;
 using Source.Ui.Profile;
@@ -31,16 +32,16 @@ public class Menu : MonoBehaviour, UiProvider
         gameManager = GameManager.INSTANCE;
         root = GetComponent<UIDocument>().rootVisualElement;
         rootPane = root.Q<VisualElement>("root");
+        rootPane.Clear();
         var tabConfigs = new List<TabConfiguration>
         {
-            new("Settings", () => new Settings(this), UpdateActions),
             new("Map", () => new Map(), UpdateActions),
             new("Help", () => new Help(), UpdateActions),
             new("Profile", () => new UserProfile(null), () =>
             {
                 var userProfile = tabPane.GetTabBody().Children().First() as UserProfile;
                 var loadingId = LoadingLayer.Show(userProfile);
-                ProfileLoader.INSTANCE.load(Settings.WalletId(),
+                ProfileLoader.INSTANCE.load(Login.WalletId(),
                     profile =>
                     {
                         userProfile.SetProfile(profile);
@@ -54,7 +55,7 @@ public class Menu : MonoBehaviour, UiProvider
                 UpdateActions();
             }),
         };
-        tabPane = new TabPane(tabConfigs);
+        tabPane = new TabPane(tabConfigs, false);
         rootPane.Add(tabPane);
         gameManager.stateChange.AddListener(state =>
         {
@@ -74,35 +75,17 @@ public class Menu : MonoBehaviour, UiProvider
                     break;
             }
         });
+        CreateActions();
     }
 
     public void UpdateActions()
     {
-        if (saveButton == null)
-            CreateActions();
         var serviceInitialized = EthereumClientService.INSTANCE.IsInited();
-        switch (tabPane.GetCurrentTab())
-        {
-            case 0:
-                saveButton.style.display =
-                    !Settings.IsGuest() && serviceInitialized ? DisplayStyle.Flex : DisplayStyle.None;
-                saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
-                exitButton.style.display = DisplayStyle.Flex;
-                break;
-            case 1:
-                saveButton.style.display = !Settings.IsGuest() ? DisplayStyle.Flex : DisplayStyle.None;
-                saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
-                exitButton.style.display = DisplayStyle.Flex;
-                break;
-            case 2:
-                saveButton.style.display = DisplayStyle.None;
-                exitButton.style.display = DisplayStyle.None;
-                break;
-            case 4:
-                saveButton.style.display = DisplayStyle.None;
-                exitButton.style.display = DisplayStyle.None;
-                break;
-        }
+        var isMap = tabPane.GetCurrentTab() == 0;
+        saveButton.style.display = isMap && !Login.IsGuest() && serviceInitialized
+            ? DisplayStyle.Flex
+            : DisplayStyle.None;
+        saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
     }
 
     private void CreateActions()
@@ -123,7 +106,6 @@ public class Menu : MonoBehaviour, UiProvider
         saveButton.clickable.clicked += () => gameManager.Save();
         saveButton.tooltip = "Save my lands";
         saveButton.AddManipulator(new ToolTipManipulator());
-        saveButton.style.display = DisplayStyle.None;
         tabPane.AddRightAction(saveButton);
     }
 

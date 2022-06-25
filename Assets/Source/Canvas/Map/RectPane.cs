@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Source.Model;
 using Source.Service;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using UnityEngine;
 using UnityEngine.UI;
@@ -124,7 +125,7 @@ namespace Source.Canvas.Map
             {
                 startCoordinate = new SerializableVector3Int(x, 0, z),
                 endCoordinate = new SerializableVector3Int(x, 0, z),
-                owner = Settings.WalletId(),
+                owner = Login.WalletId(),
                 id = -1
             };
             return Add(drawnLand, Colors.PRIMARY_COLOR);

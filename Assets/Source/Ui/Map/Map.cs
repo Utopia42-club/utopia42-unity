@@ -53,18 +53,13 @@ namespace Source.Ui.Map
         public void SubmitDrawing(Land land)
         {
             var buyDialog = new LandBuyDialog(land);
-            var dialogId = 0;
-            dialogId = DialogService.INSTANCE.Show(
+            DialogService.INSTANCE.Show(
                 new DialogConfig(buyDialog)
                     .WithWidth(new StyleLength(new Length(300)))
                     .WithHeight(new StyleLength(new Length(180)))
-                    .WithAction(new DialogAction("Cancel", () => DialogService.INSTANCE.Close(dialogId)))
+                    .WithCancelAction()
                     .WithAction(new DialogAction("Buy",
-                        () =>
-                        {
-                            DialogService.INSTANCE.Close(dialogId);
-                            GameManager.INSTANCE.Buy(new List<Land> {land});
-                        }
+                        () => GameManager.INSTANCE.Buy(new List<Land> {land})
                         , "utopia-stroked-button-secondary"))
             );
         }

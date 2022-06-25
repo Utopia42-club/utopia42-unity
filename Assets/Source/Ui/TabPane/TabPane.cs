@@ -7,6 +7,7 @@ namespace Source.Ui.TabPane
     {
         private readonly TemplateContainer root;
         private readonly List<TabConfiguration> tabConfigs;
+        private readonly bool useCache;
         private readonly List<Button> tabButtons = new();
         private int currentTab = -1;
         private readonly VisualElement tabBody;
@@ -15,9 +16,10 @@ namespace Source.Ui.TabPane
         private readonly VisualElement rightActions;
         private readonly Dictionary<int, VisualElement> tabBodiesCache = new();
 
-        public TabPane(List<TabConfiguration> tabConfigs) : base("Ui/TebPane/TabPane", true)
+        public TabPane(List<TabConfiguration> tabConfigs, bool useCache = true) : base("Ui/TebPane/TabPane", true)
         {
             this.tabConfigs = tabConfigs;
+            this.useCache = useCache;
             tabBody = this.Q<VisualElement>("tabBody");
             tabButtonsArea = this.Q<VisualElement>("tabs");
             leftActions = this.Q<VisualElement>("leftActions");
@@ -45,7 +47,8 @@ namespace Source.Ui.TabPane
             {
                 tabBodyContent = config.visualElementFactory?.Invoke() ?? config.VisualElement;
                 tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
-                tabBodiesCache[index] = tabBodyContent;
+                if (useCache)
+                    tabBodiesCache[index] = tabBodyContent;
             }
 
             tabBody.Clear();

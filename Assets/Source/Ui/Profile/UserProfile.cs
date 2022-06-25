@@ -77,7 +77,7 @@ namespace Source.Ui.Profile
                 body.Add(socialLinks);
             }
 
-            if (profile.walletId.Equals(Settings.WalletId()))
+            if (profile.walletId.Equals(Login.Login.WalletId()))
             {
                 var editButton = new Button
                 {

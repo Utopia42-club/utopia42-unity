@@ -3,6 +3,7 @@ using System.Collections;
 using Source.Canvas;
 using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using UnityEngine;
 
@@ -133,7 +134,7 @@ namespace Source
             animator.CrossFade("Jump", 0.01f);
             if (!isAnotherPlayer)
                 BrowserConnector.INSTANCE.ReportPlayerState(
-                    new PlayerState(Settings.WalletId(), state.position, state.forward, state.sprint, state.floating,
+                    new PlayerState(Login.WalletId(), state.position, state.forward, state.sprint, state.floating,
                         true));
         }
 

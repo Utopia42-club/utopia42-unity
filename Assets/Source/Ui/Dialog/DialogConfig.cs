@@ -50,6 +50,12 @@ namespace Source.Ui.Dialog
             return this;
         }
 
+        public DialogConfig WithCancelAction()
+        {
+            actions.Add(new DialogAction("Cancel", () => { }));
+            return this;
+        }
+
         public StyleLength Width => width;
 
         public StyleLength Height => height;

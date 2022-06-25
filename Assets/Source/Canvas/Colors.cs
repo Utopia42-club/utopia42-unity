@@ -1,4 +1,5 @@
 ﻿using Source.Model;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using UnityEngine;
 
@@ -44,7 +45,7 @@ namespace Source.Canvas
 
         public static Color GetLandOutlineColor(Land land)
         {
-            var owner = land.owner.Equals(Settings.WalletId());
+            var owner = land.owner.Equals(Login.WalletId());
             return owner
                 ? (land.isNft ? MAP_OWNED_LAND_NFT : MAP_OWNED_LAND)
                 : (land.isNft ? MAP_OTHERS_LAND_NFT : MAP_OTHERS_LAND);
@@ -52,7 +53,7 @@ namespace Source.Canvas
 
         public static string GetLandBorderStyle(Land land)
         {
-            var owner = land.owner.Equals(Settings.WalletId());
+            var owner = land.owner.Equals(Login.WalletId());
             return owner
                 ? land.isNft ? "map-owned-land-nft" : "map-owned-land"
                 : land.isNft

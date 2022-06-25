@@ -8,6 +8,7 @@ using Source.Model;
 using Source.Service;
 using Source.Service.Ethereum;
 using Source.Ui.Dialog;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Utils;
 using TMPro;
@@ -39,7 +40,7 @@ namespace Source
 
         void Start()
         {
-            SetState(State.MENU);
+            SetState(State.LOGIN);
             stateChange.AddListener(newState => { BrowserConnector.INSTANCE.ReportGameState(newState); });
         }
 
@@ -98,9 +99,9 @@ namespace Source
 
         private void InitPlayerForWallet(Vector3? startingPosition)
         {
-            if (string.IsNullOrWhiteSpace(Settings.WalletId()))
+            if (string.IsNullOrWhiteSpace(Login.WalletId()))
             {
-                SetState(State.MENU);
+                SetState(State.LOGIN);
                 return;
             }
 
@@ -276,7 +277,7 @@ namespace Source
         {
             var profileDialog = ProfileDialog.INSTANCE;
             profileDialog.Open(Profile.LOADING_PROFILE);
-            ProfileLoader.INSTANCE.load(Settings.WalletId(), profileDialog.Open,
+            ProfileLoader.INSTANCE.load(Login.WalletId(), profileDialog.Open,
                 () => profileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
@@ -334,7 +335,7 @@ namespace Source
 
             var lands = Player.INSTANCE.GetOwnedLands();
             if (lands == null || lands.Count == 0) yield break;
-            var wallet = Settings.WalletId();
+            var wallet = Login.WalletId();
             var service = WorldService.INSTANCE;
             if (!service.HasChange()) yield break;
             SetState(State.LOADING);
@@ -573,6 +574,7 @@ namespace Source
             LOADING,
             PLAYING,
             MENU,
+            LOGIN,
             DIALOG,
             PROFILE_DIALOG,
             MOVING_OBJECT,

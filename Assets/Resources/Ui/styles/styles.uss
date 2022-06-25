@@ -125,3 +125,16 @@
 .utopia-default-radius {
     border-radius: var(--default-border-radius);
 }
+
+.utopia-tile {
+    background-color: var(--primary-color);
+    border-radius: var(--default-border-radius);
+    border-width: 2;
+    border-color: var(--primary-color);
+}
+
+.utopia-tile:hover {
+    background-color: var(--darker-primary-color);
+    border-width: 3;
+    border-color: var(--primary-color);
+}

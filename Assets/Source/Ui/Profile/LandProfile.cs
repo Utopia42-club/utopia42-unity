@@ -98,7 +98,7 @@ namespace Source.Ui.Profile
             sizeLabel.text = (rect.width * rect.height).ToString();
             nftLogo.style.display = land.isNft ? DisplayStyle.Flex : DisplayStyle.None;
             transferButton.style.display = land.isNft ? DisplayStyle.None : DisplayStyle.Flex;
-            var isOwner = land.owner.Equals(Settings.WalletId());
+            var isOwner = land.owner.Equals(Login.Login.WalletId());
             actions.style.display = isOwner ? DisplayStyle.Flex : DisplayStyle.None;
 
             var landColor = Colors.GetLandColor(land);

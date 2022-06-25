@@ -8,6 +8,7 @@ using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
 using Source.Service;
 using Source.Ui.AssetsInventory.Models;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Utils;
 using UnityEngine;
@@ -65,7 +66,7 @@ namespace Source
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
 
-        public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
+        public bool ChangeForbidden => Login.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
 
@@ -238,7 +239,7 @@ namespace Source
 
             playerPos = Vectors.TruncateFloor(pos);
 
-            avatarController.UpdatePlayerState(new AvatarController.PlayerState(Settings.WalletId(),
+            avatarController.UpdatePlayerState(new AvatarController.PlayerState(Login.WalletId(),
                 new SerializableVector3(pos), new SerializableVector3(cam.forward), floating, sprinting));
         }
 
@@ -294,7 +295,7 @@ namespace Source
         public void ResetLands()
         {
             List<Land> lands = null;
-            if (Settings.WalletId() != null)
+            if (Login.WalletId() != null)
             {
                 var service = WorldService.INSTANCE;
                 lands = service.GetPlayerLands();
@@ -393,7 +394,7 @@ namespace Source
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
-            if (Settings.IsGuest())
+            if (Login.IsGuest())
             {
                 land = null;
                 return false;

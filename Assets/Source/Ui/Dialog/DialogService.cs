@@ -61,6 +61,8 @@ namespace Source.Ui.Dialog
             content.Add(config.Content);
 
             var actions = dialog.Q<VisualElement>("dialogActions");
+            
+            var id = dialogId++;
 
             if (config.Actions.Count > 0)
             {
@@ -70,7 +72,12 @@ namespace Source.Ui.Dialog
                     {
                         text = action.Text
                     };
-                    button.clickable.clicked += () => action.Action();
+                    button.clickable.clicked += () =>
+                    {
+                        if (action.CloseOnPerform)
+                            Close(id);
+                        action.Action();
+                    };
                     if (action.StyleClass != null)
                         button.AddToClassList(action.StyleClass);
                     else
@@ -83,7 +90,6 @@ namespace Source.Ui.Dialog
                 actions.style.display = DisplayStyle.None;
             }
 
-            var id = dialogId++;
             var closeAction = dialog.Q<Button>("dialogCloseAction");
             closeAction.clickable.clicked += () => Close(id);
             dialog.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());

@@ -3,6 +3,7 @@ using Source;
 using Source.Canvas;
 using Source.Model;
 using Source.Service;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Utils;
 using TMPro;
@@ -85,7 +86,7 @@ public class ProfileDialog : MonoBehaviour
             }
         }
 
-        editButton.SetActive(profile.walletId.Equals(Settings.WalletId()));
+        editButton.SetActive(profile.walletId.Equals(Login.WalletId()));
     }
 
     public static ProfileDialog INSTANCE => instance;
