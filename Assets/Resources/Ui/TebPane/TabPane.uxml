@@ -4,8 +4,8 @@
     <ui:VisualElement name="tabPane" style="flex-grow: 1; flex-shrink: 1; width: 100%; align-items: stretch; right: auto; position: relative; height: 100%; justify-content: center; transition-property: visibility; transition-duration: 200ms;">
         <ui:VisualElement name="root" style="flex-grow: 1; flex-shrink: 1; width: 100%; align-items: stretch; right: 0; position: absolute; height: 100%;">
             <ui:VisualElement name="header" style="height: 10%; max-height: 40px; flex-direction: row; flex-grow: 1;">
-                <ui:VisualElement name="leftActions" style="flex-direction: row; position: absolute; left: 0;" />
                 <ui:VisualElement name="tabs" style="flex-direction: row; justify-content: center; flex-grow: 1;" />
+                <ui:VisualElement name="leftActions" style="flex-direction: row; position: absolute; left: 0;" />
                 <ui:VisualElement name="rightActions" style="flex-direction: row; position: absolute; right: 0;" />
             </ui:VisualElement>
             <ui:VisualElement name="tabBody" class="tabBody" style="align-items: center; padding-top: 10px;" />

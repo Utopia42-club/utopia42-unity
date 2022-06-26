@@ -25,7 +25,7 @@ public class Menu : MonoBehaviour, UiProvider
     private TabPane tabPane;
     private VisualElement rootPane;
     private Button exitButton;
-    private Button saveButton;
+    private Button closeButton;
 
     void OnEnable()
     {
@@ -36,8 +36,8 @@ public class Menu : MonoBehaviour, UiProvider
         rootPane.Clear();
         var tabConfigs = new List<TabConfiguration>
         {
-            new("Map", () => new Map(), UpdateActions),
-            new("Help", () => new Help(), UpdateActions),
+            new("Map", () => new Map()),
+            new("Help", () => new Help()),
             new("Profile", () => new UserProfile(null), () =>
             {
                 var userProfile = tabPane.GetTabBody().Children().First() as UserProfile;
@@ -53,7 +53,6 @@ public class Menu : MonoBehaviour, UiProvider
                         userProfile.SetProfile(Profile.FAILED_TO_LOAD_PROFILE);
                         LoadingLayer.Hide(loadingId);
                     });
-                UpdateActions();
             }),
         };
         tabPane = new TabPane(tabConfigs, false);
@@ -79,16 +78,6 @@ public class Menu : MonoBehaviour, UiProvider
         CreateActions();
     }
 
-    public void UpdateActions()
-    {
-        var serviceInitialized = EthereumClientService.INSTANCE.IsInited();
-        var isMap = tabPane.GetCurrentTab() == 0;
-        saveButton.style.display = isMap && !Login.IsGuest() && serviceInitialized
-            ? DisplayStyle.Flex
-            : DisplayStyle.None;
-        saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
-    }
-
     private void CreateActions()
     {
         exitButton = new Button();
@@ -100,14 +89,17 @@ public class Menu : MonoBehaviour, UiProvider
         exitButton.AddManipulator(new ToolTipManipulator());
         tabPane.AddLeftAction(exitButton);
 
-        saveButton = new Button();
-        saveButton.AddToClassList("utopia-button-primary");
-        saveButton.AddToClassList("utopia-action-button");
-        UiImageUtils.SetBackground(saveButton, Resources.Load<Sprite>("Icons/save"));
-        saveButton.clickable.clicked += () => gameManager.Save();
-        saveButton.tooltip = "Save my lands";
-        saveButton.AddManipulator(new ToolTipManipulator(Side.BottomLeft));
-        tabPane.AddRightAction(saveButton);
+        closeButton = new Button();
+        closeButton.AddToClassList("utopia-button-primary");
+        closeButton.AddToClassList("utopia-action-button");
+        UiImageUtils.SetBackground(closeButton, Resources.Load<Sprite>("Icons/close"));
+        closeButton.clickable.clicked += () =>
+        {
+            gameManager.ReturnToGame();
+        };
+        // closeButton.tooltip = "Close";
+        // closeButton.AddManipulator(new ToolTipManipulator(Side.BottomLeft));
+        tabPane.AddRightAction(closeButton);
     }
 
     public VisualElement VisualElement()

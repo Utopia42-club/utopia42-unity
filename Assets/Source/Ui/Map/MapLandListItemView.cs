@@ -1,5 +1,6 @@
 using Source.Canvas;
 using Source.Model;
+using Source.Service;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -24,6 +25,9 @@ namespace Source.Ui.Map
                 s = s[..13] + "...";
             nameLabel.text = s + " " + "#" + land.id;
 
+            if (WorldService.INSTANCE.IsLandChanged(land))
+                nameLabel.text += "*";
+            
             var start = land.startCoordinate;
             var end = land.endCoordinate;
             coordinateLabel.text = $"({start.x}, {start.z}, {end.x}, {end.z})";

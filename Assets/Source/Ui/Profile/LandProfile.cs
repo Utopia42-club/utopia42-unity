@@ -1,5 +1,6 @@
 using Source.Canvas;
 using Source.Model;
+using Source.Service;
 using Source.Ui.CustomUi;
 using Source.Ui.Menu;
 using Source.Ui.Popup;
@@ -59,6 +60,7 @@ namespace Source.Ui.Profile
                     var newColor = Colors.ConvertToHex(color);
                     land.properties ??= new LandProperties();
                     land.properties.color = newColor;
+                    WorldService.INSTANCE.UpdateLandProperties(land.id, land.properties);
                     PopupService.INSTANCE.Close(popupId);
                 });
                 colorPicker.SetColor(Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR);
@@ -69,6 +71,7 @@ namespace Source.Ui.Profile
             {
                 land.properties ??= new LandProperties();
                 land.properties.name = editMode ? nameField.text : nameLabel.text;
+                WorldService.INSTANCE.UpdateLandProperties(land.id, land.properties);
             });
         }
 

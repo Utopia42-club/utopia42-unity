@@ -4,6 +4,7 @@ using Source.Model;
 using Source.Service;
 using Source.Ui.Popup;
 using UnityEngine.UIElements;
+using Position = UnityEngine.UIElements.Position;
 
 namespace Source.Ui.Map
 {
@@ -18,6 +19,7 @@ namespace Source.Ui.Map
         private bool isListOpen = false;
         private int? searchPopupId;
         private MapLandsList popupLandsList;
+        private readonly Button saveButton;
 
         public MapLandsSearch(Map map) : base("Ui/Map/MapLandsSearch")
         {
@@ -26,11 +28,15 @@ namespace Source.Ui.Map
             searchBox = this.Q<VisualElement>("searchBox");
             landsListContainer = this.Q<VisualElement>("landsListContainer");
             menuButton = this.Q<Button>("menuButton");
+            menuButton.clickable.clicked += ToggleMyLandsList;
+
+            saveButton = this.Q<Button>("saveLandsButton");
+            saveButton.clickable.clicked += () => GameManager.INSTANCE.Save();
+            
             searchField = this.Q<TextField>("searchField");
             Utils.Utils.SetPlaceHolderForTextField(searchField, "Search");
             Utils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
 
-            menuButton.clickable.clicked += ToggleMyLandsList;
             mapLandsList = new MapLandsList(map);
             landsListContainer.Add(mapLandsList);
 
@@ -66,10 +72,15 @@ namespace Source.Ui.Map
                     }
                 }
             });
+
+            style.position = new StyleEnum<Position>(Position.Absolute);
+            style.top = style.left = style.bottom = 0;
+            style.height = new StyleLength(new Length(100, LengthUnit.Percent));
         }
 
         private void ToggleMyLandsList()
         {
+            saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
             myLands.style.display = isListOpen ? DisplayStyle.None : DisplayStyle.Flex;
             isListOpen = !isListOpen;
             if (isListOpen)

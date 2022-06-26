@@ -285,6 +285,11 @@ namespace Source.Service
             changedLands.Add(land);
         }
 
+        public bool IsLandChanged(Land land)
+        {
+            return changedLands.Contains(land);
+        }
+
         public void OnMetaRemoved(MetaBlock block, MetaPosition position)
         {
             if (block.type is MarkerBlockType)
@@ -358,7 +363,7 @@ namespace Source.Service
             return null;
         }
 
-        public bool UpdateLandProperties(int landId, LandProperties properties)
+        public bool UpdateLandProperties(long landId, LandProperties properties)
         {
             if (landRegistry.GetLands().TryGetValue(landId, out Land land))
             {
