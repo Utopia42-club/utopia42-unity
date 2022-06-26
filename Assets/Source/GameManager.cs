@@ -155,9 +155,16 @@ namespace Source
             yield return null;
 
             worldInited = true;
-            SetState(State.PLAYING);
         }
 
+        private IEnumerator LoadAvatar()
+        {
+            SetState(State.LOADING);
+            Loading.INSTANCE.UpdateText("Loading the avatar...");
+            while (Player.INSTANCE.AvatarNotLoaded)
+                yield return new WaitForSeconds(0.1f);
+        }
+        
         internal void OpenHelpDialog()
         {
             if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
@@ -179,6 +186,8 @@ namespace Source
 
             Player.INSTANCE.SetPosition(pos);
             yield return InitWorld(pos, clean);
+            yield return LoadAvatar();
+            SetState(State.PLAYING);
         }
 
         private IEnumerator FindStartingY(Vector3 pos, Action<Vector3> consumer)

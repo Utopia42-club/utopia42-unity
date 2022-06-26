@@ -5,24 +5,34 @@ namespace Source.TestUtils
 {
     public class TestAvatarImport : MonoBehaviour
     {
-        // [SerializeField]
-        // private string avatarUrl = "https://d1a370nemizbjq.cloudfront.net/209a1bc2-efed-46c5-9dfd-edc8a1d9cbe4.glb";
-        private string avatarUrl = "https://d1a370nemizbjq.cloudfront.net/1b5c7df0-b903-4540-9643-e7db9755bf55.glb";
-
+        [SerializeField] private bool gameoObjectClone = false;
+        
+        private GameObject loadedAvatar;
+        private readonly AvatarLoader avatarLoader = new(){UseAvatarCaching = true};
+        
         private void Update()
         {
             if (!Input.GetKeyDown(KeyCode.T) || !Input.GetKey(KeyCode.LeftShift)) return;
             Debug.Log($"Started loading avatar. [{Time.timeSinceLevelLoad:F2}]");
 
-            var avatarLoader = new AvatarLoader();
+            if (gameoObjectClone && loadedAvatar != null)
+            {
+                var clone = Instantiate(loadedAvatar);
+                clone.transform.position = Player.INSTANCE.GetPosition() + 3 * Vector3.up;
+                Debug.Log($"Cloned avatar.");
+                return;
+            }
+            
             avatarLoader.OnCompleted += (sender, args) =>
             {
-                args.Avatar.transform.position = Player.INSTANCE.GetPosition() + 5 * Vector3.up;
-                Debug.Log($"Loaded avatar. [{Time.timeSinceLevelLoad:F2}]");
+                loadedAvatar = args.Avatar; 
+                loadedAvatar.transform.position = Player.INSTANCE.GetPosition() + 3 * Vector3.up;
+                Debug.Log($"Loaded avatar.");
             };
             avatarLoader.OnFailed += (sender, args) => { Debug.Log(args.Type); };
-
-            avatarLoader.LoadAvatar(avatarUrl);
+            
+            avatarLoader.LoadAvatar(AvatarController.DefaultAvatarUrl);
+            // avatarLoader.ImportModel(Resources.Load<TextAsset>($"Avatars/default").bytes);
         }
     }
 }

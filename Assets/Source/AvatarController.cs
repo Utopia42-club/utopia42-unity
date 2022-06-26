@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using ReadyPlayerMe;
 using Source.Canvas;
 using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
@@ -10,6 +11,11 @@ namespace Source
 {
     public class AvatarController : MonoBehaviour
     {
+        public static readonly string DefaultAvatarUrl =
+            "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb";
+
+        private AvatarLoader avatarLoader;
+
         public GameObject avatarPrefab;
 
         public float positionChangeThreshold = 0.1f;
@@ -17,7 +23,8 @@ namespace Source
 
         private Animator animator;
         private CharacterController controller;
-        private GameObject avatar;
+        public GameObject Avatar { private set; get; }
+        private string loadingAvatarUrl;
 
         private float updatedTime;
         private PlayerState lastAnimationState;
@@ -30,13 +37,76 @@ namespace Source
 
         private IEnumerator teleportCoroutine;
 
+        private int animIDSpeed;
+        private int animIDGrounded;
+        private int animIDJump;
+        private int animIDFreeFall;
+
+        // private int animIDMotionSpeed;
+
+        private int remainingAttempts;
+
         public void Start()
         {
-            avatar = Instantiate(avatarPrefab, transform);
-            animator = avatar.GetComponent<Animator>();
             controller = GetComponent<CharacterController>();
             if (!isAnotherPlayer)
                 StartCoroutine(UpdateAnimationCoroutine());
+            AssignAnimationIDs();
+        }
+
+        public void LoadDefaultAvatar()
+        {
+            ReloadAvatar(DefaultAvatarUrl);
+        }
+
+        private void ReloadAvatar(string url, Action onDone = null)
+        {
+            if (url == null || url.Equals(loadingAvatarUrl) || url.Equals(lastAnimationState?.avatarUrl) ||
+                remainingAttempts != 0) return; // TODO?
+            remainingAttempts = 5;
+            loadingAvatarUrl = url;
+
+            avatarLoader = new AvatarLoader {UseAvatarCaching = true};
+            avatarLoader.OnCompleted += (sender, args) =>
+            {
+                if (isAnotherPlayer)
+                    Debug.Log("Avatar loaded for another player");
+                if (Avatar != null) DestroyImmediate(Avatar);
+                Avatar = args.Avatar;
+                Avatar.gameObject.transform.SetParent(transform);
+                Avatar.gameObject.transform.localPosition = Vector3.zero;
+                animator = Avatar.GetComponent<Animator>();
+                onDone?.Invoke();
+                remainingAttempts = 0;
+            };
+            avatarLoader.OnFailed += (sender, args) =>
+            {
+                remainingAttempts -= 1;
+                switch (args.Type)
+                {
+                    case FailureType.None or FailureType.ModelDownloadError or FailureType.MetadataDownloadError
+                        or FailureType.NoInternetConnection:
+                        Debug.Log("Failed to load the avatar: " + args.Type + " | Remaining attempts: " +
+                                  remainingAttempts);
+                        if (remainingAttempts > 0)
+                            avatarLoader.LoadAvatar(url);
+                        break;
+                    //retry 
+                    default:
+                        Debug.Log("Invalid avatar: " + args.Type);
+                        break;
+                }
+            };
+            avatarLoader.LoadAvatar(url);
+        }
+
+        private void AssignAnimationIDs()
+        {
+            animIDSpeed = Animator.StringToHash("Speed");
+            animIDGrounded = Animator.StringToHash("Grounded");
+            animIDJump = Animator.StringToHash("Jump");
+            animIDFreeFall = Animator.StringToHash("FreeFall");
+            // animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
         }
 
         private void Update()
@@ -70,15 +140,17 @@ namespace Source
 
         private void UpdateLookDirection()
         {
-            var movement = state.Position() - (lastAnimationState?.Position() ?? state.Position());
+            var movement = state.GetPosition() - (lastAnimationState?.GetPosition() ?? state.GetPosition());
             movement.y = 0;
             if (movement.magnitude > 0.001)
                 LookAt(movement.normalized);
         }
+
         private void LookAt(Vector3 forward)
         {
+            if (Avatar == null) return;
             forward.y = 0;
-            avatar.transform.rotation = Quaternion.LookRotation(forward);
+            Avatar.transform.rotation = Quaternion.LookRotation(forward);
         }
 
         public void SetPosition(Vector3 target)
@@ -93,14 +165,16 @@ namespace Source
 
         public void SetAvatarBodyDisabled(bool disabled)
         {
-            if (avatar != null)
-                avatar.SetActive(!disabled);
+            if (Avatar != null)
+                Avatar.SetActive(!disabled);
         }
 
         public void UpdatePlayerState(PlayerState playerState)
         {
-            SetPosition(playerState.position.ToVector3());
             state = playerState;
+            if (state == null) return;
+            if (state.avatarUrl != null && !state.avatarUrl.Equals(loadingAvatarUrl)) ReloadAvatar(state.avatarUrl);
+            SetPosition(state.position.ToVector3());
             UpdateLookDirection();
             if (isAnotherPlayer)
                 UpdateAnimation();
@@ -108,52 +182,27 @@ namespace Source
 
         private void UpdateAnimation()
         {
-            if (state == null) return;
-            var lastPos = lastAnimationState?.Position() ?? state.Position();
-            var movement = state.Position() - lastPos;
-            var velocity = movement / (Time.time - updatedTime);
+            if (state == null || Avatar == null) return;
 
+            var lastPos = lastAnimationState?.GetPosition() ?? state.GetPosition();
+            var movement = state.GetPosition() - lastPos;
+            var velocity = movement / (Time.time - updatedTime);
+            var xzVelocity = new Vector3(velocity.x, 0, velocity.z);
             updatedTime = Time.time;
             lastAnimationState = state;
 
-            if (state.floating 
-                || movement.y != 0 && movement.x == 0 && movement.z == 0
-                // || Math.Abs(movement.y) > 0.01
-                )
+            if (state.grounded)
             {
-                animator.SetFloat("X", 0);
-                animator.SetFloat("Z", 0);
-                animator.SetFloat("Floating", state.floating ? 1 : 0);
-                // animator.SetFloat("Floating", 1);
-                
-                // if (movement.y < -0.5f && !floating)
-                //     animator.CrossFade("Falling", 0.05f);
-                return;
+                SetJump(false);
+                SetFreeFall(false);
             }
 
-            // var newX = Vector3.Dot(velocity, Quaternion.Euler(0, 90, 0) * state.Forward());
-            // var newY = Vector3.Dot(velocity, state.Forward());
-            //
-            // animator.SetFloat("X", newX);
-            // animator.SetFloat("Z", newY);
-            
-            // if(!controller.isGrounded) return;
-            animator.SetFloat("X", 0);
-            animator.SetFloat("Z", Vector3.Dot(velocity, movement.normalized));
-            animator.SetFloat("Floating", 0);
+            if (state.jump)
+                SetJump(true);
+            SetFreeFall(Mathf.Abs(velocity.y) > 0.1 && !state.grounded && !state.floating);
 
-            animator.SetFloat("Speed", state.sprint ? 0.9f : 0.1f);
-        }
-
-        public void JumpAnimation()
-        {
-            animator.CrossFade("Jump", 0.01f);
-            if (!isAnotherPlayer)
-                BrowserConnector.INSTANCE.ReportPlayerState(
-                    new PlayerState(Settings.WalletId(), state.position,
-                        // state.forward, 
-                        state.sprint, state.floating,
-                        true));
+            SetGrounded(state.grounded);
+            SetSpeed(Mathf.Pow(xzVelocity.sqrMagnitude, 0.5f));
         }
 
         IEnumerator UpdateAnimationCoroutine()
@@ -185,12 +234,11 @@ namespace Source
         {
             return s1 == null
                    || s2 == null
+                   || !Equals(s1.avatarUrl, s2.avatarUrl)
                    || !Equals(s1.position, s2.position)
-                   // || !Equals(s1.forward, s2.forward)
-                   // || Vector3.Distance(s1.Position(), s2.Position()) > positionChangeThreshold
-                   // || Vector3.Distance(s1.Forward(), s2.Forward()) > cameraRotationThreshold
-                   || s1.sprint != s2.sprint
-                   || s1.floating != s2.floating;
+                   || s1.floating != s2.floating
+                   || s1.jump != s2.jump
+                   || s1.grounded != s2.grounded;
         }
 
         public PlayerState GetState()
@@ -246,38 +294,46 @@ namespace Source
         public class PlayerState
         {
             public string walletId;
-
             public SerializableVector3 position;
-
-            public SerializableVector3 forward;
-
             public bool floating;
-
-            public bool sprint;
-
             public bool jump;
+            public bool grounded;
+            public string avatarUrl;
 
-            public PlayerState(string walletId, SerializableVector3 position,
-                // SerializableVector3 forward,
-                bool floating, bool sprint, bool jump = false)
+            public PlayerState(string walletId, SerializableVector3 position, bool floating, bool jump, bool grounded)
             {
                 this.walletId = walletId;
                 this.position = position;
-                // this.forward = forward;
                 this.floating = floating;
-                this.sprint = sprint;
                 this.jump = jump;
+                this.grounded = grounded;
+                avatarUrl = DefaultAvatarUrl;
             }
 
-            public Vector3 Position()
+            public Vector3 GetPosition()
             {
                 return position.ToVector3();
             }
+        }
 
-            // public Vector3 Forward()
-            // {
-            //     return forward.ToVector3();
-            // }
+        private void SetJump(bool jump)
+        {
+            animator.SetBool(animIDJump, jump);
+        }
+
+        private void SetFreeFall(bool freeFall)
+        {
+            animator.SetBool(animIDFreeFall, freeFall);
+        }
+
+        private void SetGrounded(bool grounded)
+        {
+            animator.SetBool(animIDGrounded, grounded);
+        }
+
+        private void SetSpeed(float speed)
+        {
+            animator.SetFloat(animIDSpeed, speed);
         }
     }
 }
