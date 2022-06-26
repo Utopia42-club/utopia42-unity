@@ -22,6 +22,7 @@ namespace Source.Ui.Map
         public MapLandsSearch(Map map) : base("Ui/Map/MapLandsSearch")
         {
             myLands = this.Q<VisualElement>("myLands");
+            // myLands.style.width = 0;
             searchBox = this.Q<VisualElement>("searchBox");
             landsListContainer = this.Q<VisualElement>("landsListContainer");
             menuButton = this.Q<Button>("menuButton");
@@ -56,7 +57,7 @@ namespace Source.Ui.Map
                         popupLandsList = new MapLandsList(map);
                         searchPopupId =
                             PopupService.INSTANCE.Show(
-                                new PopupConfig(popupLandsList, searchField, Side.Bottom)
+                                new PopupConfig(popupLandsList, searchBox, Side.Bottom)
                                     .WithWidth(300)
                                     .WithHeight(400)
                             );
@@ -72,7 +73,14 @@ namespace Source.Ui.Map
             myLands.style.display = isListOpen ? DisplayStyle.None : DisplayStyle.Flex;
             isListOpen = !isListOpen;
             if (isListOpen)
+            {
                 mapLandsList.SetLands(WorldService.INSTANCE.GetPlayerLands());
+                // myLands.style.width = 300;
+            }
+            else
+            {
+                // myLands.style.width = 0;
+            }
         }
 
         private List<Land> FilterLands(List<Land> lands)

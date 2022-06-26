@@ -27,7 +27,7 @@ namespace Source.Ui.Map
             });
 
             root.Add(new MapActionsLayer(this));
-            // root.Add(new MapLandsSearch(this));
+            root.Add(new MapLandsSearch(this));
 
             RegisterCallback<GeometryChangedEvent>(evt =>
             {

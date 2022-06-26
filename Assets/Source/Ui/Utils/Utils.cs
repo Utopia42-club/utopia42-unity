@@ -27,6 +27,8 @@ namespace Source.Ui.Utils
 
         public static void SetPlaceHolderForTextField(TextField textField, string placeHolder)
         {
+            if (string.IsNullOrEmpty(textField.text))
+                textField.SetValueWithoutNotify(placeHolder);
             textField.RegisterCallback<FocusInEvent>(evt =>
             {
                 if (textField.text == placeHolder)
@@ -62,6 +64,8 @@ namespace Source.Ui.Utils
             const float clickDelay = 0.5f;
             visualElement.RegisterCallback<MouseDownEvent>(evt =>
             {
+                if (evt.button != (int) MouseButton.LeftMouse)
+                    return;
                 clicked++;
                 if (clicked == 1)
                     clickTime = Time.time;

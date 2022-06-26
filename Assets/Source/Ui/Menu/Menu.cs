@@ -10,6 +10,7 @@ using Source.Ui.LoadingLayer;
 using Source.Ui.Login;
 using Source.Ui.Map;
 using Source.Ui.Menu;
+using Source.Ui.Popup;
 using Source.Ui.Profile;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
@@ -105,7 +106,7 @@ public class Menu : MonoBehaviour, UiProvider
         UiImageUtils.SetBackground(saveButton, Resources.Load<Sprite>("Icons/save"));
         saveButton.clickable.clicked += () => gameManager.Save();
         saveButton.tooltip = "Save my lands";
-        saveButton.AddManipulator(new ToolTipManipulator());
+        saveButton.AddManipulator(new ToolTipManipulator(Side.BottomLeft));
         tabPane.AddRightAction(saveButton);
     }
 
