@@ -104,6 +104,7 @@ namespace Source.Ui.Dialog
             if (dialogs.ContainsKey(id))
             {
                 (dialogs[id].userData as DialogConfig)?.OnClose?.Invoke();
+                dialogs[id].SetEnabled(false);
                 dialogs[id].RemoveFromHierarchy();
                 dialogs.Remove(id);
                 if (dialogs.Count == 0)
