@@ -58,6 +58,8 @@ namespace Source
         [NonSerialized] public GameObject avatar;
         [NonSerialized] public Transform focusHighlight;
 
+        public bool AvatarNotLoaded => avatarController == null || avatarController.Avatar == null;
+
         public MetaBlock PreparedMetaBlock { private set; get; }
         public GameObject MetaBlockPlaceHolder { private set; get; }
 
@@ -122,6 +124,7 @@ namespace Source
 
             avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatarController = avatar.GetComponent<AvatarController>();
+            avatarController.LoadDefaultAvatar();
             characterController = avatar.GetComponent<CharacterController>();
             camContainer.SetParent(avatar.transform);
 
@@ -224,17 +227,16 @@ namespace Source
 
             var moveDirection = PlayerForward * Vertical + CamRight * Horizontal;
 
-            var isGrounded = characterController.isGrounded && velocity.y < 0 || floating;
-
-            avatarController.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
-
-            if (isGrounded)
+            if (characterController.isGrounded && velocity.y < 0 || floating)
                 velocity.y = 0f;
+
+            var xzVelocity = moveDirection * (sprinting ? sprintSpeed : walkSpeed);
+            avatarController.Move(xzVelocity * Time.fixedDeltaTime);
 
             if (jumpRequest)
             {
-                if (!floating && isGrounded)
-                    avatarController.JumpAnimation();
+                // if (!floating && isGrounded)
+                    // avatarController.JumpAnimation();
                 velocity.y = Mathf.Sqrt((sprinting ? sprintJumpHeight : jumpHeight) * -2f * gravity);
             }
 
@@ -250,10 +252,8 @@ namespace Source
 
             playerPos = Vectors.TruncateFloor(pos);
 
-            avatarController.UpdatePlayerState(new AvatarController.PlayerState(Login.WalletId(),
-                new SerializableVector3(pos),
-                // new SerializableVector3(camContainer.forward), 
-                floating, sprinting));
+            avatarController.UpdatePlayerState(new AvatarController.PlayerState(
+                Login.WalletId(), new SerializableVector3(pos), floating, jumpRequest, characterController.isGrounded));
         }
 
 
