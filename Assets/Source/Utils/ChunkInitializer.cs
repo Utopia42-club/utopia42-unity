@@ -2,6 +2,7 @@
 using Source.Canvas;
 using Source.Model;
 using Source.Service;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using UnityEngine;
 
@@ -56,7 +57,7 @@ namespace Source.Utils
             var worldService = WorldService.INSTANCE;
 
             var lands = worldService.GetLandsForChunk(new Vector2Int(position.x, position.z));
-            var wallet = Settings.WalletId();
+            var wallet = Login.WalletId();
 
             Land land = null;
             var chunkSize = Chunk.CHUNK_SIZE;

@@ -9,6 +9,7 @@ using Source.MetaBlocks;
 using Source.MetaBlocks.MarkerBlock;
 using Source.Model;
 using Source.Service.Ethereum;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Utils;
 using UnityEngine;
@@ -123,7 +124,7 @@ namespace Source.Service
 
         public List<Land> GetPlayerLands()
         {
-            return landRegistry.GetLandsForOwner(Settings.WalletId());
+            return landRegistry.GetLandsForOwner(Login.WalletId());
         }
 
         public IEnumerator GetLandsChanges(string wallet, List<Land> lands,
@@ -404,7 +405,7 @@ namespace Source.Service
 
         public IEnumerator ReloadPlayerLands(Action onFailed)
         {
-            yield return landRegistry.ReloadLandsForOwner(Settings.WalletId(), onFailed);
+            yield return landRegistry.ReloadLandsForOwner(Login.WalletId(), onFailed);
         }
 
         public bool IsInitialized()

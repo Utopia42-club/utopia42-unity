@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Source.Model;
 using Source.Service.Ethereum;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Utils;
 using TMPro;
@@ -123,7 +124,7 @@ namespace Source.Canvas
 
         private void CallUrl(string method, string parameters, Action onDone, Action onCancel)
         {
-            var wallet = Settings.WalletId();
+            var wallet = Login.WalletId();
             int network = EthereumClientService.INSTANCE.GetNetwork().id;
             if (parameters != null)
                 currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}",

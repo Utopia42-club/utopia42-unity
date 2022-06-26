@@ -1,6 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using Source.Canvas;
+using Source.Ui.Popup;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -9,31 +7,30 @@ namespace Source.Ui.Utils
     public class ToolTipManipulator : Manipulator
     {
         private VisualElement element;
-        private readonly VisualElement rootElement;
-        private static VisualElement currentTooltip;
+        private int? popupId;
+        private readonly Side side;
 
-        public ToolTipManipulator(VisualElement rootElement)
+        public ToolTipManipulator(Side side = Side.BottomRight)
         {
-            this.rootElement = rootElement;
+            this.side = side;
         }
 
         protected override void RegisterCallbacksOnTarget()
         {
             target.RegisterCallback<MouseEnterEvent>(MouseIn);
-            target.RegisterCallback<MouseOutEvent>(MouseOut);
+            target.RegisterCallback<MouseLeaveEvent>(MouseMove);
         }
 
         protected override void UnregisterCallbacksFromTarget()
         {
             target.UnregisterCallback<MouseEnterEvent>(MouseIn);
-            target.UnregisterCallback<MouseOutEvent>(MouseOut);
+            target.UnregisterCallback<MouseLeaveEvent>(MouseMove);
         }
 
         private void MouseIn(MouseEnterEvent e)
         {
             if (string.IsNullOrEmpty(target.tooltip))
                 return;
-            currentTooltip?.RemoveFromHierarchy();
             var label = new Label(target.tooltip)
             {
                 style =
@@ -42,50 +39,18 @@ namespace Source.Ui.Utils
                 }
             };
 
-            var left = target.worldBound.xMin + target.worldBound.width / 2;
-            var top = target.worldBound.yMax + 5;
-            element = new VisualElement
-            {
-                style =
-                {
-                    backgroundColor = Colors.PRIMARY_COLOR,
-                    position = Position.Absolute,
-                    left = left,
-                    top = top,
-                    borderBottomLeftRadius = 8,
-                    borderBottomRightRadius = 8,
-                    borderTopRightRadius = 8,
-                    borderTopLeftRadius = 8,
-                    transitionDelay = new List<TimeValue> {new(200, TimeUnit.Millisecond)},
-                    transitionDuration = new List<TimeValue> {new(50, TimeUnit.Millisecond)},
-                }
-            };
-            element.Add(label);
-            rootElement.Add(element);
-            element.BringToFront();
-            currentTooltip = element;
-
-            GameManager.INSTANCE.StartCoroutine(UpdatePosition(left));
+            popupId = PopupService.INSTANCE.Show(new PopupConfig(label, target, side).WithBackDropLayer(false));
         }
 
-        private IEnumerator UpdatePosition(float left)
-        {
-            yield return null;
-            var width = element.worldBound.width;
-            while (left + width > rootElement.worldBound.xMax)
-                left -= 1;
-            element.style.left = left;
-        }
-
-        private void MouseOut(MouseOutEvent e)
+        private void MouseMove(MouseLeaveEvent evt)
         {
             Destroy();
         }
 
         public void Destroy()
         {
-            element?.RemoveFromHierarchy();
-            currentTooltip = null;
+            if (popupId != null)
+                PopupService.INSTANCE.Close(popupId.Value);
         }
     }
 }

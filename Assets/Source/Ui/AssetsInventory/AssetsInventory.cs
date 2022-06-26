@@ -140,10 +140,9 @@ namespace Source.Ui.AssetsInventory
 
         private void UpdateVisibility()
         {
-            var active = (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING ||
-                          GameManager.INSTANCE.GetState() == GameManager.State.MOVING_OBJECT)
+            var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
-                         && !Settings.IsGuest()
+                         && !Login.Login.IsGuest()
                 ; // && Can Edit Land 
             gameObject.SetActive(active);
             inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !
@@ -254,11 +253,11 @@ namespace Source.Ui.AssetsInventory
                 {
                     var favoriteItem = favoriteItems[i];
                     var slot = new FavoriteItemInventorySlot(favoriteItem);
-                    GridUtils.SetChildPosition(slot.VisualElement(), 80, i, 3);
+                    GridUtils.SetChildPosition(slot.VisualElement(), 80, 80, i, 3);
                     container.Add(slot.VisualElement());
                 }
 
-                GridUtils.SetContainerSize(container, favoriteItems.Count);
+                GridUtils.SetContainerSize(container, favoriteItems.Count, 90, 3);
                 scrollView.Add(container);
             }, () =>
             {
@@ -399,7 +398,7 @@ namespace Source.Ui.AssetsInventory
                 foldout.contentContainer.Add(slot.VisualElement());
             }
 
-            GridUtils.SetContainerSize(foldout.contentContainer, size);
+            GridUtils.SetContainerSize(foldout.contentContainer, size, 90, 3);
             return foldout;
         }
 
@@ -456,7 +455,7 @@ namespace Source.Ui.AssetsInventory
 
             var image = categoryButton.Q("image");
 
-            StartCoroutine(UiImageLoader.SetBackGroundImageFromUrl(category.thumbnailUrl,
+            StartCoroutine(UiImageUtils.SetBackGroundImageFromUrl(category.thumbnailUrl,
                 Resources.Load<Sprite>("Icons/loading"), image));
 
             categoryButton.Q<Button>().clickable.clicked += () =>
@@ -581,7 +580,7 @@ namespace Source.Ui.AssetsInventory
             }
 
             var total = size + count;
-            GridUtils.SetContainerSize(content, total);
+            GridUtils.SetContainerSize(content, total, 90, 3);
             foldout.contentContainer.style.height = content.style.height.value.value + 45;
         }
 
@@ -832,11 +831,6 @@ namespace Source.Ui.AssetsInventory
         public SlotInfo GetSelectedSlot()
         {
             return selectedSlot.GetSlotInfo();
-        }
-
-        public VisualElement GetTooltipRoot()
-        {
-            return root;
         }
 
         public static AssetsInventory INSTANCE => instance;

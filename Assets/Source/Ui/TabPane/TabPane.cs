@@ -7,16 +7,19 @@ namespace Source.Ui.TabPane
     {
         private readonly TemplateContainer root;
         private readonly List<TabConfiguration> tabConfigs;
+        private readonly bool useCache;
         private readonly List<Button> tabButtons = new();
-        private int currentTab;
+        private int currentTab = -1;
         private readonly VisualElement tabBody;
         private readonly VisualElement tabButtonsArea;
         private readonly VisualElement leftActions;
         private readonly VisualElement rightActions;
+        private readonly Dictionary<int, VisualElement> tabBodiesCache = new();
 
-        public TabPane(List<TabConfiguration> tabConfigs) : base("Ui/TebPane/TabPane", true)
+        public TabPane(List<TabConfiguration> tabConfigs, bool useCache = true) : base("Ui/TebPane/TabPane", true)
         {
             this.tabConfigs = tabConfigs;
+            this.useCache = useCache;
             tabBody = this.Q<VisualElement>("tabBody");
             tabButtonsArea = this.Q<VisualElement>("tabs");
             leftActions = this.Q<VisualElement>("leftActions");
@@ -40,15 +43,21 @@ namespace Source.Ui.TabPane
         public void OpenTab(int index)
         {
             var config = tabConfigs[index];
-            var tabBodyContent = config.VisualElement;
-            tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
+            if (!tabBodiesCache.TryGetValue(index, out var tabBodyContent))
+            {
+                tabBodyContent = config.visualElementFactory?.Invoke() ?? config.VisualElement;
+                tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
+                if (useCache)
+                    tabBodiesCache[index] = tabBodyContent;
+            }
+
             tabBody.Clear();
             tabBody.Add(tabBodyContent);
             foreach (var button in tabButtons)
                 button.RemoveFromClassList("selected-tab");
             tabButtons[index].AddToClassList("selected-tab");
             currentTab = index;
-            config.onTabOpen.Invoke();
+            config.onTabOpen?.Invoke();
         }
 
         public VisualElement GetTabBody()
@@ -74,6 +83,13 @@ namespace Source.Ui.TabPane
         public void AddRightAction(VisualElement visualElement)
         {
             rightActions.Insert(0, visualElement);
+        }
+
+        public void CloseTabs()
+        {
+            if (currentTab != -1)
+                tabConfigs[currentTab].onTabClose?.Invoke();
+            tabBody.Clear();
         }
     }
 }

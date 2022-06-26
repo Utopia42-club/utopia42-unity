@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using Source.Model;
+using Source.Service;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -22,27 +24,17 @@ namespace Source.Ui.Map
                 if (e.ctrlKey && drawingLand == null)
                 {
                     startDrawPosition = MapLand.RoundDown(this.map.ScreenToUtopia(e.mousePosition));
-                    foreach (var child in Children())
-                    {
-                        if (child is MapLand)
-                        {
-                            if (child.contentRect.Contains(startDrawPosition))
-                            {
-                                return;
-                            }
-                        }
-                    }
+                    if (Children().OfType<MapLand>().Any(child => child.contentRect.Contains(startDrawPosition)))
+                        return;
 
                     e.StopPropagation();
                     this.map.CaptureMouse();
 
                     drawingLand = new MapLand(new Land
                     {
-                        startCoordinate =
-                            new SerializableVector3Int((int) startDrawPosition.x, 0, (int) startDrawPosition.y),
-                        endCoordinate =
-                            new SerializableVector3Int((int) startDrawPosition.x, 0, (int) startDrawPosition.y)
-                    });
+                        startCoordinate = new SerializableVector3Int(startDrawPosition.x, 0, startDrawPosition.y),
+                        endCoordinate = new SerializableVector3Int(startDrawPosition.x, 0, startDrawPosition.y)
+                    }, map);
                     Add(drawingLand);
                 }
             });
@@ -55,6 +47,13 @@ namespace Source.Ui.Map
                 e.StopPropagation();
                 this.map.ReleaseMouse();
             });
+            Utils.Utils.RegisterOnDoubleClick(map, (evt) =>
+            {
+                var realPosition = map.ScreenToUtopia(evt.mousePosition);
+                GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
+            });
+            var mapPlayerPositionIndicator = new MapPlayerPositionIndicator(map);
+            Add(mapPlayerPositionIndicator);
         }
 
         private void PointerMoved(PointerMoveEvent evt)
@@ -176,16 +175,11 @@ namespace Source.Ui.Map
 
         private void InitLands()
         {
-            Add(new MapLand(new Land()
-            {
-                id = 1, owner = "xyz", startCoordinate = new SerializableVector3Int(Vector3Int.zero),
-                endCoordinate = new SerializableVector3Int(Vector3Int.one * 100)
-            }));
-            // var worldService = WorldService.INSTANCE;
-            // if (!worldService.IsInitialized()) return;
-            //
-            // foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
-            //     Add(new MapLand(land));
+            var worldService = WorldService.INSTANCE;
+            if (!worldService.IsInitialized()) return;
+
+            foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
+                Add(new MapLand(land, map));
         }
     }
 }

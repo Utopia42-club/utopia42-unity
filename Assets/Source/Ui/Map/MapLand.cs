@@ -1,18 +1,85 @@
-﻿using Source.Model;
+﻿using System;
+using Source.Canvas;
+using Source.Model;
+using Source.Ui.Dialog;
+using Source.Ui.Profile;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Position = UnityEngine.UIElements.Position;
 
 namespace Source.Ui.Map
 {
     internal class MapLand : VisualElement
     {
         private readonly Land land;
+        private static readonly Sprite nftLogo = Resources.Load<Sprite>("Icons/nft-logo");
+        private readonly Map map;
 
-        public MapLand(Land land)
+        public MapLand(Land land, Map map)
         {
             this.land = land;
+            this.map = map;
+
+            UpdateLandStyle();
             AddToClassList("map-land");
             UpdateRect();
+
+            if (land is {isNft: true})
+            {
+                const int nftLogoDefaultSize = 30;
+                var width = style.width.value.value;
+                var height = style.height.value.value;
+                var visualElement = new VisualElement
+                {
+                    style =
+                    {
+                        width = Math.Min(width - 6, nftLogoDefaultSize), // -6 is for border and position
+                        height = Math.Min(height - 6, nftLogoDefaultSize), // -6 is for border and position
+                        position = new StyleEnum<Position>(Position.Absolute),
+                        bottom = 2,
+                        right = 2
+                    }
+                };
+                UiImageUtils.SetBackground(visualElement, nftLogo);
+                Add(visualElement);
+            }
+
+            RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button == (int) MouseButton.RightMouse)
+                {
+                    var landProfile = new LandProfile(land);
+                    DialogService.INSTANCE.Show(new DialogConfig("Land Profile", landProfile)
+                            .WithOnClose(UpdateLandStyle)
+                        , out var dialog);
+                    var loadingId = LoadingLayer.LoadingLayer.Show(dialog);
+                    ProfileLoader.INSTANCE.load(land.owner, profile =>
+                        {
+                            LoadingLayer.LoadingLayer.Hide(loadingId);
+                            landProfile.SetProfile(profile);
+                        },
+                        () =>
+                        {
+                            LoadingLayer.LoadingLayer.Hide(loadingId);
+                            landProfile.SetProfile(Model.Profile.FAILED_TO_LOAD_PROFILE);
+                        });
+                }
+            });
+        }
+
+        private void UpdateLandStyle()
+        {
+            if (land.owner == null)
+            {
+                AddToClassList("map-new-drawing-land");
+                return;
+            }
+
+            var landColor = Colors.GetLandColor(land);
+            if (landColor != null)
+                style.backgroundColor = new StyleColor(landColor.Value);
+            AddToClassList(Colors.GetLandBorderStyle(land));
         }
 
         internal void UpdateRect()
@@ -30,16 +97,6 @@ namespace Source.Ui.Map
         {
             return land;
         }
-
-
-        // private static string GetLandOutlineColor(Land land)
-        // {
-        // var owner = land.owner.Equals(Settings.WalletId());
-        // return owner
-        //     ? (land.isNft ? MAP_OWNED_LAND_NFT : MAP_OWNED_LAND)
-        //     : (land.isNft ? MAP_OTHERS_LAND_NFT : MAP_OTHERS_LAND);
-        // }
-
 
         internal static Vector2Int RoundDown(Vector2 v)
         {

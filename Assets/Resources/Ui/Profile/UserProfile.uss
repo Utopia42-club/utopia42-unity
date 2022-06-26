@@ -1,0 +1,18 @@
+.social-link {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.social-link__label {
+    flex-wrap: wrap;
+    margin-left: 5;
+}
+
+.social-link__label:hover {
+    color: var(--text-darker-color)
+}
+
+.social-link__icon {
+    width: 30;
+    height: 30;
+}

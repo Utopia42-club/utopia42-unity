@@ -1,0 +1,37 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
+    <ui:VisualElement name="Root" style="background-color: rgba(0, 0, 0, 0); flex-direction: row;">
+        <ui:VisualElement name="userProfileContainer" style="flex-grow: 1;" />
+        <ui:VisualElement name="landProfile" style="width: 35%;">
+            <ui:Label text="Land Details" display-tooltip-when-elided="true" enable-rich-text="false" class="utopia-text-h1" />
+            <ui:VisualElement name="id" style="flex-direction: row; align-items: center;">
+                <ui:Label text="ID: " display-tooltip-when-elided="true" name="Label" />
+                <ui:Label display-tooltip-when-elided="true" name="idValue" />
+            </ui:VisualElement>
+            <ui:VisualElement name="name" style="flex-direction: row; align-items: center;">
+                <ui:Label text="Name:" display-tooltip-when-elided="true" />
+                <ui:Label display-tooltip-when-elided="true" name="nameValue" enable-rich-text="true" />
+                <ui:TextField picking-mode="Ignore" name="nameField" class="no-label-field" style="display: none; flex-grow: 1;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="size" style="flex-direction: row; align-items: center;">
+                <ui:Label text="Size:" display-tooltip-when-elided="true" />
+                <ui:Label display-tooltip-when-elided="true" name="sizeValue" />
+            </ui:VisualElement>
+            <ui:VisualElement name="color" style="flex-direction: row; align-items: center;">
+                <ui:Label text="Label" display-tooltip-when-elided="true" />
+                <ui:VisualElement name="colorValue" class="map-default-land-background utopia-default-radius" style="width: 70px; height: 20px;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="footer" style="bottom: 0; position: absolute; right: 0; width: 100%; align-items: flex-end;">
+                <ui:VisualElement name="nftLogo" style="background-image: resource(&apos;Icons/nft-logo&apos;); width: 80px; height: 80px;" />
+                <ui:VisualElement name="actions" style="flex-direction: row; width: 100%;">
+                    <ui:Button text="Transfer" display-tooltip-when-elided="true" name="transferButton" class="utopia-stroked-button-primary" style="flex-grow: 1;" />
+                    <ui:Button text="Make NFT" display-tooltip-when-elided="true" name="toggleNftButton" class="utopia-stroked-button-primary" style="flex-grow: 1;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="topActions" style="flex-direction: row; justify-content: flex-end; position: absolute; right: 0; top: 0;">
+                <ui:Button display-tooltip-when-elided="true" focusable="false" name="editButton" class="utopia-button-primary" style="background-image: resource(&apos;Icons/edit&apos;); width: 30px; height: 30px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -7,6 +7,8 @@ using Source.Canvas.Map;
 using Source.Model;
 using Source.Service;
 using Source.Service.Ethereum;
+using Source.Ui.Dialog;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Utils;
 using TMPro;
@@ -38,7 +40,7 @@ namespace Source
 
         void Start()
         {
-            SetState(State.SETTINGS);
+            SetState(State.LOGIN);
             stateChange.AddListener(newState => { BrowserConnector.INSTANCE.ReportGameState(newState); });
         }
 
@@ -68,14 +70,10 @@ namespace Source
                     doubleCtrlTap = true;
                     doubleCtrlTapTime = Time.time;
                 }
-                else if (Input.GetButtonDown("Menu"))
-                    SetState(State.SETTINGS);
-                else if (Input.GetButtonDown("Map"))
-                    SetState(State.MAP);
+                else if (Input.GetButtonDown("Menu") || Input.GetButtonDown("Map"))
+                    SetState(State.MENU);
             }
-            else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
-                SetState(State.PLAYING);
-            else if (Input.GetButtonDown("Map") && state == State.MAP)
+            else if (worldInited && Input.GetButtonDown("Menu") && state == State.MENU)
                 SetState(State.PLAYING);
         }
 
@@ -101,9 +99,9 @@ namespace Source
 
         private void InitPlayerForWallet(Vector3? startingPosition)
         {
-            if (string.IsNullOrWhiteSpace(Settings.WalletId()))
+            if (string.IsNullOrWhiteSpace(Login.WalletId()))
             {
-                SetState(State.SETTINGS);
+                SetState(State.LOGIN);
                 return;
             }
 
@@ -163,14 +161,6 @@ namespace Source
             Loading.INSTANCE.UpdateText("Loading the avatar...");
             while (Player.INSTANCE.AvatarNotLoaded)
                 yield return new WaitForSeconds(0.1f);
-        }
-        
-        internal void OpenHelpDialog()
-        {
-            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
-            {
-                SetState(State.HELP);
-            }
         }
 
         public void MovePlayerTo(Vector3 pos)
@@ -232,20 +222,17 @@ namespace Source
             }
         }
 
-        public bool OpenMap()
-        {
-            return SetState(State.MAP);
-        }
-
-        public bool OpenSettings()
-        {
-            return SetState(State.SETTINGS);
-        }
-
         public void ReturnToGame()
         {
             if (!worldInited)
                 return; //FIXME
+
+            var dialogService = DialogService.INSTANCE;
+            if (dialogService.isAnyDialogOpen())
+            {
+                dialogService.CloseLastOpenedDialog();
+                return;
+            }
 
             switch (state)
             {
@@ -256,18 +243,9 @@ namespace Source
                 case State.DIALOG when dialogs.Count > 0:
                     CloseDialog(dialogs[dialogs.Count - 1]);
                     break;
-                case State.MAP:
-                    if (LandProfileDialog.INSTANCE.gameObject.activeSelf)
-                        LandProfileDialog.INSTANCE.CloseIfOpened();
-                    else if (map.IsLandBuyDialogOpen())
-                        map.CloseLandBuyDialogState();
-                    else
-                        SetState(State.PLAYING);
-                    break;
-                case State.HELP:
+                case State.MENU:
                     SetState(State.PLAYING);
                     break;
-                case State.SETTINGS:
                 case State.FREEZE:
                     SetState(State.PLAYING);
                     break;
@@ -298,7 +276,7 @@ namespace Source
 
         public void SetProfileDialogState(bool open)
         {
-            if (open && GetState() == State.PLAYING || GetState() == State.SETTINGS)
+            if (open && GetState() == State.PLAYING)
                 SetState(State.PROFILE_DIALOG);
             else if (GetState() == State.PROFILE_DIALOG)
                 SetState(State.PLAYING);
@@ -308,7 +286,7 @@ namespace Source
         {
             var profileDialog = ProfileDialog.INSTANCE;
             profileDialog.Open(Profile.LOADING_PROFILE);
-            ProfileLoader.INSTANCE.load(Settings.WalletId(), profileDialog.Open,
+            ProfileLoader.INSTANCE.load(Login.WalletId(), profileDialog.Open,
                 () => profileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
@@ -366,7 +344,7 @@ namespace Source
 
             var lands = Player.INSTANCE.GetOwnedLands();
             if (lands == null || lands.Count == 0) yield break;
-            var wallet = Settings.WalletId();
+            var wallet = Login.WalletId();
             var service = WorldService.INSTANCE;
             if (!service.HasChange()) yield break;
             SetState(State.LOADING);
@@ -480,7 +458,7 @@ namespace Source
 
         public void ShowProfile(Profile profile, Land currentLand)
         {
-            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
+            if (GetState() == State.PLAYING)
             {
                 if (currentLand == null)
                 {
@@ -603,14 +581,11 @@ namespace Source
         public enum State
         {
             LOADING,
-            SETTINGS,
             PLAYING,
-            MAP,
-            INVENTORY, //FIXME Remove !
-            HELP,
+            MENU,
+            LOGIN,
             DIALOG,
             PROFILE_DIALOG,
-            MOVING_OBJECT,
             FREEZE
         }
 
@@ -646,6 +621,11 @@ namespace Source
             {
                 Application.Quit();
             }
+        }
+
+        public void OpenMenu()
+        {
+            SetState(State.MENU);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Source.Model;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Utils;
 using TMPro;
@@ -20,7 +21,7 @@ namespace Source.Canvas.Map
         public TextMeshProUGUI bioLabel;
         public ImageLoader profileImage;
         public GameObject socialLinks;
-        public SocialLink socialLinkPrefab;
+        public SocialLinkk socialLinkPrefab;
         public GameObject editButton;
         private readonly List<GameObject> links = new List<GameObject>();
 
@@ -60,7 +61,7 @@ namespace Source.Canvas.Map
             gameManager.stateGuards.Add(
                 (currentState, nextState) =>
                     !(gameObject.activeSelf
-                      && (currentState == GameManager.State.PROFILE_DIALOG || currentState == GameManager.State.MAP)));
+                      && (currentState == GameManager.State.PROFILE_DIALOG )));
         }
 
         private void Update()
@@ -84,7 +85,7 @@ namespace Source.Canvas.Map
 
         private void ToggleColorPicker()
         {
-            if (!Settings.WalletId().Equals(land.owner))
+            if (!Login.WalletId().Equals(land.owner))
                 return;
             if (isColorPickerOpen)
             {
@@ -97,7 +98,7 @@ namespace Source.Canvas.Map
             {
                 pickerInstance = Instantiate(colorPickerPrefab, colorPickerPlaceHolder.transform);
                 picker = pickerInstance.GetComponent<FlexibleColorPicker>();
-                picker.SetColor(Colors.GetLandColor(land));
+                picker.SetColor(Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR);
                 isColorPickerOpen = true;
             }
         }
@@ -175,7 +176,7 @@ namespace Source.Canvas.Map
                 }
             }
 
-            editButton.SetActive(profile.walletId.Equals(Settings.WalletId()));
+            editButton.SetActive(profile.walletId.Equals(Login.WalletId()));
         }
 
         public void SetLand(Land land)
@@ -185,10 +186,10 @@ namespace Source.Canvas.Map
             var rect = land.ToRect();
             landSizeLabel.SetText((rect.width * rect.height).ToString());
             landNftIcon.SetActive(land.isNft);
-            transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Settings.WalletId()));
-            toggleNftButton.gameObject.SetActive(land.owner.Equals(Settings.WalletId()));
+            transferButton.gameObject.SetActive(!land.isNft && land.owner.Equals(Login.WalletId()));
+            toggleNftButton.gameObject.SetActive(land.owner.Equals(Login.WalletId()));
 
-            landColorButtonImage.color = Colors.GetLandColor(land);
+            landColorButtonImage.color = Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR;
 
             if (toggleNftButton.gameObject.activeSelf)
             {
@@ -197,7 +198,7 @@ namespace Source.Canvas.Map
             }
 
             landNameField.SetTextWithoutNotify(land.GetName());
-            landNameField.interactable = land.owner.Equals(Settings.WalletId());
+            landNameField.interactable = land.owner.Equals(Login.WalletId());
         }
 
         public static LandProfileDialog INSTANCE => instance;

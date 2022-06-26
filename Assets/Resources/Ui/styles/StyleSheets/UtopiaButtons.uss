@@ -1,0 +1,90 @@
+.utopia-stroked-button-primary {
+    border-radius: var(--default-border-radius);
+    border-color: var(--lighter-primary-color);
+    background-color: var(--primary-color);
+}
+
+.utopia-stroked-button-primary:hover {
+    border-color: var(--darker-primary-color);
+}
+
+.utopia-stroked-button-primary:active {
+    border-color: var(--darker-primary-color);
+}
+
+.utopia-stroked-button-secondary {
+    border-radius: var(--default-border-radius);
+    border-color: var(--lighter-secondary-color);
+    background-color: var(--secondary-color);
+}
+
+.utopia-stroked-button-secondary:hover {
+    border-color: var(--darker-secondary-color);
+}
+
+.utopia-stroked-button-secondary:active {
+    border-color: var(--darker-secondary-color);
+}
+
+.utopia-stroked-button-accent {
+    border-radius: var(--default-border-radius);
+    border-color: var(--lighter-accent-color);
+    background-color: var(--accent-color);
+}
+
+.utopia-stroked-button-accent:hover {
+    border-color: var(--darker-accent-color);
+}
+
+.utopia-stroked-button-accent:active {
+    border-color: var(--darker-accent-color);
+}
+
+
+.utopia-button-primary {
+    border-width: 0;
+    border-radius: var(--default-border-radius);
+    background-color: var(--transparent);
+}
+
+.utopia-button-primary:hover {
+    background-color: var(--darker-primary-color);
+}
+
+.utopia-button-primary:active {
+    background-color: var(--darker-primary-color);
+}
+
+.utopia-button-secondary {
+    border-width: 0;
+    border-radius: var(--default-border-radius);
+    background-color: var(--transparent);
+}
+
+.utopia-button-secondary:hover {
+    background-color: var(--darker-secondary-color);
+}
+
+.utopia-button-secondary:active {
+    background-color: var(--darker-secondary-color);
+}
+
+.utopia-button-accent {
+    border-width: 0;
+    border-radius: var(--default-border-radius);
+    background-color: var(--transparent);
+}
+
+.utopia-button-accent:hover {
+    background-color: var(--darker-accent-color);
+}
+
+.utopia-button-accent:active {
+    background-color: var(--darker-accent-color);
+}
+
+.utopia-action-button {
+    padding: 0;
+    width: 30;
+    height: 30;
+}

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Source.Model
 {
@@ -14,13 +15,13 @@ namespace Source.Model
             LOADING_PROFILE.imageUrl = null;
             LOADING_PROFILE.walletId = "";
             LOADING_PROFILE.links = null;
-            
+
             FAILED_TO_LOAD_PROFILE.name = "Failed to load";
             FAILED_TO_LOAD_PROFILE.imageUrl = null;
             FAILED_TO_LOAD_PROFILE.walletId = "";
             FAILED_TO_LOAD_PROFILE.links = null;
         }
-        
+
         public string walletId;
         public string name;
         public string bio;
@@ -35,21 +36,22 @@ namespace Source.Model
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            if ((obj == null) || GetType() != obj.GetType())
                 return false;
-            var other = (Profile)obj;
+            var other = (Profile) obj;
             return walletId == other.walletId;
         }
 
         public class Link
         {
-            private static Dictionary<string, Media> medias = new Dictionary<string, Media>(){
-                {"TELEGRAM",Media.TELEGRAM},
-                {"DISCORD",Media.DISCORD},
-                {"FACEBOOK",Media.FACEBOOK},
-                {"TWITTER",Media.TWITTER},
-                {"INSTAGRAM",Media.INSTAGRAM},
-                {"OTHER",Media.OTHER},
+            private static readonly Dictionary<string, Media> medias = new Dictionary<string, Media>()
+            {
+                {"TELEGRAM", Media.TELEGRAM},
+                {"DISCORD", Media.DISCORD},
+                {"FACEBOOK", Media.FACEBOOK},
+                {"TWITTER", Media.TWITTER},
+                {"INSTAGRAM", Media.INSTAGRAM},
+                {"OTHER", Media.OTHER},
             };
 
             public string link;
@@ -86,6 +88,11 @@ namespace Source.Model
                 public string GetName()
                 {
                     return name;
+                }
+
+                public Sprite GetIcon()
+                {
+                    return Resources.Load<Sprite>("Icons/Media/" + name);
                 }
             }
         }
