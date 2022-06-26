@@ -27,6 +27,8 @@ namespace Source.Ui.Map
             });
 
             root.Add(new MapActionsLayer(this));
+            // root.Add(new MapLandsSearch(this));
+
             RegisterCallback<GeometryChangedEvent>(evt =>
             {
                 var pos = Player.INSTANCE.GetPosition();
@@ -37,6 +39,14 @@ namespace Source.Ui.Map
         internal void MoveTo(Vector2 pos)
         {
             viewportController.MoveToPosition(pos);
+        }
+
+        internal void MoveTo(Land land)
+        {
+            var width = land.endCoordinate.x - land.startCoordinate.x;
+            var height = land.endCoordinate.z - land.startCoordinate.z;
+            viewportController.MoveToPosition(
+                new Vector2(land.startCoordinate.x + width / 2, land.startCoordinate.z + height / 2));
         }
 
         internal Vector2 ScreenToUtopia(Vector2 pos)

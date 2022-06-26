@@ -1,5 +1,6 @@
 using Source.Canvas;
 using Source.Model;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.Map
@@ -8,7 +9,7 @@ namespace Source.Ui.Map
     {
         private readonly Land land;
 
-        public MapLandListItemView(Land land) : base("Ui/Map/LandListItemView")
+        public MapLandListItemView(Land land, Map map) : base("Ui/Map/LandListItemView")
         {
             this.land = land;
             var nameLabel = this.Q<Label>("landNameLabel");
@@ -24,12 +25,18 @@ namespace Source.Ui.Map
             nameLabel.text = s + " " + "#" + land.id;
 
             var start = land.startCoordinate;
-            var end = land.startCoordinate;
+            var end = land.endCoordinate;
             coordinateLabel.text = $"({start.x}, {start.z}, {end.x}, {end.z})";
 
             sizeLabel.text = GetLandSize().ToString();
             nftLogo.style.display = land.isNft ? DisplayStyle.Flex : DisplayStyle.None;
             colorBar.style.backgroundColor = Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR;
+            
+            RegisterCallback<MouseDownEvent>(evt =>
+            {
+                evt.StopPropagation();
+                map.MoveTo(land);
+            });
         }
 
         private long GetLandSize()

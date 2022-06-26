@@ -55,7 +55,7 @@ namespace Source.Ui.Popup
             var id = popupId++;
             popup.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
             popup.userData = config;
-            
+
             if (config.BackdropLayer)
             {
                 popupLayer.style.display = DisplayStyle.Flex;
@@ -79,6 +79,12 @@ namespace Source.Ui.Popup
             var width = element.worldBound.width;
             switch (config.Side)
             {
+                case Side.Top:
+                    left = config.Target.worldBound.xMin;
+                    top = config.Target.worldBound.yMin - 5 - config.Target.worldBound.height;
+                    while (left + width > root.worldBound.xMax)
+                        left -= 1;
+                    break;
                 case Side.TopLeft:
                     left = config.Target.worldBound.xMin + config.Target.worldBound.width / 2 - width;
                     top = config.Target.worldBound.yMin - 5 - config.Target.worldBound.height;
@@ -88,6 +94,12 @@ namespace Source.Ui.Popup
                 case Side.TopRight:
                     left = config.Target.worldBound.xMin + config.Target.worldBound.width / 2;
                     top = config.Target.worldBound.yMin - 5 - config.Target.worldBound.height;
+                    while (left + width > root.worldBound.xMax)
+                        left -= 1;
+                    break;
+                case Side.Bottom:
+                    left = config.Target.worldBound.xMin;
+                    top = config.Target.worldBound.yMax + 5;
                     while (left + width > root.worldBound.xMax)
                         left -= 1;
                     break;

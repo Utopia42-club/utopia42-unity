@@ -63,9 +63,11 @@ namespace Source.Ui.Popup
 
     public enum Side
     {
+        Top,
         TopLeft,
         TopRight,
+        Bottom,
         BottomLeft,
-        BottomRight
+        BottomRight,
     }
 }

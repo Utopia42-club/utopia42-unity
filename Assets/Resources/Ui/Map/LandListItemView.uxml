@@ -13,7 +13,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="bottom" style="flex-grow: 1; flex-direction: row; align-items: center;">
                 <ui:VisualElement name="mapIcon" style="background-image: url(&apos;project://database/Assets/Images/map.png?fileID=2800000&amp;guid=b3e8b9d1df0be76409ad0fe855fcd484&amp;type=3#map&apos;); width: 25px; height: 25px;" />
-                <ui:Label text="(1200,1231,12312,3213)" display-tooltip-when-elided="true" name="landCordinatesLabel" style="margin-left: 8px; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; display: flex; overflow: hidden;" />
+                <ui:Label text="(1200,1231,12312,3213)" display-tooltip-when-elided="true" name="landCoordinatesLabel" style="margin-left: 8px; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; display: flex; overflow: hidden;" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="nftLogo" style="width: 40px; height: 40px; background-image: resource(&apos;Icons/nft-logo&apos;); display: none;" />

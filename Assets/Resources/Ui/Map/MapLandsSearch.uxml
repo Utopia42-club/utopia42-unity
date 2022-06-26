@@ -1,12 +1,12 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
     <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
-    <ui:VisualElement name="myLands" class="utopia-panel" style="position: absolute; top: 5px; left: 5px; width: 250px; height: 95%; display: flex;">
+    <ui:VisualElement name="myLands" class="utopia-panel" style="position: absolute; top: 5px; left: 5px; width: 300px; height: 95%; display: none; min-height: 400px; transition-duration: 500ms; transition-delay: 20ms;">
         <ui:Label text="Your Lands:" display-tooltip-when-elided="true" class="utopia-text-h1" style="top: 40px; left: 5px;" />
-        <ui:VisualElement name="lands" style="top: 45px; height: 80%;" />
+        <ui:VisualElement name="landsListContainer" style="top: 30px; height: 80%; padding-left: 7px; padding-right: 7px; padding-top: 7px; padding-bottom: 7px;" />
     </ui:VisualElement>
-    <ui:VisualElement name="currentLocationBox" class="utopia-panel current-location-box" style="justify-content: center; align-items: center; flex-direction: row; position: absolute; top: 10px; width: 240px; left: 10px;">
-        <ui:Button display-tooltip-when-elided="true" enable-rich-text="false" class="utopia-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/burger-menu&apos;); -unity-background-scale-mode: stretch-to-fill; border-top-left-radius: 2px; border-bottom-left-radius: 2px; border-top-right-radius: 2px; border-bottom-right-radius: 2px;" />
-        <ui:TextField picking-mode="Ignore" label="Text Field" class="no-label-field" style="flex-grow: 1;" />
+    <ui:VisualElement name="searchBox" class="utopia-panel current-location-box" style="justify-content: center; align-items: center; flex-direction: row; position: absolute; top: 10px; width: 290px; left: 10px;">
+        <ui:Button display-tooltip-when-elided="true" enable-rich-text="false" name="menuButton" class="utopia-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/burger-menu&apos;); -unity-background-scale-mode: stretch-to-fill; border-top-left-radius: 2px; border-bottom-left-radius: 2px; border-top-right-radius: 2px; border-bottom-right-radius: 2px;" />
+        <ui:TextField picking-mode="Ignore" label="Text Field" name="searchField" class="no-label-field" style="flex-grow: 1;" />
     </ui:VisualElement>
 </ui:UXML>
