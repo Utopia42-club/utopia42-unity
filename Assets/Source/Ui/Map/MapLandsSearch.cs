@@ -3,6 +3,7 @@ using System.Linq;
 using Source.Model;
 using Source.Service;
 using Source.Ui.Popup;
+using UnityEngine;
 using UnityEngine.UIElements;
 using Position = UnityEngine.UIElements.Position;
 
@@ -32,7 +33,7 @@ namespace Source.Ui.Map
 
             saveButton = this.Q<Button>("saveLandsButton");
             saveButton.clickable.clicked += () => GameManager.INSTANCE.Save();
-            
+
             searchField = this.Q<TextField>("searchField");
             Utils.Utils.SetPlaceHolderForTextField(searchField, "Search");
             Utils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
@@ -49,14 +50,12 @@ namespace Source.Ui.Map
                     if (string.IsNullOrEmpty(searchField.value) && searchPopupId != null)
                     {
                         PopupService.INSTANCE.Close(searchPopupId.Value);
-                        searchPopupId = null;
                         return;
                     }
 
                     if (searchPopupId != null)
                     {
-                        //FIXME search between all lands
-                        popupLandsList.SetLands(FilterLands(WorldService.INSTANCE.GetPlayerLands()));
+                        popupLandsList.SetLands(FilterLands(GetAllLands()));
                     }
                     else
                     {
@@ -66,9 +65,8 @@ namespace Source.Ui.Map
                                 new PopupConfig(popupLandsList, searchBox, Side.Bottom)
                                     .WithWidth(300)
                                     .WithHeight(400)
-                            );
-                        //FIXME search between all lands
-                        popupLandsList.SetLands(FilterLands(WorldService.INSTANCE.GetPlayerLands()));
+                                    .WithOnClose(() => searchPopupId = null));
+                        popupLandsList.SetLands(FilterLands(GetAllLands()));
                     }
                 }
             });
@@ -76,6 +74,12 @@ namespace Source.Ui.Map
             style.position = new StyleEnum<Position>(Position.Absolute);
             style.top = style.left = style.bottom = 0;
             style.height = new StyleLength(new Length(100, LengthUnit.Percent));
+        }
+
+        private static List<Land> GetAllLands()
+        {
+            return WorldService.INSTANCE.GetOwnersLands()
+                .SelectMany(entry => entry.Value).ToList();
         }
 
         private void ToggleMyLandsList()
