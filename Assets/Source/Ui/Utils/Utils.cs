@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 
 namespace Source.Ui.Utils
 {
-    public class Utils
+    public static class Utils
     {
         public static void RegisterUiEngagementCallbacksForTextField(TextField textField)
         {

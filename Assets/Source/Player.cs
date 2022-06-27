@@ -7,7 +7,7 @@ using Source.MetaBlocks;
 using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
 using Source.Service;
-using Source.Ui.AssetsInventory.Models;
+using Source.Ui.AssetInventory.Models;
 using Source.Ui.Menu;
 using Source.Utils;
 using UnityEngine;
@@ -163,7 +163,7 @@ namespace Source
             {
                 blockSelectionController.DoUpdate();
                 if (!HammerMode && Input.GetButtonDown("Delete") && !SelectionActiveBeforeAtFrameBeginning)
-                    Ui.AssetsInventory.AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
+                    Ui.AssetInventory.AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
             }
 
             if (lastChunk == null)
@@ -554,7 +554,7 @@ namespace Source
 
         public void InitOnSelectedAssetChanged()
         {
-            Ui.AssetsInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
+            Ui.AssetInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
         }
     }
 }

@@ -33,8 +33,8 @@ public class Menu : MonoBehaviour, UiProvider
         help = new Help();
         var tabConfigs = new List<TabConfiguration>
         {
-            new("Settings", settings, () => { }),
-            new("Help", help, () => { }),
+            new("Settings", settings),
+            new("Help", help),
         };
         tabPane = new TabPane(tabConfigs);
         rootPane.Add(tabPane);

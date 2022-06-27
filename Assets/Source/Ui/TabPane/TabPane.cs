@@ -48,7 +48,7 @@ namespace Source.Ui.TabPane
                 button.RemoveFromClassList("selected-tab");
             tabButtons[index].AddToClassList("selected-tab");
             currentTab = index;
-            config.onTabOpen.Invoke();
+            config.onTabOpen.Invoke(new TabOpenEvent(this));
         }
 
         public VisualElement GetTabBody()

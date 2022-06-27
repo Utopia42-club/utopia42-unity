@@ -1,7 +1,5 @@
 using Source.Model;
 using UnityEngine;
-using UnityEngine.LowLevel;
-using UnityEngine.PlayerLoop;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.Map
@@ -11,7 +9,7 @@ namespace Source.Ui.Map
         private readonly VisualElement lands;
         private readonly MapViewportController viewportController;
 
-        public Map() : base(true)
+        public Map() : base(typeof(Map), true)
         {
             var root = this.Q("Root");
             var grid = new MapGrid(this);

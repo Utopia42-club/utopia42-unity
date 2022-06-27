@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using Unity.Profiling;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace Source.TestUtils
 {

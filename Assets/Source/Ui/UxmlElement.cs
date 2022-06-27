@@ -1,5 +1,5 @@
 ﻿using System;
-using Siccity.GLTFUtility;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -7,8 +7,8 @@ namespace Source.Ui
 {
     public class UxmlElement : VisualElement
     {
-        public UxmlElement()
-            : this(null)
+        public UxmlElement(Type type)
+            : this(ResourcePaths.ForType(type))
         {
         }
 
@@ -17,8 +17,8 @@ namespace Source.Ui
         {
         }
 
-        public UxmlElement(bool fillSize)
-            : this(null, fillSize)
+        public UxmlElement(Type type, bool fillSize)
+            : this(ResourcePaths.ForType(type), fillSize)
         {
         }
 
@@ -28,8 +28,8 @@ namespace Source.Ui
         {
         }
 
-        public UxmlElement(StyleLength width, StyleLength height)
-            : this(null, true, width, height)
+        public UxmlElement(Type type, StyleLength width, StyleLength height)
+            : this(ResourcePaths.ForType(type), true, width, height)
         {
         }
 
@@ -40,16 +40,9 @@ namespace Source.Ui
 
         private UxmlElement(string resourcePath, bool setSize, StyleLength width, StyleLength height)
         {
-            if (resourcePath == null)
-            {
-                var fullName = GetType().FullName;
-                var parts = fullName?.Split(".");
-                if (parts == null || parts.Length <= 1)
-                    throw new ArgumentException("Invalid class fullname: " + fullName);
-                resourcePath = string.Join("/", parts.SubArray(1, parts.Length - 1));
-            }
-
-            Resources.Load<VisualTreeAsset>(resourcePath).CloneTree(this);
+            var resource = Resources.Load<VisualTreeAsset>(resourcePath);
+            if (resource == null) throw new ArgumentException("Could not load uxml resource: " + resourcePath);
+            resource.CloneTree(this);
             if (setSize)
             {
                 style.width = width;

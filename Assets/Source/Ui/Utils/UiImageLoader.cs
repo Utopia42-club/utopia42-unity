@@ -37,7 +37,7 @@ namespace Source.Ui.Utils
                 {
                     SetBackground(visualElement, sprite);
                     onDone?.Invoke();
-                },  
+                },
                 () =>
                 {
                     SetBackground(visualElement, Resources.Load<Sprite>("Icons/error"));
