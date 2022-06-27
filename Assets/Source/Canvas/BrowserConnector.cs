@@ -3,48 +3,23 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Source.Model;
 using Source.Service.Ethereum;
+using Source.Ui.Dialog;
 using Source.Ui.Login;
-using Source.Ui.Menu;
 using Source.Utils;
-using TMPro;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Source.Canvas
 {
     public class BrowserConnector : MonoBehaviour
     {
         private string currentUrl;
-        //[SerializeField]
-        //private Button copyUrlButton;
 
-        void Start()
-        {
-            //copyUrlButton.onClick.AddListener(() => GUIUtility.systemCopyBuffer = currentUrl);
-        }
 
         public void EditProfile(Action onDone, Action onCancel)
         {
-            if (WebBridge.IsPresent())
-            {
-#if UNITY_WEBGL
-                var orig = WebGLInput.captureAllKeyboardInput;
-                WebGLInput.captureAllKeyboardInput = false;
-                WebBridge.Call<object>("editProfile", null);
-                OpenDialog(
-                    "Edit your profile on your browser. Click RELOAD when it is done"
-                    ,() =>
-                {
-                    WebGLInput.captureAllKeyboardInput = orig;
-                    onDone();
-                }, () =>
-                {
-                    WebGLInput.captureAllKeyboardInput = orig;
-                    onCancel();
-                });
-#endif
-            }
-            else
-                CallUrl("editProfile", onDone, onCancel);
+            CallUrl("editProfile", onDone, onCancel,
+                "Edit your profile on your browser. Click RELOAD when it is done.");
         }
 
         public void Transfer(long landId, Action onDone, Action onCancel)
@@ -122,7 +97,7 @@ namespace Source.Canvas
             }
         }
 
-        private void CallUrl(string method, string parameters, Action onDone, Action onCancel)
+        private void CallUrl(string method, string parameters, Action onDone, Action onCancel, string message = null)
         {
             var wallet = Login.WalletId();
             int network = EthereumClientService.INSTANCE.GetNetwork().id;
@@ -136,42 +111,33 @@ namespace Source.Canvas
                     network);
 
             Application.OpenURL(currentUrl);
-            OpenDialog(onDone, onCancel);
+            OpenDialog(onDone, onCancel, message);
         }
 
-        private void CallUrl(string method, Action onDone, Action onCancel)
+        private void CallUrl(string method, Action onDone, Action onCancel, string message = null)
         {
-            CallUrl(method, null, onDone, onCancel);
+            CallUrl(method, null, onDone, onCancel, message);
         }
 
-        private void OpenDialog(Action onDone, Action onCancel)
+        private void OpenDialog(Action onDone, Action onCancel, string message = null)
         {
-            OpenDialog(null, onDone, onCancel);
+            OpenDialog(message, onDone, onCancel);
         }
 
         private void OpenDialog(String message, Action onDone, Action onCancel)
         {
-            var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog.WithContent("Dialog/TextContent");
-            dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
-                message ?? "Accept the transaction on your browser. Click RELOAD when it is confirmed.";
-            dialog.withOnClose(onCancel.Invoke);
-            dialog.WithAction("CANCEL", () =>
+            var label = new Label
             {
-                manager.CloseDialog(dialog);
-                onCancel.Invoke();
-            });
-            dialog.WithAction("RELOAD", () =>
-            {
-                manager.CloseDialog(dialog);
-                onDone.Invoke();
-            });
+                text = message ?? "Accept the transaction on your browser. Click RELOAD when it is confirmed."
+            };
+            DialogService.INSTANCE.Show(
+                new DialogConfig(label)
+                    .WithCancelAction(onCancel)
+                    .WithAction(new DialogAction("Reload", onDone.Invoke, "utopia-stroked-button-secondary"))
+                    .WithOnClose(onCancel)
+            );
         }
 
-        public static BrowserConnector INSTANCE
-        {
-            get { return GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>(); }
-        }
+        public static BrowserConnector INSTANCE => GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>();
     }
 }

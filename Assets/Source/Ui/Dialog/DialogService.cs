@@ -14,7 +14,6 @@ namespace Source.Ui.Dialog
         private static int dialogId = 0;
         private static Dictionary<int, VisualElement> dialogs = new();
         private VisualElement root;
-        private VisualElement dialogLayer;
 
         private void Start()
         {
@@ -25,8 +24,6 @@ namespace Source.Ui.Dialog
         {
             instance = this;
             root = GetComponent<UIDocument>().rootVisualElement;
-            dialogLayer = root.Q<VisualElement>("layer");
-            dialogLayer.RegisterCallback<MouseDownEvent>(_ => CloseLastOpenedDialog());
         }
 
         public void CloseLastOpenedDialog()
@@ -48,9 +45,16 @@ namespace Source.Ui.Dialog
         {
             if (dialogs.Count == 0)
                 gameObject.SetActive(true);
-            dialog = Utils.Utils.Create("Ui/Dialog/Dialog");
+            var dialogContainer = Utils.Utils.Create("Ui/Dialog/Dialog");
+            dialogContainer.style.width =
+                dialogContainer.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
+            dialogContainer.style.position = Position.Absolute;
+            dialog = dialogContainer.Q<VisualElement>("dialog");
             dialog.style.width = config.Width;
             dialog.style.height = config.Height;
+            var dialogLayer = dialogContainer.Q<VisualElement>("layer");
+            dialogLayer.RegisterCallback<MouseDownEvent>(_ => CloseLastOpenedDialog());
+
             if (config.Title != null)
             {
                 var title = dialog.Q<Label>("dialogTitle");
@@ -90,12 +94,12 @@ namespace Source.Ui.Dialog
                 actions.style.display = DisplayStyle.None;
             }
 
-            var closeAction = dialog.Q<Button>("dialogCloseAction");
+            var closeAction = dialogContainer.Q<Button>("dialogCloseAction");
             closeAction.clickable.clicked += () => Close(id);
-            dialog.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
-            dialog.userData = config;
-            dialogs.Add(id, dialog);
-            dialogLayer.Add(dialog);
+            dialogContainer.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
+            dialogContainer.userData = config;
+            dialogs.Add(id, dialogContainer);
+            root.Add(dialogContainer);
             return id;
         }
 

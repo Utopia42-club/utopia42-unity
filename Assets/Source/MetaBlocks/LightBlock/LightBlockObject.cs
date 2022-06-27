@@ -133,28 +133,28 @@ namespace Source.MetaBlocks.LightBlock
         private void EditProps()
         {
             var manager = GameManager.INSTANCE;
-            var dialog = manager.OpenDialog();
-            dialog
-                .WithTitle("Light Block Properties")
-                .WithContent(LightBlockEditor.PREFAB);
-            var editor = dialog.GetContent().GetComponent<LightBlockEditor>();
-
-            var props = Block.GetProps();
-            editor.SetValue(props == null ? null : props as LightBlockProperties);
-            dialog.WithAction("OK", () =>
-            {
-                var value = editor.GetValue();
-                var props = new LightBlockProperties(Block.GetProps() as LightBlockProperties);
-                if (value != null)
-                {
-                    props.intensity = value.intensity;
-                    props.range = value.range;
-                    props.hexColor = value.hexColor;
-                }
-
-                Block.SetProps(props, land);
-                manager.CloseDialog(dialog);
-            });
+            // var dialog = manager.OpenDialog();
+            // dialog
+            //     .WithTitle("Light Block Properties")
+            //     .WithContent(LightBlockEditor.PREFAB);
+            // var editor = dialog.GetContent().GetComponent<LightBlockEditor>();
+            //
+            // var props = Block.GetProps();
+            // editor.SetValue(props == null ? null : props as LightBlockProperties);
+            // dialog.WithAction("OK", () =>
+            // {
+            //     var value = editor.GetValue();
+            //     var props = new LightBlockProperties(Block.GetProps() as LightBlockProperties);
+            //     if (value != null)
+            //     {
+            //         props.intensity = value.intensity;
+            //         props.range = value.range;
+            //         props.hexColor = value.hexColor;
+            //     }
+            //
+            //     Block.SetProps(props, land);
+            //     manager.CloseDialog(dialog);
+            // });
         }
     }
 }

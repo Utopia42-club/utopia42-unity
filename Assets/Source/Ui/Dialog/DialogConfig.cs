@@ -7,8 +7,8 @@ namespace Source.Ui.Dialog
 {
     public class DialogConfig
     {
-        private StyleLength width = new(new Length(70, LengthUnit.Percent));
-        private StyleLength height = new(new Length(60, LengthUnit.Percent));
+        private StyleLength width = StyleKeyword.Auto;
+        private StyleLength height = StyleKeyword.Auto;
         private VisualElement content;
         [CanBeNull] private Action onClose;
         [CanBeNull] private string title;
@@ -50,9 +50,9 @@ namespace Source.Ui.Dialog
             return this;
         }
 
-        public DialogConfig WithCancelAction()
+        public DialogConfig WithCancelAction(Action action = null)
         {
-            actions.Add(new DialogAction("Cancel", () => { }));
+            actions.Add(new DialogAction("Cancel", action ?? (() => { })));
             return this;
         }
 

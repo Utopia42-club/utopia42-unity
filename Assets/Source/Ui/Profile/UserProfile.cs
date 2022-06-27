@@ -1,3 +1,4 @@
+using Source.Canvas;
 using Source.Ui.AssetsInventory;
 using Source.Ui.Map;
 using Source.Ui.Menu;
@@ -92,7 +93,14 @@ namespace Source.Ui.Profile
                 };
                 editButton.AddToClassList("utopia-button-primary");
                 UiImageUtils.SetBackground(editButton, editIcon);
-                editButton.clickable.clicked += () => GameManager.INSTANCE.EditProfile();
+                editButton.clickable.clicked += () => BrowserConnector.INSTANCE.EditProfile(() =>
+                {
+                    ProfileLoader.INSTANCE.InvalidateProfile(profile.walletId);
+                    ProfileLoader.INSTANCE.load(profile.walletId, SetProfile, () =>
+                    {
+                        //FIXME Show error snack
+                    });
+                }, () => { });
                 Add(editButton);
             }
         }

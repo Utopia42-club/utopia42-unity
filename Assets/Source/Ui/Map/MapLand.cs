@@ -51,6 +51,8 @@ namespace Source.Ui.Map
                 {
                     var landProfile = new LandProfile(land);
                     DialogService.INSTANCE.Show(new DialogConfig("Land Profile", landProfile)
+                            .WithWidth(new Length(70, LengthUnit.Percent))
+                            .WithHeight(new Length(60, LengthUnit.Percent))
                             .WithOnClose(UpdateLandStyle)
                         , out var dialog);
                     var loadingId = LoadingLayer.LoadingLayer.Show(dialog);

@@ -15,6 +15,7 @@ using Source.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace Source
 {
@@ -235,9 +236,6 @@ namespace Source
 
             switch (state)
             {
-                case State.DIALOG when dialogs.Count > 0:
-                    CloseDialog(dialogs[dialogs.Count - 1]);
-                    break;
                 case State.MENU:
                     SetState(State.PLAYING);
                     break;
@@ -313,11 +311,12 @@ namespace Source
         {
             var openFailureDialog = new Action(() =>
             {
-                var dialog = OpenDialog();
-                dialog
-                    .WithTitle("Failed to save your lands!")
-                    .WithAction("Retry", () => Save())
-                    .WithAction("OK", () => CloseDialog(dialog));
+                var content = new VisualElement();
+                DialogService.INSTANCE.Show(
+                    new DialogConfig("Failed to save your lands!", content)
+                        .WithAction(new DialogAction("Retry", Save, "utopia-stroked-button-secondary"))
+                        .WithAction(new DialogAction("Ok", () => { }))
+                );
             });
 
 
@@ -374,7 +373,7 @@ namespace Source
         {
             BrowserConnector.INSTANCE.Transfer(landId,
                 () => StartCoroutine(ReloadLandOwnerAndNft(landId, true)),
-                () => SetState(State.PLAYING));
+                () => { });
         }
 
         public void SetNFT(Land land, bool convertToNft)
@@ -394,24 +393,22 @@ namespace Source
                     StartCoroutine(IpfsClient.INSATANCE.UploadImage(screenshot,
                         ipfsKey => SetLandNftImage(ipfsKey, land), () =>
                         {
-                            var dialog = INSTANCE.OpenDialog();
-                            dialog
-                                .WithTitle("Failed to upload screenshot")
-                                .WithContent("Dialog/TextContent")
-                                .WithAction("OK", () =>
-                                {
-                                    INSTANCE.CloseDialog(dialog);
-                                    SetState(State.PLAYING);
-                                });
-                            dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
-                                "Conversion to NFT cancelled. Click OK to continue.";
+                            var label = new Label
+                            {
+                                text = "Conversion to NFT cancelled. Click OK to continue."
+                            };
+                            DialogService.INSTANCE.Show(
+                                new DialogConfig("Failed to upload screenshot", label)
+                                    .WithAction(new DialogAction("Ok", () => { }))
+                            );
                         }));
                 }));
             }
             else
             {
                 BrowserConnector.INSTANCE.SetNft(land.id, false,
-                    () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)), () => SetState(State.PLAYING));
+                    () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
+                    () => { });
             }
         }
 
@@ -424,17 +421,14 @@ namespace Source
                     () => SetState(State.PLAYING));
             }, () =>
             {
-                var dialog = INSTANCE.OpenDialog();
-                dialog
-                    .WithTitle("Failed to update land metadata")
-                    .WithContent("Dialog/TextContent")
-                    .WithAction("OK", () =>
-                    {
-                        INSTANCE.CloseDialog(dialog);
-                        SetState(State.PLAYING);
-                    });
-                dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
-                    "Conversion to NFT cancelled. Click OK to continue.";
+                var label = new Label
+                {
+                    text = "Conversion to NFT cancelled. Click OK to continue."
+                };
+                DialogService.INSTANCE.Show(
+                    new DialogConfig("Failed to update land metadata", label)
+                        .WithAction(new DialogAction("Ok", () => { }))
+                );
             }));
         }
 
@@ -451,18 +445,13 @@ namespace Source
                 {
                     var landProfile = new LandProfile(currentLand);
                     landProfile.SetProfile(profile);
-                    DialogService.INSTANCE.Show(new DialogConfig("Land Profile", landProfile));
+                    DialogService.INSTANCE.Show(
+                        new DialogConfig("Land Profile", landProfile)
+                            .WithWidth(new Length(70, LengthUnit.Percent))
+                            .WithHeight(new Length(60, LengthUnit.Percent))
+                    );
                 }
             }
-        }
-
-        public void EditProfile()
-        {
-            BrowserConnector.INSTANCE.EditProfile(() =>
-            {
-                SetState(State.PLAYING);
-                Owner.INSTANCE.OnProfileEdited();
-            }, () => { SetState(State.PLAYING); });
         }
 
         private IEnumerator ReloadLandOwnerAndNft(long id, bool reCreateWorld)
@@ -501,15 +490,6 @@ namespace Source
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.GetPosition(), true);
-        }
-
-        public Dialog OpenDialog(State targetState = State.DIALOG)
-        {
-            var go = Instantiate(Resources.Load<GameObject>("Dialog/Dialog"), GameObject.Find("Canvas").transform);
-            SetState(targetState);
-            var dialog = go.GetComponent<Dialog>();
-            dialogs.Add(dialog);
-            return dialog;
         }
 
         public void CloseDialog(Dialog dialog, State? targetState = null)
@@ -561,7 +541,6 @@ namespace Source
             PLAYING,
             MENU,
             LOGIN,
-            DIALOG,
             FREEZE
         }
 
