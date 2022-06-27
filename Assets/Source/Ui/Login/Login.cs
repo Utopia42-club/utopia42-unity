@@ -1,8 +1,7 @@
-using Org.BouncyCastle.Asn1.Misc;
 using Source.Model;
 using Source.Service.Ethereum;
 using Source.Ui.Dialog;
-using Source.Ui.Toaster;
+using Source.Ui.Snack;
 using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -43,8 +42,12 @@ namespace Source.Ui.Login
                 },
                 () =>
                 {
-                    ToasterService.Show("Could not load any ETHEREUM networks. Please report the error.",
-                        ToasterService.ToastType.Error, null);
+                    SnackService.INSTANCE.Show(
+                        new SnackConfig(
+                            new Toast("Could not load any ETHEREUM networks. Please report the error.",
+                                Toast.ToastType.Error)
+                        )
+                    );
                     LoadingLayer.LoadingLayer.Hide(loadingId);
                 }));
         }
@@ -54,8 +57,12 @@ namespace Source.Ui.Login
             var nets = EthNetwork.GetNetworksIfPresent();
             if (nets == null || nets.Length == 0)
             {
-                ToasterService.Show("Could not load any ETHEREUM networks. Please report the error.",
-                    ToasterService.ToastType.Error, null);
+                SnackService.INSTANCE.Show(
+                    new SnackConfig(
+                        new Toast("Could not load any ETHEREUM networks. Please report the error.",
+                            Toast.ToastType.Error)
+                    )
+                );
                 return;
             }
 

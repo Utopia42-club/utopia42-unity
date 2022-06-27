@@ -1,0 +1,15 @@
+.utopia-snack {
+    opacity: 0.8;
+    background-color: var(--primary-color);
+    border-radius: var(--default-border-radius);
+    border-width: 2;
+    border-color: var(--primary-color);
+    margin-bottom: 6;
+    margin-top: 3;
+}
+
+.utopia-snack:hover {
+    background-color: var(--darker-primary-color);
+    border-width: 2;
+    border-color: var(--primary-color);
+}

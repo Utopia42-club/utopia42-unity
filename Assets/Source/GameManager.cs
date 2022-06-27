@@ -228,7 +228,7 @@ namespace Source
                 return; //FIXME
 
             var dialogService = DialogService.INSTANCE;
-            if (dialogService.isAnyDialogOpen())
+            if (dialogService.IsAnyDialogOpen())
             {
                 dialogService.CloseLastOpenedDialog();
                 return;
