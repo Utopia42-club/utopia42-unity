@@ -1,4 +1,5 @@
 ﻿using Source.Model;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using UnityEngine;
 
@@ -26,7 +27,12 @@ namespace Source.Canvas
             return null;
         }
 
-        public static Color GetLandColor(Land land)
+        public static string ConvertToHex(Color color)
+        {
+            return "#" + ColorUtility.ToHtmlStringRGB(color);
+        }
+
+        public static Color? GetLandColor(Land land)
         {
             Color? color = null;
             if (land != null && land.properties != null && land.properties.color != null)
@@ -34,15 +40,25 @@ namespace Source.Canvas
                 color = ConvertHexToColor(land.properties.color);
             }
 
-            return color ?? MAP_DEFAULT_LAND_COLOR;
+            return color;
         }
 
         public static Color GetLandOutlineColor(Land land)
         {
-            var owner = land.owner.Equals(Settings.WalletId());
+            var owner = land.owner.Equals(Login.WalletId());
             return owner
                 ? (land.isNft ? MAP_OWNED_LAND_NFT : MAP_OWNED_LAND)
                 : (land.isNft ? MAP_OTHERS_LAND_NFT : MAP_OTHERS_LAND);
+        }
+
+        public static string GetLandBorderStyle(Land land)
+        {
+            var owner = land.owner.Equals(Login.WalletId());
+            return owner
+                ? land.isNft ? "map-owned-land-nft" : "map-owned-land"
+                : land.isNft
+                    ? "map-others-land-nft"
+                    : "map-others-land";
         }
     }
 }

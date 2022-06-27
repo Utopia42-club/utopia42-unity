@@ -1,10 +1,14 @@
 using System.Collections.Generic;
+using System.Linq;
 using Source;
-using Source.Canvas;
-using Source.Service;
+using Source.Model;
 using Source.Service.Ethereum;
 using Source.Ui;
+using Source.Ui.LoadingLayer;
+using Source.Ui.Login;
+using Source.Ui.Map;
 using Source.Ui.Menu;
+using Source.Ui.Profile;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
 using UnityEngine;
@@ -16,12 +20,9 @@ public class Menu : MonoBehaviour, UiProvider
     private VisualElement root;
     private GameManager gameManager;
     private TabPane tabPane;
-    private Settings settings;
     private VisualElement rootPane;
     private Button exitButton;
-    private Button saveButton;
-    private Button copyLocationButton;
-    private Help help;
+    private Button closeButton;
 
     void OnEnable()
     {
@@ -29,68 +30,73 @@ public class Menu : MonoBehaviour, UiProvider
         gameManager = GameManager.INSTANCE;
         root = GetComponent<UIDocument>().rootVisualElement;
         rootPane = root.Q<VisualElement>("root");
-        settings = new Settings(this);
-        help = new Help();
+        rootPane.Clear();
         var tabConfigs = new List<TabConfiguration>
         {
-            new("Settings", settings),
-            new("Help", help),
+            new("Map", () => new Map()),
+            new("Help", () => new Help()),
+            new("Profile", () => new UserProfile(null), (e) =>
+            {
+                var userProfile = tabPane.GetTabBody().Children().First() as UserProfile;
+                var loadingId = LoadingLayer.Show(userProfile);
+                ProfileLoader.INSTANCE.load(Login.WalletId(),
+                    profile =>
+                    {
+                        userProfile.SetProfile(profile);
+                        LoadingLayer.Hide(loadingId);
+                    },
+                    () =>
+                    {
+                        userProfile.SetProfile(Profile.FAILED_TO_LOAD_PROFILE);
+                        LoadingLayer.Hide(loadingId);
+                    });
+            }),
         };
-        tabPane = new TabPane(tabConfigs);
+        tabPane = new TabPane(tabConfigs, false);
         rootPane.Add(tabPane);
-
-        exitButton = new Button();
-        exitButton.AddToClassList("utopia-button");
-        UiImageLoader.SetBackground(exitButton, Resources.Load<Sprite>("Icons/shutdown"));
-        exitButton.clickable.clicked += () => gameManager.Exit();
-        exitButton.tooltip = "Exit";
-        exitButton.AddManipulator(new ToolTipManipulator(root));
-        tabPane.AddRightAction(exitButton);
-
-        saveButton = new Button();
-        saveButton.AddToClassList("utopia-button");
-        UiImageLoader.SetBackground(saveButton, Resources.Load<Sprite>("Icons/save"));
-        saveButton.clickable.clicked += () => gameManager.Save();
-        saveButton.tooltip = "Save my lands";
-        saveButton.AddManipulator(new ToolTipManipulator(root));
-        saveButton.style.display = DisplayStyle.None;
-        tabPane.AddRightAction(saveButton);
-
-        copyLocationButton = new Button();
-        copyLocationButton.AddToClassList("utopia-button");
-        UiImageLoader.SetBackground(copyLocationButton, Resources.Load<Sprite>("Icons/pin"));
-        copyLocationButton.clickable.clicked += () => gameManager.CopyPositionLink();
-        copyLocationButton.tooltip = "Copy current position";
-        copyLocationButton.AddManipulator(new ToolTipManipulator(root));
-        copyLocationButton.style.display = DisplayStyle.None;
-        tabPane.AddRightAction(copyLocationButton);
-
         gameManager.stateChange.AddListener(state =>
         {
-            if (state == GameManager.State.SETTINGS)
+            var serviceInitialized = EthereumClientService.INSTANCE.IsInited();
+            switch (state)
             {
-                var serviceInitialized = EthereumClientService.INSTANCE.IsInited();
-                gameObject.SetActive(true);
-                tabPane.OpenTab(0);
-                tabPane.SetTabButtonsAreaVisibility(serviceInitialized);
-                saveButton.style.display = !Settings.IsGuest() ? DisplayStyle.Flex : DisplayStyle.None;
-                saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
-                copyLocationButton.style.display = serviceInitialized ? DisplayStyle.Flex : DisplayStyle.None;
-                root.SetEnabled(true);
-            }
-            else if (state == GameManager.State.HELP)
-            {
-                gameObject.SetActive(true);
-                tabPane.OpenTab(1);
-                tabPane.SetTabButtonsAreaVisibility(true);
-                root.SetEnabled(true);
-            }
-            else
-            {
-                root.SetEnabled(false);
-                gameObject.SetActive(false);
+                case GameManager.State.MENU:
+                {
+                    gameObject.SetActive(true);
+                    tabPane.OpenTab(0);
+                    tabPane.SetTabButtonsAreaVisibility(serviceInitialized);
+                    break;
+                }
+                default:
+                    gameObject.SetActive(false);
+                    tabPane.CloseTabs();
+                    break;
             }
         });
+        CreateActions();
+    }
+
+    private void CreateActions()
+    {
+        exitButton = new Button();
+        exitButton.AddToClassList("utopia-button-primary");
+        exitButton.AddToClassList("utopia-action-button");
+        UiImageUtils.SetBackground(exitButton, Resources.Load<Sprite>("Icons/exit"));
+        exitButton.clickable.clicked += () => gameManager.Exit();
+        exitButton.tooltip = "Exit";
+        exitButton.AddManipulator(new ToolTipManipulator());
+        tabPane.AddLeftAction(exitButton);
+
+        closeButton = new Button();
+        closeButton.AddToClassList("utopia-button-primary");
+        closeButton.AddToClassList("utopia-action-button");
+        UiImageUtils.SetBackground(closeButton, Resources.Load<Sprite>("Icons/close"));
+        closeButton.clickable.clicked += () =>
+        {
+            gameManager.ReturnToGame();
+        };
+        // closeButton.tooltip = "Close";
+        // closeButton.AddManipulator(new ToolTipManipulator(Side.BottomLeft));
+        tabPane.AddRightAction(closeButton);
     }
 
     public VisualElement VisualElement()

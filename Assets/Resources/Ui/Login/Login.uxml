@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <ui:VisualElement class="utopia-background" style="flex-grow: 1; align-items: center; width: 100%; justify-content: center;">
+        <ui:Button display-tooltip-when-elided="true" name="exitButton" class="utopia-button-primary utopia-action-button" style="position: absolute; left: 2px; top: 2px; background-image: resource(&apos;Icons/exit&apos;);" />
+        <ui:VisualElement name="root" style="flex-grow: 1; justify-content: space-between; width: 60%; max-width: 600px; flex-direction: row; align-items: center;">
+            <ui:VisualElement name="walletLoginTile" class="utopia-tile" style="flex-grow: 0; flex-direction: column; height: 300px; width: 45%;">
+                <ui:VisualElement style="background-image: resource(&apos;Icons/metamask&apos;); flex-grow: 1;" />
+                <ui:Label text="Connect your account and get the full experience" display-tooltip-when-elided="true" style="white-space: normal; -unity-text-align: upper-center;" />
+                <ui:Button text="Enter" display-tooltip-when-elided="true" name="enterButton" class="utopia-stroked-button-secondary" style="height: 40px; margin-bottom: 20px; margin-left: 8px; margin-right: 8px;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="guestTile" class="utopia-tile" style="flex-grow: 0; flex-direction: column; height: 300px; width: 45%;">
+                <ui:VisualElement style="background-image: resource(&apos;Icons/guest&apos;); flex-grow: 1;" />
+                <ui:Label text="You will have a limited experience" display-tooltip-when-elided="true" style="-unity-text-align: upper-center; white-space: normal;" />
+                <ui:Button text="Enter As Guest" display-tooltip-when-elided="true" name="guestButton" class="utopia-stroked-button-secondary" style="height: 40px; margin-bottom: 20px; margin-right: 8px; margin-left: 8px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

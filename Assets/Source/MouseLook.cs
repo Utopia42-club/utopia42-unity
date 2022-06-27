@@ -24,7 +24,7 @@ namespace Source
 
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
-                if (state == GameManager.State.PLAYING || state == GameManager.State.MOVING_OBJECT)
+                if (state == GameManager.State.PLAYING)
                 {
                     onUpdate = DoUpdate;
                 }

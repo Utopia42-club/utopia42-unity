@@ -10,21 +10,33 @@ namespace Source.Ui.TabPane
         public VisualElement VisualElement { get; set; }
         public Action<TabOpenEvent> onTabOpen { get; set; }
 
-        public TabConfiguration(string name, string uxmlPath, Action<TabOpenEvent> onTabOpen) :
-            this(name, Utils.Utils.Create(uxmlPath), onTabOpen)
+        public Func<VisualElement> visualElementFactory { get; set; }
+
+        public Action onTabClose { get; set; }
+
+        public TabConfiguration(string name, string uxmlPath, Action<TabOpenEvent> onTabOpen = null, Action onTabClose = null) 
+            :this(name, Utils.Utils.Create(uxmlPath), onTabOpen, onTabClose)
         {
         }
 
-        public TabConfiguration(string name, VisualElement visualElement, Action<TabOpenEvent> onTabOpen = null)
+        public TabConfiguration(string name, VisualElement visualElement, Action<TabOpenEvent> onTabOpen = null,
+            Action onTabClose = null)
+        : this(name, onTabOpen, onTabClose)
+        {
+            VisualElement = visualElement;
+        }
+
+        public TabConfiguration(string name, Func<VisualElement> visualElementFactory, Action<TabOpenEvent> onTabOpen = null,
+            Action onTabClose = null) : this(name, onTabOpen, onTabClose)
+        {
+            this.visualElementFactory = visualElementFactory;
+        }
+
+        private TabConfiguration(string name, Action<TabOpenEvent> onTabOpen = null, Action onTabClose = null)
         {
             this.name = name;
-            VisualElement = visualElement;
-            this.onTabOpen = (e) =>
-            {
-                if (visualElement is TabOpenListener)
-                    ((TabOpenListener) visualElement).OnTabOpen(e);
-                onTabOpen?.Invoke(e);
-            };
+            this.onTabClose = onTabClose;
+            this.onTabOpen = onTabOpen;
         }
     }
 }

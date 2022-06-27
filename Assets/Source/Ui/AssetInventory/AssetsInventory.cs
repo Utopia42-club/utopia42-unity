@@ -132,10 +132,9 @@ namespace Source.Ui.AssetInventory
 
         private void UpdateVisibility()
         {
-            var active = (GameManager.INSTANCE.GetState() == GameManager.State.PLAYING ||
-                          GameManager.INSTANCE.GetState() == GameManager.State.MOVING_OBJECT)
+            var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
-                         && !Settings.IsGuest()
+                         && !Login.Login.IsGuest()
                 ; // && Can Edit Land 
             gameObject.SetActive(active);
             inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !
@@ -197,11 +196,11 @@ namespace Source.Ui.AssetInventory
                 {
                     var favoriteItem = favoriteItems[i];
                     var slot = new FavoriteItemInventorySlot(favoriteItem);
-                    GridUtils.SetChildPosition(slot.VisualElement(), 80, i, 3);
+                    GridUtils.SetChildPosition(slot.VisualElement(), 80, 80, i, 3);
                     container.Add(slot.VisualElement());
                 }
 
-                GridUtils.SetContainerSize(container, favoriteItems.Count);
+                GridUtils.SetContainerSize(container, favoriteItems.Count, 90, 3);
                 scrollView.Add(container);
             }, () =>
             {
@@ -336,7 +335,7 @@ namespace Source.Ui.AssetInventory
                 foldout.contentContainer.Add(slot.VisualElement());
             }
 
-            GridUtils.SetContainerSize(foldout.contentContainer, size);
+            GridUtils.SetContainerSize(foldout.contentContainer, size, 90, 3);
             return foldout;
         }
 
@@ -555,11 +554,6 @@ namespace Source.Ui.AssetInventory
         public SlotInfo GetSelectedSlot()
         {
             return selectedSlot.GetSlotInfo();
-        }
-
-        public VisualElement GetTooltipRoot()
-        {
-            return root;
         }
 
         public static AssetsInventory INSTANCE => instance;

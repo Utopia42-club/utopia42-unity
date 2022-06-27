@@ -13,7 +13,7 @@ namespace ReadyPlayerMe
         // TODO: Expose this and let developer change it to where they want
         private const string SAVE_FOLDER = "Resources/Avatars";
         
-        public int Timeout { get; set; } = 20;
+        public int Timeout { get; set; } = 100;
         public Action<FailureType, string> OnFailed;
         public Action<float> OnProgressChanged;
         public Action<byte[]> OnCompleted;

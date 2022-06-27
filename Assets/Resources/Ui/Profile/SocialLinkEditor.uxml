@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
+    <Style src="project://database/Assets/Resources/Ui/Profile/UserProfile.uss?fileID=7433441132597879392&amp;guid=c31bcd65131e47bba209b6de1368fd35&amp;type=3#UserProfile" />
+    <ui:VisualElement name="root" style="flex-direction: row; align-items: center;">
+        <ui:DropdownField label="Media" index="-1" choices="INSTAGRAM, TELEGRAM, DISCORD, FACEBOOK, TWITTER, OTHER" name="typeField" style="flex-grow: 0; width: 165px;" />
+        <ui:TextField picking-mode="Ignore" label="Url" name="urlField" style="flex-grow: 2;" />
+        <ui:Button display-tooltip-when-elided="true" enable-rich-text="true" name="deleteButton" class="utopia-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/delete&apos;); -unity-background-scale-mode: stretch-to-fill;" />
+    </ui:VisualElement>
+</ui:UXML>

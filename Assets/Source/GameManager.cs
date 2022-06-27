@@ -1,17 +1,21 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Source.Canvas;
-using Source.Canvas.Map;
 using Source.Model;
 using Source.Service;
 using Source.Service.Ethereum;
-using Source.Ui.Menu;
+using Source.Ui.Dialog;
+using Source.Ui.Login;
+using Source.Ui.Map;
+using Source.Ui.Profile;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace Source
 {
@@ -28,8 +32,6 @@ namespace Source
         private List<Dialog> dialogs = new();
         private bool captureAllKeyboardInputOrig;
 
-        public Map map;
-
         private bool doubleCtrlTap = false;
         private double doubleCtrlTapTime;
 
@@ -38,7 +40,7 @@ namespace Source
 
         void Start()
         {
-            SetState(State.SETTINGS);
+            SetState(State.LOGIN);
             stateChange.AddListener(newState => { BrowserConnector.INSTANCE.ReportGameState(newState); });
         }
 
@@ -68,14 +70,10 @@ namespace Source
                     doubleCtrlTap = true;
                     doubleCtrlTapTime = Time.time;
                 }
-                else if (Input.GetButtonDown("Menu"))
-                    SetState(State.SETTINGS);
-                else if (Input.GetButtonDown("Map"))
-                    SetState(State.MAP);
+                else if (Input.GetButtonDown("Menu") || Input.GetButtonDown("Map"))
+                    SetState(State.MENU);
             }
-            else if (worldInited && Input.GetButtonDown("Menu") && state == State.SETTINGS)
-                SetState(State.PLAYING);
-            else if (Input.GetButtonDown("Map") && state == State.MAP)
+            else if (worldInited && Input.GetButtonDown("Menu") && state == State.MENU)
                 SetState(State.PLAYING);
         }
 
@@ -101,9 +99,9 @@ namespace Source
 
         private void InitPlayerForWallet(Vector3? startingPosition)
         {
-            if (string.IsNullOrWhiteSpace(Settings.WalletId()))
+            if (string.IsNullOrWhiteSpace(Login.WalletId()))
             {
-                SetState(State.SETTINGS);
+                SetState(State.LOGIN);
                 return;
             }
 
@@ -155,15 +153,14 @@ namespace Source
             yield return null;
 
             worldInited = true;
-            SetState(State.PLAYING);
         }
 
-        internal void OpenHelpDialog()
+        private IEnumerator LoadAvatar()
         {
-            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
-            {
-                SetState(State.HELP);
-            }
+            SetState(State.LOADING);
+            Loading.INSTANCE.UpdateText("Loading the avatar...");
+            while (Player.INSTANCE.AvatarNotLoaded)
+                yield return new WaitForSeconds(0.1f);
         }
 
         public void MovePlayerTo(Vector3 pos)
@@ -179,6 +176,8 @@ namespace Source
 
             Player.INSTANCE.SetPosition(pos);
             yield return InitWorld(pos, clean);
+            yield return LoadAvatar();
+            SetState(State.PLAYING);
         }
 
         private IEnumerator FindStartingY(Vector3 pos, Action<Vector3> consumer)
@@ -223,42 +222,23 @@ namespace Source
             }
         }
 
-        public bool OpenMap()
-        {
-            return SetState(State.MAP);
-        }
-
-        public bool OpenSettings()
-        {
-            return SetState(State.SETTINGS);
-        }
-
         public void ReturnToGame()
         {
             if (!worldInited)
                 return; //FIXME
 
+            var dialogService = DialogService.INSTANCE;
+            if (dialogService.isAnyDialogOpen())
+            {
+                dialogService.CloseLastOpenedDialog();
+                return;
+            }
+
             switch (state)
             {
-                case State.PROFILE_DIALOG:
-                    LandProfileDialog.INSTANCE.CloseIfOpened();
-                    ProfileDialog.INSTANCE.CloseIfOpened();
-                    break;
-                case State.DIALOG when dialogs.Count > 0:
-                    CloseDialog(dialogs[dialogs.Count - 1]);
-                    break;
-                case State.MAP:
-                    if (LandProfileDialog.INSTANCE.gameObject.activeSelf)
-                        LandProfileDialog.INSTANCE.CloseIfOpened();
-                    else if (map.IsLandBuyDialogOpen())
-                        map.CloseLandBuyDialogState();
-                    else
-                        SetState(State.PLAYING);
-                    break;
-                case State.HELP:
+                case State.MENU:
                     SetState(State.PLAYING);
                     break;
-                case State.SETTINGS:
                 case State.FREEZE:
                     SetState(State.PLAYING);
                     break;
@@ -285,22 +265,6 @@ namespace Source
                 SetState(State.LOADING);
                 InitPlayerForWallet(startingPosition);
             }
-        }
-
-        public void SetProfileDialogState(bool open)
-        {
-            if (open && GetState() == State.PLAYING || GetState() == State.SETTINGS)
-                SetState(State.PROFILE_DIALOG);
-            else if (GetState() == State.PROFILE_DIALOG)
-                SetState(State.PLAYING);
-        }
-
-        public void ShowUserProfile()
-        {
-            var profileDialog = ProfileDialog.INSTANCE;
-            profileDialog.Open(Profile.LOADING_PROFILE);
-            ProfileLoader.INSTANCE.load(Settings.WalletId(), profileDialog.Open,
-                () => profileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
         public void CopyPositionLink()
@@ -347,17 +311,18 @@ namespace Source
         {
             var openFailureDialog = new Action(() =>
             {
-                var dialog = OpenDialog();
-                dialog
-                    .WithTitle("Failed to save your lands!")
-                    .WithAction("Retry", () => Save())
-                    .WithAction("OK", () => CloseDialog(dialog));
+                var content = new VisualElement();
+                DialogService.INSTANCE.Show(
+                    new DialogConfig("Failed to save your lands!", content)
+                        .WithAction(new DialogAction("Retry", Save, "utopia-stroked-button-secondary"))
+                        .WithAction(new DialogAction("Ok", () => { }))
+                );
             });
 
 
             var lands = Player.INSTANCE.GetOwnedLands();
             if (lands == null || lands.Count == 0) yield break;
-            var wallet = Settings.WalletId();
+            var wallet = Login.WalletId();
             var service = WorldService.INSTANCE;
             if (!service.HasChange()) yield break;
             SetState(State.LOADING);
@@ -408,41 +373,42 @@ namespace Source
         {
             BrowserConnector.INSTANCE.Transfer(landId,
                 () => StartCoroutine(ReloadLandOwnerAndNft(landId, true)),
-                () => SetState(State.PLAYING));
+                () => { });
         }
 
         public void SetNFT(Land land, bool convertToNft)
         {
             if (convertToNft)
             {
-                StartCoroutine(GameObject.Find("Map").GetComponent<Map>().TakeNftScreenShot(land, screenshot =>
+                StartCoroutine(Map.INSTANCE.TakeNftScreenShot(land, screenshot =>
                 {
-                    // using(var ms = new MemoryStream(screenshot)) {
-                    //     using(var fs = new FileStream("nftImg", FileMode.Create)) {
+                    // using (var ms = new MemoryStream(screenshot))
+                    // {
+                    //     using (var fs = new FileStream("nftImg.jpg", FileMode.Create))
+                    //     {
                     //         ms.WriteTo(fs);
                     //     }
                     // }
+
                     StartCoroutine(IpfsClient.INSATANCE.UploadImage(screenshot,
                         ipfsKey => SetLandNftImage(ipfsKey, land), () =>
                         {
-                            var dialog = INSTANCE.OpenDialog();
-                            dialog
-                                .WithTitle("Failed to upload screenshot")
-                                .WithContent("Dialog/TextContent")
-                                .WithAction("OK", () =>
-                                {
-                                    INSTANCE.CloseDialog(dialog);
-                                    SetState(State.PLAYING);
-                                });
-                            dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
-                                "Conversion to NFT cancelled. Click OK to continue.";
+                            var label = new Label
+                            {
+                                text = "Conversion to NFT cancelled. Click OK to continue."
+                            };
+                            DialogService.INSTANCE.Show(
+                                new DialogConfig("Failed to upload screenshot", label)
+                                    .WithAction(new DialogAction("Ok", () => { }))
+                            );
                         }));
                 }));
             }
             else
             {
                 BrowserConnector.INSTANCE.SetNft(land.id, false,
-                    () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)), () => SetState(State.PLAYING));
+                    () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
+                    () => { });
             }
         }
 
@@ -455,44 +421,37 @@ namespace Source
                     () => SetState(State.PLAYING));
             }, () =>
             {
-                var dialog = INSTANCE.OpenDialog();
-                dialog
-                    .WithTitle("Failed to update land metadata")
-                    .WithContent("Dialog/TextContent")
-                    .WithAction("OK", () =>
-                    {
-                        INSTANCE.CloseDialog(dialog);
-                        SetState(State.PLAYING);
-                    });
-                dialog.GetContent().GetComponent<TextMeshProUGUI>().text =
-                    "Conversion to NFT cancelled. Click OK to continue.";
+                var label = new Label
+                {
+                    text = "Conversion to NFT cancelled. Click OK to continue."
+                };
+                DialogService.INSTANCE.Show(
+                    new DialogConfig("Failed to update land metadata", label)
+                        .WithAction(new DialogAction("Ok", () => { }))
+                );
             }));
         }
 
         public void ShowProfile(Profile profile, Land currentLand)
         {
-            if (GetState() == State.PLAYING || GetState() == State.SETTINGS)
+            if (GetState() == State.PLAYING)
             {
                 if (currentLand == null)
                 {
-                    var profileDialog = ProfileDialog.INSTANCE;
-                    profileDialog.Open(profile);
+                    var userProfile = new UserProfile(profile);
+                    DialogService.INSTANCE.Show(new DialogConfig("User Profile", userProfile));
                 }
                 else
                 {
-                    LandProfileDialog.INSTANCE.Open(currentLand, profile);
+                    var landProfile = new LandProfile(currentLand);
+                    landProfile.SetProfile(profile);
+                    DialogService.INSTANCE.Show(
+                        new DialogConfig("Land Profile", landProfile)
+                            .WithWidth(new Length(70, LengthUnit.Percent))
+                            .WithHeight(new Length(60, LengthUnit.Percent))
+                    );
                 }
             }
-        }
-
-        public void EditProfile()
-        {
-            LandProfileDialog.INSTANCE.CloseIfOpened();
-            BrowserConnector.INSTANCE.EditProfile(() =>
-            {
-                SetState(State.PLAYING);
-                Owner.INSTANCE.OnProfileEdited();
-            }, () => { SetState(State.PLAYING); });
         }
 
         private IEnumerator ReloadLandOwnerAndNft(long id, bool reCreateWorld)
@@ -531,15 +490,6 @@ namespace Source
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.GetPosition(), true);
-        }
-
-        public Dialog OpenDialog(State targetState = State.DIALOG)
-        {
-            var go = Instantiate(Resources.Load<GameObject>("Dialog/Dialog"), GameObject.Find("Canvas").transform);
-            SetState(targetState);
-            var dialog = go.GetComponent<Dialog>();
-            dialogs.Add(dialog);
-            return dialog;
         }
 
         public void CloseDialog(Dialog dialog, State? targetState = null)
@@ -583,25 +533,14 @@ namespace Source
 #endif
         }
 
-        public void NavigateInMap(Land land)
-        {
-            var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
-            mapInputManager.NavigateInMap(land);
-        }
-
         public static GameManager INSTANCE => GameObject.Find("GameManager").GetComponent<GameManager>();
 
         public enum State
         {
             LOADING,
-            SETTINGS,
             PLAYING,
-            MAP,
-            INVENTORY, //FIXME Remove !
-            HELP,
-            DIALOG,
-            PROFILE_DIALOG,
-            MOVING_OBJECT,
+            MENU,
+            LOGIN,
             FREEZE
         }
 
@@ -637,6 +576,11 @@ namespace Source
             {
                 Application.Quit();
             }
+        }
+
+        public void OpenMenu()
+        {
+            SetState(State.MENU);
         }
     }
 }

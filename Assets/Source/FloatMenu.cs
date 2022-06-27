@@ -14,15 +14,9 @@ public class FloatMenu : MonoBehaviour
         root = GetComponent<UIDocument>().rootVisualElement;
         _gameManager = GameManager.INSTANCE;
 
-        var mapButton = root.Q<Button>("map");
-        mapButton.clicked += () => _gameManager.OpenMap();
+        var menu = root.Q<Button>("menu");
+        menu.clicked += () => _gameManager.OpenMenu();
 
-        var settingsButton = root.Q<Button>("settings");
-        settingsButton.clicked += () => _gameManager.OpenSettings();
-
-        var helpButton = root.Q<Button>("help");
-        helpButton.clicked += () => _gameManager.OpenHelpDialog();
-        
         var locked = MouseLook.INSTANCE.cursorLocked;
         root.focusable = !locked;
         root.SetEnabled(!locked);

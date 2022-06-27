@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using Source.Model;
 using Source.Service;
+using Source.Ui.Login;
 using Source.Ui.Menu;
+using Source.Ui.Profile;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
@@ -93,7 +95,7 @@ namespace Source.Canvas
 
         internal void OnProfileEdited()
         {
-            var owner = Settings.WalletId();
+            var owner = Login.WalletId();
             profileLoader.InvalidateProfile(owner);
             if (currentWallet != null && currentWallet.Equals(owner))
                 LoadProfile();

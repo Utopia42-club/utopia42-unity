@@ -108,7 +108,7 @@ namespace Source.Ui.AssetInventory
 
             var image = categoryButton.Q("image");
 
-            inventory.StartCoroutine(UiImageLoader.SetBackGroundImageFromUrl(category.thumbnailUrl,
+            inventory.StartCoroutine(UiImageUtils.SetBackGroundImageFromUrl(category.thumbnailUrl,
                 Resources.Load<Sprite>("Icons/loading"), image));
 
             categoryButton.Q<Button>().clickable.clicked += () =>

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using Source.Model;
+using Source.Service;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,6 +12,8 @@ namespace Source.Ui.Map
         private readonly Map map;
         private MapLand drawingLand;
         private Vector2Int startDrawPosition;
+        private readonly MapPlayerPositionIndicator mapPlayerPositionIndicator;
+        private Overlay dimLayer;
 
         public MapLandLayer(Map map)
         {
@@ -22,27 +26,17 @@ namespace Source.Ui.Map
                 if (e.ctrlKey && drawingLand == null)
                 {
                     startDrawPosition = MapLand.RoundDown(this.map.ScreenToUtopia(e.mousePosition));
-                    foreach (var child in Children())
-                    {
-                        if (child is MapLand)
-                        {
-                            if (child.contentRect.Contains(startDrawPosition))
-                            {
-                                return;
-                            }
-                        }
-                    }
+                    if (Children().OfType<MapLand>().Any(child => child.contentRect.Contains(startDrawPosition)))
+                        return;
 
                     e.StopPropagation();
                     this.map.CaptureMouse();
 
                     drawingLand = new MapLand(new Land
                     {
-                        startCoordinate =
-                            new SerializableVector3Int((int) startDrawPosition.x, 0, (int) startDrawPosition.y),
-                        endCoordinate =
-                            new SerializableVector3Int((int) startDrawPosition.x, 0, (int) startDrawPosition.y)
-                    });
+                        startCoordinate = new SerializableVector3Int(startDrawPosition.x, 0, startDrawPosition.y),
+                        endCoordinate = new SerializableVector3Int(startDrawPosition.x, 0, startDrawPosition.y)
+                    }, map);
                     Add(drawingLand);
                 }
             });
@@ -55,6 +49,18 @@ namespace Source.Ui.Map
                 e.StopPropagation();
                 this.map.ReleaseMouse();
             });
+            Utils.Utils.RegisterOnDoubleClick(map, (evt) =>
+            {
+                var realPosition = map.ScreenToUtopia(evt.mousePosition);
+                GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
+            });
+            mapPlayerPositionIndicator = new MapPlayerPositionIndicator(map);
+            Add(mapPlayerPositionIndicator);
+        }
+
+        internal void SetPlayerPositionIndicatorVisibility(Visibility visibility)
+        {
+            mapPlayerPositionIndicator.style.visibility = visibility;
         }
 
         private void PointerMoved(PointerMoveEvent evt)
@@ -176,16 +182,39 @@ namespace Source.Ui.Map
 
         private void InitLands()
         {
-            Add(new MapLand(new Land()
+            var worldService = WorldService.INSTANCE;
+            if (!worldService.IsInitialized()) return;
+
+            foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
+                Add(new MapLand(land, map));
+        }
+
+        public void FocusOnLand(Land land)
+        {
+            dimLayer = new Overlay();
+            var mapRect = this.WorldToLocal(map.worldBound);
+            dimLayer.style.left = mapRect.x;
+            dimLayer.style.top = mapRect.y;
+            dimLayer.style.width = mapRect.width;
+            dimLayer.style.height = mapRect.height;
+            
+            Add(dimLayer);
+            dimLayer.BringToFront();
+            foreach (var visualElement in Children())
             {
-                id = 1, owner = "xyz", startCoordinate = new SerializableVector3Int(Vector3Int.zero),
-                endCoordinate = new SerializableVector3Int(Vector3Int.one * 100)
-            }));
-            // var worldService = WorldService.INSTANCE;
-            // if (!worldService.IsInitialized()) return;
-            //
-            // foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
-            //     Add(new MapLand(land));
+                var mapLand = visualElement as MapLand;
+                if (Equals(mapLand.GetLand(), land))
+                {
+                    mapLand.BringToFront();
+                    return;
+                }
+            }
+        }
+
+        public void ClearFocus()
+        {
+            dimLayer?.SetEnabled(false);
+            dimLayer?.RemoveFromHierarchy();
         }
     }
 }

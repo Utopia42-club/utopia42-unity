@@ -8,7 +8,7 @@ using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
 using Source.Service;
 using Source.Ui.AssetInventory.Models;
-using Source.Ui.Menu;
+using Source.Ui.Login;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -58,6 +58,8 @@ namespace Source
         [NonSerialized] public GameObject avatar;
         [NonSerialized] public Transform focusHighlight;
 
+        public bool AvatarNotLoaded => avatarController == null || avatarController.Avatar == null;
+
         public MetaBlock PreparedMetaBlock { private set; get; }
         public GameObject MetaBlockPlaceHolder { private set; get; }
 
@@ -66,7 +68,7 @@ namespace Source
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
 
-        public bool ChangeForbidden => Settings.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
+        public bool ChangeForbidden => Login.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
 
@@ -122,6 +124,7 @@ namespace Source
 
             avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatarController = avatar.GetComponent<AvatarController>();
+            avatarController.LoadDefaultAvatar();
             characterController = avatar.GetComponent<CharacterController>();
             camContainer.SetParent(avatar.transform);
 
@@ -224,17 +227,16 @@ namespace Source
 
             var moveDirection = PlayerForward * Vertical + CamRight * Horizontal;
 
-            var isGrounded = characterController.isGrounded && velocity.y < 0 || floating;
-
-            avatarController.Move(moveDirection * (sprinting ? sprintSpeed : walkSpeed) * Time.fixedDeltaTime);
-
-            if (isGrounded)
+            if (characterController.isGrounded && velocity.y < 0 || floating)
                 velocity.y = 0f;
+
+            var xzVelocity = moveDirection * (sprinting ? sprintSpeed : walkSpeed);
+            avatarController.Move(xzVelocity * Time.fixedDeltaTime);
 
             if (jumpRequest)
             {
-                if (!floating && isGrounded)
-                    avatarController.JumpAnimation();
+                // if (!floating && isGrounded)
+                    // avatarController.JumpAnimation();
                 velocity.y = Mathf.Sqrt((sprinting ? sprintJumpHeight : jumpHeight) * -2f * gravity);
             }
 
@@ -250,10 +252,8 @@ namespace Source
 
             playerPos = Vectors.TruncateFloor(pos);
 
-            avatarController.UpdatePlayerState(new AvatarController.PlayerState(Settings.WalletId(),
-                new SerializableVector3(pos),
-                // new SerializableVector3(camContainer.forward), 
-                floating, sprinting));
+            avatarController.UpdatePlayerState(new AvatarController.PlayerState(
+                Login.WalletId(), new SerializableVector3(pos), floating, jumpRequest, characterController.isGrounded));
         }
 
 
@@ -308,7 +308,7 @@ namespace Source
         public void ResetLands()
         {
             List<Land> lands = null;
-            if (Settings.WalletId() != null)
+            if (Login.WalletId() != null)
             {
                 var service = WorldService.INSTANCE;
                 lands = service.GetPlayerLands();
@@ -408,7 +408,7 @@ namespace Source
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
-            if (Settings.IsGuest())
+            if (Login.IsGuest())
             {
                 land = null;
                 return false;
@@ -446,7 +446,8 @@ namespace Source
 
         public Vector3 GetCurrentPosition()
         {
-            return characterController.center;
+            //FIXME gets called from plugin -> Delete after adapting plugin side
+            return GetPosition();
         }
 
         public static Vector3? GetSavedPosition()

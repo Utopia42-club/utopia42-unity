@@ -9,6 +9,7 @@ using Source.MetaBlocks;
 using Source.MetaBlocks.MarkerBlock;
 using Source.Model;
 using Source.Service.Ethereum;
+using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Utils;
 using UnityEngine;
@@ -123,7 +124,7 @@ namespace Source.Service
 
         public List<Land> GetPlayerLands()
         {
-            return landRegistry.GetLandsForOwner(Settings.WalletId());
+            return landRegistry.GetLandsForOwner(Login.WalletId());
         }
 
         public IEnumerator GetLandsChanges(string wallet, List<Land> lands,
@@ -284,6 +285,11 @@ namespace Source.Service
             changedLands.Add(land);
         }
 
+        public bool IsLandChanged(Land land)
+        {
+            return changedLands.Contains(land);
+        }
+
         public void OnMetaRemoved(MetaBlock block, MetaPosition position)
         {
             if (block.type is MarkerBlockType)
@@ -357,7 +363,7 @@ namespace Source.Service
             return null;
         }
 
-        public bool UpdateLandProperties(int landId, LandProperties properties)
+        public bool UpdateLandProperties(long landId, LandProperties properties)
         {
             if (landRegistry.GetLands().TryGetValue(landId, out Land land))
             {
@@ -404,7 +410,7 @@ namespace Source.Service
 
         public IEnumerator ReloadPlayerLands(Action onFailed)
         {
-            yield return landRegistry.ReloadLandsForOwner(Settings.WalletId(), onFailed);
+            yield return landRegistry.ReloadLandsForOwner(Login.WalletId(), onFailed);
         }
 
         public bool IsInitialized()

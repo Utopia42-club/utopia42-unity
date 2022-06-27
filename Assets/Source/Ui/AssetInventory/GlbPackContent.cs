@@ -84,7 +84,7 @@ namespace Source.Ui.AssetInventory
             }
 
             var total = size + count;
-            GridUtils.SetContainerSize(slots, total);
+            GridUtils.SetContainerSize(slots, total, 90, 3);
             style.height = slots.style.height.value.value + 45;
         }
     }

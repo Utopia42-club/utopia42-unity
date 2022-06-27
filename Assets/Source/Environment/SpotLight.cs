@@ -11,8 +11,7 @@ namespace Source.Environment
             spotLight.range = 20;
             GameManager.INSTANCE.stateChange.AddListener(state =>
                 {
-                    gameObject.SetActive(state == GameManager.State.PLAYING ||
-                                         state == GameManager.State.MOVING_OBJECT);
+                    gameObject.SetActive(state == GameManager.State.PLAYING);
                 }
             );
         }

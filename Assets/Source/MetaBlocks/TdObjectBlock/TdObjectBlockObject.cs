@@ -12,7 +12,7 @@ namespace Source.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockObject : MetaBlockObject
     {
-        private const float GroundGap = 0.2f;
+        private const float GroundGap = 0.1f;
 
         private GameObject objContainer;
         public GameObject Obj { private set; get; }

@@ -37,5 +37,7 @@ namespace Source
             yield return 0;
             controller.UpdatePlayerState(playerState);
         }
+        
+        public static Players INSTANCE => GameObject.Find("Players").GetComponent<Players>();
     }
 }

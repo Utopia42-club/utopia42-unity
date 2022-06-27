@@ -89,19 +89,19 @@ namespace Source.Ui.AssetInventory.Slots
             }
             else if (tooltip != null)
             {
-                toolTipManipulator = new ToolTipManipulator(assetsInventory.GetTooltipRoot());
+                toolTipManipulator = new ToolTipManipulator();
                 slotIcon.AddManipulator(toolTipManipulator);
             }
         }
 
         public void SetGridPosition(int index, int itemsInARow)
         {
-            GridUtils.SetChildPosition(this, size, index, itemsInARow);
+            GridUtils.SetChildPosition(this, size, size, index, itemsInARow);
         }
 
         protected void LoadImage(string url)
         {
-            imageCoroutine = UiImageLoader.SetBackGroundImageFromUrl(url, assetDefaultImage,
+            imageCoroutine = UiImageUtils.SetBackGroundImageFromUrl(url, assetDefaultImage,
                 slotIcon, () => isLoadingImage = false);
             isLoadingImage = true;
             assetsInventory.StartCoroutine(imageCoroutine);
@@ -114,7 +114,7 @@ namespace Source.Ui.AssetInventory.Slots
 
         public void SetBackground(Sprite sprite)
         {
-            // UiImageLoader.SetBackground(slotIcon, sprite);
+            UiImageUtils.SetBackground(slotIcon, sprite);
         }
 
         public bool IsLoadingImage()
@@ -144,7 +144,7 @@ namespace Source.Ui.AssetInventory.Slots
             leftAction.style.backgroundImage = Background.FromSprite(background);
             leftAction.clickable = new Clickable(() => { });
             leftAction.clickable.clicked += () => action?.Invoke();
-            leftAction.AddManipulator(new ToolTipManipulator(assetsInventory.GetTooltipRoot()));
+            leftAction.AddManipulator(new ToolTipManipulator());
         }
 
         public void SetLeftActionVisible(bool visible)
@@ -159,7 +159,7 @@ namespace Source.Ui.AssetInventory.Slots
             rightAction.style.backgroundImage = Background.FromSprite(background);
             rightAction.clickable = new Clickable(() => { });
             rightAction.clickable.clicked += () => action?.Invoke();
-            rightAction.AddManipulator(new ToolTipManipulator(assetsInventory.GetTooltipRoot()));
+            rightAction.AddManipulator(new ToolTipManipulator());
         }
 
         public void SetRightActionVisible(bool visible)

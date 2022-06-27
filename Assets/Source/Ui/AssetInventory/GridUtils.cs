@@ -5,21 +5,21 @@ namespace Source.Ui.AssetInventory
 {
     public class GridUtils
     {
-        public static void SetChildPosition(VisualElement element, int size, int index, int itemsInARow)
+        public static void SetChildPosition(VisualElement element, int width, int height, int index, int itemsInARow)
         {
             var s = element.style;
             s.position = new StyleEnum<Position>(Position.Absolute);
             var div = index / itemsInARow;
             var rem = index % itemsInARow;
-            s.left = rem * (size + 10);
-            s.top = div * (size + 10);
+            s.left = rem * (width + 10);
+            s.top = div * (height + 10);
         }
 
-        public static void SetContainerSize(VisualElement container, int size)
+        public static void SetContainerSize(VisualElement container, int count, int height, int itemsInARow)
         {
-            container.style.height = 90 * DivideRoundingUp(size, 3);
+            container.style.height = height * DivideRoundingUp(count, itemsInARow);
         }
-        
+
         private static int DivideRoundingUp(int x, int y)
         {
             var quotient = Math.DivRem(x, y, out var remainder);
