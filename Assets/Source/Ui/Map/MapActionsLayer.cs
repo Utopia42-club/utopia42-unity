@@ -8,11 +8,15 @@ namespace Source.Ui.Map
     {
         public MapActionsLayer(Map map) : base("Ui/Map/MapActionsLayer")
         {
-            var zoomButtons = this.Q<VisualElement>("zoomButtons");
+            var actions = this.Q<VisualElement>("actions");
+            var showYourLocationButton = this.Q<Button>("showYourLocationButton");
+            showYourLocationButton.clickable.clicked += map.MoveToPlayerPosition;
+            showYourLocationButton.tooltip = "Show your location";
+            showYourLocationButton.AddManipulator(new ToolTipManipulator(Side.TopLeft));
             var zoomInButton = this.Q<Button>("zoomInButton");
-            zoomInButton.clickable.clicked += map.ZoomIn;
+            zoomInButton.AddManipulator(new ToolTipManipulator(Side.TopLeft));
             var zoomOutButton = this.Q<Button>("zoomOutButton");
-            zoomOutButton.clickable.clicked += map.ZoomOut;
+            zoomOutButton.AddManipulator(new ToolTipManipulator(Side.TopLeft));
             var currentLocationLabel = this.Q<Label>("currentLocationLabel");
             currentLocationLabel.text = Player.INSTANCE.GetPosition().ToString();
             var currentLocationBox = this.Q<VisualElement>("currentLocationBox");
@@ -27,7 +31,7 @@ namespace Source.Ui.Map
             RegisterCallback<MouseDownEvent>(evt =>
             {
                 if (currentLocationBox.worldBound.Contains(evt.mousePosition)
-                    || zoomButtons.worldBound.Contains(evt.mousePosition))
+                    || actions.worldBound.Contains(evt.mousePosition))
                     evt.StopImmediatePropagation();
             });
         }

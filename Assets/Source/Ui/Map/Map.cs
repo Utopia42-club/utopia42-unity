@@ -29,11 +29,13 @@ namespace Source.Ui.Map
             root.Add(new MapActionsLayer(this));
             root.Add(new MapLandsSearch(this));
 
-            RegisterCallback<GeometryChangedEvent>(evt =>
-            {
-                var pos = Player.INSTANCE.GetPosition();
-                MoveTo(new Vector2(pos.x, pos.z));
-            });
+            RegisterCallback<GeometryChangedEvent>(evt => MoveToPlayerPosition());
+        }
+
+        internal void MoveToPlayerPosition()
+        {
+            var pos = Player.INSTANCE.GetPosition();
+            MoveTo(new Vector2(pos.x, pos.z));
         }
 
         internal void MoveTo(Vector2 pos)
