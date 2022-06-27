@@ -2,7 +2,7 @@ using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.Ui.Map
+namespace Source.Ui.Profile
 {
     public class SocialLink : VisualElement
     {
