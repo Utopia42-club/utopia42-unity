@@ -1,16 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using Nethereum.Model;
 using Source;
 using Source.Model;
-using Source.Service;
 using Source.Service.Ethereum;
 using Source.Ui;
 using Source.Ui.LoadingLayer;
 using Source.Ui.Login;
 using Source.Ui.Map;
 using Source.Ui.Menu;
-using Source.Ui.Popup;
 using Source.Ui.Profile;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;

@@ -12,6 +12,8 @@ namespace Source.Ui.Map
         private readonly Map map;
         private MapLand drawingLand;
         private Vector2Int startDrawPosition;
+        private readonly MapPlayerPositionIndicator mapPlayerPositionIndicator;
+        private Overlay dimLayer;
 
         public MapLandLayer(Map map)
         {
@@ -52,8 +54,13 @@ namespace Source.Ui.Map
                 var realPosition = map.ScreenToUtopia(evt.mousePosition);
                 GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
             });
-            var mapPlayerPositionIndicator = new MapPlayerPositionIndicator(map);
+            mapPlayerPositionIndicator = new MapPlayerPositionIndicator(map);
             Add(mapPlayerPositionIndicator);
+        }
+
+        internal void SetPlayerPositionIndicatorVisibility(Visibility visibility)
+        {
+            mapPlayerPositionIndicator.style.visibility = visibility;
         }
 
         private void PointerMoved(PointerMoveEvent evt)
@@ -180,6 +187,34 @@ namespace Source.Ui.Map
 
             foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
                 Add(new MapLand(land, map));
+        }
+
+        public void FocusOnLand(Land land)
+        {
+            dimLayer = new Overlay();
+            var mapRect = this.WorldToLocal(map.worldBound);
+            dimLayer.style.left = mapRect.x;
+            dimLayer.style.top = mapRect.y;
+            dimLayer.style.width = mapRect.width;
+            dimLayer.style.height = mapRect.height;
+            
+            Add(dimLayer);
+            dimLayer.BringToFront();
+            foreach (var visualElement in Children())
+            {
+                var mapLand = visualElement as MapLand;
+                if (Equals(mapLand.GetLand(), land))
+                {
+                    mapLand.BringToFront();
+                    return;
+                }
+            }
+        }
+
+        public void ClearFocus()
+        {
+            dimLayer?.SetEnabled(false);
+            dimLayer?.RemoveFromHierarchy();
         }
     }
 }

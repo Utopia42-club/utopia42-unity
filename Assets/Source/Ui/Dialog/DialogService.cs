@@ -61,7 +61,7 @@ namespace Source.Ui.Dialog
             content.Add(config.Content);
 
             var actions = dialog.Q<VisualElement>("dialogActions");
-            
+
             var id = dialogId++;
 
             if (config.Actions.Count > 0)
@@ -110,6 +110,12 @@ namespace Source.Ui.Dialog
                 if (dialogs.Count == 0)
                     gameObject.SetActive(false);
             }
+        }
+
+        public void CloseAll()
+        {
+            foreach (var id in dialogs.Select(pair => pair.Key).ToList())
+                Close(id);
         }
     }
 }

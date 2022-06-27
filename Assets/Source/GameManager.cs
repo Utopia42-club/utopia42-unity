@@ -1,15 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Source.Canvas;
-using Source.Canvas.Map;
 using Source.Model;
 using Source.Service;
 using Source.Service.Ethereum;
 using Source.Ui.Dialog;
 using Source.Ui.Login;
-using Source.Ui.Menu;
+using Source.Ui.Map;
+using Source.Ui.Profile;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
@@ -29,8 +30,6 @@ namespace Source
 
         private List<Dialog> dialogs = new();
         private bool captureAllKeyboardInputOrig;
-
-        public Map map;
 
         private bool doubleCtrlTap = false;
         private double doubleCtrlTapTime;
@@ -236,10 +235,6 @@ namespace Source
 
             switch (state)
             {
-                case State.PROFILE_DIALOG:
-                    LandProfileDialog.INSTANCE.CloseIfOpened();
-                    ProfileDialog.INSTANCE.CloseIfOpened();
-                    break;
                 case State.DIALOG when dialogs.Count > 0:
                     CloseDialog(dialogs[dialogs.Count - 1]);
                     break;
@@ -272,22 +267,6 @@ namespace Source
                 SetState(State.LOADING);
                 InitPlayerForWallet(startingPosition);
             }
-        }
-
-        public void SetProfileDialogState(bool open)
-        {
-            if (open && GetState() == State.PLAYING)
-                SetState(State.PROFILE_DIALOG);
-            else if (GetState() == State.PROFILE_DIALOG)
-                SetState(State.PLAYING);
-        }
-
-        public void ShowUserProfile()
-        {
-            var profileDialog = ProfileDialog.INSTANCE;
-            profileDialog.Open(Profile.LOADING_PROFILE);
-            ProfileLoader.INSTANCE.load(Login.WalletId(), profileDialog.Open,
-                () => profileDialog.SetProfile(Profile.FAILED_TO_LOAD_PROFILE));
         }
 
         public void CopyPositionLink()
@@ -402,13 +381,16 @@ namespace Source
         {
             if (convertToNft)
             {
-                StartCoroutine(GameObject.Find("Map").GetComponent<Map>().TakeNftScreenShot(land, screenshot =>
+                StartCoroutine(Map.INSTANCE.TakeNftScreenShot(land, screenshot =>
                 {
-                    // using(var ms = new MemoryStream(screenshot)) {
-                    //     using(var fs = new FileStream("nftImg", FileMode.Create)) {
+                    // using (var ms = new MemoryStream(screenshot))
+                    // {
+                    //     using (var fs = new FileStream("nftImg.jpg", FileMode.Create))
+                    //     {
                     //         ms.WriteTo(fs);
                     //     }
                     // }
+
                     StartCoroutine(IpfsClient.INSATANCE.UploadImage(screenshot,
                         ipfsKey => SetLandNftImage(ipfsKey, land), () =>
                         {
@@ -462,19 +444,20 @@ namespace Source
             {
                 if (currentLand == null)
                 {
-                    var profileDialog = ProfileDialog.INSTANCE;
-                    profileDialog.Open(profile);
+                    var userProfile = new UserProfile(profile);
+                    DialogService.INSTANCE.Show(new DialogConfig("User Profile", userProfile));
                 }
                 else
                 {
-                    LandProfileDialog.INSTANCE.Open(currentLand, profile);
+                    var landProfile = new LandProfile(currentLand);
+                    landProfile.SetProfile(profile);
+                    DialogService.INSTANCE.Show(new DialogConfig("Land Profile", landProfile));
                 }
             }
         }
 
         public void EditProfile()
         {
-            LandProfileDialog.INSTANCE.CloseIfOpened();
             BrowserConnector.INSTANCE.EditProfile(() =>
             {
                 SetState(State.PLAYING);
@@ -570,12 +553,6 @@ namespace Source
 #endif
         }
 
-        public void NavigateInMap(Land land)
-        {
-            var mapInputManager = GameObject.Find("InputManager").GetComponent<MapInputManager>();
-            mapInputManager.NavigateInMap(land);
-        }
-
         public static GameManager INSTANCE => GameObject.Find("GameManager").GetComponent<GameManager>();
 
         public enum State
@@ -585,7 +562,6 @@ namespace Source
             MENU,
             LOGIN,
             DIALOG,
-            PROFILE_DIALOG,
             FREEZE
         }
 

@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using Source.Model;
 using Source.Ui.Dialog;
@@ -8,16 +10,24 @@ namespace Source.Ui.Map
 {
     public class Map : UxmlElement
     {
-        private readonly VisualElement lands;
+        private static Map instance;
+        public static Map INSTANCE => instance;
+
+        private readonly MapLandLayer lands;
         private readonly MapViewportController viewportController;
+        private readonly MapPointerPositionLabel mapPointerPositionLabel;
+        private readonly MapActionsLayer mapActionsLayer;
+        private readonly MapLandsSearch mapLandsSearch;
 
         public Map() : base(true)
         {
+            instance = this;
             var root = this.Q("Root");
             var grid = new MapGrid(this);
             root.Add(grid);
             root.Add(lands = new MapLandLayer(this));
-            root.Add(new MapPointerPositionLabel(this));
+            mapPointerPositionLabel = new MapPointerPositionLabel(this);
+            root.Add(mapPointerPositionLabel);
 
             viewportController = new MapViewportController(this, e =>
             {
@@ -26,8 +36,10 @@ namespace Source.Ui.Map
                 grid.UpdateViewport(e.scale);
             });
 
-            root.Add(new MapActionsLayer(this));
-            root.Add(new MapLandsSearch(this));
+            mapActionsLayer = new MapActionsLayer(this);
+            root.Add(mapActionsLayer);
+            mapLandsSearch = new MapLandsSearch(this);
+            root.Add(mapLandsSearch);
 
             RegisterCallback<GeometryChangedEvent>(evt => MoveToPlayerPosition());
         }
@@ -84,6 +96,37 @@ namespace Source.Ui.Map
         public void ZoomOut()
         {
             viewportController.ZoomOut();
+        }
+
+        public IEnumerator TakeNftScreenShot(Land land, Action<byte[]> consumer)
+        {
+            // Preparing map for screen shot
+            mapPointerPositionLabel.style.display = DisplayStyle.None;
+            mapLandsSearch.style.visibility = Visibility.Hidden;
+            mapActionsLayer.style.visibility = Visibility.Hidden;
+            lands.SetPlayerPositionIndicatorVisibility(Visibility.Hidden);
+            viewportController.BackToDefaultZoom();
+            MoveTo(land);
+            DialogService.INSTANCE.CloseAll();
+            lands.FocusOnLand(land);
+            yield return new WaitForEndOfFrame();
+
+            // var screenshot = ScreenCapture.CaptureScreenshotAsTexture();
+            var width = (int) worldBound.width - 1;
+            var height = (int) worldBound.height - 1;
+            var screenshot = new Texture2D(width, height, TextureFormat.ARGB32, false);
+            screenshot.ReadPixels(new Rect(worldBound.xMin, 0, width, height), 0, 0);
+            screenshot.Apply();
+            yield return null;
+
+            consumer.Invoke(screenshot.EncodeToPNG());
+            GameManager.Destroy(screenshot);
+
+            mapPointerPositionLabel.style.display = DisplayStyle.Flex;
+            mapLandsSearch.style.visibility = Visibility.Visible;
+            mapActionsLayer.style.visibility = Visibility.Visible;
+            lands.SetPlayerPositionIndicatorVisibility(Visibility.Visible);
+            lands.ClearFocus();
         }
     }
 }

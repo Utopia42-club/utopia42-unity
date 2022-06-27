@@ -1,19 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Source.Model;
 using Source.Service;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
-namespace Source
+namespace Source.Ui.Profile
 {
     public class ProfileLoader : MonoBehaviour
     {
         private static ProfileLoader instance;
 
-        private Dictionary<string, Profile> profileCache = new Dictionary<string, Profile>();
+        private Dictionary<string, Model.Profile> profileCache = new Dictionary<string, Model.Profile>();
         private Dictionary<string, List<LoadData>> loadListeners = new Dictionary<string, List<LoadData>>();
         private HashSet<string> loadingWallets = new HashSet<string>();
 
@@ -22,7 +19,7 @@ namespace Source
             instance = this;
         }
 
-        public void load(string walletId, Action<Profile> consumer, Action failed)
+        public void load(string walletId, Action<Model.Profile> consumer, Action failed)
         {
             if (profileCache.ContainsKey(walletId))
                 consumer.Invoke(profileCache[walletId]);
@@ -38,7 +35,7 @@ namespace Source
             }
         }
 
-        private IEnumerator doLoad(float timeout, string walletId, Action<Profile> consumer, Action failed)
+        private IEnumerator doLoad(float timeout, string walletId, Action<Model.Profile> consumer, Action failed)
         {
             loadingWallets.Add(walletId);
             bool success = true;
@@ -47,7 +44,7 @@ namespace Source
                 loadingWallets.Remove(walletId);
                 if (profile == null)
                 {
-                    profile = new Profile();
+                    profile = new Model.Profile();
                     profile.walletId = walletId;
                     profile.name = "No profile";
                 }
@@ -91,10 +88,10 @@ namespace Source
         
         public class LoadData
         {
-            public Action<Profile> consumer;
+            public Action<Model.Profile> consumer;
             public Action onFailed;
 
-            public LoadData(Action<Profile> consumer, Action onFailed)
+            public LoadData(Action<Model.Profile> consumer, Action onFailed)
             {
                 this.consumer = consumer;
                 this.onFailed = onFailed;

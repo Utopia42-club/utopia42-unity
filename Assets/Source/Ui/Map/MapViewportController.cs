@@ -6,6 +6,8 @@ namespace Source.Ui.Map
 {
     internal class MapViewportController
     {
+        private const int defaultZoomIndex = 7;
+
         private readonly float[] scales = new[]
         {
             0.25f, 0.33f, 0.50f, 0.67f, 0.75f, 0.8f, 0.9f, 1,
@@ -15,7 +17,7 @@ namespace Source.Ui.Map
         private readonly Map map;
         private readonly Action<ViewportChangeEvent> listener;
         private bool dragging = false;
-        private int scaleIndex = 7;
+        private int scaleIndex = defaultZoomIndex;
         private Rect rect;
         private Vector2 dragPrevPosition;
 
@@ -42,33 +44,43 @@ namespace Source.Ui.Map
                 this.map.ReleaseMouse();
             });
             this.map.RegisterCallback<GeometryChangedEvent>(e => UpdateSize(e.newRect.width, e.newRect.height));
-            this.map.RegisterCallback<WheelEvent>(Scale);
+            this.map.RegisterCallback<WheelEvent>(OnMouseWheelEvent);
         }
 
-        private void Scale(WheelEvent e)
+        private void OnMouseWheelEvent(WheelEvent e)
         {
             if (e.delta.y == 0) return;
-            DoScale(e.mousePosition, e.delta.y <= 0);
+            Scale(e.mousePosition, e.delta.y <= 0);
         }
 
         public void ZoomIn()
         {
-            DoScale(new Vector2(Screen.width / 2, Screen.height / 2), true);
+            Scale(new Vector2(Screen.width / 2, Screen.height / 2), true);
         }
 
         public void ZoomOut()
         {
-            DoScale(new Vector2(Screen.width / 2, Screen.height / 2), false);
+            Scale(new Vector2(Screen.width / 2, Screen.height / 2), false);
         }
 
-        private void DoScale(Vector2 mousePosition, bool zoomIn)
+        public void BackToDefaultZoom()
+        {
+            DoScale(new Vector2(Screen.width / 2, Screen.height / 2), defaultZoomIndex);
+        }
+
+        private void Scale(Vector2 mousePosition, bool zoomIn)
         {
             var additive = zoomIn ? 1 : -1;
             var newIdx = scaleIndex + additive;
 
+            DoScale(mousePosition, newIdx);
+        }
+
+        private void DoScale(Vector2 mousePosition, int newIdx)
+        {
             if (newIdx >= 0 && newIdx < scales.Length)
             {
-                scaleIndex += additive;
+                scaleIndex = newIdx;
                 var scale = scales[scaleIndex];
                 var mouseBeforeScale = map.ScreenToUtopia(mousePosition);
                 listener(new ViewportChangeEvent(rect, scale));
