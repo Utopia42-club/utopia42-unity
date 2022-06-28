@@ -68,7 +68,7 @@ namespace Source
         public Transform HighlightBlock => highlightBlock;
         public Transform PlaceBlock => placeBlock;
 
-        public bool ChangeForbidden => Login.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
+        public bool ChangeForbidden => AuthService.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
 
@@ -253,7 +253,7 @@ namespace Source
             playerPos = Vectors.TruncateFloor(pos);
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
-                Login.WalletId(), new SerializableVector3(pos), floating, jumpRequest, characterController.isGrounded));
+                AuthService.WalletId(), new SerializableVector3(pos), floating, jumpRequest, characterController.isGrounded));
         }
 
 
@@ -308,7 +308,7 @@ namespace Source
         public void ResetLands()
         {
             List<Land> lands = null;
-            if (Login.WalletId() != null)
+            if (AuthService.WalletId() != null)
             {
                 var service = WorldService.INSTANCE;
                 lands = service.GetPlayerLands();
@@ -408,7 +408,7 @@ namespace Source
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
-            if (Login.IsGuest())
+            if (AuthService.IsGuest())
             {
                 land = null;
                 return false;

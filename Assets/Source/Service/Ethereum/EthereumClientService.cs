@@ -12,14 +12,15 @@ namespace Source.Service.Ethereum
 {
     public class EthereumClientService
     {
-        public readonly static EthereumClientService INSTANCE = new EthereumClientService();
+        public static readonly EthereumClientService INSTANCE = new();
+        
         private EthNetwork network;
 
         private EthereumClientService()
         {
         }
 
-        public bool IsInited()
+        public bool IsInitialized()
         {
             return network != null;
         }

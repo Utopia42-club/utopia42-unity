@@ -38,17 +38,17 @@ public class Menu : MonoBehaviour, UiProvider
             new("Profile", () => new UserProfile(null), (e) =>
             {
                 var userProfile = tabPane.GetTabBody().Children().First() as UserProfile;
-                var loadingId = LoadingLayer.Show(userProfile);
-                ProfileLoader.INSTANCE.load(Login.WalletId(),
+                var loading = LoadingLayer.Show(userProfile);
+                ProfileLoader.INSTANCE.load(AuthService.WalletId(),
                     profile =>
                     {
                         userProfile.SetProfile(profile);
-                        LoadingLayer.Hide(loadingId);
+                        loading.Close();
                     },
                     () =>
                     {
                         userProfile.SetProfile(Profile.FAILED_TO_LOAD_PROFILE);
-                        LoadingLayer.Hide(loadingId);
+                        loading.Close();
                     });
             }),
         };
@@ -56,7 +56,7 @@ public class Menu : MonoBehaviour, UiProvider
         rootPane.Add(tabPane);
         gameManager.stateChange.AddListener(state =>
         {
-            var serviceInitialized = EthereumClientService.INSTANCE.IsInited();
+            var serviceInitialized = EthereumClientService.INSTANCE.IsInitialized();
             switch (state)
             {
                 case GameManager.State.MENU:

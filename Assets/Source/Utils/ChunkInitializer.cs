@@ -57,7 +57,7 @@ namespace Source.Utils
             var worldService = WorldService.INSTANCE;
 
             var lands = worldService.GetLandsForChunk(new Vector2Int(position.x, position.z));
-            var wallet = Login.WalletId();
+            var wallet = AuthService.WalletId();
 
             Land land = null;
             var chunkSize = Chunk.CHUNK_SIZE;

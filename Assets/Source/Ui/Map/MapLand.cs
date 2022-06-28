@@ -55,15 +55,15 @@ namespace Source.Ui.Map
                             .WithHeight(new Length(60, LengthUnit.Percent))
                             .WithOnClose(UpdateLandStyle)
                         , out var dialog);
-                    var loadingId = LoadingLayer.LoadingLayer.Show(dialog);
+                    var loading = LoadingLayer.LoadingLayer.Show(dialog);
                     ProfileLoader.INSTANCE.load(land.owner, profile =>
                         {
-                            LoadingLayer.LoadingLayer.Hide(loadingId);
+                            loading.Close();
                             landProfile.SetProfile(profile);
                         },
                         () =>
                         {
-                            LoadingLayer.LoadingLayer.Hide(loadingId);
+                            loading.Close();
                             landProfile.SetProfile(Model.Profile.FAILED_TO_LOAD_PROFILE);
                         });
                 }

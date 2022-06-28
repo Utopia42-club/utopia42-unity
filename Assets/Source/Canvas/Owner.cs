@@ -95,7 +95,7 @@ namespace Source.Canvas
 
         internal void OnProfileEdited()
         {
-            var owner = Login.WalletId();
+            var owner = AuthService.WalletId();
             profileLoader.InvalidateProfile(owner);
             if (currentWallet != null && currentWallet.Equals(owner))
                 LoadProfile();

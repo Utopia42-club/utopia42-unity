@@ -99,7 +99,7 @@ namespace Source.Canvas
 
         private void CallUrl(string method, string parameters, Action onDone, Action onCancel, string message = null)
         {
-            var wallet = Login.WalletId();
+            var wallet = AuthService.WalletId();
             int network = EthereumClientService.INSTANCE.GetNetwork().id;
             if (parameters != null)
                 currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}",

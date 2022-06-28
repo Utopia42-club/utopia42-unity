@@ -99,7 +99,7 @@ namespace Source
 
         private void InitPlayerForWallet(Vector3? startingPosition)
         {
-            if (string.IsNullOrWhiteSpace(Login.WalletId()))
+            if (string.IsNullOrWhiteSpace(AuthService.WalletId()))
             {
                 SetState(State.LOGIN);
                 return;
@@ -228,7 +228,7 @@ namespace Source
                 return; //FIXME
 
             var dialogService = DialogService.INSTANCE;
-            if (dialogService.isAnyDialogOpen())
+            if (dialogService.IsAnyDialogOpen())
             {
                 dialogService.CloseLastOpenedDialog();
                 return;
@@ -253,7 +253,7 @@ namespace Source
 
         internal void SettingsChanged(EthNetwork network, Vector3? startingPosition)
         {
-            if (!EthereumClientService.INSTANCE.IsInited())
+            if (!EthereumClientService.INSTANCE.IsInitialized())
             {
                 EthereumClientService.INSTANCE.SetNetwork(network);
                 SetState(State.LOADING);
@@ -322,7 +322,7 @@ namespace Source
 
             var lands = Player.INSTANCE.GetOwnedLands();
             if (lands == null || lands.Count == 0) yield break;
-            var wallet = Login.WalletId();
+            var wallet = AuthService.WalletId();
             var service = WorldService.INSTANCE;
             if (!service.HasChange()) yield break;
             SetState(State.LOADING);

@@ -124,7 +124,7 @@ namespace Source.Service
 
         public List<Land> GetPlayerLands()
         {
-            return landRegistry.GetLandsForOwner(Login.WalletId());
+            return landRegistry.GetLandsForOwner(AuthService.WalletId());
         }
 
         public IEnumerator GetLandsChanges(string wallet, List<Land> lands,
@@ -410,7 +410,7 @@ namespace Source.Service
 
         public IEnumerator ReloadPlayerLands(Action onFailed)
         {
-            yield return landRegistry.ReloadLandsForOwner(Login.WalletId(), onFailed);
+            yield return landRegistry.ReloadLandsForOwner(AuthService.WalletId(), onFailed);
         }
 
         public bool IsInitialized()

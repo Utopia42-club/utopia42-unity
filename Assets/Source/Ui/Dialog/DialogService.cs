@@ -31,7 +31,7 @@ namespace Source.Ui.Dialog
             Close(dialogs.Last().Key);
         }
 
-        public bool isAnyDialogOpen()
+        public bool IsAnyDialogOpen()
         {
             return dialogs.Count > 0;
         }

@@ -1,8 +1,5 @@
-using Org.BouncyCastle.Asn1.Misc;
-using Source.Model;
-using Source.Service.Ethereum;
 using Source.Ui.Dialog;
-using Source.Ui.Toaster;
+using Source.Ui.Snack;
 using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,8 +9,6 @@ namespace Source.Ui.Login
 {
     public class Login : MonoBehaviour
     {
-        private static readonly string GUEST = "guest";
-
         private GameObject panel;
         private Button submitButton;
         private Button guestButton;
@@ -27,55 +22,37 @@ namespace Source.Ui.Login
         {
             root = GetComponent<UIDocument>().rootVisualElement;
             walletLoginTile = root.Q<VisualElement>("walletLoginTile");
+
             guestButton = root.Q<Button>("guestButton");
-            guestButton.clickable.clicked += SetGuest;
+            guestButton.clickable.clicked += () =>
+            {
+                AuthService.SetGuestMode();
+                DoSubmit();
+            };
+
             submitButton = root.Q<Button>("enterButton");
             submitButton.clickable.clicked += Submit;
+
             exitButton = root.Q<Button>("exitButton");
             exitButton.tooltip = "Exit";
             exitButton.clickable.clicked += () => GameManager.INSTANCE.Exit();
             exitButton.AddManipulator(new ToolTipManipulator());
-            var loadingId = LoadingLayer.LoadingLayer.Show(root);
-            StartCoroutine(EthNetwork.GetNetworks(_ =>
-                {
-                    LoadingLayer.LoadingLayer.Hide(loadingId);
-                    DoStart();
-                },
-                () =>
-                {
-                    ToasterService.Show("Could not load any ETHEREUM networks. Please report the error.",
-                        ToasterService.ToastType.Error, null);
-                    LoadingLayer.LoadingLayer.Hide(loadingId);
-                }));
         }
 
-        private void DoStart()
+        private void Submit()
         {
-            var nets = EthNetwork.GetNetworksIfPresent();
-            if (nets == null || nets.Length == 0)
-            {
-                ToasterService.Show("Could not load any ETHEREUM networks. Please report the error.",
-                    ToasterService.ToastType.Error, null);
-                return;
-            }
-
             if (!WebBridge.IsPresent())
-            {
                 OpenCredentialsDialog();
-            }
             else
             {
-                var metamaskLoadingId = LoadingLayer.LoadingLayer.Show(walletLoginTile);
-                WebBridge.CallAsync<ConnectionDetail>("connectMetamask", "", (ci) =>
+                var metamaskLoading = LoadingLayer.LoadingLayer.Show(walletLoginTile);
+                AuthService.Connect(detail =>
                 {
-                    LoadingLayer.LoadingLayer.Hide(metamaskLoadingId);
-                    if (ci.network.HasValue && ci.wallet != null)
-                    {
-                        PlayerPrefs.SetInt(Keys.NETWORK, ci.network.Value);
-                        PlayerPrefs.SetString(Keys.WALLET, ci.wallet);
-                    }
-                    else
+                    metamaskLoading.Close();
+                    if (detail.network == null || detail.wallet == null)
                         OpenCredentialsDialog();
+                    else
+                        DoSubmit();
                 });
                 WebBridge.CallAsync<Position>("getStartingPosition", "", (pos) =>
                 {
@@ -90,68 +67,26 @@ namespace Source.Ui.Login
         private void OpenCredentialsDialog()
         {
             var loginCredentialsDialog = new LoginCredentialsDialog();
-            var dialogId = 0;
-            dialogId = DialogService.INSTANCE.Show(new DialogConfig("Login credentials", loginCredentialsDialog)
+            DialogService.INSTANCE.Show(new DialogConfig("Login credentials", loginCredentialsDialog)
                 .WithWidth(450)
                 .WithHeight(300)
                 .WithCancelAction()
                 .WithAction(new DialogAction("Submit", () =>
                 {
                     loginCredentialsDialog.SaveInputs();
-                    Submit();
+                    if (!string.IsNullOrEmpty(AuthService.WalletId()))
+                        DoSubmit();
+                    else
+                        SnackService.INSTANCE.Show(new SnackConfig(
+                            new Toast("Invalid Wallet address", Toast.ToastType.Error)
+                        ));
                 }, "utopia-stroked-button-secondary"))
             );
         }
 
-        public void SetGuest()
+        private void DoSubmit()
         {
-            DoSubmit(GUEST);
+            GameManager.INSTANCE.SettingsChanged(AuthService.Network(), startingPosition);
         }
-
-        public void Submit()
-        {
-            if (string.IsNullOrWhiteSpace(WalletId()))
-                OpenCredentialsDialog();
-            else
-                DoSubmit(WalletId());
-        }
-
-
-        private void DoSubmit(string walletId)
-        {
-            GameManager.INSTANCE.SettingsChanged(Network(), startingPosition);
-        }
-
-        public static bool IsGuest()
-        {
-            return WalletId().Equals(GUEST);
-        }
-
-        public static string WalletId()
-        {
-            return PlayerPrefs.GetString(Keys.WALLET).ToLower();
-        }
-
-        public static EthNetwork Network()
-        {
-            var nets = EthNetwork.GetNetworksIfPresent();
-            return EthNetwork.GetByIdIfPresent(PlayerPrefs.GetInt(Keys.NETWORK,
-                nets == null || nets.Length == 0 ? -1 : nets[0].id));
-        }
-
-        public static ConnectionDetail ConnectionDetail()
-        {
-            var detail = new ConnectionDetail();
-            detail.wallet = WalletId();
-            var net = Network();
-            detail.network = net?.id ?? -1;
-            return detail;
-        }
-    }
-
-    class Keys
-    {
-        public static readonly string WALLET = "WALLET";
-        public static readonly string NETWORK = "NETWORK";
     }
 }
