@@ -15,8 +15,10 @@ namespace Source.Ui.Map
             showYourLocationButton.AddManipulator(new ToolTipManipulator(Side.TopLeft));
             var zoomInButton = this.Q<Button>("zoomInButton");
             zoomInButton.AddManipulator(new ToolTipManipulator(Side.TopLeft));
+            zoomInButton.clickable.clicked += map.ZoomIn;
             var zoomOutButton = this.Q<Button>("zoomOutButton");
             zoomOutButton.AddManipulator(new ToolTipManipulator(Side.TopLeft));
+            zoomOutButton.clickable.clicked += map.ZoomOut;
             var currentLocationLabel = this.Q<Label>("currentLocationLabel");
             currentLocationLabel.text = Player.INSTANCE.GetPosition().ToString();
             var currentLocationBox = this.Q<VisualElement>("currentLocationBox");
