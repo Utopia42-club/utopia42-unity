@@ -17,7 +17,7 @@ namespace Source.Ui.Snack
         public SnackConfig(VisualElement content,
             Side verticalSide = Side.Start,
             Side horizontalSide = Side.End,
-            int? duration = 6)
+            int? duration = 4)
         {
             this.content = content;
             this.verticalSide = verticalSide;
@@ -45,7 +45,7 @@ namespace Source.Ui.Snack
 
         public SnackConfig WithCloseButtonVisible(bool b)
         {
-            this.closeButtonVisible = b;
+            closeButtonVisible = b;
             return this;
         }
 

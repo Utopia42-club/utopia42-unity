@@ -142,7 +142,7 @@ namespace Source.Ui.AssetsInventory
         {
             var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
-                         && !Login.Login.IsGuest()
+                         && !AuthService.IsGuest()
                 ; // && Can Edit Land 
             gameObject.SetActive(active);
             inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !
@@ -171,15 +171,15 @@ namespace Source.Ui.AssetsInventory
             {
                 limit = 100
             };
-            var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
+            var loading = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
             {
                 foreach (var pack in packs)
                     this.packs[pack.id] = pack;
-                LoadingLayer.LoadingLayer.Hide(loadingId);
-            }, () => LoadingLayer.LoadingLayer.Hide(loadingId)));
+                loading.Close();
+            }, () => loading.Close()));
 
-            var loadingId2 = LoadingLayer.LoadingLayer.Show(inventory);
+            var loading2 = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetCategories(searchCriteria, categories =>
             {
                 var scrollView = tabPane.GetTabBody().Q<ScrollView>("categories");
@@ -189,8 +189,8 @@ namespace Source.Ui.AssetsInventory
                 scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
                 foreach (var category in categories)
                     scrollView.Add(CreateCategoriesListItem(category));
-                LoadingLayer.LoadingLayer.Hide(loadingId2);
-            }, () => LoadingLayer.LoadingLayer.Hide(loadingId2)));
+                loading2.Close();
+            }, () => loading2.Close()));
 
             var searchField = tabPane.GetTabBody().Q<TextField>("searchField");
             searchField.multiline = false;
@@ -322,15 +322,15 @@ namespace Source.Ui.AssetsInventory
 
         private void LoadFavoriteItems(Action onDone = null, Action onFail = null, bool forFavoritesTab = false)
         {
-            var loadingId = LoadingLayer.LoadingLayer.Show(forFavoritesTab ? inventory : handyPanelRoot);
+            var loading = LoadingLayer.LoadingLayer.Show(forFavoritesTab ? inventory : handyPanelRoot);
             StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
             {
                 favoriteItems = favItems;
                 onDone?.Invoke();
-                LoadingLayer.LoadingLayer.Hide(loadingId);
+                loading.Close();
             }, () =>
             {
-                LoadingLayer.LoadingLayer.Hide(loadingId);
+                loading.Close();
                 onFail?.Invoke();
             }, this));
         }
@@ -548,7 +548,7 @@ namespace Source.Ui.AssetsInventory
             else
                 searchCriteria.lastId = null;
 
-            var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
+            var loading = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.GetAssets(searchCriteria, assets =>
             {
                 var empty = content.childCount == 0 && assets.Count == 0;
@@ -558,8 +558,8 @@ namespace Source.Ui.AssetsInventory
                     AddAssetsToFoldout(foldout, assets);
                 else
                     foldout.contentContainer.style.height = 75;
-                LoadingLayer.LoadingLayer.Hide(loadingId);
-            }, () => LoadingLayer.LoadingLayer.Hide(loadingId)));
+                loading.Close();
+            }, () => loading.Close()));
         }
 
         private void AddAssetsToFoldout(Foldout foldout, List<Asset> assets)
@@ -667,7 +667,7 @@ namespace Source.Ui.AssetsInventory
         public void AddToFavorites(BaseInventorySlot slot)
         {
             var slotInfo = slot.GetSlotInfo();
-            var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
+            var loading = LoadingLayer.LoadingLayer.Show(inventory);
             var favoriteItem = new FavoriteItem
             {
                 asset = slotInfo.asset,
@@ -675,31 +675,31 @@ namespace Source.Ui.AssetsInventory
             };
             StartCoroutine(restClient.CreateFavoriteItem(favoriteItem, item =>
                 {
-                    LoadingLayer.LoadingLayer.Hide(loadingId);
+                    loading.Close();
                     favoriteItems.Add(item);
                     SetupFavoriteAction(slot);
                 },
                 () =>
                 {
-                    LoadingLayer.LoadingLayer.Hide(loadingId);
+                    loading.Close();
                     //TODO a toast?
                 }));
         }
 
         public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot, Action onDone = null)
         {
-            var loadingId = LoadingLayer.LoadingLayer.Show(inventory);
+            var loading = LoadingLayer.LoadingLayer.Show(inventory);
             StartCoroutine(restClient.DeleteFavoriteItem(favoriteItem.id.Value,
                 () =>
                 {
-                    LoadingLayer.LoadingLayer.Hide(loadingId);
+                    loading.Close();
                     favoriteItems.Remove(favoriteItem);
                     SetupFavoriteAction(slot);
                     onDone?.Invoke();
                     //TODO a toast?
                 }, () =>
                 {
-                    LoadingLayer.LoadingLayer.Hide(loadingId);
+                    loading.Close();
                     //TODO a toast?
                 }));
         }

@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
     <Style src="project://database/Assets/Resources/Ui/Snack/Snack.uss?fileID=7433441132597879392&amp;guid=7ced7aa2929d4f82b91ed15f49a9fcb2&amp;type=3#Snack" />
-    <ui:VisualElement name="panel" class="utopia-snack" style="align-items: center; flex-direction: column; width: 100%;">
+    <ui:VisualElement name="panel" class="utopia-snack" style="align-items: center; flex-direction: column; width: 100%; transition-duration: 300ms;">
         <ui:VisualElement name="header" style="flex-grow: 1; height: 24px; flex-direction: row;">
             <ui:Label text="Label" display-tooltip-when-elided="true" name="titleLabel" style="flex-grow: 1; -unity-font-style: bold; font-size: 15px; padding-top: 0; margin-top: 2px; padding-bottom: 0; padding-right: 0; padding-left: 0; margin-left: 4px;" />
             <ui:Button display-tooltip-when-elided="true" name="closeButton" class="utopia-action-button-small utopia-button-primary" style="background-image: resource(&apos;Icons/close&apos;);" />

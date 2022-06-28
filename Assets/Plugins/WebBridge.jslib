@@ -4,8 +4,8 @@ mergeInto(LibraryManager.library, {
     },
 
     callOnBridge: function (fn, p) {
-        var functionName = Pointer_stringify(fn);
-        var parameter = JSON.parse(Pointer_stringify(p));
+        var functionName = UTF8ToString(fn);
+        var parameter = JSON.parse(UTF8ToString(p));
         var r = window.bridge[functionName](parameter);
 
         if (r) {
@@ -19,9 +19,9 @@ mergeInto(LibraryManager.library, {
     },
 
     callAsyncOnBridge: function (cid, fn, p) {
-        var functionName = Pointer_stringify(fn);
-        var parameter = JSON.parse(Pointer_stringify(p));
-        var id = Pointer_stringify(cid);
+        var functionName = UTF8ToString(fn);
+        var parameter = JSON.parse(UTF8ToString(p));
+        var id = UTF8ToString(cid);
 
         window.bridge[functionName](parameter).subscribe(
             {

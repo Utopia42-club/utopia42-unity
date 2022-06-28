@@ -6,19 +6,19 @@ using UnityEngine.UIElements;
 
 namespace Source.Ui.LoadingLayer
 {
-    public class LoadingLayer
+    public static class LoadingLayer
     {
         private static int id;
         private static readonly Dictionary<int, Tuple<VisualElement, VisualElement>> loadingLayers = new();
 
-        public static int Show(VisualElement root)
+        public static LoadingController Show(VisualElement root)
         {
             foreach (var keyValuePair in loadingLayers)
             {
                 if (keyValuePair.Value.Item1 == root && keyValuePair.Key != id)
                 {
                     loadingLayers.Add(id, keyValuePair.Value);
-                    return id++;
+                    return new LoadingController(id++);
                 }
             }
 
@@ -29,7 +29,7 @@ namespace Source.Ui.LoadingLayer
             s.flexGrow = 1;
             loadingLayers.Add(id, new Tuple<VisualElement, VisualElement>(root, layer));
             root.Add(layer);
-            return id++;
+            return new LoadingController(id++);
         }
 
         public static void Hide(int id)

@@ -69,7 +69,11 @@ namespace Source.Ui.Snack
             if (config.Duration.HasValue)
             {
                 var closeCoroutine = CloseCoroutine(controller, config.Duration.Value);
-                snack.RegisterCallback<MouseEnterEvent>(evt => StopCoroutine(closeCoroutine));
+                snack.RegisterCallback<MouseEnterEvent>(evt =>
+                {
+                    StopCoroutine(closeCoroutine);
+                    closeCoroutine.Reset();
+                });
                 snack.RegisterCallback<MouseLeaveEvent>(evt => StartCoroutine(closeCoroutine));
                 StartCoroutine(closeCoroutine);
             }

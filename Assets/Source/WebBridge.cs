@@ -36,7 +36,7 @@ namespace Source
         public static string PrepareParameters(object parameter)
         {
             var req = new UnityToWebRequest<object>();
-            req.connection = Login.ConnectionDetail();
+            req.connection = AuthService.ConnectionDetail();
             req.body = parameter;
 
             return JsonConvert.SerializeObject(req);
