@@ -70,11 +70,6 @@ namespace Source.Ui.TabPane
             return currentTab;
         }
 
-        public void SetTabButtonsAreaVisibility(bool visible)
-        {
-            tabButtonsArea.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
-        }
-
         public void AddLeftAction(VisualElement visualElement)
         {
             leftActions.Add(visualElement);
