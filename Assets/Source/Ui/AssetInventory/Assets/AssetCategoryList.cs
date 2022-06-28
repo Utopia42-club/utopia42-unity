@@ -15,7 +15,7 @@ namespace Source.Ui.AssetInventory.Assets
         public AssetCategoryList(List<Category> categories)
         {
             AddToClassList("categories");
-            Scrolls.IncreaseScrollSpeed(this, 600);
+            Scrolls.IncreaseScrollSpeed(this);
             mode = ScrollViewMode.Vertical;
             verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
             foreach (var category in categories)

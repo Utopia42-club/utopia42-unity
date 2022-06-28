@@ -3,7 +3,7 @@
     <Style src="project://database/Assets/Resources/Ui/AssetInventory/Assets/AssetsTab.uss?fileID=7433441132597879392&amp;guid=06643c710f554844f8df876aa4460c43&amp;type=3#AssetsTab" />
     <ui:VisualElement name="root" class="root">
         <ui:VisualElement name="searchBar" class="search-bar">
-            <ui:TextField picking-mode="Ignore" label="Search&#x9;" name="searchField" multiline="true" mask-character="SearchField" usage-hints="None" password="true" class="short-label-field no-label-field utopia-field search-field" />
+            <ui:TextField picking-mode="Ignore" name="searchField" class="search-field utopia-field" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

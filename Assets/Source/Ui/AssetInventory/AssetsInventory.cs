@@ -98,7 +98,7 @@ namespace Source.Ui.AssetInventory
             handyPanelRoot = root.Q<VisualElement>("handyPanelRoot");
             handyPanel = root.Q<VisualElement>("handyPanel");
             handyBar = handyPanel.Q<ScrollView>("handyBar");
-            Scrolls.IncreaseScrollSpeed(handyBar, 600);
+            Scrolls.IncreaseScrollSpeed(handyBar);
             openCloseInvButton = handyPanel.Q<Button>("openCloseInvButton");
             openCloseInvButton.clickable.clicked += ToggleInventory;
 
@@ -160,9 +160,10 @@ namespace Source.Ui.AssetInventory
 
         private void SetupBlocksTab()
         {
+            tabPane.GetCurrentTabContent().style.width = new Length(100, LengthUnit.Percent);
             var scrollView = tabPane.GetTabBody().Q<ScrollView>("blockPacks");
             scrollView.Clear();
-            Scrolls.IncreaseScrollSpeed(scrollView, 600);
+            Scrolls.IncreaseScrollSpeed(scrollView);
             scrollView.mode = ScrollViewMode.Vertical;
             scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
 
@@ -190,9 +191,11 @@ namespace Source.Ui.AssetInventory
 
         private void SetupFavoritesTab()
         {
+            tabPane.GetCurrentTabContent().style.width = new Length(100, LengthUnit.Percent);
             LoadFavoriteItems(() =>
             {
                 var scrollView = tabPane.GetTabBody().Q<ScrollView>("favorites");
+                Scrolls.IncreaseScrollSpeed(scrollView);
                 var container = new VisualElement();
                 for (int i = 0; i < favoriteItems.Count; i++)
                 {
@@ -299,13 +302,13 @@ namespace Source.Ui.AssetInventory
             var playerColorBlocks = ColorBlocks.GetPlayerColorBlocks();
             var size = playerColorBlocks.Count;
             var slotsContainer = new VisualElement();
+            slotsContainer.AddToClassList("slots-wrapper");
             for (var i = 0; i < size; i++)
             {
                 var slot = new ColorBlockInventorySlot();
                 ColorUtility.TryParseHtmlString(playerColorBlocks[i], out var color);
                 slot.SetSlotInfo(new SlotInfo(ColorBlocks.GetBlockTypeFromColor(color)));
                 slot.SetSize(80);
-                slot.SetGridPosition(i, 3);
                 SetupFavoriteAction(slot);
                 slotsContainer.Add(slot.VisualElement());
             }
@@ -323,7 +326,7 @@ namespace Source.Ui.AssetInventory
         private Foldout CreateBlocksPackFoldout(string name, List<BlockType> blocks)
         {
             var foldout = new PackFoldout<VisualElement>(name, true);
-
+            foldout.contentContainer.AddToClassList("slots-wrapper");
             var size = blocks.Count;
             if (size <= 0) return foldout;
             for (var i = 0; i < size; i++)
@@ -332,7 +335,6 @@ namespace Source.Ui.AssetInventory
                 var slotInfo = new SlotInfo(blocks[i]);
                 slot.SetSlotInfo(slotInfo);
                 slot.SetSize(80);
-                slot.SetGridPosition(i, 3);
                 SetupFavoriteAction(slot);
                 foldout.contentContainer.Add(slot.VisualElement());
             }

@@ -7,5 +7,15 @@ namespace Source.Ui.AssetInventory.Models
         public int? lastId { get; set; }
         public int limit { get; set; }
         public Dictionary<string, object> searchTerms { get; set; }
+
+        public SearchCriteria Clone()
+        {
+            return new SearchCriteria()
+            {
+                lastId = lastId,
+                limit = limit,
+                searchTerms = new Dictionary<string, object>(searchTerms)
+            };
+        }
     }
 }

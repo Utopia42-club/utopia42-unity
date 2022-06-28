@@ -9,7 +9,7 @@ namespace Source.Ui.Utils
         private readonly MonoBehaviour monoBehaviour;
         private readonly EventCallback<TE> innerCallback;
         private readonly float debounceSeconds;
-        private Coroutine coRoutine;
+        private Coroutine coroutine;
         private float lastEventTime;
         private TE lastEvent;
         
@@ -27,16 +27,16 @@ namespace Source.Ui.Utils
         {
             lastEventTime = Time.realtimeSinceStartup;
             lastEvent = e;
-            if (coRoutine != null)
-                coRoutine = monoBehaviour.StartCoroutine(StartTimer());
+            if (coroutine == null)
+                coroutine = monoBehaviour.StartCoroutine(StartTimer());
         }
 
         private IEnumerator StartTimer()
         {
             float elapsed;
-            while ((elapsed = Time.realtimeSinceStartup - lastEventTime) >= debounceSeconds)
+            while ((elapsed = Time.realtimeSinceStartup - lastEventTime) < debounceSeconds)
                 yield return new WaitForSecondsRealtime(debounceSeconds - elapsed);
-            coRoutine = null;
+            coroutine = null;
             innerCallback(lastEvent);
         }
     }

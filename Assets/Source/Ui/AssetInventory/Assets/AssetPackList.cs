@@ -28,7 +28,7 @@ namespace Source.Ui.AssetInventory.Assets
                 verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible,
                 horizontalScrollerVisibility = ScrollerVisibility.Hidden
             };
-            Scrolls.IncreaseScrollSpeed(scrollView, 600);
+            Scrolls.IncreaseScrollSpeed(scrollView);
             Add(scrollView);
         }
 
@@ -61,7 +61,7 @@ namespace Source.Ui.AssetInventory.Assets
                 foldout.RegisterValueChangedCallback(evt =>
                 {
                     if (evt.newValue)
-                        foldout.SetContent(new AssetPackContent(searchCriteria, packEntry.Value));
+                        foldout.SetContent(new AssetPackContent(searchCriteria.Clone(), packEntry.Value));
                 });
                 if (hasFilter)
                     foldout.schedule.Execute(() => foldout.value = true);

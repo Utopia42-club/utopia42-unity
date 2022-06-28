@@ -41,7 +41,7 @@ public class PropertyEditor : MonoBehaviour
     {
         root = GetComponent<UIDocument>().rootVisualElement;
         body = root.Q<ScrollView>("body");
-        Scrolls.IncreaseScrollSpeed(body, 600);
+        Scrolls.IncreaseScrollSpeed(body);
         label = root.Q<Label>("label");
         label.text = header;
         var editor = Utils.Create(uxmlPath);

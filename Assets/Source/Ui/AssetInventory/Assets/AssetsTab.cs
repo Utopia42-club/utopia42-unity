@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Source.Ui.AssetInventory.Models;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.AssetInventory.Assets
@@ -28,7 +27,7 @@ namespace Source.Ui.AssetInventory.Assets
             TextFields.SetPlaceHolderForTextField(searchField, "Search");
             TextFields.RegisterUiEngagementCallbacksForTextField(searchField);
             searchField.RegisterValueChangedCallback(new DebounceEventListener<ChangeEvent<string>>
-                (inventory, 0.6f, e => FilterAssets(e.newValue)).Deligate);
+                (inventory, 0.6f, e => FilterAssets()).Deligate);
         }
 
         public void OnTabOpen(TabOpenEvent e)
@@ -39,6 +38,7 @@ namespace Source.Ui.AssetInventory.Assets
 
         private void OpenCategoryList()
         {
+            DisposeAll();
             disposables.Add(dataLoader.GetCategories((categories) =>
             {
                 var categoriesList = new AssetCategoryList(categories);
@@ -49,6 +49,7 @@ namespace Source.Ui.AssetInventory.Assets
 
         private void OpenPackList(Category category)
         {
+            DisposeAll();
             disposables.Add(dataLoader.GetPacks(packs =>
             {
                 var packList = new AssetPackList(packs, category);
@@ -65,9 +66,9 @@ namespace Source.Ui.AssetInventory.Assets
             searchField.value = null;
         }
 
-        private void FilterAssets(string filter)
+        private void FilterAssets()
         {
-            filter = filter ?? "";
+            var filter = searchField.text ?? "";
             if (Equals(filter, lastSearchFilter))
                 return;
             lastSearchFilter = filter;
@@ -80,6 +81,11 @@ namespace Source.Ui.AssetInventory.Assets
         public void OnTabClose(TabCloseEvent e)
         {
             SetContent(null);
+            DisposeAll();
+        }
+
+        private void DisposeAll()
+        {
             disposables.ForEach(d => d.Dispose());
             disposables.Clear();
         }

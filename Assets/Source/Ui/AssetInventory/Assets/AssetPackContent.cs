@@ -26,10 +26,11 @@ namespace Source.Ui.AssetInventory.Assets
             };
             Add(notFoundLabel);
             slots = new VisualElement();
+            slots.AddToClassList("slots-wrapper");
+            // slots.style.alignItems = Align.Center;
+            slots.style.justifyContent = Justify.Center;
             Add(slots);
-            if (searchCriteria.searchTerms.ContainsKey("pack"))
-                searchCriteria.searchTerms.Remove("pack");
-            searchCriteria.searchTerms.Add("pack", pack);
+            searchCriteria.searchTerms.Add("pack", pack.id);
             var loadMore = Utils.Utils.Create("Ui/AssetInventory/Assets/LoadMoreButton");
             var loadMoreButton = loadMore.Q<Button>();
             loadMoreButton.clickable.clicked += () => Load();
@@ -48,7 +49,7 @@ namespace Source.Ui.AssetInventory.Assets
             else
                 searchCriteria.lastId = null;
 
-            searchCriteria.searchTerms.Clear();
+            // searchCriteria.searchTerms.Clear();
             var loading = LoadingLayer.LoadingLayer.Show(this); //FIXME
             var inventory = AssetsInventory.INSTANCE;
             inventory.StartCoroutine(inventory.restClient.GetAssets(searchCriteria, assets =>
@@ -73,7 +74,6 @@ namespace Source.Ui.AssetInventory.Assets
                 var slotInfo = new SlotInfo(assets[i - count]);
                 slot.SetSlotInfo(slotInfo);
                 slot.SetSize(80);
-                slot.SetGridPosition(i, 3);
                 // SetupFavoriteAction(slot);
                 slots.Add(slot);
             }

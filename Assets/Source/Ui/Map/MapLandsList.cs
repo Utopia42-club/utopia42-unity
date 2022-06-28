@@ -13,7 +13,7 @@ namespace Source.Ui.Map
         public MapLandsList(Map map)
         {
             this.map = map;
-            Scrolls.IncreaseScrollSpeed(this, 600);
+            Scrolls.IncreaseScrollSpeed(this);
             contentContainer.style.paddingBottom = contentContainer.style.paddingTop =
                 contentContainer.style.paddingLeft = contentContainer.style.paddingRight = 5;
         }

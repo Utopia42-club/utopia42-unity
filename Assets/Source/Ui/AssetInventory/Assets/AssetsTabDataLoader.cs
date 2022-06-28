@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Source.Ui.AssetInventory.Models;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.AssetInventory.Assets
@@ -14,8 +13,10 @@ namespace Source.Ui.AssetInventory.Assets
             private readonly AssetsRestClient restClient = new();
             private readonly VisualElement loadingTarget;
             private bool loaded = false;
-            private Dictionary<int, Pack> packs = new();
-            private List<Category> categories = new();
+            private bool loading = false;
+            private readonly List<Action> consumers = new();
+            private readonly Dictionary<int, Pack> packs = new();
+            private readonly List<Category> categories = new();
 
             public DataLoader(VisualElement loadingTarget)
             {
@@ -24,26 +25,36 @@ namespace Source.Ui.AssetInventory.Assets
 
             public IDisposable GetCategories(Action<List<Category>> consumer)
             {
-                if (loaded)
-                {
-                    consumer(categories);
-                    return DisposableAction.NoOp;
-                }
-                var action = new DisposableAction(() => consumer(categories), true);
-                Load(action.Invoke);
-                return action;
+                return Get(() => consumer(categories));
             }
 
             public IDisposable GetPacks(Action<Dictionary<int, Pack>> consumer)
             {
+                return Get(() => consumer(packs));
+            }
+
+            private IDisposable Get(Action consumer)
+            {
                 if (loaded)
-                    consumer(packs);
-                var action = new DisposableAction(() => consumer(packs), true);
-                Load(action.Invoke);
+                {
+                    consumer();
+                    CallConsumers();
+                    return DisposableAction.NoOp;
+                }
+
+                var action = new DisposableAction(consumer, true);
+                consumers.Add(action.Invoke);
+                Load();
                 return action;
             }
 
-            private void Load(Action done)
+            private void CallConsumers()
+            {
+                consumers.ForEach(c => c.Invoke());
+                consumers.Clear();
+            }
+
+            private void Load()
             {
                 bool packsLoaded = false;
                 bool catsLoaded = false;
@@ -62,7 +73,7 @@ namespace Source.Ui.AssetInventory.Assets
                     if (catsLoaded)
                     {
                         loaded = true;
-                        done();
+                        CallConsumers();
                     }
                 }, () => packsLoading.Close()));
 
@@ -75,15 +86,16 @@ namespace Source.Ui.AssetInventory.Assets
                         if (catsLoaded)
                         {
                             loaded = true;
-                            done();
+                            CallConsumers();
                         }
+
                         catsLoading.Close();
                     }, () => catsLoading.Close()));
             }
 
             private class DisposableAction : IDisposable
             {
-                internal static DisposableAction NoOp = new DisposableAction(null, true);
+                internal static DisposableAction NoOp = new(null, true);
                 private readonly bool disposeAfterFirst = false;
                 private Action action;
 
