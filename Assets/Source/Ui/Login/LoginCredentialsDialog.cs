@@ -16,24 +16,9 @@ namespace Source.Ui.Login
         {
             walletField = this.Q<TextField>("walletField");
             networkField = this.Q<DropdownField>("networkField");
-            var loading = LoadingLayer.LoadingLayer.Show(this);
-            GameManager.INSTANCE.StartCoroutine(EthNetwork.GetNetworks(_ =>
-                {
-                    loading.Close();
-                    var nets = EthNetwork.GetNetworksIfPresent();
-                    networkField.choices = nets.Select(network => network.name).ToList();
-                    ResetInputs();
-                },
-                () =>
-                {
-                    SnackService.INSTANCE.Show(
-                        new SnackConfig(
-                            new Toast("Could not load any ETHEREUM networks. Please report the error.",
-                                Toast.ToastType.Error)
-                        )
-                    );
-                    loading.Close();
-                }));
+            var nets = EthNetwork.GetNetworksIfPresent();
+            networkField.choices = nets.Select(network => network.name).ToList();
+            ResetInputs();
         }
 
         private void ResetInputs()

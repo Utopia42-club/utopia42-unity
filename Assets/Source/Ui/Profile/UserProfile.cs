@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Source.Canvas;
 using Source.Ui.AssetsInventory;
 using Source.Ui.Map;
@@ -12,7 +13,6 @@ namespace Source.Ui.Profile
     public class UserProfile : UxmlElement
     {
         private static readonly Sprite emptyUserIcon = Resources.Load<Sprite>("Icons/empty-user-icon");
-        private static readonly Sprite editIcon = Resources.Load<Sprite>("Icons/edit");
         private VisualElement imageElement;
         private Label nameLabel;
         private ScrollView body;
@@ -57,42 +57,31 @@ namespace Source.Ui.Profile
                 body.Add(bioLabel);
             }
 
-            if (profile.links != null)
+            if (profile.links == null)
             {
-                var socialLinks = new VisualElement
-                {
-                    style =
+                profile.links = new List<Model.Profile.Link>();
+                foreach (var media in Model.Profile.Link.medias)
+                    profile.links.Add(new Model.Profile.Link
                     {
-                        paddingTop = 10
-                    }
-                };
-                for (var index = 0; index < profile.links.Count; index++)
-                {
-                    var link = profile.links[index];
-                    var socialLink = new SocialLink(link);
-                    socialLinks.Add(socialLink);
-                    GridUtils.SetChildPosition(socialLink, 150, 40, index, 2);
-                }
-
-                GridUtils.SetContainerSize(socialLinks, profile.links.Count, 40, 2);
-                body.Add(socialLinks);
+                        media = media.Key,
+                        link = null
+                    });
             }
 
+            var socialLinks = this.Q<VisualElement>("socialLinks");
+            for (var index = 0; index < profile.links.Count; index++)
+            {
+                var link = profile.links[index];
+                var socialLink = new SocialLink(link);
+                socialLinks.Add(socialLink);
+                GridUtils.SetChildPosition(socialLink, 120, 40, index, 6);
+            }
+
+            GridUtils.SetContainerSize(socialLinks, profile.links.Count, 40, 6);
+
+            var editButton = this.Q<Button>("userEditButton");
             if (profile.walletId.Equals(AuthService.WalletId()))
             {
-                var editButton = new Button
-                {
-                    style =
-                    {
-                        position = Position.Absolute,
-                        top = 5,
-                        left = 158,
-                        width = 30,
-                        height = 30
-                    }
-                };
-                editButton.AddToClassList("utopia-button-primary");
-                UiImageUtils.SetBackground(editButton, editIcon);
                 editButton.clickable.clicked += () => BrowserConnector.INSTANCE.EditProfile(() =>
                 {
                     ProfileLoader.INSTANCE.InvalidateProfile(profile.walletId);
@@ -101,7 +90,10 @@ namespace Source.Ui.Profile
                         //FIXME Show error snack
                     });
                 }, () => { });
-                Add(editButton);
+            }
+            else
+            {
+                editButton.style.display = DisplayStyle.None;
             }
         }
     }

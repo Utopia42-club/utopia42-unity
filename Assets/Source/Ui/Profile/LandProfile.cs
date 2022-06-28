@@ -12,8 +12,6 @@ namespace Source.Ui.Profile
 {
     public class LandProfile : UxmlElement
     {
-        private static readonly Sprite editIcon = Resources.Load<Sprite>("Icons/edit");
-        private static readonly Sprite checkIcon = Resources.Load<Sprite>("Icons/checkmark");
         private static readonly string colorPickerPrefab = "Prefabs/FloatColorPicker";
 
         private Label nameLabel;
@@ -84,7 +82,7 @@ namespace Source.Ui.Profile
                 nameLabel.text = nameField.value;
             nameField.style.display = editMode ? DisplayStyle.Flex : DisplayStyle.None;
             nameLabel.style.display = editMode ? DisplayStyle.None : DisplayStyle.Flex;
-            UiImageUtils.SetBackground(editButton, editMode ? checkIcon : editIcon);
+            editButton.text = editMode ? "Done" : "Edit";
             if (editMode)
                 colorValue.RegisterCallback(colorValueClickCallback);
             else

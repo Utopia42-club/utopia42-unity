@@ -52,6 +52,7 @@ namespace Source.Ui.Dialog
             dialog = dialogContainer.Q<VisualElement>("dialog");
             dialog.style.width = config.Width;
             dialog.style.height = config.Height;
+            dialog.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
             var dialogLayer = dialogContainer.Q<VisualElement>("layer");
             dialogLayer.RegisterCallback<MouseDownEvent>(_ => CloseLastOpenedDialog());
 

@@ -13,7 +13,7 @@ namespace Source.Service.Ethereum
     public class EthereumClientService
     {
         public static readonly EthereumClientService INSTANCE = new();
-        
+
         private EthNetwork network;
 
         private EthereumClientService()

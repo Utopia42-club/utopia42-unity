@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Source.Model;
 using Source.Service.Ethereum;
 using UnityEngine;
@@ -18,7 +19,10 @@ namespace Source
 
         public static void Connect(Action<ConnectionDetail> onDone)
         {
-            WebBridge.CallAsync<ConnectionDetail>("connectMetamask", "", (ci) =>
+            var nets = EthNetwork.GetNetworksIfPresent();
+            if (nets == null || nets.Length == 0)
+                throw new Exception("Networks are not loaded");
+            WebBridge.CallAsync<ConnectionDetail>("connectMetamask", nets.First().id, (ci) =>
             {
                 if (ci.network.HasValue && ci.wallet != null)
                     Save(ci.network.Value, ci.wallet);

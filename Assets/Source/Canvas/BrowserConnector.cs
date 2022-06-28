@@ -103,12 +103,11 @@ namespace Source.Canvas
             int network = EthereumClientService.INSTANCE.GetNetwork().id;
             if (parameters != null)
                 currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}",
-                    Constants.WebAppHomeURL, method,
+                    Constants.WebAppRpcURL, method,
                     parameters, wallet, network);
             else
-                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", Constants.WebAppHomeURL,
-                    method, wallet,
-                    network);
+                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", Constants.WebAppRpcURL,
+                    method, wallet, network);
 
             Application.OpenURL(currentUrl);
             OpenDialog(onDone, onCancel, message);
