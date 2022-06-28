@@ -3,6 +3,7 @@ using System.Linq;
 using Source.Model;
 using Source.Service;
 using Source.Ui.Popup;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Position = UnityEngine.UIElements.Position;
@@ -35,8 +36,8 @@ namespace Source.Ui.Map
             saveButton.clickable.clicked += () => GameManager.INSTANCE.Save();
 
             searchField = this.Q<TextField>("searchField");
-            Utils.Utils.SetPlaceHolderForTextField(searchField, "Search");
-            Utils.Utils.RegisterUiEngagementCallbacksForTextField(searchField);
+            TextFields.SetPlaceHolderForTextField(searchField, "Search");
+            TextFields.RegisterUiEngagementCallbacksForTextField(searchField);
 
             mapLandsList = new MapLandsList(map);
             landsListContainer.Add(mapLandsList);

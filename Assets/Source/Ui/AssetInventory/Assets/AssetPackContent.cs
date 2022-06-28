@@ -4,18 +4,16 @@ using Source.Ui.AssetInventory.Slots;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.Ui.AssetInventory
+namespace Source.Ui.AssetInventory.Assets
 {
-    public class GlbPackContent : VisualElement
+    public class AssetPackContent : VisualElement
     {
-        private readonly AssetsInventory inventory;
         private readonly SearchCriteria searchCriteria;
         private readonly VisualElement slots;
         private readonly Label notFoundLabel;
 
-        public GlbPackContent(AssetsInventory inventory, SearchCriteria searchCriteria, Pack pack)
+        public AssetPackContent(SearchCriteria searchCriteria, Pack pack)
         {
-            this.inventory = inventory;
             this.searchCriteria = searchCriteria;
             notFoundLabel = new Label("No items found")
             {
@@ -32,7 +30,7 @@ namespace Source.Ui.AssetInventory
             if (searchCriteria.searchTerms.ContainsKey("pack"))
                 searchCriteria.searchTerms.Remove("pack");
             searchCriteria.searchTerms.Add("pack", pack);
-            var loadMore = Utils.Utils.Create("Ui/AssetInventory/LoadMoreButton");
+            var loadMore = Utils.Utils.Create("Ui/AssetInventory/Assets/LoadMoreButton");
             var loadMoreButton = loadMore.Q<Button>();
             loadMoreButton.clickable.clicked += () => Load();
             Add(loadMore);
@@ -51,8 +49,8 @@ namespace Source.Ui.AssetInventory
                 searchCriteria.lastId = null;
 
             searchCriteria.searchTerms.Clear();
-            var loadingId = LoadingLayer.LoadingLayer.Show(this); //FIXME
-            Debug.Log(searchCriteria.limit + " " + searchCriteria.lastId + " " + searchCriteria.searchTerms);
+            var loading = LoadingLayer.LoadingLayer.Show(this); //FIXME
+            var inventory = AssetsInventory.INSTANCE;
             inventory.StartCoroutine(inventory.restClient.GetAssets(searchCriteria, assets =>
             {
                 var empty = childCount == 0 && assets.Count == 0;
@@ -61,10 +59,9 @@ namespace Source.Ui.AssetInventory
                     AddAssets(assets);
                 else
                     style.height = 75;
-                LoadingLayer.LoadingLayer.Hide(loadingId);
-            }, () => LoadingLayer.LoadingLayer.Hide(loadingId)));
+                loading.Close();
+            }, () => loading.Close()));
         }
-
 
         private void AddAssets(List<Asset> assets)
         {
@@ -73,13 +70,11 @@ namespace Source.Ui.AssetInventory
             for (var i = count; i < count + size; i++)
             {
                 var slot = new AssetInventorySlot();
-                slot.data = new byte[100 * 1024 * 1024];
                 var slotInfo = new SlotInfo(assets[i - count]);
                 slot.SetSlotInfo(slotInfo);
                 slot.SetSize(80);
                 slot.SetGridPosition(i, 3);
                 // SetupFavoriteAction(slot);
-                slot.VisualElement().userData = slot;
                 slots.Add(slot);
             }
 

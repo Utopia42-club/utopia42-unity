@@ -34,8 +34,9 @@ namespace Source.Ui.AssetInventory.Slots
             slotIcon = this.Q<VisualElement>("slotIcon");
             leftAction = this.Q<Button>("leftAction");
             rightAction = this.Q<Button>("rightAction");
-
+            
             selectedBorder = this.Q<VisualElement>("selectedBorder");
+
             RegisterCallback<PointerDownEvent>(evt =>
             {
                 if (selectable)

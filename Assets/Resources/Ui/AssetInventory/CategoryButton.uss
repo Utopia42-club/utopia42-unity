@@ -1,0 +1,6 @@
+.button {
+    border-color: var(--darker-primary-color);
+}
+.button:hover {
+    border-color: var(--lighter-primary-color);
+}

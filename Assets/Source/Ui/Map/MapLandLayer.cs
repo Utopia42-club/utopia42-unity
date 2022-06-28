@@ -49,10 +49,13 @@ namespace Source.Ui.Map
                 e.StopPropagation();
                 this.map.ReleaseMouse();
             });
-            Utils.Utils.RegisterOnDoubleClick(map, (evt) =>
+            map.RegisterCallback<ClickEvent>(evt =>
             {
-                var realPosition = map.ScreenToUtopia(evt.mousePosition);
-                GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
+                if (evt.clickCount == 2)
+                {
+                    var realPosition = map.ScreenToUtopia(evt.position);
+                    GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
+                }
             });
             mapPlayerPositionIndicator = new MapPlayerPositionIndicator(map);
             Add(mapPlayerPositionIndicator);
@@ -197,7 +200,7 @@ namespace Source.Ui.Map
             dimLayer.style.top = mapRect.y;
             dimLayer.style.width = mapRect.width;
             dimLayer.style.height = mapRect.height;
-            
+
             Add(dimLayer);
             dimLayer.BringToFront();
             foreach (var visualElement in Children())

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.TabPane
@@ -42,6 +43,7 @@ namespace Source.Ui.TabPane
 
         public void OpenTab(int index)
         {
+            if (currentTab == index) return;
             var config = tabConfigs[index];
             if (!tabBodiesCache.TryGetValue(index, out var tabBodyContent))
             {
@@ -51,16 +53,19 @@ namespace Source.Ui.TabPane
                     tabBodiesCache[index] = tabBodyContent;
             }
 
-            tabBody.Clear();
+            CloseCurrent();
             tabBody.Add(tabBodyContent);
             foreach (var button in tabButtons)
                 button.RemoveFromClassList("selected-tab");
             tabButtons[index].AddToClassList("selected-tab");
             currentTab = index;
-            var openEvent = new TabOpenEvent(this);
-            config.onTabOpen?.Invoke(openEvent);
-            if(tabBodyContent is TabOpenListener listener)
-                listener.OnTabOpen(openEvent);
+            if (currentTab != -1)
+            {
+                var e = new TabOpenEvent(this);
+                tabConfigs[currentTab].onTabOpen?.Invoke(e);
+                if (GetCurrentTabContent() is TabOpenListener listener)
+                    listener.OnTabOpen(e);
+            }
         }
 
         public VisualElement GetTabBody()
@@ -68,7 +73,7 @@ namespace Source.Ui.TabPane
             return tabBody;
         }
 
-        public int GetCurrentTab()
+        public int GetCurrentTabIndex()
         {
             return currentTab;
         }
@@ -88,11 +93,22 @@ namespace Source.Ui.TabPane
             rightActions.Insert(0, visualElement);
         }
 
-        public void CloseTabs()
+        public void CloseCurrent()
         {
             if (currentTab != -1)
-                tabConfigs[currentTab].onTabClose?.Invoke();
+            {
+                var e = new TabCloseEvent(this);
+                tabConfigs[currentTab].onTabClose?.Invoke(e);
+                if (GetCurrentTabContent() is TabCloseListener listener)
+                    listener.OnTabClose(e);
+            }
+
             tabBody.Clear();
+        }
+
+        public VisualElement GetCurrentTabContent()
+        {
+            return tabBody.Children().ElementAtOrDefault(0);
         }
     }
 }

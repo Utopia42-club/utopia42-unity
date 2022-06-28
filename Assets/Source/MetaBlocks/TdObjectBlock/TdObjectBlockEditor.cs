@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Source.Model;
+using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
 namespace Source.MetaBlocks.TdObjectBlock
@@ -40,13 +41,13 @@ namespace Source.MetaBlocks.TdObjectBlock
             type = root.Q<DropdownField>("type");
             type.choices = new List<string> {"OBJ (zip)", "GLB"};
             type.index = 0;
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(url);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(scaleX);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(scaleY);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(scaleZ);
+            TextFields.RegisterUiEngagementCallbacksForTextField(url);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationX);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationY);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            TextFields.RegisterUiEngagementCallbacksForTextField(scaleX);
+            TextFields.RegisterUiEngagementCallbacksForTextField(scaleY);
+            TextFields.RegisterUiEngagementCallbacksForTextField(scaleZ);
         }
         
         public TdObjectBlockProperties GetValue()

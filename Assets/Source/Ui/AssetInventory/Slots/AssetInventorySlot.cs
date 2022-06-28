@@ -6,8 +6,6 @@ namespace Source.Ui.AssetInventory.Slots
     {
         private readonly bool updateImage;
 
-        public object data;
-
         public AssetInventorySlot(bool updateImage = true)
         {
             this.updateImage = updateImage;

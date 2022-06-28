@@ -1,4 +1,5 @@
 using System;
+using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
 namespace Source.MetaBlocks.MarkerBlock
@@ -16,7 +17,7 @@ namespace Source.MetaBlocks.MarkerBlock
                     PropertyEditor.INSTANCE.Hide();
                 }, instanceID);
             name = root.Q<TextField>("name");
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(name);
+            TextFields.RegisterUiEngagementCallbacksForTextField(name);
         }
 
 

@@ -68,7 +68,7 @@ public class Menu : MonoBehaviour, UiProvider
                 }
                 default:
                     gameObject.SetActive(false);
-                    tabPane.CloseTabs();
+                    tabPane.CloseCurrent();
                     break;
             }
         });

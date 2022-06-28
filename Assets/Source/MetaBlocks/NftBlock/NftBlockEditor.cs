@@ -1,6 +1,7 @@
 using System;
 using Source.MetaBlocks.ImageBlock;
 using Source.Model;
+using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
 namespace Source.MetaBlocks.NftBlock
@@ -35,13 +36,13 @@ namespace Source.MetaBlocks.NftBlock
             width = root.Q<TextField>("w");
             height = root.Q<TextField>("h");
             detectCollision = root.Q<Toggle>("collisionDetect");
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(collection);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(tokenId);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(width);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(height);
+            TextFields.RegisterUiEngagementCallbacksForTextField(collection);
+            TextFields.RegisterUiEngagementCallbacksForTextField(tokenId);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationX);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationY);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            TextFields.RegisterUiEngagementCallbacksForTextField(width);
+            TextFields.RegisterUiEngagementCallbacksForTextField(height);
         }
 
         public NftBlockProperties GetValue()

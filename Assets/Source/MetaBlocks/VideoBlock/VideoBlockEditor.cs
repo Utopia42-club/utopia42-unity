@@ -1,6 +1,7 @@
 using System;
 using Source.MetaBlocks.ImageBlock;
 using Source.Model;
+using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
 namespace Source.MetaBlocks.VideoBlock
@@ -35,13 +36,13 @@ namespace Source.MetaBlocks.VideoBlock
             height = root.Q<TextField>("h");
             previewTime = root.Q<TextField>("previewTime");
             detectCollision = root.Q<Toggle>("collisionDetect");
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(url);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(width);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(height);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(previewTime);
+            TextFields.RegisterUiEngagementCallbacksForTextField(url);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationX);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationY);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            TextFields.RegisterUiEngagementCallbacksForTextField(width);
+            TextFields.RegisterUiEngagementCallbacksForTextField(height);
+            TextFields.RegisterUiEngagementCallbacksForTextField(previewTime);
         }
 
         public VideoBlockProperties GetValue()

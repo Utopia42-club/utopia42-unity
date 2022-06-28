@@ -1,5 +1,6 @@
 using System;
 using Source.Model;
+using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
 namespace Source.MetaBlocks.ImageBlock
@@ -33,12 +34,12 @@ namespace Source.MetaBlocks.ImageBlock
             width = root.Q<TextField>("w");
             height = root.Q<TextField>("h");
             detectCollision = root.Q<Toggle>("collisionDetect");
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(url);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationX);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationY);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(width);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(height);
+            TextFields.RegisterUiEngagementCallbacksForTextField(url);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationX);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationY);
+            TextFields.RegisterUiEngagementCallbacksForTextField(rotationZ);
+            TextFields.RegisterUiEngagementCallbacksForTextField(width);
+            TextFields.RegisterUiEngagementCallbacksForTextField(height);
         }
 
         public MediaBlockProperties GetValue()

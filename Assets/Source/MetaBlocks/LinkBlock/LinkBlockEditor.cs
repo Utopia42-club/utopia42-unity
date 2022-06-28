@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
 namespace Source.MetaBlocks.LinkBlock
@@ -31,10 +32,10 @@ namespace Source.MetaBlocks.LinkBlock
             yField = root.Q<TextField>("y");
             zField = root.Q<TextField>("z");
 
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(urlField);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(xField);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(yField);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(zField);
+            TextFields.RegisterUiEngagementCallbacksForTextField(urlField);
+            TextFields.RegisterUiEngagementCallbacksForTextField(xField);
+            TextFields.RegisterUiEngagementCallbacksForTextField(yField);
+            TextFields.RegisterUiEngagementCallbacksForTextField(zField);
 
             typeField.RegisterValueChangedCallback(evt => UpdateFieldsVisibility());
             UpdateFieldsVisibility();

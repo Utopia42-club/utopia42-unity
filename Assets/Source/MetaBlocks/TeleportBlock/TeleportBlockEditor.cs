@@ -1,4 +1,5 @@
 using System;
+using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
 namespace Source.MetaBlocks.TeleportBlock
@@ -20,9 +21,9 @@ namespace Source.MetaBlocks.TeleportBlock
             posX = root.Q<TextField>("x");
             posY = root.Q<TextField>("y");
             posZ = root.Q<TextField>("z");
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(posX);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(posY);
-            Ui.Utils.Utils.RegisterUiEngagementCallbacksForTextField(posZ);
+            TextFields.RegisterUiEngagementCallbacksForTextField(posX);
+            TextFields.RegisterUiEngagementCallbacksForTextField(posY);
+            TextFields.RegisterUiEngagementCallbacksForTextField(posZ);
         }
         
         public TeleportBlockProperties GetValue()

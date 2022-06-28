@@ -30,7 +30,7 @@
     --warn-color: rgb(174, 177, 28);
     --transparent: rgba(0, 0, 0, 0);
 
-    --default-border-radius: 7px;
+    --default-border-radius: 4px;
     --default-border-color: var(--lighter-primary-color);
 
     --default-font-size: 14px;

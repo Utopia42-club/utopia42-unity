@@ -12,27 +12,30 @@ namespace Source.Ui.TabPane
 
         public Func<VisualElement> visualElementFactory { get; set; }
 
-        public Action onTabClose { get; set; }
+        public Action<TabCloseEvent> onTabClose { get; set; }
 
-        public TabConfiguration(string name, string uxmlPath, Action<TabOpenEvent> onTabOpen = null, Action onTabClose = null) 
-            :this(name, Utils.Utils.Create(uxmlPath), onTabOpen, onTabClose)
+        public TabConfiguration(string name, string uxmlPath, Action<TabOpenEvent> onTabOpen = null,
+            Action<TabCloseEvent> onTabClose = null)
+            : this(name, Utils.Utils.Create(uxmlPath), onTabOpen, onTabClose)
         {
         }
 
         public TabConfiguration(string name, VisualElement visualElement, Action<TabOpenEvent> onTabOpen = null,
-            Action onTabClose = null)
-        : this(name, onTabOpen, onTabClose)
+            Action<TabCloseEvent> onTabClose = null)
+            : this(name, onTabOpen, onTabClose)
         {
             VisualElement = visualElement;
         }
 
-        public TabConfiguration(string name, Func<VisualElement> visualElementFactory, Action<TabOpenEvent> onTabOpen = null,
-            Action onTabClose = null) : this(name, onTabOpen, onTabClose)
+        public TabConfiguration(string name, Func<VisualElement> visualElementFactory,
+            Action<TabOpenEvent> onTabOpen = null,
+            Action<TabCloseEvent> onTabClose = null) : this(name, onTabOpen, onTabClose)
         {
             this.visualElementFactory = visualElementFactory;
         }
 
-        private TabConfiguration(string name, Action<TabOpenEvent> onTabOpen = null, Action onTabClose = null)
+        private TabConfiguration(string name, Action<TabOpenEvent> onTabOpen = null,
+            Action<TabCloseEvent> onTabClose = null)
         {
             this.name = name;
             this.onTabClose = onTabClose;

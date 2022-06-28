@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Source.Model;
+using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.Map
@@ -12,7 +13,7 @@ namespace Source.Ui.Map
         public MapLandsList(Map map)
         {
             this.map = map;
-            Utils.Utils.IncreaseScrollSpeed(this, 600);
+            Scrolls.IncreaseScrollSpeed(this, 600);
             contentContainer.style.paddingBottom = contentContainer.style.paddingTop =
                 contentContainer.style.paddingLeft = contentContainer.style.paddingRight = 5;
         }

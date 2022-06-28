@@ -64,6 +64,7 @@ public class AspectRatioPanel : VisualElement
         style.right = StyleKeyword.Undefined;
         style.bottom = StyleKeyword.Undefined;
         RegisterCallback<AttachToPanelEvent>(OnAttachToPanelEvent);
+        RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanelEvent);
     }
 
 
@@ -73,6 +74,10 @@ public class AspectRatioPanel : VisualElement
         FitToParent();
     }
 
+    void OnDetachFromPanelEvent(DetachFromPanelEvent e)
+    {
+        parent?.UnregisterCallback<GeometryChangedEvent>(OnGeometryChangedEvent);
+    }
 
     void OnGeometryChangedEvent(GeometryChangedEvent e)
     {

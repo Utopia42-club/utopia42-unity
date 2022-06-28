@@ -36,8 +36,8 @@ namespace Source.Ui.AssetInventory.Slots
                 {
                     AssetsInventory.INSTANCE.ReloadTab();
                 }));
-            // currentSlot.slot.RegisterCallback<MouseEnterEvent>(evt => currentSlot.SetLeftActionVisible(true));
-            // currentSlot.slot.RegisterCallback<MouseLeaveEvent>(evt => currentSlot.SetLeftActionVisible(false));
+            currentSlot.RegisterCallback<MouseEnterEvent>(evt => currentSlot.SetLeftActionVisible(true));
+            currentSlot.RegisterCallback<MouseLeaveEvent>(evt => currentSlot.SetLeftActionVisible(false));
         }
     }
 }
