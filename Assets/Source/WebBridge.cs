@@ -53,7 +53,7 @@ namespace Source
 
         public static void CallAsync<T>(string function, object parameter, Action<T> onDone)
         {
-            string paramStr = JsonConvert.SerializeObject(parameter);
+            string paramStr = PrepareParameters(parameter);
             var id = Guid.NewGuid().ToString();
             responseListeners[id] = (string result) =>
             {

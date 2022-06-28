@@ -1,3 +1,5 @@
+using System.Linq;
+using Source.Service.Ethereum;
 using Source.Ui.Dialog;
 using Source.Ui.Snack;
 using Source.Ui.Utils;
@@ -37,6 +39,22 @@ namespace Source.Ui.Login
             exitButton.tooltip = "Exit";
             exitButton.clickable.clicked += () => GameManager.INSTANCE.Exit();
             exitButton.AddManipulator(new ToolTipManipulator());
+            
+            var loading = LoadingLayer.LoadingLayer.Show(root);
+            GameManager.INSTANCE.StartCoroutine(EthNetwork.GetNetworks(_ =>
+                {
+                    loading.Close();
+                },
+                () =>
+                {
+                    SnackService.INSTANCE.Show(
+                        new SnackConfig(
+                            new Toast("Could not load any ETHEREUM networks. Please report the error.",
+                                Toast.ToastType.Error)
+                        )
+                    );
+                    loading.Close();
+                }));
         }
 
         private void Submit()

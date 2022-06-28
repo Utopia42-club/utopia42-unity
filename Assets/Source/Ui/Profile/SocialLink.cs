@@ -8,7 +8,7 @@ namespace Source.Ui.Profile
     {
         public SocialLink(Model.Profile.Link link)
         {
-            AddToClassList("social-link");  
+            AddToClassList("social-link");
             var icon = new VisualElement();
             icon.AddToClassList("social-link__icon");
             UiImageUtils.SetBackground(icon, link.GetMedia().GetIcon());
@@ -17,8 +17,11 @@ namespace Source.Ui.Profile
             var label = new Label();
             label.AddToClassList("social-link__label");
             label.text = link.GetMedia().GetName();
-            label.RegisterCallback<MouseDownEvent>(evt => Application.OpenURL(link.link));
+            if (link.link != null)
+                label.RegisterCallback<MouseDownEvent>(evt => Application.OpenURL(link.link));
             Add(label);
+
+            style.alignItems = Align.Center;
         }
     }
 }

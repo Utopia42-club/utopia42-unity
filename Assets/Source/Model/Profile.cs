@@ -44,7 +44,7 @@ namespace Source.Model
 
         public class Link
         {
-            private static readonly Dictionary<string, Media> medias = new Dictionary<string, Media>()
+            public static readonly Dictionary<string, Media> medias = new()
             {
                 {"TELEGRAM", Media.TELEGRAM},
                 {"DISCORD", Media.DISCORD},

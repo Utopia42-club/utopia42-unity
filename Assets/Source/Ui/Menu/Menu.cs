@@ -56,14 +56,12 @@ public class Menu : MonoBehaviour, UiProvider
         rootPane.Add(tabPane);
         gameManager.stateChange.AddListener(state =>
         {
-            var serviceInitialized = EthereumClientService.INSTANCE.IsInitialized();
             switch (state)
             {
                 case GameManager.State.MENU:
                 {
                     gameObject.SetActive(true);
                     tabPane.OpenTab(0);
-                    tabPane.SetTabButtonsAreaVisibility(serviceInitialized);
                     break;
                 }
                 default:

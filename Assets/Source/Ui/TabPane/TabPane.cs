@@ -48,7 +48,7 @@ namespace Source.Ui.TabPane
             if (!tabBodiesCache.TryGetValue(index, out var tabBodyContent))
             {
                 tabBodyContent = config.visualElementFactory?.Invoke() ?? config.VisualElement;
-                tabBodyContent.style.width = new StyleLength(new Length(95, LengthUnit.Percent));
+                tabBodyContent.style.paddingRight = tabBodyContent.style.paddingLeft = 5;
                 if (useCache)
                     tabBodiesCache[index] = tabBodyContent;
             }
@@ -76,11 +76,6 @@ namespace Source.Ui.TabPane
         public int GetCurrentTabIndex()
         {
             return currentTab;
-        }
-
-        public void SetTabButtonsAreaVisibility(bool visible)
-        {
-            tabButtonsArea.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
         }
 
         public void AddLeftAction(VisualElement visualElement)

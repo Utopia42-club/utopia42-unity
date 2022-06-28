@@ -27,6 +27,8 @@ namespace Source.Ui.Map
         {
             myLands = this.Q<VisualElement>("myLands");
             // myLands.style.width = 0;
+            myLands.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
+
             searchBox = this.Q<VisualElement>("searchBox");
             landsListContainer = this.Q<VisualElement>("landsListContainer");
             menuButton = this.Q<Button>("menuButton");
@@ -40,6 +42,7 @@ namespace Source.Ui.Map
             TextFields.RegisterUiEngagementCallbacksForTextField(searchField);
 
             mapLandsList = new MapLandsList(map);
+            mapLandsList.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
             landsListContainer.Add(mapLandsList);
 
             searchField.RegisterValueChangedCallback(evt =>
