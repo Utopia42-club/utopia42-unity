@@ -13,11 +13,13 @@ namespace Source.Model
         {
             LOADING_PROFILE.name = "Loading...";
             LOADING_PROFILE.imageUrl = null;
+            LOADING_PROFILE.avatarUrl = null;
             LOADING_PROFILE.walletId = "";
             LOADING_PROFILE.links = null;
 
             FAILED_TO_LOAD_PROFILE.name = "Failed to load";
             FAILED_TO_LOAD_PROFILE.imageUrl = null;
+            FAILED_TO_LOAD_PROFILE.avatarUrl = null;
             FAILED_TO_LOAD_PROFILE.walletId = "";
             FAILED_TO_LOAD_PROFILE.links = null;
         }
@@ -27,6 +29,7 @@ namespace Source.Model
         public string bio;
         public List<Link> links;
         public string imageUrl;
+        public string avatarUrl;
 
         public override int GetHashCode()
         {

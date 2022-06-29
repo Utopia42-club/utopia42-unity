@@ -47,7 +47,7 @@ namespace Source
                 Debug.Log("New player detected");
                 var avatar = Instantiate(avatarPrefab, transform);
                 var c = avatar.GetComponent<AvatarController>();
-                c.SetAnotherPlayer();
+                c.SetAnotherPlayer(playerState.walletId);
                 StartCoroutine(UpdatePlayerState(c, playerState));
                 playersMap.TryAdd(playerState.walletId, c);
             }

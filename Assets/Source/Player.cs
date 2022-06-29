@@ -35,7 +35,7 @@ namespace Source
         [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] public GameObject avatarPrefab;
 
-        public float Gravity => gravity; 
+        public float Gravity => gravity;
         public BlockType SelectedBlockType { private set; get; }
 
         private bool sprinting;
@@ -127,7 +127,7 @@ namespace Source
 
             avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatarController = avatar.GetComponent<AvatarController>();
-            avatarController.LoadDefaultAvatar();
+            avatarController.SetMainPlayer();
             characterController = avatar.GetComponent<CharacterController>();
             camContainer.SetParent(avatar.transform);
 
@@ -262,6 +262,11 @@ namespace Source
                 Mathf.Abs(reportVelocityY)));
         }
 
+        public void ReloadAvatar(string avatarUrl)
+        {
+            if (avatarController != null)
+                avatarController.ReloadAvatar(avatarUrl);
+        }
 
         // ReSharper disable Unity.PerformanceAnalysis
         private void DetectFocus()

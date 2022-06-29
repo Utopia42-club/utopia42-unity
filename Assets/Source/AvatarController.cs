@@ -4,6 +4,7 @@ using ReadyPlayerMe;
 using Source.Canvas;
 using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
+using Source.Ui.Profile;
 using Source.Utils;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
@@ -17,7 +18,7 @@ namespace Source
             "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb";
 
         private const int MaxReportDelay = 1; // in seconds 
-        public const float AnimationUpdateRate = 0.1f; // in seconds
+        private const float AnimationUpdateRate = 0.1f; // in seconds
 
         private AvatarLoader avatarLoader;
 
@@ -31,20 +32,18 @@ namespace Source
         private double lastReportedTime;
         private PlayerState lastAnimationState;
         private PlayerState lastReportedState;
-        public PlayerState State { private set; get; }
+        private PlayerState state;
         private Vector3 targetPosition;
         private bool isAnotherPlayer = false;
 
         private int animIDSpeed;
         private int animIDGrounded;
         private int animIDJump;
-
         private int animIDFreeFall;
-        // private int animIDMotionSpeed;
 
         private IEnumerator teleportCoroutine;
 
-        private const int Precision = 4;
+        private const int Precision = 5;
         private static readonly float FloatPrecision = Mathf.Pow(10, -Precision);
 
         // private Vector3 anotherPlayerVelocity;
@@ -57,12 +56,23 @@ namespace Source
             animIDGrounded = Animator.StringToHash("Grounded");
             animIDJump = Animator.StringToHash("Jump");
             animIDFreeFall = Animator.StringToHash("FreeFall");
-            // animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
         }
 
-        public void LoadDefaultAvatar()
+        private void LoadDefaultAvatar()
         {
             ReloadAvatar(DefaultAvatarUrl);
+        }
+
+        private IEnumerator LoadAvatarFromWallet(string walletId)
+        {
+            yield return null;
+            ProfileLoader.INSTANCE.load(walletId, profile =>
+            {
+                if (profile.avatarUrl is {Length: > 0})
+                    ReloadAvatar(profile.avatarUrl);
+                else
+                    LoadDefaultAvatar();
+            }, LoadDefaultAvatar);
         }
 
         private void FixedUpdate()
@@ -84,7 +94,7 @@ namespace Source
                     controller.Move(movement);
                 else
                 {
-                    var xzVelocity = State is not {sprinting: true}
+                    var xzVelocity = state is not {sprinting: true}
                         ? Player.INSTANCE.walkSpeed
                         : Player.INSTANCE.sprintSpeed;
 
@@ -97,7 +107,7 @@ namespace Source
                         Player.INSTANCE.sprintSpeed * Time.fixedDeltaTime); // TODO: enhance falling speed
 
                     var m = new Vector3(xzStepTarget.x, yStepTarget.y, xzStepTarget.z) - currentPosition;
-                    if (!controller.isGrounded && State is {floating: false})
+                    if (!controller.isGrounded && state is {floating: false})
                         m += FloatPrecision * Vector3.down;
                     m = Vectors.Truncate(m, Precision);
 
@@ -106,7 +116,7 @@ namespace Source
 
                     controller.Move(m);
 
-                    if (xzMovementMagnitude < FloatPrecision && PlayerState.Equals(State, lastAnimationState)
+                    if (xzMovementMagnitude < FloatPrecision && PlayerState.Equals(state, lastAnimationState)
                                                              && Time.fixedUnscaledTimeAsDouble -
                                                              lastAnimationUpdateTime > AnimationUpdateRate)
                         SetSpeed(0);
@@ -125,9 +135,16 @@ namespace Source
             }
         }
 
-        public void SetAnotherPlayer()
+        public void SetAnotherPlayer(string playerStateWalletId)
         {
             isAnotherPlayer = true;
+            StartCoroutine(LoadAvatarFromWallet(playerStateWalletId));
+        }
+
+        public void SetMainPlayer()
+        {
+            isAnotherPlayer = false;
+            StartCoroutine(LoadAvatarFromWallet(AuthService.WalletId()));
         }
 
         private void UpdateLookDirection(Vector3 movement)
@@ -163,11 +180,9 @@ namespace Source
         {
             if (playerState == null) return;
             SetPosition(playerState.position.ToVector3());
-            if (playerState.avatarUrl != null && !playerState.avatarUrl.Equals(loadingAvatarUrl))
-                ReloadAvatar(playerState.avatarUrl);
             SetPlayerState(playerState);
 
-            var pos = State.GetPosition();
+            var pos = state.GetPosition();
             var movement = pos - (lastAnimationState?.GetPosition() ?? pos);
             UpdateLookDirection(movement);
 
@@ -179,20 +194,16 @@ namespace Source
 
             if (Avatar != null)
             {
-                // var velocity = movement / (float) (Time.unscaledTimeAsDouble - lastAnimationUpdateTime);
-                // UpdateAnimation(velocity);
-
-
                 var velocity = new Vector3(movement.x, 0, movement.z).normalized *
-                               (State.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed) +
-                               new Vector3(0, movement.y, 0).normalized * State.velocityY; // TODO ?
+                               (state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed) +
+                               new Vector3(0, movement.y, 0).normalized * state.velocityY; // TODO ?
                 UpdateAnimation(velocity);
             }
 
             if (isAnotherPlayer) return;
             if (floatOrJumpStateChanged ||
                 Time.unscaledTimeAsDouble - lastReportedTime >
-                (PlayerState.Equals(lastReportedState, State)
+                (PlayerState.Equals(lastReportedState, state)
                     ? MaxReportDelay
                     : AnimationUpdateRate))
                 ReportToServer();
@@ -201,7 +212,7 @@ namespace Source
 
         private void SetPlayerState(PlayerState state)
         {
-            State = state;
+            this.state = state;
             UpdatedTime = Time.unscaledTimeAsDouble;
         }
 
@@ -215,30 +226,29 @@ namespace Source
                 SetFreeFall(false);
             }
 
-            if (State is {jump: true} && !PlayerState.Equals(State, lastAnimationState))
+            if (state is {jump: true} && !PlayerState.Equals(state, lastAnimationState))
                 SetJump(true);
-            SetFreeFall(Mathf.Abs(velocity.y) > FloatPrecision && !grounded && State is not {floating: true});
+            SetFreeFall(Mathf.Abs(velocity.y) > FloatPrecision && !grounded && state is not {floating: true});
 
             SetGrounded(grounded);
             SetSpeed(xzVelocity.magnitude);
 
-            lastAnimationState = State;
+            lastAnimationState = state;
             lastAnimationUpdateTime = Time.unscaledTimeAsDouble;
         }
 
         private void ReportToServer()
         {
-            BrowserConnector.INSTANCE.ReportPlayerState(State);
-            lastReportedState = State;
+            BrowserConnector.INSTANCE.ReportPlayerState(state);
+            lastReportedState = state;
             lastReportedTime = Time.unscaledTimeAsDouble;
-            Player.INSTANCE.mainPlayerStateReport.Invoke(State);
+            Player.INSTANCE.mainPlayerStateReport.Invoke(state);
         }
 
-        private void ReloadAvatar(string url, Action onDone = null)
+        public void ReloadAvatar(string url, Action onDone = null)
         {
-            if (url == null || url.Equals(loadingAvatarUrl) || url.Equals(lastAnimationState?.avatarUrl) ||
-                remainingAvatarLoadAttempts != 0) return; // TODO?
-            remainingAvatarLoadAttempts = 5;
+            if (url == null || url.Equals(loadingAvatarUrl) || remainingAvatarLoadAttempts != 0) return;
+            remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
             avatarLoader = new AvatarLoader {UseAvatarCaching = true};
@@ -268,7 +278,8 @@ namespace Source
                         break;
                     //retry 
                     default:
-                        Debug.Log("Invalid avatar: " + args.Type);
+                        Debug.Log("Invalid avatar: " + args.Type + " (Loading the default avatar)");
+                        LoadDefaultAvatar();
                         break;
                 }
             };
@@ -308,7 +319,6 @@ namespace Source
             public bool floating;
             public bool jump;
             public bool sprinting;
-            public string avatarUrl;
             public float velocityY;
 
             public PlayerState(string walletId, SerializableVector3 position, bool floating, bool jump, bool sprinting,
@@ -319,7 +329,6 @@ namespace Source
                 this.floating = floating;
                 this.jump = jump;
                 this.sprinting = sprinting;
-                avatarUrl = DefaultAvatarUrl;
                 this.velocityY = velocityY;
             }
 
@@ -332,7 +341,6 @@ namespace Source
             {
                 return !(s1 == null
                          || s2 == null
-                         || !Equals(s1.avatarUrl, s2.avatarUrl)
                          || !Equals(s1.position, s2.position)
                          || s1.floating != s2.floating
                          || s1.jump != s2.jump
