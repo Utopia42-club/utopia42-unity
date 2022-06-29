@@ -228,7 +228,8 @@ namespace Source
 
             if (state is {jump: true} && !PlayerState.Equals(state, lastAnimationState))
                 SetJump(true);
-            SetFreeFall(Mathf.Abs(velocity.y) > FloatPrecision && !grounded && state is not {floating: true});
+            SetFreeFall(Mathf.Abs(velocity.y) > Player.INSTANCE.MinFreeFallSpeed 
+                        && !grounded && state is not {floating: true});
 
             SetGrounded(grounded);
             SetSpeed(xzVelocity.magnitude);
