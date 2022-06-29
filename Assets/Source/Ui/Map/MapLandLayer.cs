@@ -187,7 +187,7 @@ namespace Source.Ui.Map
         {
             var worldService = WorldService.INSTANCE;
             if (!worldService.IsInitialized()) return;
-
+            
             foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
                 Add(new MapLand(land, map));
         }
