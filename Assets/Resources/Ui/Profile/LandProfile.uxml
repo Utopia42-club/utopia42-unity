@@ -27,12 +27,12 @@
                     <ui:Label display-tooltip-when-elided="true" name="idValue" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:Button display-tooltip-when-elided="true" focusable="false" name="editButton" text="Edit" class="utopia-stroked-button-primary" />
+            <ui:Button display-tooltip-when-elided="true" focusable="false" name="editButton" text="Edit" class="utopia-button-primary" />
             <ui:VisualElement name="footer" style="bottom: 0; position: absolute; right: 0; width: 100%; align-items: flex-end;">
                 <ui:VisualElement name="nftLogo" style="background-image: resource(&apos;Icons/nft-logo&apos;); width: 80px; height: 80px;" />
                 <ui:VisualElement name="actions" style="flex-direction: row; width: 100%;">
-                    <ui:Button text="Transfer" display-tooltip-when-elided="true" name="transferButton" class="utopia-stroked-button-primary" style="flex-grow: 1;" />
-                    <ui:Button text="Make NFT" display-tooltip-when-elided="true" name="toggleNftButton" class="utopia-stroked-button-primary" style="flex-grow: 1;" />
+                    <ui:Button text="Transfer" display-tooltip-when-elided="true" name="transferButton" class="utopia-button-primary" style="flex-grow: 1;" />
+                    <ui:Button text="Make NFT" display-tooltip-when-elided="true" name="toggleNftButton" class="utopia-button-primary" style="flex-grow: 1;" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

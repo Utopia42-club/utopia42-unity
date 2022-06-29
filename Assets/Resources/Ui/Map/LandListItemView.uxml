@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
     <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
-    <ui:VisualElement name="root" class="utopia-default-radius utopia-stroked-button-primary" style="flex-direction: row; width: 100%; height: 60px; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px; align-items: center; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px;">
+    <ui:VisualElement name="root" class="utopia-default-radius utopia-button-primary" style="flex-direction: row; width: 100%; height: 60px; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px; align-items: center; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px;">
         <ui:VisualElement name="colorBar" class="utopia-default-radius" style="width: 16px; background-color: rgb(221, 16, 16); height: 100%; margin-right: 5px;" />
         <ui:VisualElement name="details" style="flex-grow: 1;">
             <ui:VisualElement name="top" style="flex-grow: 1; flex-direction: row;">

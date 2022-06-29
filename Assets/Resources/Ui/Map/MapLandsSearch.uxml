@@ -8,7 +8,7 @@
         <ui:VisualElement name="landsListContainer" style="padding-left: 7px; padding-right: 7px; padding-top: 7px; padding-bottom: 7px; flex-grow: 1;" />
     </ui:VisualElement>
     <ui:VisualElement name="searchBox" class="utopia-panel current-location-box" style="justify-content: center; align-items: center; flex-direction: row; position: absolute; top: 10px; width: 290px; left: 10px;">
-        <ui:Button display-tooltip-when-elided="true" enable-rich-text="false" name="menuButton" class="utopia-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/burger-menu&apos;); -unity-background-scale-mode: stretch-to-fill; border-top-left-radius: 2px; border-bottom-left-radius: 2px; border-top-right-radius: 2px; border-bottom-right-radius: 2px;" />
+        <ui:Button display-tooltip-when-elided="true" enable-rich-text="false" name="menuButton" class="utopia-basic-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/burger-menu&apos;); -unity-background-scale-mode: stretch-to-fill; border-top-left-radius: 2px; border-bottom-left-radius: 2px; border-top-right-radius: 2px; border-bottom-right-radius: 2px;" />
         <ui:TextField picking-mode="Ignore" label="Text Field" name="searchField" class="no-label-field" style="flex-grow: 1;" />
     </ui:VisualElement>
 </ui:UXML>

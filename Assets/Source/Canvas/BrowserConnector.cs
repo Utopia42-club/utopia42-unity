@@ -138,7 +138,7 @@ namespace Source.Canvas
             DialogService.INSTANCE.Show(
                 new DialogConfig(label)
                     .WithCancelAction(onCancel)
-                    .WithAction(new DialogAction("Reload", onDone.Invoke, "utopia-stroked-button-secondary"))
+                    .WithAction(new DialogAction("Reload", onDone.Invoke, "utopia-button-secondary"))
                     .WithOnClose(onCancel)
             );
         }

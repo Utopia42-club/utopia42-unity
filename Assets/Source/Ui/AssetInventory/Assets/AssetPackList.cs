@@ -81,7 +81,7 @@ namespace Source.Ui.AssetInventory.Assets
                 AddToClassList("bread-crumb");
                 var backButton = new Button();
                 backButton.AddToClassList("back-button");
-                backButton.AddToClassList("utopia-button-primary");
+                backButton.AddToClassList("utopia-basic-button-primary");
                 backButton.clicked += () => BackRequested();
                 Add(backButton);
                 if (category != null)

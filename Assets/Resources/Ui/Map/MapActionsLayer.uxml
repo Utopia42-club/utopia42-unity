@@ -2,10 +2,10 @@
     <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
     <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
     <ui:VisualElement name="actions" class="utopia-panel" style="position: absolute; right: 5px; bottom: 35px; justify-content: space-around; align-items: center; height: 90px;">
-        <ui:Button display-tooltip-when-elided="true" name="showYourLocationButton" class="utopia-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/gps&apos;); margin-bottom: 3px;" />
+        <ui:Button display-tooltip-when-elided="true" name="showYourLocationButton" class="utopia-basic-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/gps&apos;); margin-bottom: 3px;" />
         <ui:VisualElement name="separator" style="height: 2px; width: 100%; background-color: rgb(255, 255, 255);" />
-        <ui:Button display-tooltip-when-elided="true" name="zoomInButton" class="utopia-button-primary utopia-action-button" style="background-image: url(&apos;project://database/Assets/Images/plus.png?fileID=2800000&amp;guid=fc89270d37cb66b4ea67be8867d89011&amp;type=3#plus&apos;); margin-top: 3px;" />
-        <ui:Button display-tooltip-when-elided="true" name="zoomOutButton" class="utopia-button-primary utopia-action-button" style="background-image: url(&apos;project://database/Assets/Images/minus.png?fileID=2800000&amp;guid=847f8a0ac2b480c43b65e4ac496d78a5&amp;type=3#minus&apos;);" />
+        <ui:Button display-tooltip-when-elided="true" name="zoomInButton" class="utopia-basic-button-primary utopia-action-button" style="background-image: url(&apos;project://database/Assets/Images/plus.png?fileID=2800000&amp;guid=fc89270d37cb66b4ea67be8867d89011&amp;type=3#plus&apos;); margin-top: 3px;" />
+        <ui:Button display-tooltip-when-elided="true" name="zoomOutButton" class="utopia-basic-button-primary utopia-action-button" style="background-image: url(&apos;project://database/Assets/Images/minus.png?fileID=2800000&amp;guid=847f8a0ac2b480c43b65e4ac496d78a5&amp;type=3#minus&apos;);" />
     </ui:VisualElement>
     <ui:VisualElement name="currentLocationBox" class="utopia-panel current-location-box" style="position: absolute; right: 5px; bottom: 5px; height: 27px; justify-content: center; align-items: center; flex-direction: row;">
         <ui:VisualElement style="background-image: resource(&apos;Icons/pin&apos;); width: 20px; height: 20px; margin-left: 3px; margin-right: 3px; margin-top: 2px; margin-bottom: 2px;" />

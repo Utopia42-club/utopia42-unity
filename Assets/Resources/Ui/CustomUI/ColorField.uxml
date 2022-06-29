@@ -4,6 +4,6 @@
     <ui:VisualElement name="root" class="utopia-fields-group utopia-background" style="flex-direction: column;">
         <ui:Label text="Label" name="label" class="utopia-fields-group__label" />
         <ui:VisualElement name="colorPreview" class="utopia-color-field__preview" />
-        <ui:Button display-tooltip-when-elided="true" enable-rich-text="false" name="pickerButton" class="utopia-button-primary" style="background-image: resource(&apos;Icons/color-picker&apos;); position: absolute; right: 5px; top: 10px; width: 30px; height: 30px;" />
+        <ui:Button display-tooltip-when-elided="true" enable-rich-text="false" name="pickerButton" class="utopia-basic-button-primary" style="background-image: resource(&apos;Icons/color-picker&apos;); position: absolute; right: 5px; top: 10px; width: 30px; height: 30px;" />
     </ui:VisualElement>
 </ui:UXML>

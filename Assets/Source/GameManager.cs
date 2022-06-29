@@ -315,7 +315,7 @@ namespace Source
                 var content = new VisualElement();
                 DialogService.INSTANCE.Show(
                     new DialogConfig("Failed to save your lands!", content)
-                        .WithAction(new DialogAction("Retry", Save, "utopia-stroked-button-secondary"))
+                        .WithAction(new DialogAction("Retry", Save, "utopia-button-secondary"))
                         .WithAction(new DialogAction("Ok", () => { SetState(State.PLAYING); }))
                 );
             });

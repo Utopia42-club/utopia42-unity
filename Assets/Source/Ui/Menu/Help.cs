@@ -18,7 +18,7 @@ namespace Source.Ui.Menu
                 text = "Basic shortcuts"
             };
             basicShortcutsButton.clickable.clicked += () => content.ScrollTo(basicShortcuts);
-            basicShortcutsButton.AddToClassList("utopia-button-primary");
+            basicShortcutsButton.AddToClassList("utopia-basic-button-primary");
             basicShortcutsButton.AddToClassList("left-align-text");
             leftBar.Add(basicShortcutsButton);
         }

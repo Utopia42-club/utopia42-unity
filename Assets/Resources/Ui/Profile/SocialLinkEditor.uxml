@@ -5,6 +5,6 @@
     <ui:VisualElement name="root" style="flex-direction: row; align-items: center;">
         <ui:DropdownField label="Media" index="-1" choices="INSTAGRAM, TELEGRAM, DISCORD, FACEBOOK, TWITTER, OTHER" name="typeField" style="flex-grow: 0; width: 165px;" />
         <ui:TextField picking-mode="Ignore" label="Url" name="urlField" style="flex-grow: 2;" />
-        <ui:Button display-tooltip-when-elided="true" enable-rich-text="true" name="deleteButton" class="utopia-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/delete&apos;); -unity-background-scale-mode: stretch-to-fill;" />
+        <ui:Button display-tooltip-when-elided="true" enable-rich-text="true" name="deleteButton" class="utopia-basic-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/delete&apos;); -unity-background-scale-mode: stretch-to-fill;" />
     </ui:VisualElement>
 </ui:UXML>

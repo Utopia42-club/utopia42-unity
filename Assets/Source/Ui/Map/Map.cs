@@ -84,7 +84,7 @@ namespace Source.Ui.Map
                     .WithCancelAction()
                     .WithAction(new DialogAction("Buy",
                         () => GameManager.INSTANCE.Buy(new List<Land> {land})
-                        , "utopia-stroked-button-secondary"))
+                        , "utopia-button-secondary"))
             );
         }
 

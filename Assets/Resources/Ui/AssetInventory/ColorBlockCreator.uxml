@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/UiDocuments/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
-    <ui:Button display-tooltip-when-elided="true" class="utopia-stroked-button-primary right-align-text-button" style="flex-grow: 0; flex-shrink: 1; -unity-text-align: middle-center; flex-direction: row; justify-content: flex-start; align-items: center;">
+    <ui:Button display-tooltip-when-elided="true" class="utopia-button-primary right-align-text-button" style="flex-grow: 0; flex-shrink: 1; -unity-text-align: middle-center; flex-direction: row; justify-content: flex-start; align-items: center;">
         <ui:VisualElement name="image" style="width: 30%; height: 100%; background-color: rgba(0, 0, 0, 0); min-width: 30%; background-image: resource(&apos;BlockIcons/ColorPicker&apos;);" />
         <ui:Label text="Create " display-tooltip-when-elided="true" name="label" style="flex-grow: 1; font-size: 16px; -unity-font-style: bold;" />
         <ui:VisualElement name="arrow" style="width: 10%; height: 30px; background-image: resource(&apos;Icons/add&apos;); min-width: 10%;" />

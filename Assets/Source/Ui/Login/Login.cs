@@ -92,7 +92,7 @@ namespace Source.Ui.Login
                         SnackService.INSTANCE.Show(new SnackConfig(
                             new Toast("Invalid Wallet address", Toast.ToastType.Error)
                         ));
-                }, "utopia-stroked-button-secondary"))
+                }, "utopia-button-secondary"))
             );
         }
 

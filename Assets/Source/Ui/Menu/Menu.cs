@@ -83,7 +83,7 @@ public class Menu : MonoBehaviour, UiProvider
         tabPane.AddLeftAction(exitButton);
 
         closeButton = new Button();
-        closeButton.AddToClassList("utopia-stroked-button-primary");
+        closeButton.AddToClassList("utopia-button-primary");
         closeButton.AddToClassList("utopia-action-text-button");
         closeButton.text = "Back to game";
         closeButton.style.marginRight = 0;

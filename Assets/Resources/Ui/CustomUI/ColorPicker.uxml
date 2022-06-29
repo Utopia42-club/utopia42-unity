@@ -10,7 +10,7 @@
         <ui:SliderInt picking-mode="Ignore" label="Blue" value="0" high-value="255" show-input-field="true" name="blue" />
         <ui:VisualElement name="footer" style="flex-direction: row;">
             <ui:TextField picking-mode="Ignore" label="Text Field" name="hexField" readonly="false" class="no-label-field" style="flex-grow: 1;" />
-            <ui:Button text="Submit" display-tooltip-when-elided="true" name="submitButton" class="utopia-stroked-button-primary" style="white-space: normal;" />
+            <ui:Button text="Submit" display-tooltip-when-elided="true" name="submitButton" class="utopia-button-primary" style="white-space: normal;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

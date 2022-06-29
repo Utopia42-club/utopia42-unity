@@ -86,7 +86,7 @@ namespace Source.Ui.Dialog
                     if (action.StyleClass != null)
                         button.AddToClassList(action.StyleClass);
                     else
-                        button.AddToClassList("utopia-stroked-button-primary");
+                        button.AddToClassList("utopia-button-primary");
                     button.AddToClassList("utopia-action-text-button");
                     actions.Add(button);
                 }
