@@ -11,6 +11,7 @@ using Source.Ui.Dialog;
 using Source.Ui.Login;
 using Source.Ui.Map;
 using Source.Ui.Profile;
+using Source.Ui.Snack;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
@@ -319,12 +320,18 @@ namespace Source
                 );
             });
 
-
             var lands = Player.INSTANCE.GetOwnedLands();
             if (lands == null || lands.Count == 0) yield break;
             var wallet = AuthService.WalletId();
             var service = WorldService.INSTANCE;
-            if (!service.HasChange()) yield break;
+            if (!service.HasChange())
+            {
+                SnackService.INSTANCE.Show(new SnackConfig(
+                    new Toast("Lands are already saved", Toast.ToastType.Info)
+                ).WithCloseButtonVisible(false));
+                yield break;
+            }
+
             SetState(State.LOADING);
             Loading.INSTANCE.UpdateText("Preparing your changes...");
 

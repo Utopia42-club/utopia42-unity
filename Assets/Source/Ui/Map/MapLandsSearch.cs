@@ -27,7 +27,7 @@ namespace Source.Ui.Map
         {
             myLands = this.Q<VisualElement>("myLands");
             // myLands.style.width = 0;
-            myLands.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
+            myLands.RegisterCallback<ClickEvent>(evt => evt.StopImmediatePropagation());
 
             searchBox = this.Q<VisualElement>("searchBox");
             landsListContainer = this.Q<VisualElement>("landsListContainer");
@@ -36,13 +36,14 @@ namespace Source.Ui.Map
 
             saveButton = this.Q<Button>("saveLandsButton");
             saveButton.clickable.clicked += () => GameManager.INSTANCE.Save();
-
+            saveButton.RegisterCallback<ClickEvent>(evt => evt.StopImmediatePropagation());
+            
             searchField = this.Q<TextField>("searchField");
             TextFields.SetPlaceHolderForTextField(searchField, "Search");
             TextFields.RegisterUiEngagementCallbacksForTextField(searchField);
 
             mapLandsList = new MapLandsList(map);
-            mapLandsList.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
+            mapLandsList.RegisterCallback<ClickEvent>(evt => evt.StopImmediatePropagation());
             landsListContainer.Add(mapLandsList);
 
             searchField.RegisterValueChangedCallback(evt =>
@@ -88,7 +89,7 @@ namespace Source.Ui.Map
 
         private void ToggleMyLandsList()
         {
-            saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
+            // saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
             myLands.style.display = isListOpen ? DisplayStyle.None : DisplayStyle.Flex;
             isListOpen = !isListOpen;
             if (isListOpen)

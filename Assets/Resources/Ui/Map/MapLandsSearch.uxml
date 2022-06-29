@@ -1,13 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
     <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
+    <ui:Button text="Save Lands" display-tooltip-when-elided="true" name="saveLandsButton" class="utopia-stroked-button-primary" style="width: 110px; position: absolute; bottom: 5px; left: 5px; height: 30px;" />
     <ui:VisualElement name="myLands" class="utopia-panel" style="position: absolute; top: 5px; left: 5px; width: 300px; display: none; transition-duration: 500ms; transition-delay: 0ms; transition-property: all; transition-timing-function: ease; bottom: 5px;">
         <ui:VisualElement name="emptySpace" style="height: 46px; min-height: 46px;" />
         <ui:Label text="Your Lands:" display-tooltip-when-elided="true" class="utopia-text-h1" style="left: 5px;" />
         <ui:VisualElement name="landsListContainer" style="padding-left: 7px; padding-right: 7px; padding-top: 7px; padding-bottom: 7px; flex-grow: 1;" />
-        <ui:VisualElement name="actions" style="align-items: flex-end; height: 40px; min-height: 40px;">
-            <ui:Button text="Save my lands" display-tooltip-when-elided="true" name="saveLandsButton" class="utopia-stroked-button-primary" style="flex-direction: column; margin-left: 5px; margin-bottom: 5px; margin-right: 5px; margin-top: 5px; width: 40%;" />
-        </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="searchBox" class="utopia-panel current-location-box" style="justify-content: center; align-items: center; flex-direction: row; position: absolute; top: 10px; width: 290px; left: 10px;">
         <ui:Button display-tooltip-when-elided="true" enable-rich-text="false" name="menuButton" class="utopia-button-primary utopia-action-button" style="background-image: resource(&apos;Icons/burger-menu&apos;); -unity-background-scale-mode: stretch-to-fill; border-top-left-radius: 2px; border-bottom-left-radius: 2px; border-top-right-radius: 2px; border-bottom-right-radius: 2px;" />
