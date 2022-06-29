@@ -45,9 +45,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53b1622893cb4ae2977e5ea5c650762b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  avatarPrefab: {fileID: 1782702501690864755, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
-  positionChangeThreshold: 0.1
-  cameraRotationThreshold: 0.1
 --- !u!143 &6712077085746196061
 CharacterController:
   m_ObjectHideFlags: 0

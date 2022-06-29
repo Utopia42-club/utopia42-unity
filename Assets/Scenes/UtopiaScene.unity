@@ -304,8 +304,8 @@ MonoBehaviour:
   cam: {fileID: 963194228}
   camContainer: {fileID: 828577561}
   world: {fileID: 1828913042}
-  walkSpeed: 6
-  sprintSpeed: 12
+  walkSpeed: 3
+  sprintSpeed: 6
   jumpHeight: 1
   sprintJumpHeight: 1.5
   gravity: -9.8
@@ -331,6 +331,9 @@ MonoBehaviour:
   cameraContainerHeight: 1.74
   cameraZOffset: 3.5
   viewModeChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  mainPlayerStateReport:
     m_PersistentCalls:
       m_Calls: []
 --- !u!114 &144663242
