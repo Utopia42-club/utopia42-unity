@@ -25,8 +25,8 @@ namespace Source
         [SerializeField] private Transform cam;
         [SerializeField] private Transform camContainer;
         [SerializeField] private World world;
-        [SerializeField] public float walkSpeed = 6f;
-        [SerializeField] public float sprintSpeed = 12f;
+        [SerializeField] public float walkSpeed = 3f;
+        [SerializeField] public float sprintSpeed = 6f;
         [SerializeField] private float jumpHeight = 2;
         [SerializeField] private float sprintJumpHeight = 2.5f;
         [SerializeField] private float gravity = -9.8f;
@@ -35,6 +35,7 @@ namespace Source
         [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] public GameObject avatarPrefab;
 
+        public float Gravity => gravity; 
         public BlockType SelectedBlockType { private set; get; }
 
         private bool sprinting;
@@ -88,7 +89,7 @@ namespace Source
 
         [SerializeField] private float cameraContainerHeight;
         [SerializeField] private float cameraZOffset;
-        
+
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
         public UnityEvent<ViewMode> viewModeChanged;
 
@@ -106,7 +107,9 @@ namespace Source
         public Vector3 PossiblePlaceMetaBlockPos { get; private set; }
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
         public Land HighlightLand => highlightLand;
-        
+
+        public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport = new();
+
         private void Start()
         {
             blockSelectionController = GetComponent<BlockSelectionController>();
@@ -230,20 +233,22 @@ namespace Source
             if (characterController.isGrounded && velocity.y < 0 || floating)
                 velocity.y = 0f;
 
-            var xzVelocity = moveDirection * (sprinting ? sprintSpeed : walkSpeed);
-            avatarController.Move(xzVelocity * Time.fixedDeltaTime);
+            var xzVelocity = moveDirection.normalized * (sprinting ? sprintSpeed : walkSpeed);
+            characterController.Move(xzVelocity * Time.fixedDeltaTime);
 
             if (jumpRequest)
             {
                 // if (!floating && isGrounded)
-                    // avatarController.JumpAnimation();
+                // avatarController.JumpAnimation();
                 velocity.y = Mathf.Sqrt((sprinting ? sprintJumpHeight : jumpHeight) * -2f * gravity);
             }
 
             if (!floating && !characterController.isGrounded)
                 velocity.y += gravity * Time.fixedDeltaTime;
 
-            avatarController.Move(velocity * Time.fixedDeltaTime);
+            var reportVelocityY = velocity.y;
+
+            characterController.Move(velocity * Time.fixedDeltaTime);
 
             if ((characterController.collisionFlags & CollisionFlags.Above) != 0)
                 velocity.y = 0;
@@ -253,7 +258,8 @@ namespace Source
             playerPos = Vectors.TruncateFloor(pos);
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
-                AuthService.WalletId(), new SerializableVector3(pos), floating, jumpRequest, characterController.isGrounded));
+                AuthService.WalletId(), new SerializableVector3(pos), floating, jumpRequest, sprinting,
+                Mathf.Abs(reportVelocityY)));
         }
 
 
@@ -488,7 +494,7 @@ namespace Source
 
         public Vector3 GetPosition()
         {
-            return avatarController.GetPosition();
+            return avatarController.CurrentPosition();
         }
 
         public bool PluginWriteAllowed(out string warnMsg)
