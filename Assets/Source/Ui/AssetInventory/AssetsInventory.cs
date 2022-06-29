@@ -2,12 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Source.Canvas;
 using Source.MetaBlocks;
 using Source.Model;
+using Source.Service;
 using Source.Ui.AssetInventory.Assets;
 using Source.Ui.AssetInventory.Models;
 using Source.Ui.AssetInventory.Slots;
+using Source.Ui.CustomUi;
 using Source.Ui.Menu;
+using Source.Ui.Popup;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
 using Source.Utils;
@@ -42,8 +46,7 @@ namespace Source.Ui.AssetInventory
         private InventorySlot selectedSlot;
         public readonly UnityEvent<SlotInfo> selectedSlotChanged = new();
 
-        [SerializeField] private ColorSlotPicker colorSlotPicker;
-        private Foldout colorBlocksFoldout;
+        private PackFoldout<VisualElement> colorBlocksFoldout;
         private List<FavoriteItem> favoriteItems;
         private TabPane.TabPane tabPane;
         private VisualElement inventoryContainer;
@@ -174,18 +177,10 @@ namespace Source.Ui.AssetInventory
             var metaBlocksFoldout = CreateBlocksPackFoldout("Meta Blocks",
                 Blocks.GetBlockTypes().Where(blockType => blockType is MetaBlockType).ToList());
 
-            colorSlotPicker.SetOnColorCreated(color =>
-            {
-                ColorBlocks.SaveBlockColor(color);
-                UpdateUserColorBlocks();
-            });
-            colorSlotPicker.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
-
             scrollView.Add(regularBlocksFoldout);
             scrollView.Add(metaBlocksFoldout);
 
             colorBlocksFoldout = CreateColorBlocksFoldout();
-            UpdateUserColorBlocks();
             scrollView.Add(colorBlocksFoldout);
         }
 
@@ -195,6 +190,7 @@ namespace Source.Ui.AssetInventory
             LoadFavoriteItems(() =>
             {
                 var scrollView = tabPane.GetTabBody().Q<ScrollView>("favorites");
+                scrollView.Clear();
                 Scrolls.IncreaseScrollSpeed(scrollView);
                 var container = new VisualElement();
                 for (int i = 0; i < favoriteItems.Count; i++)
@@ -204,7 +200,6 @@ namespace Source.Ui.AssetInventory
                     GridUtils.SetChildPosition(slot.VisualElement(), 80, 80, i, 3);
                     container.Add(slot.VisualElement());
                 }
-
                 GridUtils.SetContainerSize(container, favoriteItems.Count, 90, 3);
                 scrollView.Add(container);
             }, () =>
@@ -279,21 +274,38 @@ namespace Source.Ui.AssetInventory
 
         private void UpdateUserColorBlocks()
         {
-            if (colorBlocksFoldout.childCount == 2)
-                colorBlocksFoldout.RemoveAt(1);
-            var colorSlotsContainer = CreateUserColorBlocks();
-            colorBlocksFoldout.contentContainer.Add(colorSlotsContainer);
-            colorBlocksFoldout.contentContainer.style.height = colorSlotsContainer.style.height.value.value + 75;
+            colorBlocksFoldout.value = false;
+            colorBlocksFoldout.value = true;
         }
 
-        private Foldout CreateColorBlocksFoldout()
+        private PackFoldout<VisualElement> CreateColorBlocksFoldout()
         {
             var foldout = new PackFoldout<VisualElement>("Color Blocks", true);
-            var colorBlockCreator = Utils.Utils.Create("Ui/AssetInventory/ColorBlockCreator");
-            var colorPickerToggle = colorBlockCreator.Q<Button>();
-            colorPickerToggle.style.height = 70;
-            colorPickerToggle.clickable.clicked += () => colorSlotPicker.ToggleColorPicker();
-            foldout.contentContainer.Add(colorPickerToggle);
+            foldout.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue)
+                {
+                    var colorBlockCreator = Utils.Utils.Create("Ui/AssetInventory/ColorBlockCreator");
+                    var colorPickerToggle = colorBlockCreator.Q<Button>();
+                    colorPickerToggle.style.height = 70;
+                    colorPickerToggle.clickable.clicked += () =>
+                    {
+                        var popupId = 0;
+                        var colorPicker = new ColorPicker(color =>
+                        {
+                            ColorBlocks.SaveBlockColor(color);
+                            UpdateUserColorBlocks();
+                            PopupService.INSTANCE.Close(popupId);
+                        });
+                        colorPicker.SetColor(Color.white);
+                        popupId = PopupService.INSTANCE.Show(
+                            new PopupConfig(colorPicker, colorPickerToggle, Side.TopLeft)
+                                .WithWidth(250));
+                    };
+                    colorBlocksFoldout.contentContainer.Add(colorPickerToggle);
+                    colorBlocksFoldout.contentContainer.Add(CreateUserColorBlocks());
+                }
+            });
             return foldout;
         }
 
@@ -327,19 +339,28 @@ namespace Source.Ui.AssetInventory
         {
             var foldout = new PackFoldout<VisualElement>(name, true);
             foldout.contentContainer.AddToClassList("slots-wrapper");
-            var size = blocks.Count;
-            if (size <= 0) return foldout;
-            for (var i = 0; i < size; i++)
+            foldout.RegisterValueChangedCallback(evt =>
             {
-                var slot = new BlockInventorySlot();
-                var slotInfo = new SlotInfo(blocks[i]);
-                slot.SetSlotInfo(slotInfo);
-                slot.SetSize(80);
-                SetupFavoriteAction(slot);
-                foldout.contentContainer.Add(slot.VisualElement());
-            }
+                if (evt.newValue)
+                {
+                    var content = new VisualElement();
+                    content.AddToClassList("slots-wrapper");
+                    var size = blocks.Count;
+                    if (size <= 0) return;
+                    for (var i = 0; i < size; i++)
+                    {
+                        var slot = new BlockInventorySlot();
+                        var slotInfo = new SlotInfo(blocks[i]);
+                        slot.SetSlotInfo(slotInfo);
+                        slot.SetSize(80);
+                        SetupFavoriteAction(slot);
+                        content.Add(slot.VisualElement());
+                    }
 
-            GridUtils.SetContainerSize(foldout.contentContainer, size, 90, 3);
+                    GridUtils.SetContainerSize(content, size, 90, 3);
+                    foldout.SetContent(content);
+                }
+            });
             return foldout;
         }
 
