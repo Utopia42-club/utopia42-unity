@@ -217,7 +217,7 @@ namespace Source
 
             if (State is {jump: true} && !PlayerState.Equals(State, lastAnimationState))
                 SetJump(true);
-            SetFreeFall(Mathf.Abs(velocity.y) > 0.1 && !grounded && State is not {floating: true});
+            SetFreeFall(Mathf.Abs(velocity.y) > FloatPrecision && !grounded && State is not {floating: true});
 
             SetGrounded(grounded);
             SetSpeed(xzVelocity.magnitude);
@@ -309,7 +309,7 @@ namespace Source
             public bool jump;
             public bool sprinting;
             public string avatarUrl;
-            // public float velocityY;
+            public float velocityY;
 
             public PlayerState(string walletId, SerializableVector3 position, bool floating, bool jump, bool sprinting,
                 float velocityY)
@@ -320,7 +320,7 @@ namespace Source
                 this.jump = jump;
                 this.sprinting = sprinting;
                 avatarUrl = DefaultAvatarUrl;
-                // this.velocityY = velocityY;
+                this.velocityY = velocityY;
             }
 
             public Vector3 GetPosition()
