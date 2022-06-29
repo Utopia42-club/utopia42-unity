@@ -76,24 +76,20 @@ public class Menu : MonoBehaviour, UiProvider
     private void CreateActions()
     {
         exitButton = new Button();
-        exitButton.AddToClassList("utopia-button-primary");
-        exitButton.AddToClassList("utopia-action-button");
-        UiImageUtils.SetBackground(exitButton, Resources.Load<Sprite>("Icons/exit"));
+        exitButton.AddToClassList("utopia-stroked-button-primary");
+        exitButton.AddToClassList("utopia-action-text-button");
         exitButton.clickable.clicked += () => gameManager.Exit();
-        exitButton.tooltip = "Exit";
-        exitButton.AddManipulator(new ToolTipManipulator());
+        exitButton.text = "Exit";
         tabPane.AddLeftAction(exitButton);
 
         closeButton = new Button();
-        closeButton.AddToClassList("utopia-button-primary");
-        closeButton.AddToClassList("utopia-action-button");
-        UiImageUtils.SetBackground(closeButton, Resources.Load<Sprite>("Icons/close"));
+        closeButton.AddToClassList("utopia-stroked-button-primary");
+        closeButton.AddToClassList("utopia-action-text-button");
+        closeButton.text = "Back to game";
         closeButton.clickable.clicked += () =>
         {
             gameManager.ReturnToGame();
         };
-        // closeButton.tooltip = "Close";
-        // closeButton.AddManipulator(new ToolTipManipulator(Side.BottomLeft));
         tabPane.AddRightAction(closeButton);
     }
 

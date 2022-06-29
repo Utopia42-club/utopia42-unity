@@ -88,3 +88,10 @@
     width: 20;
     height: 20;
 }
+
+.utopia-action-text-button {
+    padding-top: 5;
+    padding-bottom: 5;
+    margin-left: 0;
+    margin-right: 0;
+}
