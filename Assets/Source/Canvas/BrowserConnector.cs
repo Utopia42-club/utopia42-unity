@@ -15,12 +15,18 @@ namespace Source.Canvas
     {
         private string currentUrl;
 
-
         public void EditProfile(Action onDone, Action onCancel)
         {
-            CallUrl("editProfile", onDone, onCancel,
-                "Edit your profile on your browser. Click RELOAD when it is done.");
+            const string msg = "Edit your profile on your browser. Click RELOAD when it is done.";
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("editProfile", null);
+                OpenDialog(onDone, onCancel, msg);
+            }
+            else
+                CallUrl("editProfile", onDone, onCancel, msg);
         }
+
 
         public void Transfer(long landId, Action onDone, Action onCancel)
         {
