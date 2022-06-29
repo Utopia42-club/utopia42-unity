@@ -13,7 +13,11 @@ namespace Source
         public static void GetAuthToken(Action<string> onDone, bool forceValid = false)
         {
             if (!WebBridge.IsPresent())
+            {
+                onDone(null);
                 return; //FIXME
+            }
+
             WebBridge.CallAsync<string>("getAuthToken", forceValid, onDone.Invoke);
         }
 

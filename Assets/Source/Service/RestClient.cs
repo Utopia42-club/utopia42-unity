@@ -9,44 +9,58 @@ namespace Source.Service
 {
     public class RestClient
     {
-        internal static IEnumerator Post<TB>(string url, TB body, Action success, Action failure)
+        private const string TOKEN_HEADER_KEY = "X-Auth-Token";
+
+        internal static IEnumerator Post<TB>(string url, TB body, Action success, Action failure,
+            string authToken = null)
         {
             using (var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
             {
                 webRequest.SetRequestHeader("Content-Type", "application/json");
                 webRequest.SetRequestHeader("Accept", "*/*");
+                if (authToken != null)
+                    webRequest.SetRequestHeader(TOKEN_HEADER_KEY, authToken);
                 yield return ExecuteRequest(webRequest, body, success, failure);
             }
         }
 
-        internal static IEnumerator Post<TB, TR>(string url, TB body, Action<TR> success, Action failure)
+        internal static IEnumerator Post<TB, TR>(string url, TB body, Action<TR> success, Action failure,
+            string authToken = null)
         {
             using (var webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
             {
                 webRequest.SetRequestHeader("Content-Type", "application/json");
                 webRequest.SetRequestHeader("Accept", "*/*");
+                if (authToken != null)
+                    webRequest.SetRequestHeader(TOKEN_HEADER_KEY, authToken);
                 yield return ExecuteRequest(webRequest, body, success, failure);
             }
         }
 
-        internal static IEnumerator Get<TR>(string url, Action<TR> success, Action failure)
+        internal static IEnumerator Get<TR>(string url, Action<TR> success, Action failure,
+            string authToken = null)
         {
             using (var webRequest = UnityWebRequest.Get(url))
             {
                 webRequest.SetRequestHeader("Accept", "*/*");
+                if (authToken != null)
+                    webRequest.SetRequestHeader(TOKEN_HEADER_KEY, authToken);
                 yield return ExecuteRequest(webRequest, success, failure);
             }
         }
-        
-        internal static IEnumerator Delete(string url, Action success, Action failure)
+
+        internal static IEnumerator Delete(string url, Action success, Action failure,
+            string authToken = null)
         {
             using (var webRequest = UnityWebRequest.Delete(url))
             {
                 webRequest.SetRequestHeader("Accept", "*/*");
+                if (authToken != null)
+                    webRequest.SetRequestHeader(TOKEN_HEADER_KEY, authToken);
                 yield return ExecuteRequest(webRequest, success, failure);
             }
         }
-        
+
         internal static IEnumerator ExecuteRequest<TB, TR>(UnityWebRequest webRequest, TB body, Action<TR> success,
             Action failure)
         {

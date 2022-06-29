@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Source.Service;
 using Source.Ui.AssetInventory.Models;
 using UnityEngine.UIElements;
 

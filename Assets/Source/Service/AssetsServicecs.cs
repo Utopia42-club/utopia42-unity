@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Source.Service;
 using Source.Ui.AssetInventory.Models;
 using Source.Utils;
 using UnityEngine;
 
-namespace Source.Ui.AssetInventory
+namespace Source.Service
 {
     public class AssetsRestClient
     {
@@ -81,26 +80,58 @@ namespace Source.Ui.AssetInventory
         public IEnumerator GetFavoriteItems(SearchCriteria searchCriteria, Action<List<FavoriteItem>> consumer,
             Action failed)
         {
+            var done = false;
+            string token = null;
+            AuthService.GetAuthToken(t =>
+            {
+                done = true;
+                token = t;
+            });
+            yield return new WaitUntil(() => done);
             var url = Constants.ApiURL + "/assets/favorite-items";
-            yield return RestClient.Post(url, searchCriteria, consumer, failed);
+            yield return RestClient.Post(url, searchCriteria, consumer, failed, token);
         }
 
         public IEnumerator CreateFavoriteItem(FavoriteItem favoriteItem, Action<FavoriteItem> consumer, Action failed)
         {
+            var done = false;
+            string token = null;
+            AuthService.GetAuthToken(t =>
+            {
+                done = true;
+                token = t;
+            });
+            yield return new WaitUntil(() => done);
             var url = Constants.ApiURL + "/assets/favorite-items/create";
-            yield return RestClient.Post(url, favoriteItem, consumer, failed);
+            yield return RestClient.Post(url, favoriteItem, consumer, failed, token);
         }
-        
+
         public IEnumerator UpdateFavoriteItem(FavoriteItem favoriteItem, Action success, Action failed)
         {
+            var done = false;
+            string token = null;
+            AuthService.GetAuthToken(t =>
+            {
+                done = true;
+                token = t;
+            });
+            yield return new WaitUntil(() => done);
             var url = Constants.ApiURL + "/assets/favorite-items/update";
-            yield return RestClient.Post(url, favoriteItem, success, failed);
+            yield return RestClient.Post(url, favoriteItem, success, failed, token);
         }
 
         public IEnumerator DeleteFavoriteItem(int id, Action success, Action failed)
         {
+            var done = false;
+            string token = null;
+            AuthService.GetAuthToken(t =>
+            {
+                done = true;
+                token = t;
+            });
+            yield return new WaitUntil(() => done);
             var url = Constants.ApiURL + "/assets/favorite-items/" + id;
-            yield return RestClient.Delete(url, success, failed);
+            yield return RestClient.Delete(url, success, failed, token);
         }
     }
 }
