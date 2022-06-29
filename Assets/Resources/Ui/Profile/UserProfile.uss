@@ -1,6 +1,7 @@
 .social-link {
     flex-direction: row;
     flex-grow: 1;
+    justify-content: center;
 }
 
 .social-link__label {

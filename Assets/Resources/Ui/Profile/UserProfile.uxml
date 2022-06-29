@@ -11,8 +11,6 @@
             </ui:VisualElement>
             <ui:ScrollView name="body" horizontal-scroller-visibility="Hidden" style="padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px; flex-grow: 1;" />
         </ui:VisualElement>
-        <ui:VisualElement style="align-items: center; flex-direction: row;">
-            <ui:VisualElement name="socialLinks" style="height: 50px; max-height: 50px; margin-left: 10px; margin-right: 10px; flex-grow: 1;" />
-        </ui:VisualElement>
+        <ui:VisualElement name="socialLinks" style="height: 50px; max-height: 50px; margin-left: 10px; margin-right: 10px; flex-grow: 1; flex-direction: row; flex-wrap: wrap; justify-content: center;" />
     </ui:VisualElement>
 </ui:UXML>

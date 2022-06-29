@@ -72,7 +72,6 @@ namespace Source.Ui.Snack
                 snack.RegisterCallback<MouseEnterEvent>(evt =>
                 {
                     StopCoroutine(closeCoroutine);
-                    closeCoroutine.Reset();
                 });
                 snack.RegisterCallback<MouseLeaveEvent>(evt => StartCoroutine(closeCoroutine));
                 StartCoroutine(closeCoroutine);

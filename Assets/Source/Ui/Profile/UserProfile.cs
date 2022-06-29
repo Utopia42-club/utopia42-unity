@@ -72,10 +72,7 @@ namespace Source.Ui.Profile
                 var link = profile.links[index];
                 var socialLink = new SocialLink(link);
                 socialLinks.Add(socialLink);
-                GridUtils.SetChildPosition(socialLink, 120, 40, index, 6);
             }
-
-            GridUtils.SetContainerSize(socialLinks, profile.links.Count, 40, 6);
 
             var editButton = this.Q<Button>("userEditButton");
             if (profile.walletId.Equals(AuthService.WalletId()))
