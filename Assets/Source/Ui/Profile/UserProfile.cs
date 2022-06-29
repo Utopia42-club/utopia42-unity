@@ -67,6 +67,7 @@ namespace Source.Ui.Profile
             }
 
             var socialLinks = this.Q<VisualElement>("socialLinks");
+            socialLinks.Clear();
             for (var index = 0; index < profile.links.Count; index++)
             {
                 var link = profile.links[index];
@@ -77,6 +78,7 @@ namespace Source.Ui.Profile
             var editButton = this.Q<Button>("userEditButton");
             if (profile.walletId.Equals(AuthService.WalletId()))
             {
+                editButton.clickable = new Clickable(() => { });
                 editButton.clickable.clicked += () => BrowserConnector.INSTANCE.EditProfile(() =>
                 {
                     ProfileLoader.INSTANCE.InvalidateProfile(profile.walletId);

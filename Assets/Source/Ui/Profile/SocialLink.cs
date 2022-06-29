@@ -1,3 +1,4 @@
+using Source.Ui.Popup;
 using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -18,7 +19,11 @@ namespace Source.Ui.Profile
             label.AddToClassList("social-link__label");
             label.text = link.GetMedia().GetName();
             if (link.link != null)
+            {
                 label.RegisterCallback<MouseDownEvent>(evt => Application.OpenURL(link.link));
+                label.tooltip = link.link;
+                label.AddManipulator(new ToolTipManipulator(Side.TopRight));
+            }
             Add(label);
 
             style.alignItems = Align.Center;
