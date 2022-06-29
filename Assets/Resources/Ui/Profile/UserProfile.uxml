@@ -8,6 +8,7 @@
                 <ui:VisualElement name="profileImage" style="width: 130px; height: 130px; background-image: url(&apos;project://database/Assets/Images/user.png?fileID=2800000&amp;guid=65e6c50c85dfba44895e64de548958bc&amp;type=3#user&apos;);" />
                 <ui:Label text="No Profile Found" display-tooltip-when-elided="true" name="name" class="utopia-text-h1" style="-unity-text-align: upper-left; margin-left: 0; padding-left: 0; white-space: normal;" />
                 <ui:Button text="Edit profile" display-tooltip-when-elided="true" name="userEditButton" class="utopia-button-primary" style="width: 130px; margin-left: 0; margin-right: 0;" />
+                <ui:Button text="Open Avatar Designer" display-tooltip-when-elided="true" name="openAvatarDesigner" enable-rich-text="true" class="utopia-button-primary" style="width: 130px; margin-left: 0; margin-right: 0; font-size: 12px;" />
             </ui:VisualElement>
             <ui:ScrollView name="body" horizontal-scroller-visibility="Hidden" style="padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px; flex-grow: 1;" />
         </ui:VisualElement>

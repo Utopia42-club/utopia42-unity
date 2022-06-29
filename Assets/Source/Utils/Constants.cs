@@ -13,5 +13,7 @@ namespace Source.Utils
         public static readonly string NetsURL = ApiURL + "/static/networks.json";
         // public static readonly string NetsURL = "https://api.utopia42.club" + "/static/networks.json";
         public static readonly string WebAppRpcURL = WebAppBaseURL + "/rpc";
+        
+        public static readonly string AvatarDesignerURL = "https://utopia42club.readyplayer.me/avatar";
     }
 }

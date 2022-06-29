@@ -92,6 +92,17 @@ namespace Source.Ui.Profile
             {
                 editButton.style.display = DisplayStyle.None;
             }
+
+            var designerButton = this.Q<Button>("openAvatarDesigner");
+            if (profile.walletId.Equals(AuthService.WalletId()))
+            {
+                designerButton.clickable = new Clickable(() => { });
+                designerButton.clickable.clicked += () => Application.OpenURL(Constants.AvatarDesignerURL);
+            }
+            else
+            {
+                designerButton.style.display = DisplayStyle.None;
+            }
         }
     }
 }
