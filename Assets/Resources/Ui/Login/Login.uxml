@@ -1,7 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
     <ui:VisualElement class="utopia-background" style="flex-grow: 1; align-items: center; width: 100%; justify-content: center;">
-        <ui:Button display-tooltip-when-elided="true" name="exitButton" class="utopia-button-primary utopia-action-button" style="position: absolute; left: 2px; top: 2px; background-image: resource(&apos;Icons/exit&apos;);" />
         <ui:VisualElement name="root" style="flex-grow: 1; justify-content: space-between; width: 60%; max-width: 600px; flex-direction: row; align-items: center;">
             <ui:VisualElement name="walletLoginTile" class="utopia-tile" style="flex-grow: 0; flex-direction: column; height: 300px; width: 45%;">
                 <ui:VisualElement style="flex-grow: 1; padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px;">

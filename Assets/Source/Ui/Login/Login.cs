@@ -18,7 +18,6 @@ namespace Source.Ui.Login
         private Vector3? startingPosition = null;
         private VisualElement root;
         private VisualElement walletLoginTile;
-        private Button exitButton;
 
         private void OnEnable()
         {
@@ -35,11 +34,6 @@ namespace Source.Ui.Login
             submitButton = root.Q<Button>("enterButton");
             submitButton.clickable.clicked += Submit;
 
-            exitButton = root.Q<Button>("exitButton");
-            exitButton.tooltip = "Exit";
-            exitButton.clickable.clicked += () => GameManager.INSTANCE.Exit();
-            exitButton.AddManipulator(new ToolTipManipulator());
-            
             var loading = LoadingLayer.LoadingLayer.Show(root);
             GameManager.INSTANCE.StartCoroutine(EthNetwork.GetNetworks(_ =>
                 {
