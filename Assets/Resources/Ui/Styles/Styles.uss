@@ -26,7 +26,8 @@
     --darker-accent-color: rgb(180, 98, 98);
     --lighter-accent-color: rgb(220, 139, 139);
 
-    --danger-color: rgb(217, 70, 70);
+    --danger-color: rgb(243, 92, 92);
+    --darker-danger-color: rgb(211, 81, 81);
     --warn-color: rgb(174, 177, 28);
     --transparent: rgba(0, 0, 0, 0);
 

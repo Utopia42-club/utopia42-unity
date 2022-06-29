@@ -126,3 +126,16 @@
 .map-new-drawing-land{
     background-color: var(--secondary-color);
 }
+
+.save-lands-button {
+    background-color: #92d55b;
+    border-color: #65963d;
+    border-radius: var(--default-border-radius);
+    color: black;
+}
+
+.save-lands-button:hover {
+    background-color: #92d55b;
+    border-color: #92d55b;
+    color: black;
+}
