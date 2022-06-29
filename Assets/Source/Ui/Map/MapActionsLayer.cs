@@ -30,11 +30,11 @@ namespace Source.Ui.Map
             style.width = style.height = 0;
             style.right = style.bottom = 0;
 
-            RegisterCallback<ClickEvent>(evt =>
+            RegisterCallback<MouseDownEvent>(evt =>
             {
-                if (currentLocationBox.worldBound.Contains(evt.position)
-                    || actions.worldBound.Contains(evt.position))
-                    evt.StopImmediatePropagation();
+                if (currentLocationBox.worldBound.Contains(evt.mousePosition)
+                    || actions.worldBound.Contains(evt.mousePosition))
+                    evt.StopPropagation();
             });
         }
     }

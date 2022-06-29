@@ -27,7 +27,7 @@ namespace Source.Ui.Map
         {
             myLands = this.Q<VisualElement>("myLands");
             // myLands.style.width = 0;
-            myLands.RegisterCallback<ClickEvent>(evt => evt.StopImmediatePropagation());
+            myLands.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
 
             searchBox = this.Q<VisualElement>("searchBox");
             landsListContainer = this.Q<VisualElement>("landsListContainer");
@@ -36,14 +36,14 @@ namespace Source.Ui.Map
 
             saveButton = this.Q<Button>("saveLandsButton");
             saveButton.clickable.clicked += () => GameManager.INSTANCE.Save();
-            saveButton.RegisterCallback<ClickEvent>(evt => evt.StopImmediatePropagation());
+            saveButton.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
             
             searchField = this.Q<TextField>("searchField");
             TextFields.SetPlaceHolderForTextField(searchField, "Search");
             TextFields.RegisterUiEngagementCallbacksForTextField(searchField);
 
             mapLandsList = new MapLandsList(map);
-            mapLandsList.RegisterCallback<ClickEvent>(evt => evt.StopImmediatePropagation());
+            mapLandsList.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
             landsListContainer.Add(mapLandsList);
 
             searchField.RegisterValueChangedCallback(evt =>

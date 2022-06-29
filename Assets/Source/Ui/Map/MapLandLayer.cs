@@ -49,13 +49,10 @@ namespace Source.Ui.Map
                 e.StopPropagation();
                 this.map.ReleaseMouse();
             });
-            map.RegisterCallback<ClickEvent>(evt =>
+            Utils.Utils.RegisterOnDoubleClick(map, evt =>
             {
-                if (evt.clickCount == 2)
-                {
-                    var realPosition = map.ScreenToUtopia(evt.position);
-                    GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
-                }
+                var realPosition = map.ScreenToUtopia(evt.mousePosition);
+                GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
             });
             mapPlayerPositionIndicator = new MapPlayerPositionIndicator(map);
             Add(mapPlayerPositionIndicator);
@@ -187,7 +184,7 @@ namespace Source.Ui.Map
         {
             var worldService = WorldService.INSTANCE;
             if (!worldService.IsInitialized()) return;
-            
+
             foreach (var land in worldService.GetOwnersLands().SelectMany(entry => entry.Value))
                 Add(new MapLand(land, map));
         }
