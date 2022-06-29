@@ -316,10 +316,7 @@ namespace Source
                 DialogService.INSTANCE.Show(
                     new DialogConfig("Failed to save your lands!", content)
                         .WithAction(new DialogAction("Retry", Save, "utopia-stroked-button-secondary"))
-                        .WithAction(new DialogAction("Ok", () =>
-                        {
-                            SetState(State.PLAYING);
-                        }))
+                        .WithAction(new DialogAction("Ok", () => { SetState(State.PLAYING); }))
                 );
             });
 
@@ -331,7 +328,7 @@ namespace Source
             {
                 SnackService.INSTANCE.Show(new SnackConfig(
                     new Toast("Lands are already saved", Toast.ToastType.Info)
-                ).WithCloseButtonVisible(false));
+                    , SnackConfig.Side.End).WithCloseButtonVisible(false));
                 yield break;
             }
 
