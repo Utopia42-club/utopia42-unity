@@ -1,45 +1,44 @@
 .utopia-stroked-button-primary {
     border-radius: var(--default-border-radius);
-    border-color: var(--lighter-primary-color);
+    border-color: var(--darker-primary-color);
     background-color: var(--primary-color);
 }
 
 .utopia-stroked-button-primary:hover {
-    border-color: var(--darker-primary-color);
+    border-color: var(--primary-color);
 }
 
 .utopia-stroked-button-primary:active {
-    border-color: var(--darker-primary-color);
+    border-color: var(--primary-color);
 }
 
 .utopia-stroked-button-secondary {
     border-radius: var(--default-border-radius);
-    border-color: var(--lighter-secondary-color);
+    border-color: var(--darker-secondary-color);
     background-color: var(--secondary-color);
 }
 
 .utopia-stroked-button-secondary:hover {
-    border-color: var(--darker-secondary-color);
+    border-color: var(--secondary-color);
 }
 
 .utopia-stroked-button-secondary:active {
-    border-color: var(--darker-secondary-color);
+    border-color: var(--secondary-color);
 }
 
 .utopia-stroked-button-accent {
     border-radius: var(--default-border-radius);
-    border-color: var(--lighter-accent-color);
+    border-color: var(--darker-accent-color);
     background-color: var(--accent-color);
 }
 
 .utopia-stroked-button-accent:hover {
-    border-color: var(--darker-accent-color);
+    border-color: var(--accent-color);
 }
 
 .utopia-stroked-button-accent:active {
-    border-color: var(--darker-accent-color);
+    border-color: var(--accent-color);
 }
-
 
 .utopia-button-primary {
     border-width: 0;
