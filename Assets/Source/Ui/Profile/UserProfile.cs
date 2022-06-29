@@ -55,7 +55,7 @@ namespace Source.Ui.Profile
                 body.Add(bioLabel);
             }
 
-            if (profile.links == null)
+            if (profile.links == null || profile.links.Count == 0)
             {
                 profile.links = new List<Model.Profile.Link>();
                 foreach (var media in Model.Profile.Link.medias)
