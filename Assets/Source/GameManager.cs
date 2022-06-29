@@ -315,7 +315,10 @@ namespace Source
                 DialogService.INSTANCE.Show(
                     new DialogConfig("Failed to save your lands!", content)
                         .WithAction(new DialogAction("Retry", Save, "utopia-stroked-button-secondary"))
-                        .WithAction(new DialogAction("Ok", () => { }))
+                        .WithAction(new DialogAction("Ok", () =>
+                        {
+                            SetState(State.PLAYING);
+                        }))
                 );
             });
 
@@ -357,6 +360,7 @@ namespace Source
                 Loading.INSTANCE.UpdateText($"Saving data on IPFS...\n {done}/{worldChanges.Count}");
             }
 
+            Loading.INSTANCE.UpdateText($"Issuing transaction...");
             //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
             BrowserConnector.INSTANCE.Save(hashes, () => StartCoroutine(ReloadOwnerLands()),
                 () => SetState(State.PLAYING));
@@ -490,6 +494,7 @@ namespace Source
             var player = Player.INSTANCE;
             player.ResetLands();
             yield return InitWorld(player.GetPosition(), true);
+            SetState(State.PLAYING);
         }
 
         public void CloseDialog(Dialog dialog, State? targetState = null)

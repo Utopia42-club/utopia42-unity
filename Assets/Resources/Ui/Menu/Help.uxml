@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Resources/Ui/styles/styles.uss?fileID=7433441132597879392&amp;guid=b4d45f28ebf0a82b0a13f21a4d9e4747&amp;type=3#styles" />
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
     <ui:VisualElement name="root" style="flex-grow: 1; align-items: center; width: 100%; justify-content: center; flex-direction: row;">
         <ui:VisualElement name="sections" style="width: 25%; flex-grow: 1; padding-right: 5px; border-right-width: 1px; border-left-color: rgb(255, 255, 255); border-right-color: rgb(255, 255, 255); border-top-color: rgb(255, 255, 255); border-bottom-color: rgb(255, 255, 255); margin-right: 5px;">
             <ui:Label text="Topics" display-tooltip-when-elided="true" class="utopia-text-h1" style="-unity-font-style: bold; border-bottom-width: 1px; border-bottom-color: rgb(255, 255, 255);" />
