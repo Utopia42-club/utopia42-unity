@@ -3,10 +3,10 @@
     <ui:VisualElement name="propertyEditor" style="flex-grow: 1; flex-shrink: 1; align-items: stretch; justify-content: center;">
         <ui:TextField picking-mode="Ignore" label="Metaverse ID" name="metaverseId" class="utopia-field" />
         <ui:VisualElement name="destination" class="utopia-fields-group">
-            <ui:Label text="Rotation" display-tooltip-when-elided="true" name="destinationLabel" class="utopia-fields-group__label" />
+            <ui:Label text="Destination" display-tooltip-when-elided="true" name="destinationLabel" focusable="false" class="utopia-fields-group__label" />
             <ui:VisualElement name="destinationFields" style="flex-direction: row; flex-wrap: nowrap; flex-grow: 1;">
                 <ui:TextField picking-mode="Ignore" label="X" name="x" class="utopia-field" style="flex-grow: 1;" />
-                <ui:TextField picking-mode="Ignore" label="Y" name="y" class="utopia-field" style="flex-grow: 1;" />
+                <ui:TextField picking-mode="Ignore" label="Y (Height)" name="y" class="utopia-field" style="flex-grow: 1;" />
                 <ui:TextField picking-mode="Ignore" label="Z" name="z" class="utopia-field" style="flex-grow: 1;" />
             </ui:VisualElement>
         </ui:VisualElement>
