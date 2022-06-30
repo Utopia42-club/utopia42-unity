@@ -3,12 +3,14 @@ using System.Linq;
 using Source.Model;
 using Source.Service.Ethereum;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Source
 {
     public class AuthService
     {
         private static readonly string GUEST = "guest";
+        public static readonly UnityEvent<string> WalletIdChanged = new();
 
         public static void GetAuthToken(Action<string> onDone, bool forceValid = false)
         {
@@ -41,7 +43,7 @@ namespace Source
 
         public static string WalletId()
         {
-            return PlayerPrefs.GetString(Keys.WALLET).ToLower();
+            return PlayerPrefs.GetString(Keys.WALLET)?.ToLower();
         }
 
         public static EthNetwork Network()
@@ -66,6 +68,7 @@ namespace Source
         {
             PlayerPrefs.SetInt(Keys.NETWORK, network);
             PlayerPrefs.SetString(Keys.WALLET, walletId);
+            WalletIdChanged.Invoke(walletId);
         }
 
         public static void SetGuestMode()

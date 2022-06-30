@@ -25,9 +25,9 @@ namespace Source
             {
                 var controller = playersMap[wallet];
                 if (Time.unscaledTimeAsDouble - controller.UpdatedTime < MaxInactivityDelay) continue;
-                Debug.Log("Player " + wallet + " was inactive for too long. Removing avatar...");
-                DestroyImmediate(controller);
+                Debug.LogWarning("Player " + wallet + " was inactive for too long. Removing avatar...");
                 playersMap.TryRemove(wallet, out _);
+                DestroyImmediate(controller);
             }
         }
 
@@ -38,7 +38,12 @@ namespace Source
 
         public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
         {
-            if (playersMap.TryGetValue(playerState.walletId, out var controller))
+            if (playerState == null) return;
+            if (playerState.walletId.Equals(AuthService.WalletId()))
+            {
+                Debug.LogWarning("Cannot add another player with the same wallet. Ignoring state...");
+            }
+            else if (playersMap.TryGetValue(playerState.walletId, out var controller))
             {
                 controller.UpdatePlayerState(playerState);
             }
@@ -48,14 +53,15 @@ namespace Source
                 var avatar = Instantiate(avatarPrefab, transform);
                 var c = avatar.GetComponent<AvatarController>();
                 c.SetAnotherPlayer(playerState.walletId);
-                StartCoroutine(UpdatePlayerState(c, playerState));
                 playersMap.TryAdd(playerState.walletId, c);
+                StartCoroutine(UpdatePlayerStateInNextFrame(c, playerState));
             }
         }
 
-        private IEnumerator UpdatePlayerState(AvatarController controller, AvatarController.PlayerState playerState)
+        private IEnumerator UpdatePlayerStateInNextFrame(AvatarController controller,
+            AvatarController.PlayerState playerState)
         {
-            yield return 0;
+            yield return null;
             controller.UpdatePlayerState(playerState);
         }
 
