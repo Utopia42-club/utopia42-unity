@@ -41,9 +41,9 @@ namespace Source.Ui.TabPane
             }
         }
 
-        public void OpenTab(int index)
+        public void OpenTab(int index, bool reloadOnSameTab = false)
         {
-            if (currentTab == index) return;
+            if (currentTab == index && !reloadOnSameTab) return;
             var config = tabConfigs[index];
             if (!tabBodiesCache.TryGetValue(index, out var tabBodyContent))
             {
@@ -104,6 +104,11 @@ namespace Source.Ui.TabPane
         public VisualElement GetCurrentTabContent()
         {
             return tabBody.Children().ElementAtOrDefault(0);
+        }
+
+        public void ReloadTab()
+        {
+            OpenTab(currentTab, true);
         }
     }
 }

@@ -32,10 +32,11 @@ namespace Source.Ui.AssetInventory.Slots
                 return;
 
             currentSlot.ConfigLeftAction("Delete", Resources.Load<Sprite>("Icons/close"),
-                () => currentSlot.assetsInventory.RemoveFromFavorites(favoriteItem, currentSlot, () =>
+                () =>
                 {
-                    AssetsInventory.INSTANCE.ReloadTab();
-                }));
+                    currentSlot.assetsInventory.RemoveFromFavorites(favoriteItem, currentSlot,
+                        () => AssetsInventory.INSTANCE.ReloadTab());
+                });
             currentSlot.RegisterCallback<MouseEnterEvent>(evt => currentSlot.SetLeftActionVisible(true));
             currentSlot.RegisterCallback<MouseLeaveEvent>(evt => currentSlot.SetLeftActionVisible(false));
         }

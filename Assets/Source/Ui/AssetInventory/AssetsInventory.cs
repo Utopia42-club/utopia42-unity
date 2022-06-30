@@ -442,7 +442,6 @@ namespace Source.Ui.AssetInventory
                 {
                     loading.Close();
                     favoriteItems.Remove(favoriteItem);
-                    SetupFavoriteAction(slot);
                     onDone?.Invoke();
                     //TODO a toast?
                 }, () =>
@@ -580,12 +579,13 @@ namespace Source.Ui.AssetInventory
         {
             return selectedSlot.GetSlotInfo();
         }
+        
+        public void ReloadTab()
+        {
+            tabPane.ReloadTab();
+        }
 
         public static AssetsInventory INSTANCE => instance;
 
-        public void ReloadTab()
-        {
-            tabPane.OpenTab(tabPane.GetCurrentTabIndex());
-        }
     }
 }

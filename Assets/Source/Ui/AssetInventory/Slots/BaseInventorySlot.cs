@@ -34,7 +34,7 @@ namespace Source.Ui.AssetInventory.Slots
             slotIcon = this.Q<VisualElement>("slotIcon");
             leftAction = this.Q<Button>("leftAction");
             rightAction = this.Q<Button>("rightAction");
-            
+
             selectedBorder = this.Q<VisualElement>("selectedBorder");
 
             RegisterCallback<PointerDownEvent>(evt =>
@@ -138,8 +138,7 @@ namespace Source.Ui.AssetInventory.Slots
             return slotIcon.style.backgroundImage.value.sprite;
         }
 
-        public void ConfigLeftAction(string tooltip = null, Sprite background = null,
-            Action action = null)
+        public void ConfigLeftAction(string tooltip = null, Sprite background = null, Action action = null)
         {
             leftAction.tooltip = tooltip;
             leftAction.style.backgroundImage = Background.FromSprite(background);
@@ -153,8 +152,7 @@ namespace Source.Ui.AssetInventory.Slots
             leftAction.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        public void ConfigRightAction(string tooltip = null, Sprite background = null,
-            Action action = null)
+        public void ConfigRightAction(string tooltip = null, Sprite background = null, Action action = null)
         {
             rightAction.tooltip = tooltip;
             rightAction.style.backgroundImage = Background.FromSprite(background);
