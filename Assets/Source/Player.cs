@@ -250,6 +250,9 @@ namespace Source
             if (!floating && !characterController.isGrounded)
                 velocity.y += gravity * Time.fixedDeltaTime;
 
+            if (velocity.y < -sprintSpeed)
+                velocity.y = -sprintSpeed;
+
             var reportVelocityY = velocity.y;
 
             characterController.Move(velocity * Time.fixedDeltaTime);
@@ -566,6 +569,11 @@ namespace Source
                 FocusedFocusable.UnFocus();
             FocusedFocusable = null;
             hitCollider = null;
+        }
+
+        public void ResetVelocity()
+        {
+            velocity = Vector3.zero;
         }
 
         public void InitOnSelectedAssetChanged()

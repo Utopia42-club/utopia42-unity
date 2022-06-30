@@ -172,6 +172,7 @@ namespace Source
         private IEnumerator DoMovePlayerTo(Vector3 pos, bool clean)
         {
             SetState(State.LOADING);
+            Player.INSTANCE.ResetVelocity();
             Loading.INSTANCE.UpdateText("Positioning the player...");
             yield return FindStartingY(pos, result => pos = result);
 
