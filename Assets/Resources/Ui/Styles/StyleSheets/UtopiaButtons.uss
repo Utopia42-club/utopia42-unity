@@ -30,6 +30,7 @@
     border-radius: var(--default-border-radius);
     border-color: var(--darker-accent-color);
     background-color: var(--accent-color);
+    color: black;
 }
 
 .utopia-button-accent:hover {
@@ -76,10 +77,12 @@
 
 .utopia-basic-button-accent:hover {
     background-color: var(--darker-accent-color);
+    color: black;
 }
 
 .utopia-basic-button-accent:active {
     background-color: var(--darker-accent-color);
+    color: black;
 }
 
 .utopia-action-button {
