@@ -79,10 +79,6 @@ namespace Source.Ui.AssetInventory.Assets
                 AssetsInventory.INSTANCE.SetupFavoriteAction(slot);
                 slots.Add(slot);
             }
-
-            var total = size + count;
-            GridUtils.SetContainerSize(slots, total, 90, 3);
-            style.height = slots.style.height.value.value + 45;
         }
     }
 }

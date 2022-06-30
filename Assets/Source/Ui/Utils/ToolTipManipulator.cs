@@ -18,7 +18,7 @@ namespace Source.Ui.Utils
         protected override void RegisterCallbacksOnTarget()
         {
             target.RegisterCallback<MouseEnterEvent>(MouseIn);
-            target.RegisterCallback<MouseLeaveEvent>(MouseLeave, TrickleDown.TrickleDown);
+            target.RegisterCallback<MouseLeaveEvent>(MouseLeave);
             target.RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
         }
 

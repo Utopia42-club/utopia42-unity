@@ -73,7 +73,7 @@ namespace Source.Utils
 
             if (Cache.TryGet(id, out blockType)) return true;
 
-            var color = new Color32(bytes[2], bytes[1], bytes[0], 1);
+            var color = new Color32(bytes[2], bytes[1], bytes[0], 255);
             blockType = GetBlockTypeFromColor(color);
             Cache.Add(blockType);
             return true;
@@ -83,18 +83,24 @@ namespace Source.Utils
         {
             return (uint) (color.b + (color.g << 8) + (color.r << 16) + (1 << 24));
         }
-        
+
         public static void SaveBlockColor(Color color)
         {
             var colorBlocks = GetPlayerColorBlocks();
-            colorBlocks.Add("#" + ColorUtility.ToHtmlStringRGB(color));
+            Debug.Log("=======");
+            Debug.Log(color);
+            Debug.Log(GetTypeIdFromColor(color));
+            Debug.Log(Blocks.GetBlockType(GetTypeIdFromColor(color)).color);
+            
+            colorBlocks.Add(GetTypeIdFromColor(color));
             SetPlayerColorBlocks(colorBlocks);
         }
 
         public static void RemoveBlockColorFromSaving(Color color)
         {
             var colorBlocks = GetPlayerColorBlocks();
-            colorBlocks = colorBlocks.Where(c => c != "#" + ColorUtility.ToHtmlStringRGB(color)).ToList();
+            var id = GetTypeIdFromColor(color);
+            colorBlocks = colorBlocks.Where(c => c != id).ToList();
             SetPlayerColorBlocks(colorBlocks);
         }
 
@@ -103,11 +109,18 @@ namespace Source.Utils
             PlayerPrefs.SetString(PLAYER_COLOR_BLOCKS, JsonConvert.SerializeObject(colorBlocks));
         }
 
-        public static List<string> GetPlayerColorBlocks()
+        public static List<uint> GetPlayerColorBlocks()
         {
-            var deserializeObject =
-                JsonConvert.DeserializeObject<List<string>>(PlayerPrefs.GetString(PLAYER_COLOR_BLOCKS, "[]"));
-            return new HashSet<string>(deserializeObject).ToList();
+            try
+            {
+                var deserializeObject =
+                    JsonConvert.DeserializeObject<List<uint>>(PlayerPrefs.GetString(PLAYER_COLOR_BLOCKS, "[]"));
+                return new HashSet<uint>(deserializeObject).ToList();
+            }
+            catch (JsonSerializationException e)
+            {
+                return new List<uint>();
+            }
         }
 
         private class ColorCache

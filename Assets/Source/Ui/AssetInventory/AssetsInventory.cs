@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Source.Canvas;
 using Source.MetaBlocks;
 using Source.Model;
 using Source.Service;
@@ -10,7 +9,6 @@ using Source.Ui.AssetInventory.Assets;
 using Source.Ui.AssetInventory.Models;
 using Source.Ui.AssetInventory.Slots;
 using Source.Ui.CustomUi;
-using Source.Ui.Menu;
 using Source.Ui.Popup;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
@@ -193,15 +191,14 @@ namespace Source.Ui.AssetInventory
                 scrollView.Clear();
                 Scrolls.IncreaseScrollSpeed(scrollView);
                 var container = new VisualElement();
+                container.AddToClassList("slots-wrapper");
                 for (int i = 0; i < favoriteItems.Count; i++)
                 {
                     var favoriteItem = favoriteItems[i];
                     var slot = new FavoriteItemInventorySlot(favoriteItem);
-                    GridUtils.SetChildPosition(slot.VisualElement(), 80, 80, i, 3);
                     container.Add(slot.VisualElement());
                 }
 
-                GridUtils.SetContainerSize(container, favoriteItems.Count, 90, 3);
                 scrollView.Add(container);
             }, () =>
             {
@@ -319,8 +316,7 @@ namespace Source.Ui.AssetInventory
             for (var i = 0; i < size; i++)
             {
                 var slot = new ColorBlockInventorySlot();
-                ColorUtility.TryParseHtmlString(playerColorBlocks[i], out var color);
-                slot.SetSlotInfo(new SlotInfo(ColorBlocks.GetBlockTypeFromColor(color)));
+                slot.SetSlotInfo(new SlotInfo(Blocks.GetBlockType(playerColorBlocks[i])));
                 slot.SetSize(80);
                 SetupFavoriteAction(slot);
                 slotsContainer.Add(slot.VisualElement());
@@ -332,7 +328,7 @@ namespace Source.Ui.AssetInventory
 
         public void DeleteColorBlock(ColorBlockInventorySlot colorBlockInventorySlot)
         {
-            ColorBlocks.RemoveBlockColorFromSaving(colorBlockInventorySlot.color);
+            ColorBlocks.RemoveBlockColorFromSaving(colorBlockInventorySlot.GetColor());
             UpdateUserColorBlocks();
         }
 
@@ -358,7 +354,6 @@ namespace Source.Ui.AssetInventory
                         content.Add(slot.VisualElement());
                     }
 
-                    GridUtils.SetContainerSize(content, size, 90, 3);
                     foldout.SetContent(content);
                 }
             });

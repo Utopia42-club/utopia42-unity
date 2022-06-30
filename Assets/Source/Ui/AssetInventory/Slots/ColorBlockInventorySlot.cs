@@ -7,8 +7,6 @@ namespace Source.Ui.AssetInventory.Slots
 {
     public class ColorBlockInventorySlot : BlockInventorySlot
     {
-        public Color color;
-
         public ColorBlockInventorySlot(bool addDeleteAction = true)
         {
             if (addDeleteAction)
@@ -25,13 +23,17 @@ namespace Source.Ui.AssetInventory.Slots
             base.SetSlotInfo(slotInfo);
             if (slotInfo.block.color == null)
                 throw new Exception("Invalid SlotInfo for color slot");
-            color = slotInfo.block.color.Value;
-            SetBackgroundColor(color);
+            SetBackgroundColor();
         }
 
-        private void SetBackgroundColor(Color col)
+        private void SetBackgroundColor()
         {
-            slotIcon.style.unityBackgroundImageTintColor = col;
+            slotIcon.style.unityBackgroundImageTintColor = new StyleColor(GetColor());
+        }
+
+        public Color GetColor()
+        {
+            return slotInfo.block.color.Value;
         }
 
         public override object Clone()

@@ -93,11 +93,6 @@ namespace Source.Ui.AssetInventory.Slots
             }
         }
 
-        public void SetGridPosition(int index, int itemsInARow)
-        {
-            GridUtils.SetChildPosition(this, size, size, index, itemsInARow);
-        }
-
         protected void LoadImage(string url)
         {
             imageCoroutine = UiImageUtils.SetBackGroundImageFromUrl(url, slotIcon, () => isLoadingImage = false);
