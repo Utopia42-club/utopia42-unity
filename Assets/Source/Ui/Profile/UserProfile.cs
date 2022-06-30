@@ -82,7 +82,11 @@ namespace Source.Ui.Profile
                 editButton.clickable.clicked += () => BrowserConnector.INSTANCE.EditProfile(() =>
                 {
                     ProfileLoader.INSTANCE.InvalidateProfile(profile.walletId);
-                    ProfileLoader.INSTANCE.load(profile.walletId, SetProfile, () =>
+                    ProfileLoader.INSTANCE.load(profile.walletId, p =>
+                    {
+                        SetProfile(p);
+                        Player.INSTANCE.ReloadAvatar(p.avatarUrl);
+                    }, () =>
                     {
                         //FIXME Show error snack
                     });
