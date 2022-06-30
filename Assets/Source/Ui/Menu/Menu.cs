@@ -4,6 +4,7 @@ using Source;
 using Source.Model;
 using Source.Service.Ethereum;
 using Source.Ui;
+using Source.Ui.Dialog;
 using Source.Ui.LoadingLayer;
 using Source.Ui.Login;
 using Source.Ui.Map;
@@ -78,8 +79,16 @@ public class Menu : MonoBehaviour, UiProvider
         exitButton = new Button();
         exitButton.AddToClassList("utopia-action-text-button");
         exitButton.AddToClassList("exit-button");
-        exitButton.clickable.clicked += () => gameManager.Exit();
+        exitButton.clickable.clicked += () =>
+        {
+            DialogService.INSTANCE.Show(
+                new DialogConfig("Confirm exit", new Label("Are you sure you want to exit?"))
+                    .WithCancelAction()
+                    .WithAction(new DialogAction("Yes", () => gameManager.Exit(), "utopia-button-secondary"))
+            );
+        };
         exitButton.text = "Exit";
+        exitButton.style.marginLeft = 12;
         tabPane.AddLeftAction(exitButton);
 
         closeButton = new Button();
