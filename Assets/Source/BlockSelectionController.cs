@@ -65,7 +65,7 @@ namespace Source
             GetInputs();
             HandleSelectionKeyboardMovement();
             HandleSelectionMouseMovement();
-            HandleBlockSelection();
+            HandlePutBlockAndSelection();
             HandleBlockClipboard();
         }
 
@@ -180,11 +180,11 @@ namespace Source
             //     PrepareForSelectionMovement(SelectionMode.Default); // already happening
         }
 
-        private void HandleBlockSelection()
+        private void HandlePutBlockAndSelection()
         {
             if (Dragging || scalingOrRotatingSelection || !mouseLook.cursorLocked) return;
 
-            var selectVoxel = !selectionDisplaced && (player.CtrlHeld || player.CursorEmpty) &&
+            var selectVoxel = !player.HammerMode && !selectionDisplaced && (player.CtrlHeld || player.CursorEmpty) &&
                               SMode == SelectionMode.Default &&
                               (player.HighlightBlock.gameObject.activeSelf || player.FocusedFocusable != null) &&
                               Input.GetMouseButtonDown(0);
