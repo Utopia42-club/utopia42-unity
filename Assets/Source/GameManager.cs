@@ -240,9 +240,6 @@ namespace Source
                 case State.MENU:
                     SetState(State.PLAYING);
                     break;
-                case State.FREEZE:
-                    SetState(State.PLAYING);
-                    break;
             }
         }
 
@@ -513,7 +510,6 @@ namespace Source
 
         public void FreezeGame()
         {
-            SetState(State.FREEZE);
 #if UNITY_WEBGL
             captureAllKeyboardInputOrig = WebGLInput.captureAllKeyboardInput;
             WebGLInput.captureAllKeyboardInput = false;
@@ -522,9 +518,8 @@ namespace Source
 
         public void UnFreezeGame()
         {
-            ReturnToGame();
 #if UNITY_WEBGL
-            WebGLInput.captureAllKeyboardInput = captureAllKeyboardInputOrig == null || captureAllKeyboardInputOrig;
+            WebGLInput.captureAllKeyboardInput = captureAllKeyboardInputOrig;
 #endif
         }
 
@@ -550,7 +545,6 @@ namespace Source
             PLAYING,
             MENU,
             LOGIN,
-            FREEZE
         }
 
         public void ShowConnectionError()
