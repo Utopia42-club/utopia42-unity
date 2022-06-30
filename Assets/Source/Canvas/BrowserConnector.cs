@@ -95,6 +95,14 @@ namespace Source.Canvas
             }
         }
 
+        public void ReportLoggedInUser(User user)
+        {
+            if (WebBridge.IsPresent())
+            {
+                WebBridge.Call<object>("reportLoggedInUser", user);
+            }
+        }
+
         public void ReportPlayerState(AvatarController.PlayerState state)
         {
             if (WebBridge.IsPresent())

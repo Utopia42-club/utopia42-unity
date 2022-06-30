@@ -1,3 +1,4 @@
+using Source.Canvas;
 using Source.Service.Ethereum;
 using Source.Ui.Dialog;
 using Source.Ui.Snack;
@@ -130,6 +131,25 @@ namespace Source.Ui.Login
         private void DoSubmit()
         {
             GameManager.INSTANCE.SettingsChanged(AuthService.Network(), startingPosition);
+            BrowserConnector.INSTANCE.ReportLoggedInUser(new User(
+                AuthService.WalletId(), AuthService.IsGuest()
+            ));
         }
+    }
+
+    public class User
+    {
+        private string walletId;
+        private bool isGuest;
+
+        public User(string walletId, bool isGuest)
+        {
+            this.walletId = walletId;
+            this.isGuest = isGuest;
+        }
+
+        public string WalletId => walletId;
+
+        public bool IsGuest => isGuest;
     }
 }
