@@ -240,34 +240,38 @@ namespace Source
                         AddHighlight(new MetaPosition(pos.Value));
                 }
             }
-
-            else if (!selectionActive && !player.CtrlHeld)
+            else if (selectionActive)
             {
-                if (Input.GetMouseButtonDown(0))
+                if (Input.GetMouseButtonDown(0) && selectionDisplaced && !player.CtrlHeld && player.FocusedFocusable != null)
                 {
-                    if (player.HammerMode)
-                        DeleteBlock();
-                    else if (player.PlaceBlock.gameObject.activeSelf && player.SelectedBlockType != null &&
-                             player.SelectedBlockType is not MetaBlockType)
-                    {
-                        World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PossiblePlaceBlockPosInt),
-                            player.SelectedBlockType);
-                    }
-                    else if (player.MetaBlockPlaceHolder != null && player.MetaBlockPlaceHolder.activeSelf)
-                    {
-                        World.INSTANCE.TryPutMeta(new MetaPosition(player.MetaBlockPlaceHolder.transform.position),
-                            player.SelectedBlockType);
-                    }
-                    else if (player.PreparedMetaBlock != null && player.PreparedMetaBlock.IsActive)
-                    {
-                        World.INSTANCE.PutMetaWithProps(
-                            new MetaPosition(player.PreparedMetaBlock.blockObject.transform.position),
-                            player.PreparedMetaBlock.type, player.PreparedMetaBlock.GetProps(), player.placeLand);
-                    }
+                    ConfirmMove();
+                    ReSelectSelection();
                 }
-                else if (player.HammerMode && Input.GetButtonDown("Delete"))
-                    DeleteBlock();
             }
+            else if (Input.GetMouseButtonDown(0) && !player.CtrlHeld)
+            {
+                if (player.HammerMode)
+                    DeleteBlock();
+                else if (player.PlaceBlock.gameObject.activeSelf && player.SelectedBlockType != null &&
+                         player.SelectedBlockType is not MetaBlockType)
+                {
+                    World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PossiblePlaceBlockPosInt),
+                        player.SelectedBlockType);
+                }
+                else if (player.MetaBlockPlaceHolder != null && player.MetaBlockPlaceHolder.activeSelf)
+                {
+                    World.INSTANCE.TryPutMeta(new MetaPosition(player.MetaBlockPlaceHolder.transform.position),
+                        player.SelectedBlockType);
+                }
+                else if (player.PreparedMetaBlock != null && player.PreparedMetaBlock.IsActive)
+                {
+                    World.INSTANCE.PutMetaWithProps(
+                        new MetaPosition(player.PreparedMetaBlock.blockObject.transform.position),
+                        player.PreparedMetaBlock.type, player.PreparedMetaBlock.GetProps(), player.placeLand);
+                }
+            }
+            else if (player.HammerMode && Input.GetButtonDown("Delete"))
+                DeleteBlock();
         }
 
         private void DeleteBlock()
