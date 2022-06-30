@@ -6,6 +6,10 @@
 @import "StyleSheets/UtopiaButtons.uss";
 @import "StyleSheets/SliderStyleSheet.uss";
 
+* {
+    -unity-background-scale-mode: scale-to-fit
+}
+
 :root {
     --text-darker-color: rgb(172, 172, 172);
     --text-color: rgb(240, 240, 240);

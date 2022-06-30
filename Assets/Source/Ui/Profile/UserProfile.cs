@@ -76,7 +76,8 @@ namespace Source.Ui.Profile
             }
 
             var editButton = this.Q<Button>("userEditButton");
-            if (profile.walletId.Equals(AuthService.WalletId()))
+            var designerButton = this.Q<Button>("openAvatarDesigner");
+            if (!AuthService.IsGuest() && Equals(profile.walletId, AuthService.WalletId()))
             {
                 editButton.clickable = new Clickable(() => { });
                 editButton.clickable.clicked += () => BrowserConnector.INSTANCE.EditProfile(() =>
@@ -91,20 +92,12 @@ namespace Source.Ui.Profile
                         //FIXME Show error snack
                     });
                 }, () => { });
-            }
-            else
-            {
-                editButton.style.display = DisplayStyle.None;
-            }
-
-            var designerButton = this.Q<Button>("openAvatarDesigner");
-            if (profile.walletId.Equals(AuthService.WalletId()))
-            {
                 designerButton.clickable = new Clickable(() => { });
                 designerButton.clickable.clicked += () => Application.OpenURL(Constants.AvatarDesignerURL);
             }
             else
             {
+                editButton.style.display = DisplayStyle.None;
                 designerButton.style.display = DisplayStyle.None;
             }
         }

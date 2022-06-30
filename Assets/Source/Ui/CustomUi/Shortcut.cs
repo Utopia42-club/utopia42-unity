@@ -46,7 +46,7 @@ public class Shortcut : VisualElement
         style.alignContent = Align.Center;
         style.alignItems = Align.Center;
         style.justifyContent = Justify.Center;
-        UiImageUtils.SetBackground(this, Resources.Load<Sprite>("Icons/keyboard_key_empty"));
+        UiImageUtils.SetBackground(this, Resources.Load<Sprite>("Icons/keyboard_key_empty"), ScaleMode.StretchToFill);
         label = new Label
         {
             style =

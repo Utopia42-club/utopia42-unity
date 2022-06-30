@@ -45,11 +45,13 @@ namespace Source.Ui.Utils
                 });
         }
 
-        public static void SetBackground(VisualElement visualElement, Sprite sprite)
+        public static void SetBackground(VisualElement visualElement, Sprite sprite, ScaleMode? scaleMode = null)
         {
             var background = new StyleBackground();
             background.value = Background.FromSprite(sprite);
             visualElement.style.backgroundImage = background;
+            if (scaleMode != null)
+                visualElement.style.unityBackgroundScaleMode = scaleMode.Value;
         }
     }
 }
