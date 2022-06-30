@@ -18,13 +18,15 @@ namespace Source.Ui.Utils
         protected override void RegisterCallbacksOnTarget()
         {
             target.RegisterCallback<MouseEnterEvent>(MouseIn);
-            target.RegisterCallback<MouseLeaveEvent>(MouseMove);
+            target.RegisterCallback<MouseLeaveEvent>(MouseLeave);
+            target.RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
         }
 
         protected override void UnregisterCallbacksFromTarget()
         {
             target.UnregisterCallback<MouseEnterEvent>(MouseIn);
-            target.UnregisterCallback<MouseLeaveEvent>(MouseMove);
+            target.UnregisterCallback<MouseLeaveEvent>(MouseLeave);
+            target.UnregisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
         }
 
         private void MouseIn(MouseEnterEvent e)
@@ -42,7 +44,12 @@ namespace Source.Ui.Utils
             popupId = PopupService.INSTANCE.Show(new PopupConfig(label, target, side).WithBackDropLayer(false));
         }
 
-        private void MouseMove(MouseLeaveEvent evt)
+        private void MouseLeave(MouseLeaveEvent evt)
+        {
+            Destroy();
+        }
+        
+        private void OnDetachFromPanel(DetachFromPanelEvent evt)
         {
             Destroy();
         }
