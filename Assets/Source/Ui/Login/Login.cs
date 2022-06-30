@@ -103,20 +103,27 @@ namespace Source.Ui.Login
         private void OpenCredentialsDialog()
         {
             var loginCredentialsDialog = new LoginCredentialsDialog();
-            DialogService.INSTANCE.Show(new DialogConfig("Login credentials", loginCredentialsDialog)
+            var dialogId = -1;
+            dialogId = DialogService.INSTANCE.Show(new DialogConfig("Login credentials", loginCredentialsDialog)
                 .WithWidth(450)
                 .WithHeight(300)
                 .WithCancelAction()
                 .WithAction(new DialogAction("Submit", () =>
                 {
+                    if (!loginCredentialsDialog.AreInputsValid())
+                    {
+                        SnackService.INSTANCE.Show(
+                            new SnackConfig(
+                                new Toast("Invalid credentials", Toast.ToastType.Error)
+                                , SnackConfig.Side.End)
+                        );
+                        return;
+                    }
+
                     loginCredentialsDialog.SaveInputs();
-                    if (!string.IsNullOrEmpty(AuthService.WalletId()))
-                        DoSubmit();
-                    else
-                        SnackService.INSTANCE.Show(new SnackConfig(
-                            new Toast("Invalid Wallet address", Toast.ToastType.Error)
-                        ));
-                }, "utopia-button-secondary"))
+                    DoSubmit();
+                    DialogService.INSTANCE.Close(dialogId);
+                }, "utopia-button-secondary", false))
             );
         }
 

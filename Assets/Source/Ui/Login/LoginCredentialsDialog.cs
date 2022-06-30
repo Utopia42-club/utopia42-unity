@@ -43,5 +43,10 @@ namespace Source.Ui.Login
         {
             AuthService.Save(EthNetwork.GetNetworksIfPresent()[networkField.index].id, walletField.text);
         }
+
+        public bool AreInputsValid()
+        {
+            return networkField.index >= 0 && !string.IsNullOrEmpty(walletField.text);
+        }
     }
 }
