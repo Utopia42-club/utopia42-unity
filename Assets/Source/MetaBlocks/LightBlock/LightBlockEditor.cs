@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,42 +13,42 @@ namespace Source.MetaBlocks.LightBlock
         [SerializeField] private InputField intensity;
         [SerializeField] private InputField range;
         [SerializeField] private Image colorImage;
-        [SerializeField] private FlexibleColorPicker colorPicker;
+        // [SerializeField] private FlexibleColorPicker colorPicker;
 
         private void Update()
         {
-            if (colorImage != null && colorPicker != null)
-                colorImage.color = colorPicker.color;
+            // if (colorImage != null && colorPicker != null)
+            //     colorImage.color = colorPicker.color;
         }
 
         public LightBlockProperties GetValue()
         {
-            if (HasValue(intensity) && HasValue(range) && colorPicker != null)
-            {
-                return new LightBlockProperties
-                {
-                    intensity = float.Parse(intensity.text),
-                    range = float.Parse(range.text),
-                    hexColor = "#" + ColorUtility.ToHtmlStringRGB(colorPicker.color)
-                };
-            }
+            // if (HasValue(intensity) && HasValue(range) && colorPicker != null)
+            // {
+            //     return new LightBlockProperties
+            //     {
+            //         intensity = float.Parse(intensity.text),
+            //         range = float.Parse(range.text),
+            //         hexColor = "#" + ColorUtility.ToHtmlStringRGB(colorPicker.color)
+            //     };
+            // }
 
             return null;
         }
 
         public void SetValue(LightBlockProperties value)
         {
-            if (value == null)
-            {
-                intensity.text = DefaultIntensity.ToString();
-                range.text = DefaultRange.ToString();
-                colorPicker.SetColor(DefaultColor);
-                return;
-            }
-
-            intensity.text = value.intensity.ToString();
-            range.text = value.range.ToString();
-            colorPicker.SetColor(ColorUtility.TryParseHtmlString(value.hexColor, out var color) ? color : DefaultColor);
+            // if (value == null)
+            // {
+            //     intensity.text = DefaultIntensity.ToString();
+            //     range.text = DefaultRange.ToString();
+            //     colorPicker.SetColor(DefaultColor);
+            //     return;
+            // }
+            //
+            // intensity.text = value.intensity.ToString();
+            // range.text = value.range.ToString();
+            // colorPicker.SetColor(ColorUtility.TryParseHtmlString(value.hexColor, out var color) ? color : DefaultColor);
         }
 
         private bool HasValue(InputField f)
