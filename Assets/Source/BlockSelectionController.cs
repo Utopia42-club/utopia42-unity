@@ -13,9 +13,6 @@ namespace Source
 {
     public class BlockSelectionController : MonoBehaviour
     {
-        [SerializeField] private TextMeshProUGUI selectedBlocksCountText;
-        [SerializeField] private RectTransform selectedBlocksCountTextContainer;
-
         private MouseLook mouseLook;
         private Player player;
         private SnackItem snackItem;
@@ -25,7 +22,8 @@ namespace Source
         private Vector3? DraggedPosition { get; set; }
         private bool KeepSourceAfterSelectionMovement => SMode != SelectionMode.Default;
 
-        public bool PlayerMovementAllowed => (!selectionActive || !movingSelectionAllowed) && !scalingOrRotatingSelection;
+        public bool PlayerMovementAllowed =>
+            (!selectionActive || !movingSelectionAllowed) && !scalingOrRotatingSelection;
 
         private bool selectionActive;
         private bool metaSelectionActive;
@@ -43,6 +41,7 @@ namespace Source
         private bool verticalDown;
         private bool jumpDown;
         private bool shiftHeld;
+        private bool snackItemInHelpMode;
 
         public void Start()
         {
@@ -324,7 +323,7 @@ namespace Source
             {
                 var minPoint = World.INSTANCE.GetClipboardMinPoint();
                 var minIntPoint = Vectors.TruncateFloor(minPoint);
-                ClearSelection();
+                World.INSTANCE.ClearHighlights();
 
                 if (!onlyMetaSelectionActive)
                 {
@@ -377,42 +376,40 @@ namespace Source
             }
         }
 
-        private void ClearSelection()
+        private void UpdateSnackText()
         {
-            World.INSTANCE.ClearHighlights();
-            selectedBlocksCountTextContainer.gameObject.SetActive(false);
+            ((SnackItem.Text) snackItem)?.UpdateLines(GetSnackLines());
         }
 
-        private void UpdateCountMsg()
+        private void SetBlockSelectionSnack()
         {
-            var count = World.INSTANCE.TotalBlocksSelected;
-            selectedBlocksCountText.text = count == 1 ? "1 Block Selected" : count + " Blocks Selected";
-        }
-
-        private void SetBlockSelectionSnack(bool help = false)
-        {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
-
-            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(help), () =>
+            snackItem?.Remove();
+            snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (Input.GetKeyDown(KeyCode.H))
-                    SetBlockSelectionSnack(!help);
+                {
+                    snackItemInHelpMode = !snackItemInHelpMode;
+                    UpdateSnackText();
+                }
+
                 if (Input.GetKeyDown(KeyCode.V) && !player.CtrlHeld)
                 {
                     movingSelectionAllowed = !movingSelectionAllowed;
-                    SetBlockSelectionSnack(help);
+                    SetBlockSelectionSnack();
                 }
             });
         }
 
-        private List<string> GetSnackLines(bool helpMode)
+        private string GetCountMsg()
         {
-            var lines = new List<string>();
-            if (helpMode)
+            var count = World.INSTANCE.TotalBlocksSelected;
+            return count == 1 ? "1 Block Selected" : count + " Blocks Selected";
+        }
+
+        private List<string> GetSnackLines()
+        {
+            var lines = new List<string> {GetCountMsg() + "\n"};
+            if (snackItemInHelpMode)
             {
                 lines.Add("H : exit help");
                 if (movingSelectionAllowed)
@@ -446,27 +443,23 @@ namespace Source
             }
 
             lines.Add("X : cancel");
+            lines.Add("DEL : delete selection");
             lines.Add("ENTER : confirm movement");
-            lines.Add("Del : delete selected blocks");
-            if (movingSelectionAllowed)
-                lines.Add("V : set player as movement target");
-            else
-                lines.Add("V : set selection as movement target");
+            lines.Add(movingSelectionAllowed
+                ? "V : set player as movement target"
+                : "V : set selection as movement target");
             return lines;
         }
 
         public void ExitSelectionMode()
         {
-            if (snackItem != null)
-            {
-                snackItem.Remove();
-                snackItem = null;
-            }
-
-            ClearSelection();
+            snackItem?.Remove();
+            snackItem = null;
+            World.INSTANCE.ClearHighlights();
             movingSelectionAllowed = false;
             SMode = SelectionMode.Default;
             DraggedPosition = null;
+            snackItemInHelpMode = false;
         }
 
         public void AddHighlights(List<VoxelPosition> vps)
@@ -512,21 +505,20 @@ namespace Source
             var total = World.INSTANCE.TotalBlocksSelected;
 
             if (total == 0)
-                ExitSelectionMode();
-            else
             {
-                if (setSnack)
-                {
-                    // movingSelectionAllowed = false; // TODO
-                    // SetBlockSelectionSnack();
-                    PrepareForSelectionMovement(SelectionMode.Default);
-                }
-
-                selectedBlocksCountTextContainer.gameObject.SetActive(true);
-                PropertyEditor.INSTANCE.Hide();
+                ExitSelectionMode();
+                return;
             }
 
-            UpdateCountMsg();
+            if (setSnack)
+            {
+                // movingSelectionAllowed = false; // TODO
+                // SetBlockSelectionSnack();
+                PrepareForSelectionMovement(SelectionMode.Default);
+            }
+            else UpdateSnackText();
+
+            PropertyEditor.INSTANCE.Hide();
         }
 
         public static BlockSelectionController INSTANCE =>
