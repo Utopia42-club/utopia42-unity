@@ -8,6 +8,7 @@ using Source.Ui.Profile;
 using Source.Utils;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
+using Random = System.Random;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Source
@@ -19,6 +20,8 @@ namespace Source
 
         private const int MaxReportDelay = 1; // in seconds 
         private const float AnimationUpdateRate = 0.1f; // in seconds
+
+        private static readonly Random random = new();
 
         private AvatarLoader avatarLoader;
 
@@ -45,6 +48,7 @@ namespace Source
 
         private const int Precision = 5;
         private static readonly float FloatPrecision = Mathf.Pow(10, -Precision);
+        private Vector3 movement;
 
         // private Vector3 anotherPlayerVelocity;
 
@@ -56,6 +60,7 @@ namespace Source
             animIDGrounded = Animator.StringToHash("Grounded");
             animIDJump = Animator.StringToHash("Jump");
             animIDFreeFall = Animator.StringToHash("FreeFall");
+            StartCoroutine(UpdateAnimationCoroutine());
         }
 
         private void LoadDefaultAvatar()
@@ -68,7 +73,7 @@ namespace Source
             yield return null;
             ProfileLoader.INSTANCE.load(walletId, profile =>
             {
-                if (profile.avatarUrl is {Length: > 0})
+                if (profile.avatarUrl != null && profile.avatarUrl.Length > 0)
                     ReloadAvatar(profile.avatarUrl);
                 else
                     LoadDefaultAvatar();
@@ -108,7 +113,7 @@ namespace Source
 
                     var m = new Vector3(xzStepTarget.x, yStepTarget.y, xzStepTarget.z) - currentPosition;
                     if (!controller.isGrounded && state is {floating: false})
-                        m += FloatPrecision * Vector3.down;
+                        m += 2 * FloatPrecision * Vector3.down;
                     m = Vectors.Truncate(m, Precision);
 
                     // if (isAnotherPlayer)
@@ -116,15 +121,16 @@ namespace Source
 
                     controller.Move(m);
 
-                    if (xzMovementMagnitude < FloatPrecision && PlayerState.Equals(state, lastAnimationState)
-                                                             && Time.fixedUnscaledTimeAsDouble -
-                                                             lastAnimationUpdateTime > AnimationUpdateRate)
+                    if (Avatar != null && xzMovementMagnitude < FloatPrecision &&
+                        PlayerState.Equals(state, lastAnimationState)
+                        && Time.fixedUnscaledTimeAsDouble -
+                        lastAnimationUpdateTime > AnimationUpdateRate)
                         SetSpeed(0);
                 }
             }
 
-            if (isAnotherPlayer
-                && controller.isGrounded
+            if (Avatar != null && isAnotherPlayer
+                               && controller.isGrounded
                 // && anotherPlayerVelocity.y <= 0 && (-anotherPlayerVelocity.y) < FloatPrecision
                 // && State is {floating: false}
                )
@@ -141,10 +147,10 @@ namespace Source
             StartCoroutine(LoadAvatarFromWallet(playerStateWalletId));
         }
 
-        public void SetMainPlayer()
+        public void SetMainPlayer(string walletId)
         {
             isAnotherPlayer = false;
-            StartCoroutine(LoadAvatarFromWallet(AuthService.WalletId()));
+            StartCoroutine(LoadAvatarFromWallet(walletId));
         }
 
         private void UpdateLookDirection(Vector3 movement)
@@ -183,32 +189,43 @@ namespace Source
             SetPlayerState(playerState);
 
             var pos = state.GetPosition();
-            var movement = pos - (lastAnimationState?.GetPosition() ?? pos);
+            movement = pos - (lastAnimationState?.GetPosition() ?? pos);
             UpdateLookDirection(movement);
 
             var floatOrJumpStateChanged =
                 playerState.floating != lastAnimationState?.floating || playerState.jump != lastAnimationState?.jump;
 
-            if (!isAnotherPlayer && !floatOrJumpStateChanged &&
-                Time.fixedUnscaledTimeAsDouble - lastAnimationUpdateTime < AnimationUpdateRate) return;
-
-            if (Avatar != null)
+            if ((isAnotherPlayer || floatOrJumpStateChanged) && Avatar != null)
             {
-                var velocity = new Vector3(movement.x, 0, movement.z).normalized *
-                               (state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed) +
-                               new Vector3(0, movement.y, 0).normalized * state.velocityY; // TODO ?
-                UpdateAnimation(velocity);
+                UpdateAnimation();
             }
 
-            if (isAnotherPlayer) return;
-            if (floatOrJumpStateChanged ||
-                Time.unscaledTimeAsDouble - lastReportedTime >
-                (PlayerState.Equals(lastReportedState, state)
-                    ? MaxReportDelay
-                    : AnimationUpdateRate))
+            if (!isAnotherPlayer && floatOrJumpStateChanged)
                 ReportToServer();
         }
-        // }
+
+        private IEnumerator UpdateAnimationCoroutine()
+        {
+            while (true)
+            {
+                yield return null;
+                if (isAnotherPlayer)
+                    yield break;
+
+                if (Avatar != null && Time.unscaledTimeAsDouble - lastAnimationUpdateTime > AnimationUpdateRate
+                                   && !PlayerState.Equals(state, lastAnimationState) 
+                                   && state != null)
+                {
+                    UpdateAnimation();
+                }
+
+                if (state != null && Time.unscaledTimeAsDouble - lastReportedTime >
+                    (PlayerState.Equals(lastReportedState, state)
+                        ? MaxReportDelay
+                        : AnimationUpdateRate))
+                    ReportToServer();
+            }
+        }
 
         private void SetPlayerState(PlayerState state)
         {
@@ -216,9 +233,10 @@ namespace Source
             UpdatedTime = Time.unscaledTimeAsDouble;
         }
 
-        private void UpdateAnimation(Vector3 velocity)
+        private void UpdateAnimation()
         {
-            var xzVelocity = new Vector3(velocity.x, 0, velocity.z);
+            var xzVelocity = new Vector3(movement.x, 0, movement.z).normalized *
+                             (state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed);
             var grounded = controller.isGrounded;
             if (grounded)
             {
@@ -228,7 +246,7 @@ namespace Source
 
             if (state is {jump: true} && !PlayerState.Equals(state, lastAnimationState))
                 SetJump(true);
-            SetFreeFall(Mathf.Abs(velocity.y) > Player.INSTANCE.MinFreeFallSpeed 
+            SetFreeFall(Mathf.Abs(state.velocityY) > Player.INSTANCE.MinFreeFallSpeed
                         && !grounded && state is not {floating: true});
 
             SetGrounded(grounded);
@@ -321,10 +339,12 @@ namespace Source
             public bool jump;
             public bool sprinting;
             public float velocityY;
+            public int rid;
 
             public PlayerState(string walletId, SerializableVector3 position, bool floating, bool jump, bool sprinting,
                 float velocityY)
             {
+                rid = random.Next(0, int.MaxValue);
                 this.walletId = walletId;
                 this.position = position;
                 this.floating = floating;
@@ -340,12 +360,14 @@ namespace Source
 
             public static bool Equals(PlayerState s1, PlayerState s2)
             {
-                return !(s1 == null
-                         || s2 == null
-                         || !Equals(s1.position, s2.position)
-                         || s1.floating != s2.floating
-                         || s1.jump != s2.jump
-                         || s1.sprinting != s2.sprinting);
+                return s1 != null
+                       && s2 != null
+                       && s1.rid == s2.rid
+                       && Equals(s1.position, s2.position)
+                       && s1.floating == s2.floating
+                       && s1.jump == s2.jump
+                       && s1.sprinting == s2.sprinting
+                       && Math.Abs(s1.velocityY - s2.velocityY) < FloatPrecision;
             }
         }
 

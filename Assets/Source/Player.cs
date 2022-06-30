@@ -70,7 +70,7 @@ namespace Source
         public Transform PlaceBlock => placeBlock;
 
         public float MinFreeFallSpeed => minFreeFallSpeed;
-        
+
         public bool ChangeForbidden => AuthService.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
@@ -129,7 +129,9 @@ namespace Source
 
             avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatarController = avatar.GetComponent<AvatarController>();
-            avatarController.SetMainPlayer();
+            avatarController.SetMainPlayer(AuthService.WalletId());
+            AuthService.WalletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });
+
             characterController = avatar.GetComponent<CharacterController>();
             camContainer.SetParent(avatar.transform);
 
