@@ -74,7 +74,7 @@ namespace Source.Ui.AssetInventory.Assets
                 var slotInfo = new SlotInfo(assets[i - count]);
                 slot.SetSlotInfo(slotInfo);
                 slot.SetSize(80);
-                // SetupFavoriteAction(slot);
+                AssetsInventory.INSTANCE.SetupFavoriteAction(slot);
                 slots.Add(slot);
             }
 

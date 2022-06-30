@@ -200,6 +200,7 @@ namespace Source.Ui.AssetInventory
                     GridUtils.SetChildPosition(slot.VisualElement(), 80, 80, i, 3);
                     container.Add(slot.VisualElement());
                 }
+
                 GridUtils.SetContainerSize(container, favoriteItems.Count, 90, 3);
                 scrollView.Add(container);
             }, () =>
@@ -369,7 +370,7 @@ namespace Source.Ui.AssetInventory
             tabPane.OpenTab(0);
         }
 
-        private void SetupFavoriteAction(BaseInventorySlot slot)
+        internal void SetupFavoriteAction(BaseInventorySlot slot)
         {
             var slotInfo = slot.GetSlotInfo();
             var isFavorite = IsUserFavorite(slotInfo, out _);
@@ -442,6 +443,7 @@ namespace Source.Ui.AssetInventory
                 {
                     loading.Close();
                     favoriteItems.Remove(favoriteItem);
+                    SetupFavoriteAction(slot);
                     onDone?.Invoke();
                     //TODO a toast?
                 }, () =>
@@ -579,13 +581,12 @@ namespace Source.Ui.AssetInventory
         {
             return selectedSlot.GetSlotInfo();
         }
-        
+
         public void ReloadTab()
         {
             tabPane.ReloadTab();
         }
 
         public static AssetsInventory INSTANCE => instance;
-
     }
 }
