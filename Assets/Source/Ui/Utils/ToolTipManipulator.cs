@@ -18,7 +18,7 @@ namespace Source.Ui.Utils
         protected override void RegisterCallbacksOnTarget()
         {
             target.RegisterCallback<MouseEnterEvent>(MouseIn);
-            target.RegisterCallback<MouseLeaveEvent>(MouseLeave);
+            target.RegisterCallback<MouseLeaveEvent>(MouseLeave, TrickleDown.TrickleDown);
             target.RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
         }
 
@@ -31,7 +31,7 @@ namespace Source.Ui.Utils
 
         private void MouseIn(MouseEnterEvent e)
         {
-            if (string.IsNullOrEmpty(target.tooltip))
+            if (string.IsNullOrEmpty(target.tooltip) || popupId != null)
                 return;
             var label = new Label(target.tooltip)
             {
@@ -40,7 +40,6 @@ namespace Source.Ui.Utils
                     color = Color.white
                 }
             };
-
             popupId = PopupService.INSTANCE.Show(new PopupConfig(label, target, side).WithBackDropLayer(false));
         }
 
@@ -48,7 +47,7 @@ namespace Source.Ui.Utils
         {
             Destroy();
         }
-        
+
         private void OnDetachFromPanel(DetachFromPanelEvent evt)
         {
             Destroy();
@@ -57,7 +56,10 @@ namespace Source.Ui.Utils
         public void Destroy()
         {
             if (popupId != null)
+            {
                 PopupService.INSTANCE.Close(popupId.Value);
+                popupId = null;
+            }
         }
     }
 }

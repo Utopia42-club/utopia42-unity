@@ -9,12 +9,14 @@ namespace Source.Ui.AssetInventory.Assets
     public class AssetPackContent : VisualElement
     {
         private readonly SearchCriteria searchCriteria;
+        private readonly VisualElement loadingTarget;
         private readonly VisualElement slots;
         private readonly Label notFoundLabel;
 
-        public AssetPackContent(SearchCriteria searchCriteria, Pack pack)
+        public AssetPackContent(SearchCriteria searchCriteria, Pack pack, VisualElement loadingTarget)
         {
             this.searchCriteria = searchCriteria;
+            this.loadingTarget = loadingTarget;
             notFoundLabel = new Label("No items found")
             {
                 style =
@@ -50,7 +52,7 @@ namespace Source.Ui.AssetInventory.Assets
                 searchCriteria.lastId = null;
 
             // searchCriteria.searchTerms.Clear();
-            var loading = LoadingLayer.LoadingLayer.Show(this); //FIXME
+            var loading = LoadingLayer.LoadingLayer.Show(loadingTarget); //FIXME
             var inventory = AssetsInventory.INSTANCE;
             inventory.StartCoroutine(inventory.restClient.GetAssets(searchCriteria, assets =>
             {

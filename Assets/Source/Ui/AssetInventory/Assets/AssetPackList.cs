@@ -61,7 +61,7 @@ namespace Source.Ui.AssetInventory.Assets
                 foldout.RegisterValueChangedCallback(evt =>
                 {
                     if (evt.newValue)
-                        foldout.SetContent(new AssetPackContent(searchCriteria.Clone(), packEntry.Value));
+                        foldout.SetContent(new AssetPackContent(searchCriteria.Clone(), packEntry.Value, this));
                 });
                 if (hasFilter)
                     foldout.schedule.Execute(() => foldout.value = true);

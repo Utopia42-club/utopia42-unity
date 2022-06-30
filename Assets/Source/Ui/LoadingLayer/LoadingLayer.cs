@@ -22,11 +22,12 @@ namespace Source.Ui.LoadingLayer
                 }
             }
 
-            var layer = Utils.Utils.Create("Ui/LoadingLayer/Loading");
-            var s = layer.style;
-            s.position = Position.Absolute;
-            s.top = s.left = s.right = s.bottom = 0;
-            s.flexGrow = 1;
+            var layer = new LoadingDots();
+            // var layer = Utils.Utils.Create("Ui/LoadingLayer/Loading");
+            // var s = layer.style;
+            // s.position = Position.Absolute;
+            // s.top = s.left = s.right = s.bottom = 0;
+            // s.flexGrow = 1;
             loadingLayers.Add(id, new Tuple<VisualElement, VisualElement>(root, layer));
             root.Add(layer);
             return new LoadingController(id++);

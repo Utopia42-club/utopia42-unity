@@ -9,8 +9,6 @@ namespace Source.Ui.AssetInventory.Slots
 {
     public abstract class BaseInventorySlot : UxmlElement, InventorySlot
     {
-        private static readonly Sprite assetDefaultImage = Resources.Load<Sprite>("Icons/loading");
-
         public readonly VisualElement slotIcon;
         public readonly AssetsInventory assetsInventory;
 
@@ -102,8 +100,7 @@ namespace Source.Ui.AssetInventory.Slots
 
         protected void LoadImage(string url)
         {
-            imageCoroutine = UiImageUtils.SetBackGroundImageFromUrl(url, assetDefaultImage,
-                slotIcon, () => isLoadingImage = false);
+            imageCoroutine = UiImageUtils.SetBackGroundImageFromUrl(url, slotIcon, () => isLoadingImage = false);
             isLoadingImage = true;
             assetsInventory.StartCoroutine(imageCoroutine);
             slotIcon.RegisterCallback<DetachFromPanelEvent>(evt =>

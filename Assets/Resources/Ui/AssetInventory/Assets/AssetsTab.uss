@@ -40,7 +40,7 @@
     padding-right: 4px;
 }
 
-.packs > ScrollView {
+.packs > ScrollView{
     width: 100%;
     flex-grow: 1;
 }
@@ -56,9 +56,10 @@
 .packs > .bread-crumb > .back-button {
     justify-content: center;
     align-items: center;
-    background-image: url('project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=1169890249420208065&guid=a80665435d1ae52f687d90cdd44fb201&type=3#arrow-left');
+    background-image: url('project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=-4528830608231651361&guid=a80665435d1ae52f687d90cdd44fb201&type=3#arrow-left@2x');
     margin: 0;
     padding: 0;
     width: 24px;
     height: 24px;
 }
+

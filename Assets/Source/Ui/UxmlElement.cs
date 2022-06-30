@@ -49,5 +49,15 @@ namespace Source.Ui
                 style.height = height;
             }
         }
+        
+        public static StyleSheet LoadStyleSheet(Type type)
+        {
+            return LoadStyleSheet(ResourcePaths.ForType(type));
+        }
+
+        public static StyleSheet LoadStyleSheet(string path)
+        {
+            return Resources.Load<StyleSheet>(path);
+        }
     }
 }

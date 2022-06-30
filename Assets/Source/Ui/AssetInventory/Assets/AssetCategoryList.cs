@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Source.Ui.AssetInventory.Models;
 using Source.Ui.Utils;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.AssetInventory.Assets
@@ -44,8 +43,7 @@ namespace Source.Ui.AssetInventory.Assets
             var image = this.Q("image");
 
             AssetsInventory.INSTANCE
-                .StartCoroutine(UiImageUtils.SetBackGroundImageFromUrl(category.thumbnailUrl,
-                    Resources.Load<Sprite>("Icons/loading"), image));
+                .StartCoroutine(UiImageUtils.SetBackGroundImageFromUrl(category.thumbnailUrl, image));
 
             this.Q<Button>().clickable.clicked += () => Selected.Invoke();
         }

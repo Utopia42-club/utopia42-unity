@@ -18,7 +18,7 @@ namespace Source.Canvas
 
             this.url = url;
             GetComponent<Image>().overrideSprite = emptySprite;
-            if (!string.IsNullOrWhiteSpace(url))
+            if (isActiveAndEnabled && !string.IsNullOrWhiteSpace(url))
                 StartCoroutine(LoadFromLikeCoroutine());
         }
 

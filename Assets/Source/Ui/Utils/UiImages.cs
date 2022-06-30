@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Source.Ui.LoadingLayer;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UIElements;
@@ -29,17 +30,29 @@ namespace Source.Ui.Utils
             }
         }
 
-        public static IEnumerator SetBackGroundImageFromUrl(string url, Sprite emptySprite, VisualElement visualElement,
-            Action onDone = null, Action onFail = null)
+        public static IEnumerator SetBackGroundImageFromUrl(string url, VisualElement visualElement,
+            Action onDone = null, Action onFail = null, bool showLoading = true)
         {
-            SetBackground(visualElement, emptySprite);
+            yield return SetBackGroundImageFromUrl(url, null, visualElement, onDone, onFail, showLoading);
+        }
+
+        public static IEnumerator SetBackGroundImageFromUrl(string url, Sprite emptySprite, VisualElement visualElement,
+            Action onDone = null, Action onFail = null, bool showLoading = true)
+        {
+            if (emptySprite != null)
+                SetBackground(visualElement, emptySprite);
+            LoadingController loading = null;
+            if (showLoading)
+                loading = LoadingLayer.LoadingLayer.Show(visualElement);
             yield return LoadImage(url, sprite =>
                 {
+                    loading?.Close();
                     SetBackground(visualElement, sprite);
                     onDone?.Invoke();
                 },
                 () =>
                 {
+                    loading?.Close();
                     SetBackground(visualElement, Resources.Load<Sprite>("Icons/error"));
                     onFail?.Invoke();
                 });
