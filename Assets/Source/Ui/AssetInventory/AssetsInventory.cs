@@ -288,15 +288,15 @@ namespace Source.Ui.AssetInventory
                     colorPickerToggle.style.height = 70;
                     colorPickerToggle.clickable.clicked += () =>
                     {
-                        var popupId = 0;
+                        PopupController popupController = null;
                         var colorPicker = new ColorPicker(color =>
                         {
                             ColorBlocks.SaveBlockColor(color);
                             UpdateUserColorBlocks();
-                            PopupService.INSTANCE.Close(popupId);
+                            popupController.Close();
                         });
                         colorPicker.SetColor(Color.white);
-                        popupId = PopupService.INSTANCE.Show(
+                        popupController = PopupService.INSTANCE.Show(
                             new PopupConfig(colorPicker, colorPickerToggle, Side.TopLeft)
                                 .WithWidth(250));
                     };

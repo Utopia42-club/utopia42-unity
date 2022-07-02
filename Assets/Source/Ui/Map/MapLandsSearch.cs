@@ -19,7 +19,7 @@ namespace Source.Ui.Map
         private readonly TextField searchField;
         private readonly MapLandsList mapLandsList;
         private bool isListOpen = false;
-        private int? searchPopupId;
+        private PopupController searchPopupConttoller;
         private MapLandsList popupLandsList;
         private readonly Button saveButton;
 
@@ -52,25 +52,25 @@ namespace Source.Ui.Map
                     mapLandsList.SetLands(FilterLands(WorldService.INSTANCE.GetPlayerLands()));
                 else
                 {
-                    if (string.IsNullOrEmpty(searchField.value) && searchPopupId != null)
+                    if (string.IsNullOrEmpty(searchField.value) && searchPopupConttoller != null)
                     {
-                        PopupService.INSTANCE.Close(searchPopupId.Value);
+                        searchPopupConttoller.Close();
                         return;
                     }
 
-                    if (searchPopupId != null)
+                    if (searchPopupConttoller != null)
                     {
                         popupLandsList.SetLands(FilterLands(GetAllLands()));
                     }
                     else
                     {
                         popupLandsList = new MapLandsList(map);
-                        searchPopupId =
+                        searchPopupConttoller =
                             PopupService.INSTANCE.Show(
                                 new PopupConfig(popupLandsList, searchBox, Side.Bottom)
                                     .WithWidth(300)
                                     .WithHeight(400)
-                                    .WithOnClose(() => searchPopupId = null));
+                                    .WithOnClose(() => searchPopupConttoller = null));
                         popupLandsList.SetLands(FilterLands(GetAllLands()));
                     }
                 }

@@ -19,15 +19,15 @@ namespace Source.Ui.CustomUi
             pickerButton = this.Q<Button>("pickerButton");
             pickerButton.clickable.clicked += () =>
             {
-                var popupId = 0;
+                PopupController popupController = null;
                 var colorPicker = new ColorPicker(color =>
                 {
                     this.color = color;
                     colorPreview.style.backgroundColor = color;
-                    PopupService.INSTANCE.Close(popupId);
+                    popupController.Close();
                 });
                 colorPicker.SetColor(this.color);
-                popupId = PopupService.INSTANCE.Show(new PopupConfig(colorPicker, pickerButton, Side.BottomLeft)
+                popupController = PopupService.INSTANCE.Show(new PopupConfig(colorPicker, pickerButton, Side.BottomLeft)
                     .WithWidth(250));
             };
         }

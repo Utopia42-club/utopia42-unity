@@ -30,16 +30,11 @@ namespace Source.Ui.Popup
             popupLayer.RegisterCallback<MouseDownEvent>(evt => Close(backDroppedPopups.Last().Key));
         }
 
-        public int Show(PopupConfig config)
-        {
-            return Show(config, out _);
-        }
-
-        public int Show(PopupConfig config, out VisualElement popup)
+        public PopupController Show(PopupConfig config)
         {
             if (backDroppedPopups.Count == 0 && nonBackDroppedPopups.Count == 0)
                 gameObject.SetActive(true);
-            popup = Utils.Utils.Create("Ui/Popup/Popup");
+            var popup = Utils.Utils.Create("Ui/Popup/Popup");
             popup.style.width = config.Width;
             popup.style.height = config.Height;
             popup.style.position = Position.Absolute;
@@ -69,7 +64,7 @@ namespace Source.Ui.Popup
                 nonBackDroppedPopups.Add(id, popup);
             }
 
-            return id;
+            return new PopupController(id, popup);
         }
 
         private void UpdatePopupPosition(PopupConfig config, VisualElement element)

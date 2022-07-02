@@ -51,7 +51,7 @@ namespace Source.Ui.Profile
             editButton.clicked += OnEditButtonClicked;
             colorValueClickCallback = evt =>
             {
-                var popupId = 0;
+                PopupController popupController = null;
                 var colorPicker = new ColorPicker(color =>
                 {
                     colorValue.style.backgroundColor = new StyleColor(color);
@@ -59,10 +59,10 @@ namespace Source.Ui.Profile
                     land.properties ??= new LandProperties();
                     land.properties.color = newColor;
                     WorldService.INSTANCE.UpdateLandProperties(land.id, land.properties);
-                    PopupService.INSTANCE.Close(popupId);
+                    popupController.Close();
                 });
                 colorPicker.SetColor(Colors.GetLandColor(land) ?? Colors.MAP_DEFAULT_LAND_COLOR);
-                popupId = PopupService.INSTANCE.Show(new PopupConfig(colorPicker, colorValue, Side.BottomLeft)
+                popupController = PopupService.INSTANCE.Show(new PopupConfig(colorPicker, colorValue, Side.BottomLeft)
                     .WithWidth(250));
             };
             nameField.RegisterValueChangedCallback(evt =>

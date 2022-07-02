@@ -7,7 +7,7 @@ namespace Source.Ui.Utils
     public class ToolTipManipulator : Manipulator
     {
         private VisualElement element;
-        private int? popupId;
+        private PopupController popupController;
         private readonly Side side;
 
         public ToolTipManipulator(Side side = Side.BottomRight)
@@ -31,7 +31,7 @@ namespace Source.Ui.Utils
 
         private void MouseIn(MouseEnterEvent e)
         {
-            if (string.IsNullOrEmpty(target.tooltip) || popupId != null)
+            if (string.IsNullOrEmpty(target.tooltip) || popupController != null)
                 return;
             var label = new Label(target.tooltip)
             {
@@ -40,7 +40,7 @@ namespace Source.Ui.Utils
                     color = Color.white
                 }
             };
-            popupId = PopupService.INSTANCE.Show(new PopupConfig(label, target, side).WithBackDropLayer(false));
+            popupController = PopupService.INSTANCE.Show(new PopupConfig(label, target, side).WithBackDropLayer(false));
         }
 
         private void MouseLeave(MouseLeaveEvent evt)
@@ -55,10 +55,10 @@ namespace Source.Ui.Utils
 
         public void Destroy()
         {
-            if (popupId != null)
+            if (popupController != null)
             {
-                PopupService.INSTANCE.Close(popupId.Value);
-                popupId = null;
+                popupController.Close();
+                popupController = null;
             }
         }
     }
