@@ -8,7 +8,6 @@ using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
 using Source.Service;
 using Source.Ui.AssetInventory.Models;
-using Source.Ui.Login;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -56,6 +55,7 @@ namespace Source
         public bool CtrlUp { private set; get; }
         private Vector3Int playerPos;
         private AvatarController avatarController;
+        // public string AvatarId { private set; get; } // test only
         [NonSerialized] public GameObject avatar;
         [NonSerialized] public Transform focusHighlight;
 
@@ -110,7 +110,7 @@ namespace Source
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
         public Land HighlightLand => highlightLand;
 
-        public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport = new();
+        public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport = new(); // test only
 
         private void Start()
         {
@@ -127,6 +127,7 @@ namespace Source
                     HideCursors();
             });
 
+            // AvatarId = Guid.NewGuid().ToString(); // test only
             avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatarController = avatar.GetComponent<AvatarController>();
             avatarController.SetMainPlayer(AuthService.WalletId());
@@ -265,8 +266,10 @@ namespace Source
             playerPos = Vectors.TruncateFloor(pos);
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
-                AuthService.WalletId(), new SerializableVector3(pos), floating, jumpRequest, sprinting,
-                Mathf.Abs(reportVelocityY)));
+                // AvatarId, // test only
+                AuthService.WalletId(), 
+                new SerializableVector3(pos), floating, jumpRequest, sprinting,
+                Mathf.Abs(reportVelocityY), false));
         }
 
         public void ReloadAvatar(string avatarUrl)
@@ -499,9 +502,10 @@ namespace Source
             return true;
         }
 
-        public void SetPosition(Vector3 pos)
+        public void SetTeleportTarget(Vector3 pos)
         {
-            avatarController.SetPosition(pos);
+            avatarController.UpdatePlayerState(
+                AvatarController.PlayerState.CreateTeleportState(pos));
         }
 
         public Vector3 GetPosition()

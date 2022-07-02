@@ -224,7 +224,7 @@ namespace Source.MetaBlocks
             highlightBox.gameObject.SetActive(active);
         }
 
-        protected static void DeepDestroy3DObject(GameObject go, bool immediate = true)
+        public static void DeepDestroy3DObject(GameObject go, bool immediate = true)
         {
             foreach (var renderer in go.GetComponentsInChildren<Renderer>())
             foreach (var mat in renderer.sharedMaterials)

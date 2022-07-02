@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using ReadyPlayerMe;
 using Source.Canvas;
+using Source.MetaBlocks;
 using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
 using Source.Ui.Profile;
@@ -32,9 +33,9 @@ namespace Source
         private string loadingAvatarUrl;
         private int remainingAvatarLoadAttempts;
         public double UpdatedTime { private set; get; }
-        private double lastAnimationUpdateTime;
+        private double lastPerformedStateTime;
         private double lastReportedTime;
-        private PlayerState lastAnimationState;
+        private PlayerState lastPerformedState;
         private PlayerState lastReportedState;
         private PlayerState state;
         private Vector3 targetPosition;
@@ -52,7 +53,9 @@ namespace Source
         private Vector3 movement;
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private GameObject namePanel;
+        private bool controllerDisabled;
 
+        private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
         // private Vector3 anotherPlayerVelocity;
 
         public void Start()
@@ -90,58 +93,38 @@ namespace Source
 
         private void FixedUpdate()
         {
-            if (isAnotherPlayer || GameManager.INSTANCE.GetState() != GameManager.State.PLAYING)
-            {
-                var currentPosition = CurrentPosition();
-                var movement = targetPosition - currentPosition;
-                var xzMovementMagnitude = new Vector3(movement.x, 0, movement.z).magnitude;
-                // var yMovementMagnitude = new Vector3(0, movement.y, 0).magnitude;
-                if (xzMovementMagnitude < FloatPrecision && (!isAnotherPlayer
-                        // || yMovementMagnitude < FloatPrecision
-                    ))
-                {
-                    // if (isAnotherPlayer)
-                    //     controller.Move(targetPosition - currentPosition);
-                }
-                else if (xzMovementMagnitude > 100)
-                    controller.Move(movement);
-                else
-                {
-                    var xzVelocity = state is not {sprinting: true}
-                        ? Player.INSTANCE.walkSpeed
-                        : Player.INSTANCE.sprintSpeed;
+            if (!isAnotherPlayer || !ControllerEnabled || state is {teleport: true}) return;
 
-                    var xzStepTarget = Vector3.MoveTowards(currentPosition,
-                        new Vector3(targetPosition.x, currentPosition.y, targetPosition.z),
-                        xzVelocity * Time.fixedDeltaTime);
+            var currentPosition = CurrentPosition();
+            var xzVelocity = state is not {sprinting: true}
+                ? Player.INSTANCE.walkSpeed
+                : Player.INSTANCE.sprintSpeed;
 
-                    var yStepTarget = Vector3.MoveTowards(currentPosition,
-                        new Vector3(currentPosition.x, targetPosition.y, currentPosition.z),
-                        Player.INSTANCE.sprintSpeed * Time.fixedDeltaTime); // TODO: enhance falling speed
+            var xzStepTarget = Vector3.MoveTowards(currentPosition,
+                new Vector3(targetPosition.x, currentPosition.y, targetPosition.z),
+                xzVelocity * Time.fixedDeltaTime);
 
-                    var m = new Vector3(xzStepTarget.x, yStepTarget.y, xzStepTarget.z) - currentPosition;
-                    if (!controller.isGrounded && state is {floating: false})
-                        m += 2 * FloatPrecision * Vector3.down;
-                    m = Vectors.Truncate(m, Precision);
+            var yStepTarget = Vector3.MoveTowards(currentPosition,
+                new Vector3(currentPosition.x, targetPosition.y, currentPosition.z),
+                Player.INSTANCE.sprintSpeed * Time.fixedDeltaTime); // TODO: enhance falling speed
 
-                    // if (isAnotherPlayer)
-                    //     anotherPlayerVelocity = m / Time.fixedDeltaTime;
+            var m = new Vector3(xzStepTarget.x, yStepTarget.y, xzStepTarget.z) - currentPosition;
+            if (!controller.isGrounded && state is {floating: false})
+                m += 2 * FloatPrecision * Vector3.down;
+            m = Vectors.Truncate(m, Precision);
 
-                    controller.Move(m);
+            var xzMovementMagnitude =
+                new Vector3(targetPosition.x - currentPosition.x, 0, targetPosition.z - currentPosition.z)
+                    .magnitude;
+            controller.Move(m);
 
-                    if (Avatar != null && xzMovementMagnitude < FloatPrecision &&
-                        PlayerState.Equals(state, lastAnimationState)
-                        && Time.fixedUnscaledTimeAsDouble -
-                        lastAnimationUpdateTime > AnimationUpdateRate)
-                        SetSpeed(0);
-                }
-            }
+            if (Avatar != null && xzMovementMagnitude < FloatPrecision &&
+                PlayerState.Equals(state, lastPerformedState)
+                && Time.fixedUnscaledTimeAsDouble -
+                lastPerformedStateTime > AnimationUpdateRate)
+                SetSpeed(0);
 
-            if (Avatar != null && isAnotherPlayer
-                               && controller.isGrounded
-                // && anotherPlayerVelocity.y <= 0 && (-anotherPlayerVelocity.y) < FloatPrecision
-                // && State is {floating: false}
-               )
+            if (Avatar != null && controller.isGrounded)
             {
                 SetGrounded(true);
                 SetFreeFall(false);
@@ -149,13 +132,30 @@ namespace Source
             }
         }
 
-        public void SetAnotherPlayer(string walletId)
+        public void SetAnotherPlayer(string walletId, Vector3 position)
         {
             isAnotherPlayer = true;
             ProfileLoader.INSTANCE.load(walletId,
                 profile => nameLabel.text = profile?.name ?? MakeWalletShorter(walletId),
                 () => nameLabel.text = MakeWalletShorter(walletId));
             StartCoroutine(LoadAvatarFromWallet(walletId));
+            var target = Vectors.Truncate(position, Precision);
+            SetTargetPosition(target);
+        }
+
+        private IEnumerator SetTransformPosition(Vector3 position)
+        {
+            controllerDisabled = true;
+            yield return null;
+            if (Avatar != null)
+                Avatar.SetActive(false);
+            controller.enabled = false;
+            yield return null;
+            transform.position = position;
+            controller.enabled = true;
+            if (Avatar != null)
+                Avatar.SetActive(true);
+            controllerDisabled = false;
         }
 
         public void SetMainPlayer(string walletId)
@@ -163,6 +163,7 @@ namespace Source
             isAnotherPlayer = false;
             namePanel.gameObject.SetActive(false);
             StartCoroutine(LoadAvatarFromWallet(walletId));
+            SetTargetPosition(transform.position);
         }
 
         private string MakeWalletShorter(string walletId)
@@ -183,7 +184,7 @@ namespace Source
             Avatar.transform.rotation = Quaternion.LookRotation(forward);
         }
 
-        public void SetPosition(Vector3 target)
+        public void SetTargetPosition(Vector3 target)
         {
             targetPosition = Vectors.Truncate(target, Precision);
         }
@@ -201,24 +202,42 @@ namespace Source
 
         public void UpdatePlayerState(PlayerState playerState)
         {
-            if (playerState == null) return;
-            SetPosition(playerState.position.ToVector3());
+            if (playerState == null || isAnotherPlayer && !ControllerEnabled) return;
+            SetTargetPosition(playerState.position.ToVector3());
             SetPlayerState(playerState);
+            if (state.teleport)
+            {
+                if (!PlayerState.Equals(state, lastPerformedState))
+                {
+                    StartCoroutine(SetTransformPosition(targetPosition));
+                    if (!isAnotherPlayer)
+                        ReportToServer();
+                }
+
+                SetLastPerformedState(state);
+                return;
+            }
 
             var pos = state.GetPosition();
-            movement = pos - (lastAnimationState?.GetPosition() ?? pos);
+            movement = pos - (lastPerformedState?.GetPosition() ?? pos);
             UpdateLookDirection(movement);
 
             var floatOrJumpStateChanged =
-                playerState.floating != lastAnimationState?.floating || playerState.jump != lastAnimationState?.jump;
+                playerState.floating != lastPerformedState?.floating || playerState.jump != lastPerformedState?.jump;
 
-            if ((isAnotherPlayer || floatOrJumpStateChanged) && Avatar != null)
+            if ((isAnotherPlayer || floatOrJumpStateChanged) && Avatar != null && ControllerEnabled)
             {
                 UpdateAnimation();
             }
 
             if (!isAnotherPlayer && floatOrJumpStateChanged)
                 ReportToServer();
+        }
+
+        private void SetLastPerformedState(PlayerState playerState)
+        {
+            lastPerformedState = playerState;
+            lastPerformedStateTime = Time.unscaledTimeAsDouble;
         }
 
         private IEnumerator UpdateAnimationCoroutine()
@@ -229,9 +248,9 @@ namespace Source
                 if (isAnotherPlayer)
                     yield break;
 
-                if (Avatar != null && Time.unscaledTimeAsDouble - lastAnimationUpdateTime > AnimationUpdateRate
-                                   && !PlayerState.Equals(state, lastAnimationState)
-                                   && state != null)
+                if (Avatar != null && Time.unscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate
+                                   && !PlayerState.Equals(state, lastPerformedState)
+                                   && state != null && ControllerEnabled)
                 {
                     UpdateAnimation();
                 }
@@ -244,9 +263,9 @@ namespace Source
             }
         }
 
-        private void SetPlayerState(PlayerState state)
+        private void SetPlayerState(PlayerState playerState)
         {
-            this.state = state;
+            state = playerState;
             UpdatedTime = Time.unscaledTimeAsDouble;
         }
 
@@ -261,7 +280,7 @@ namespace Source
                 SetFreeFall(false);
             }
 
-            if (state is {jump: true} && !PlayerState.Equals(state, lastAnimationState))
+            if (state is {jump: true} && !PlayerState.Equals(state, lastPerformedState))
                 SetJump(true);
             SetFreeFall(Mathf.Abs(state.velocityY) > Player.INSTANCE.MinFreeFallSpeed
                         && !grounded && state is not {floating: true});
@@ -269,8 +288,7 @@ namespace Source
             SetGrounded(grounded);
             SetSpeed(xzVelocity.magnitude);
 
-            lastAnimationState = state;
-            lastAnimationUpdateTime = Time.unscaledTimeAsDouble;
+            SetLastPerformedState(state);
         }
 
         private void ReportToServer()
@@ -345,29 +363,43 @@ namespace Source
         private void OnDestroy()
         {
             if (Avatar != null)
-                DestroyImmediate(Avatar);
+                MetaBlockObject.DeepDestroy3DObject(Avatar); // TODO: incomplete destroy
         }
 
         public class PlayerState
         {
+            public string rid;
             public string walletId;
             public SerializableVector3 position;
             public bool floating;
             public bool jump;
             public bool sprinting;
             public float velocityY;
-            public int rid;
+            public bool teleport;
 
-            public PlayerState(string walletId, SerializableVector3 position, bool floating, bool jump, bool sprinting,
-                float velocityY)
+            public PlayerState(string walletId, SerializableVector3 position, bool floating, bool jump,
+                bool sprinting, float velocityY, bool teleport)
             {
-                rid = random.Next(0, int.MaxValue);
+                // rid = random.Next(0, int.MaxValue);
+                rid = Guid.NewGuid().ToString();
                 this.walletId = walletId;
                 this.position = position;
                 this.floating = floating;
                 this.jump = jump;
                 this.sprinting = sprinting;
                 this.velocityY = velocityY;
+                this.teleport = teleport;
+            }
+
+            private PlayerState(SerializableVector3 position)
+            {
+                this.position = position;
+                teleport = true;
+            }
+
+            public static PlayerState CreateTeleportState(Vector3 position)
+            {
+                return new PlayerState(new SerializableVector3(position));
             }
 
             public Vector3 GetPosition()
@@ -379,11 +411,13 @@ namespace Source
             {
                 return s1 != null
                        && s2 != null
+                       && s1.walletId == s2.walletId
                        && s1.rid == s2.rid
                        && Equals(s1.position, s2.position)
                        && s1.floating == s2.floating
                        && s1.jump == s2.jump
                        && s1.sprinting == s2.sprinting
+                       && s1.teleport == s2.teleport
                        && Math.Abs(s1.velocityY - s2.velocityY) < FloatPrecision;
             }
         }

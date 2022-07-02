@@ -20,14 +20,14 @@ namespace Source
         {
             if (Time.unscaledTimeAsDouble - lastInActivityCheck < MaxInactivityDelay) return; // TODO?
             lastInActivityCheck = Time.unscaledTimeAsDouble;
-            var wallets = playersMap.Keys.ToList();
-            foreach (var wallet in wallets)
+            var avatarIds = playersMap.Keys.ToList();
+            foreach (var id in avatarIds)
             {
-                var controller = playersMap[wallet];
+                var controller = playersMap[id];
                 if (Time.unscaledTimeAsDouble - controller.UpdatedTime < MaxInactivityDelay) continue;
-                Debug.LogWarning("Player " + wallet + " was inactive for too long. Removing avatar...");
-                playersMap.TryRemove(wallet, out _);
-                DestroyImmediate(controller);
+                Debug.LogWarning("Player " + id + " was inactive for too long. Removing avatar...");
+                playersMap.TryRemove(id, out _);
+                DestroyImmediate(controller.gameObject);
             }
         }
 
@@ -49,16 +49,21 @@ namespace Source
             }
             else
             {
-                Debug.Log("New player detected");
                 var avatar = Instantiate(avatarPrefab, transform);
                 var c = avatar.GetComponent<AvatarController>();
-                c.SetAnotherPlayer(playerState.walletId);
-                playersMap.TryAdd(playerState.walletId, c);
-                StartCoroutine(UpdatePlayerStateInNextFrame(c, playerState));
+                c.SetAnotherPlayer(playerState.walletId, playerState.GetPosition());
+                if (playersMap.TryAdd(playerState.walletId, c))
+                {
+                    playerState.teleport = true;
+                    StartCoroutine(UpdatePlayerStateInNextFrame(c, playerState));
+                    Debug.Log("New player detected");
+                }
+                else
+                    DestroyImmediate(c.gameObject);
             }
         }
 
-        private IEnumerator UpdatePlayerStateInNextFrame(AvatarController controller,
+        private static IEnumerator UpdatePlayerStateInNextFrame(AvatarController controller,
             AvatarController.PlayerState playerState)
         {
             yield return null;

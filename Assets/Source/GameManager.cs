@@ -194,7 +194,7 @@ namespace Source
             Loading.INSTANCE.UpdateText("Positioning the player...");
             yield return FindStartingY(pos, result => pos = result);
 
-            Player.INSTANCE.SetPosition(pos);
+            Player.INSTANCE.SetTeleportTarget(pos);
             yield return InitWorld(pos, clean);
             yield return LoadAvatar();
             SetState(State.PLAYING);
