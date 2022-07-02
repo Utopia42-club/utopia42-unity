@@ -108,7 +108,7 @@ namespace Source.Ui.Map
             return lands.Where(land =>
             {
                 var name = land.GetName() ?? "";
-                return name.Contains(searchField.text) || land.id.ToString().Contains(searchField.text);
+                return name.ToUpper().Contains(searchField.text.ToUpper()) || land.id.ToString().Contains(searchField.text);
             }).ToList();
         }
     }
