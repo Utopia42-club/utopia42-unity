@@ -54,7 +54,9 @@ namespace Source
         public bool CtrlDown { private set; get; }
         public bool CtrlUp { private set; get; }
         private Vector3Int playerPos;
+
         private AvatarController avatarController;
+
         // public string AvatarId { private set; get; } // test only
         [NonSerialized] public GameObject avatar;
         [NonSerialized] public Transform focusHighlight;
@@ -267,7 +269,7 @@ namespace Source
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
                 // AvatarId, // test only
-                AuthService.WalletId(), 
+                AuthService.WalletId(),
                 new SerializableVector3(pos), floating, jumpRequest, sprinting,
                 Mathf.Abs(reportVelocityY), false));
         }
@@ -505,7 +507,7 @@ namespace Source
         public void SetTeleportTarget(Vector3 pos)
         {
             avatarController.UpdatePlayerState(
-                AvatarController.PlayerState.CreateTeleportState(pos));
+                AvatarController.PlayerState.CreateTeleportState(AuthService.WalletId(), pos));
         }
 
         public Vector3 GetPosition()

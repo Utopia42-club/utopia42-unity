@@ -364,6 +364,10 @@ namespace Source
         {
             if (Avatar != null)
                 MetaBlockObject.DeepDestroy3DObject(Avatar); // TODO: incomplete destroy
+            if (nameLabel != null)
+                DestroyImmediate(nameLabel);
+            if (namePanel != null)
+                DestroyImmediate(namePanel);
         }
 
         public class PlayerState
@@ -391,15 +395,16 @@ namespace Source
                 this.teleport = teleport;
             }
 
-            private PlayerState(SerializableVector3 position)
+            private PlayerState(string walletId, SerializableVector3 position)
             {
+                this.walletId = walletId;
                 this.position = position;
                 teleport = true;
             }
 
-            public static PlayerState CreateTeleportState(Vector3 position)
+            public static PlayerState CreateTeleportState(string walletId, Vector3 position)
             {
-                return new PlayerState(new SerializableVector3(position));
+                return new PlayerState(walletId, new SerializableVector3(position));
             }
 
             public Vector3 GetPosition()

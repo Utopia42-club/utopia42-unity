@@ -20,8 +20,8 @@ namespace Source
         {
             if (Time.unscaledTimeAsDouble - lastInActivityCheck < MaxInactivityDelay) return; // TODO?
             lastInActivityCheck = Time.unscaledTimeAsDouble;
-            var avatarIds = playersMap.Keys.ToList();
-            foreach (var id in avatarIds)
+            var walletIds = playersMap.Keys.ToList();
+            foreach (var id in walletIds)
             {
                 var controller = playersMap[id];
                 if (Time.unscaledTimeAsDouble - controller.UpdatedTime < MaxInactivityDelay) continue;

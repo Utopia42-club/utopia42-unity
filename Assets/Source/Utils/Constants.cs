@@ -2,7 +2,7 @@ namespace Source.Utils
 {
     public static class Constants
     {
-        public static readonly string WebAppBaseURL = "https://dev.utopia42.club";
+        public static readonly string WebAppBaseURL = "http://utopia.vitaminhq.ir";
         // public static readonly string WebAppBaseURL = "https://app.utopia42.club";
         // public static readonly string WebAppBaseURL = "http://localhost:4200";
 
