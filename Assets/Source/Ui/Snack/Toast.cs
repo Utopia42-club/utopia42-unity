@@ -20,6 +20,13 @@ namespace Source.Ui.Snack
             });
         }
 
+        public SnackController Show()
+        {
+            return SnackService.INSTANCE.Show(
+                new SnackConfig(this)
+            );
+        }
+
         public enum ToastType
         {
             Error,

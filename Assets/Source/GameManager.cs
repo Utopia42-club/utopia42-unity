@@ -324,8 +324,8 @@ namespace Source
             if (!service.HasChange())
             {
                 SnackService.INSTANCE.Show(new SnackConfig(
-                    new Toast("Lands are already saved", Toast.ToastType.Info)
-                    , SnackConfig.Side.End).WithCloseButtonVisible(false));
+                        new Toast("Lands are already saved", Toast.ToastType.Info))
+                    .WithCloseButtonVisible(false));
                 yield break;
             }
 

@@ -15,7 +15,7 @@ namespace Source.Ui.Snack
         private readonly Side horizontalSide;
 
         public SnackConfig(VisualElement content,
-            Side verticalSide = Side.Start,
+            Side verticalSide = Side.End,
             Side horizontalSide = Side.End,
             int? duration = 4)
         {

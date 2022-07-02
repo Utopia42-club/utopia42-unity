@@ -46,12 +46,8 @@ namespace Source.Ui.Login
             GameManager.INSTANCE.StartCoroutine(EthNetwork.GetNetworks(_ => { loading.Close(); },
                 () =>
                 {
-                    SnackService.INSTANCE.Show(
-                        new SnackConfig(
-                            new Toast("Could not load any ETHEREUM networks. Please report the error.",
-                                Toast.ToastType.Error)
-                        )
-                    );
+                    new Toast("Could not load any ETHEREUM networks. Please report the error.",
+                        Toast.ToastType.Error).Show();
                     loading.Close();
                 }));
             SelectTab(0);
@@ -113,11 +109,7 @@ namespace Source.Ui.Login
                 {
                     if (!loginCredentialsDialog.AreInputsValid())
                     {
-                        SnackService.INSTANCE.Show(
-                            new SnackConfig(
-                                new Toast("Invalid credentials", Toast.ToastType.Error)
-                                , SnackConfig.Side.End)
-                        );
+                        new Toast("Invalid credentials", Toast.ToastType.Error).Show();
                         return;
                     }
 

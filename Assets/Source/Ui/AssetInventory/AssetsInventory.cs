@@ -10,6 +10,7 @@ using Source.Ui.AssetInventory.Models;
 using Source.Ui.AssetInventory.Slots;
 using Source.Ui.CustomUi;
 using Source.Ui.Popup;
+using Source.Ui.Snack;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
 using Source.Utils;
@@ -200,10 +201,7 @@ namespace Source.Ui.AssetInventory
                 }
 
                 scrollView.Add(container);
-            }, () =>
-            {
-                //TODO: show error snack
-            }, true);
+            }, () => new Toast("Failed to load user favorite Items", Toast.ToastType.Error).Show(), true);
         }
 
         private void Update()
@@ -426,7 +424,7 @@ namespace Source.Ui.AssetInventory
                 () =>
                 {
                     loading.Close();
-                    //TODO a toast?
+                    new Toast("Failed to add item to user favorites", Toast.ToastType.Error).Show();
                 }));
         }
 
@@ -440,11 +438,10 @@ namespace Source.Ui.AssetInventory
                     favoriteItems.Remove(favoriteItem);
                     SetupFavoriteAction(slot);
                     onDone?.Invoke();
-                    //TODO a toast?
                 }, () =>
                 {
                     loading.Close();
-                    //TODO a toast?
+                    new Toast("Failed to remove item from favorites", Toast.ToastType.Error).Show();
                 }));
         }
 
