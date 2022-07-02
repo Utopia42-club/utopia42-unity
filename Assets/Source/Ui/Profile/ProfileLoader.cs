@@ -10,9 +10,9 @@ namespace Source.Ui.Profile
     {
         private static ProfileLoader instance;
 
-        private Dictionary<string, Model.Profile> profileCache = new Dictionary<string, Model.Profile>();
-        private Dictionary<string, List<LoadData>> loadListeners = new Dictionary<string, List<LoadData>>();
-        private HashSet<string> loadingWallets = new HashSet<string>();
+        private readonly Dictionary<string, Model.Profile> profileCache = new();
+        private readonly Dictionary<string, List<LoadData>> loadListeners = new();
+        private readonly HashSet<string> loadingWallets = new();
 
         void Awake()
         {
@@ -42,21 +42,12 @@ namespace Source.Ui.Profile
             yield return WorldRestClient.INSTANCE.GetProfile(walletId, profile =>
             {
                 loadingWallets.Remove(walletId);
-                if (profile == null)
-                {
-                    profile = new Model.Profile();
-                    profile.walletId = walletId;
-                    profile.name = "No profile";
-                }
                 profileCache[walletId] = profile;
                 consumer.Invoke(profile);
                 if (loadListeners.ContainsKey(walletId))
                     loadListeners[walletId].ForEach(data => data.consumer.Invoke(profile));
                 loadListeners.Remove(walletId);
-            }, () =>
-            {
-                success = false;
-            });
+            }, () => success = false);
             if (!success)
             {
                 if (timeout > 8)
@@ -78,14 +69,14 @@ namespace Source.Ui.Profile
         {
             return loadingWallets.Contains(walletId);
         }
-        
+
         public void InvalidateProfile(string walletId)
         {
             profileCache.Remove(walletId);
         }
-        
+
         public static ProfileLoader INSTANCE => instance;
-        
+
         public class LoadData
         {
             public Action<Model.Profile> consumer;

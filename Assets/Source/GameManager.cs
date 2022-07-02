@@ -41,7 +41,26 @@ namespace Source
         void Start()
         {
             SetState(State.LOGIN);
-            stateChange.AddListener(newState => { BrowserConnector.INSTANCE.ReportGameState(newState); });
+            var checkedForProfile = false;
+            stateChange.AddListener(newState =>
+            {
+                BrowserConnector.INSTANCE.ReportGameState(newState);
+                if (!checkedForProfile && state == State.PLAYING)
+                {
+                    checkedForProfile = true;
+                    if (!AuthService.IsGuest())
+                        ProfileLoader.INSTANCE.load(AuthService.WalletId(), profile =>
+                        {
+                            if (profile == null)
+                            {
+                                BrowserConnector.INSTANCE.EditProfile(() =>
+                                {
+                                    ProfileLoader.INSTANCE.InvalidateProfile(AuthService.WalletId());
+                                }, () => { });
+                            }
+                        }, () => { });
+                }
+            });
         }
 
         void Update()

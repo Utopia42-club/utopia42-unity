@@ -81,7 +81,7 @@ namespace Source
             yield return null;
             ProfileLoader.INSTANCE.load(walletId, profile =>
             {
-                if (profile.avatarUrl != null && profile.avatarUrl.Length > 0)
+                if (profile != null && profile.avatarUrl != null && profile.avatarUrl.Length > 0)
                     ReloadAvatar(profile.avatarUrl);
                 else
                     LoadDefaultAvatar();
@@ -153,7 +153,7 @@ namespace Source
         {
             isAnotherPlayer = true;
             ProfileLoader.INSTANCE.load(walletId,
-                profile => nameLabel.text = profile.name ?? MakeWalletShorter(walletId),
+                profile => nameLabel.text = profile?.name ?? MakeWalletShorter(walletId),
                 () => nameLabel.text = MakeWalletShorter(walletId));
             StartCoroutine(LoadAvatarFromWallet(walletId));
         }
