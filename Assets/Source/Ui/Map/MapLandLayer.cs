@@ -39,6 +39,10 @@ namespace Source.Ui.Map
                     }, map);
                     Add(drawingLand);
                 }
+                else
+                {
+                    map.CloseSearchPanelIfOpened();
+                }
             });
             map.RegisterCallback<MouseUpEvent>(e =>
             {

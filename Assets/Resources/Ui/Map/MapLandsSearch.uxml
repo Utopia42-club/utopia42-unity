@@ -2,9 +2,9 @@
     <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
     <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
     <ui:Button text="Save Lands" display-tooltip-when-elided="true" name="saveLandsButton" class="utopia-action-text-button utopia-button-accent" style="width: 110px; position: absolute; bottom: 5px; left: 5px;" />
-    <ui:VisualElement name="myLands" class="utopia-panel" style="position: absolute; top: 5px; left: 5px; width: 300px; display: none; transition-duration: 500ms; transition-delay: 0ms; transition-property: all; transition-timing-function: ease; bottom: 5px;">
+    <ui:VisualElement name="myLands" class="utopia-panel" style="position: absolute; top: 5px; left: 5px; width: 300px; display: none; transition-duration: 500ms, 0s; transition-delay: 0ms, 0s; transition-property: all, display; transition-timing-function: ease, ease; bottom: 5px;">
         <ui:VisualElement name="emptySpace" style="height: 46px; min-height: 46px;" />
-        <ui:Label text="Your Lands:" display-tooltip-when-elided="true" class="utopia-text-h1" style="left: 5px;" />
+        <ui:Label text="Your Lands:" display-tooltip-when-elided="true" class="utopia-text-h1" style="left: 5px; overflow: hidden;" />
         <ui:VisualElement name="landsListContainer" style="padding-left: 7px; padding-right: 7px; padding-top: 7px; padding-bottom: 7px; flex-grow: 1;" />
     </ui:VisualElement>
     <ui:VisualElement name="searchBox" class="utopia-panel current-location-box" style="justify-content: center; align-items: center; flex-direction: row; position: absolute; top: 10px; width: 290px; left: 10px;">

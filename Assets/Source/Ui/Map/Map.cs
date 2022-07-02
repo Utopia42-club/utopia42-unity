@@ -128,5 +128,11 @@ namespace Source.Ui.Map
             lands.SetPlayerPositionIndicatorVisibility(Visibility.Visible);
             lands.ClearFocus();
         }
+
+        public void CloseSearchPanelIfOpened()
+        {
+            if (mapLandsSearch.IsLandsListOpen())
+                mapLandsSearch.ToggleLandsList();
+        }
     }
 }

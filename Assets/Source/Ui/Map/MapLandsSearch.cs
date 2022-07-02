@@ -18,7 +18,7 @@ namespace Source.Ui.Map
         private readonly Button menuButton;
         private readonly TextField searchField;
         private readonly MapLandsList mapLandsList;
-        private bool isListOpen = false;
+        private bool isLandsListOpen = false;
         private PopupController searchPopupConttoller;
         private MapLandsList popupLandsList;
         private readonly Button saveButton;
@@ -26,18 +26,17 @@ namespace Source.Ui.Map
         public MapLandsSearch(Map map) : base("Ui/Map/MapLandsSearch")
         {
             myLands = this.Q<VisualElement>("myLands");
-            // myLands.style.width = 0;
             myLands.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
 
             searchBox = this.Q<VisualElement>("searchBox");
             landsListContainer = this.Q<VisualElement>("landsListContainer");
             menuButton = this.Q<Button>("menuButton");
-            menuButton.clickable.clicked += ToggleMyLandsList;
+            menuButton.clickable.clicked += ToggleLandsList;
 
             saveButton = this.Q<Button>("saveLandsButton");
             saveButton.clickable.clicked += () => GameManager.INSTANCE.Save();
             saveButton.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
-            
+
             searchField = this.Q<TextField>("searchField");
             TextFields.SetPlaceHolderForTextField(searchField, "Search");
             TextFields.RegisterUiEngagementCallbacksForTextField(searchField);
@@ -48,7 +47,7 @@ namespace Source.Ui.Map
 
             searchField.RegisterValueChangedCallback(evt =>
             {
-                if (isListOpen)
+                if (isLandsListOpen)
                     mapLandsList.SetLands(FilterLands(WorldService.INSTANCE.GetPlayerLands()));
                 else
                 {
@@ -87,20 +86,17 @@ namespace Source.Ui.Map
                 .SelectMany(entry => entry.Value).ToList();
         }
 
-        private void ToggleMyLandsList()
+        public void ToggleLandsList()
         {
-            // saveButton.SetEnabled(WorldService.INSTANCE.HasChange());
-            myLands.style.display = isListOpen ? DisplayStyle.None : DisplayStyle.Flex;
-            isListOpen = !isListOpen;
-            if (isListOpen)
-            {
+            myLands.style.display = isLandsListOpen ? DisplayStyle.None : DisplayStyle.Flex;
+            isLandsListOpen = !isLandsListOpen;
+            if (isLandsListOpen)
                 mapLandsList.SetLands(WorldService.INSTANCE.GetPlayerLands());
-                // myLands.style.width = 300;
-            }
-            else
-            {
-                // myLands.style.width = 0;
-            }
+        }
+
+        public bool IsLandsListOpen()
+        {
+            return isLandsListOpen;
         }
 
         private List<Land> FilterLands(List<Land> lands)
@@ -108,7 +104,8 @@ namespace Source.Ui.Map
             return lands.Where(land =>
             {
                 var name = land.GetName() ?? "";
-                return name.ToUpper().Contains(searchField.text.ToUpper()) || land.id.ToString().Contains(searchField.text);
+                return name.ToUpper().Contains(searchField.text.ToUpper()) ||
+                       land.id.ToString().Contains(searchField.text);
             }).ToList();
         }
     }
