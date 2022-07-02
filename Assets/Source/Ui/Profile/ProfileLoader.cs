@@ -14,7 +14,7 @@ namespace Source.Ui.Profile
         private Dictionary<string, List<LoadData>> loadListeners = new Dictionary<string, List<LoadData>>();
         private HashSet<string> loadingWallets = new HashSet<string>();
 
-        void Start()
+        void Awake()
         {
             instance = this;
         }

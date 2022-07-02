@@ -6,6 +6,7 @@ using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
 using Source.Ui.Profile;
 using Source.Utils;
+using TMPro;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Random = System.Random;
@@ -16,7 +17,7 @@ namespace Source
     public class AvatarController : MonoBehaviour
     {
         public static readonly string DefaultAvatarUrl =
-            "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb";
+            "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb"; //FIXME Configuration?
 
         private const int MaxReportDelay = 1; // in seconds 
         private const float AnimationUpdateRate = 0.1f; // in seconds
@@ -49,6 +50,8 @@ namespace Source
         private const int Precision = 5;
         private static readonly float FloatPrecision = Mathf.Pow(10, -Precision);
         private Vector3 movement;
+        [SerializeField] private TextMeshProUGUI nameLabel;
+        [SerializeField] private GameObject namePanel;
 
         // private Vector3 anotherPlayerVelocity;
 
@@ -61,6 +64,11 @@ namespace Source
             animIDJump = Animator.StringToHash("Jump");
             animIDFreeFall = Animator.StringToHash("FreeFall");
             StartCoroutine(UpdateAnimationCoroutine());
+        }
+
+        private void Update()
+        {
+            namePanel.transform.rotation = Camera.main.transform.rotation;
         }
 
         private void LoadDefaultAvatar()
@@ -141,16 +149,25 @@ namespace Source
             }
         }
 
-        public void SetAnotherPlayer(string playerStateWalletId)
+        public void SetAnotherPlayer(string walletId)
         {
             isAnotherPlayer = true;
-            StartCoroutine(LoadAvatarFromWallet(playerStateWalletId));
+            ProfileLoader.INSTANCE.load(walletId,
+                profile => nameLabel.text = profile.name ?? MakeWalletShorter(walletId),
+                () => nameLabel.text = MakeWalletShorter(walletId));
+            StartCoroutine(LoadAvatarFromWallet(walletId));
         }
 
         public void SetMainPlayer(string walletId)
         {
             isAnotherPlayer = false;
+            namePanel.gameObject.SetActive(false);
             StartCoroutine(LoadAvatarFromWallet(walletId));
+        }
+
+        private string MakeWalletShorter(string walletId)
+        {
+            return walletId[..6] + "..." + walletId[^5..];
         }
 
         private void UpdateLookDirection(Vector3 movement)
@@ -213,7 +230,7 @@ namespace Source
                     yield break;
 
                 if (Avatar != null && Time.unscaledTimeAsDouble - lastAnimationUpdateTime > AnimationUpdateRate
-                                   && !PlayerState.Equals(state, lastAnimationState) 
+                                   && !PlayerState.Equals(state, lastAnimationState)
                                    && state != null)
                 {
                     UpdateAnimation();
