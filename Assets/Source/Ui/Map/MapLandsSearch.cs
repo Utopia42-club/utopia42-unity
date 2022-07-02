@@ -26,6 +26,7 @@ namespace Source.Ui.Map
         public MapLandsSearch(Map map) : base("Ui/Map/MapLandsSearch")
         {
             myLands = this.Q<VisualElement>("myLands");
+            myLands.style.width = 0;
             myLands.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
 
             searchBox = this.Q<VisualElement>("searchBox");
@@ -88,10 +89,21 @@ namespace Source.Ui.Map
 
         public void ToggleLandsList()
         {
-            myLands.style.display = isLandsListOpen ? DisplayStyle.None : DisplayStyle.Flex;
             isLandsListOpen = !isLandsListOpen;
             if (isLandsListOpen)
+            {
                 mapLandsList.SetLands(WorldService.INSTANCE.GetPlayerLands());
+                myLands.style.width = 300;
+                myLands.style.display = DisplayStyle.Flex;
+            }
+            else
+            {
+                myLands.style.width = 0;
+                myLands.schedule.Execute(() =>
+                {
+                    myLands.style.display = DisplayStyle.None;
+                }).StartingIn(500);
+            }
         }
 
         public bool IsLandsListOpen()
