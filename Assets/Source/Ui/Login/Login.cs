@@ -104,8 +104,8 @@ namespace Source.Ui.Login
         private void OpenCredentialsDialog()
         {
             var loginCredentialsDialog = new LoginCredentialsDialog();
-            var dialogId = -1;
-            dialogId = DialogService.INSTANCE.Show(new DialogConfig("Login credentials", loginCredentialsDialog)
+            DialogController dialog = null;
+            dialog = DialogService.INSTANCE.Show(new DialogConfig("Login credentials", loginCredentialsDialog)
                 .WithWidth(450)
                 .WithHeight(300)
                 .WithCancelAction()
@@ -123,7 +123,7 @@ namespace Source.Ui.Login
 
                     loginCredentialsDialog.SaveInputs();
                     DoSubmit();
-                    DialogService.INSTANCE.Close(dialogId);
+                    dialog.Close();
                 }, "utopia-button-secondary", false))
             );
         }

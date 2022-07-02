@@ -36,12 +36,7 @@ namespace Source.Ui.Dialog
             return dialogs.Count > 0;
         }
 
-        public int Show(DialogConfig config)
-        {
-            return Show(config, out _);
-        }
-
-        public int Show(DialogConfig config, out VisualElement dialog)
+        public DialogController Show(DialogConfig config)
         {
             if (dialogs.Count == 0)
                 gameObject.SetActive(true);
@@ -49,7 +44,7 @@ namespace Source.Ui.Dialog
             dialogContainer.style.width =
                 dialogContainer.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
             dialogContainer.style.position = Position.Absolute;
-            dialog = dialogContainer.Q<VisualElement>("dialog");
+            var dialog = dialogContainer.Q<VisualElement>("dialog");
             dialog.style.width = config.Width;
             dialog.style.height = config.Height;
             dialog.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
@@ -102,7 +97,7 @@ namespace Source.Ui.Dialog
             dialogContainer.userData = config;
             dialogs.Add(id, dialogContainer);
             root.Add(dialogContainer);
-            return id;
+            return new DialogController(id, dialog);
         }
 
         public void Close(int id)

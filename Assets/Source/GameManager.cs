@@ -30,7 +30,6 @@ namespace Source
         private State state = State.LOADING;
         private State? previousState;
 
-        private List<Dialog> dialogs = new();
         private bool captureAllKeyboardInputOrig;
 
         private bool doubleCtrlTap = false;
@@ -497,16 +496,6 @@ namespace Source
             player.ResetLands();
             yield return InitWorld(player.GetPosition(), true);
             SetState(State.PLAYING);
-        }
-
-        public void CloseDialog(Dialog dialog, State? targetState = null)
-        {
-            Destroy(dialog.gameObject);
-            dialogs.Remove(dialog);
-            if (dialogs.Count == 0)
-            {
-                SetState(targetState ?? (previousState ?? State.PLAYING));
-            }
         }
 
         public void FreezeGame()

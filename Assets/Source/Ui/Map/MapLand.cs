@@ -50,12 +50,11 @@ namespace Source.Ui.Map
                 if (evt.button == (int) MouseButton.RightMouse)
                 {
                     var landProfile = new LandProfile(land);
-                    DialogService.INSTANCE.Show(new DialogConfig("Land Profile", landProfile)
-                            .WithWidth(new Length(100, LengthUnit.Percent))
-                            .WithHeight(new Length(100, LengthUnit.Percent))
-                            .WithOnClose(UpdateLandStyle)
-                        , out var dialog);
-                    var loading = LoadingLayer.LoadingLayer.Show(dialog);
+                    var controller = DialogService.INSTANCE.Show(new DialogConfig("Land Profile", landProfile)
+                        .WithWidth(new Length(100, LengthUnit.Percent))
+                        .WithHeight(new Length(100, LengthUnit.Percent))
+                        .WithOnClose(UpdateLandStyle));
+                    var loading = LoadingLayer.LoadingLayer.Show(controller.Dialog);
                     ProfileLoader.INSTANCE.load(land.owner, profile =>
                         {
                             loading.Close();
