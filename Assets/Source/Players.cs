@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -25,7 +24,7 @@ namespace Source
             {
                 var controller = playersMap[id];
                 if (Time.unscaledTimeAsDouble - controller.UpdatedTime < MaxInactivityDelay) continue;
-                Debug.LogWarning("Player " + id + " was inactive for too long. Removing avatar...");
+                Debug.LogWarning($"{id} | Player was inactive for too long. Removing avatar...");
                 playersMap.TryRemove(id, out _);
                 DestroyImmediate(controller.gameObject);
             }
@@ -38,10 +37,10 @@ namespace Source
 
         public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
         {
-            if (playerState == null) return;
+            if (playerState?.walletId == null) return;
             if (playerState.walletId.Equals(AuthService.WalletId()))
             {
-                Debug.LogWarning("Cannot add another player with the same wallet. Ignoring state...");
+                Debug.LogWarning($"Cannot add another player with the same wallet ({playerState.walletId}). Ignoring state...");
             }
             else if (playersMap.TryGetValue(playerState.walletId, out var controller))
             {
@@ -56,7 +55,7 @@ namespace Source
                 {
                     playerState.teleport = true;
                     StartCoroutine(UpdatePlayerStateInNextFrame(c, playerState));
-                    Debug.Log("New player detected");
+                    Debug.Log($"{playerState.walletId} | New player detected");
                 }
                 else
                     DestroyImmediate(c.gameObject);

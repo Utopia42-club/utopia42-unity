@@ -28,7 +28,7 @@ namespace Source.Ui.Profile
             imageElement = this.Q<VisualElement>("profileImage");
             if (profile.imageUrl != null)
             {
-                var url = Constants.ApiURL + "/profile/avatar/" + profile.imageUrl;
+                var url = Constants.ApiURL + "/profile/image/" + profile.imageUrl;
                 GameManager.INSTANCE.StartCoroutine(
                     UiImageUtils.SetBackGroundImageFromUrl(url, emptyUserIcon, imageElement));
             }

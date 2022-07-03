@@ -88,7 +88,7 @@ namespace Source.Canvas
                 currentProfile = profile;
                 profileIcon.SetUrl(profile.imageUrl == null
                     ? null
-                    : Constants.ApiURL + "/profile/avatar/" + profile.imageUrl);
+                    : Constants.ApiURL + "/profile/image/" + profile.imageUrl);
                 label.SetText(profile.name);
             }
         }

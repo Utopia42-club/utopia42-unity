@@ -56,7 +56,6 @@ namespace Source
         private bool controllerDisabled;
 
         private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
-        // private Vector3 anotherPlayerVelocity;
 
         public void Start()
         {
@@ -220,7 +219,8 @@ namespace Source
 
             var pos = state.GetPosition();
             movement = pos - (lastPerformedState?.GetPosition() ?? pos);
-            UpdateLookDirection(movement);
+            if (Avatar != null)
+                UpdateLookDirection(movement);
 
             var floatOrJumpStateChanged =
                 playerState.floating != lastPerformedState?.floating || playerState.jump != lastPerformedState?.jump;
@@ -309,7 +309,7 @@ namespace Source
             avatarLoader.OnCompleted += (_, args) =>
             {
                 if (isAnotherPlayer)
-                    Debug.Log("Avatar loaded for another player");
+                    Debug.Log($"{state?.walletId} | Avatar loaded");
                 if (Avatar != null) DestroyImmediate(Avatar);
                 Avatar = args.Avatar;
                 Avatar.gameObject.transform.SetParent(transform);
@@ -323,18 +323,26 @@ namespace Source
                 remainingAvatarLoadAttempts -= 1;
                 switch (args.Type)
                 {
-                    case FailureType.None or FailureType.ModelDownloadError or FailureType.MetadataDownloadError
-                        or FailureType.NoInternetConnection:
-                        Debug.Log("Failed to load the avatar: " + args.Type + " | Remaining attempts: " +
-                                  remainingAvatarLoadAttempts);
+                    // case FailureType.None or FailureType.ModelDownloadError or FailureType.MetadataDownloadError
+                    //     or FailureType.NoInternetConnection:
+                    default:
                         if (remainingAvatarLoadAttempts > 0)
+                        {
+                            Debug.Log($"{state?.walletId} | Failed to load the avatar: {args.Type} | Remaining attempts: " +
+                                      remainingAvatarLoadAttempts);
                             avatarLoader.LoadAvatar(url);
+                        }
+                        else
+                        {
+                            Debug.Log($"{state?.walletId} | Failed to load the avatar: {args.Type} | Loading the default avatar...");
+                            LoadDefaultAvatar();
+                        }
                         break;
                     //retry 
-                    default:
-                        Debug.Log("Invalid avatar: " + args.Type + " (Loading the default avatar)");
-                        LoadDefaultAvatar();
-                        break;
+                    // default:
+                    //     Debug.Log("Invalid avatar: " + args.Type + " (Loading the default avatar)");
+                    //     LoadDefaultAvatar();
+                    //     break;
                 }
             };
             avatarLoader.LoadAvatar(url);
