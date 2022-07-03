@@ -56,6 +56,11 @@ namespace Source
                                 BrowserConnector.INSTANCE.EditProfile(() =>
                                 {
                                     ProfileLoader.INSTANCE.InvalidateProfile(AuthService.WalletId());
+                                    ProfileLoader.INSTANCE.load(AuthService.WalletId(),
+                                        p =>
+                                        {
+                                            if (p != null) Player.INSTANCE.ReloadAvatar(p.avatarUrl);
+                                        }, () => { });
                                 }, () => { });
                             }
                         }, () => { });
