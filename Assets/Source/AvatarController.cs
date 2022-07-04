@@ -307,15 +307,17 @@ namespace Source
             {
                 if (args.Avatar.GetComponentsInChildren<Renderer>().Length > 1)
                 {
-                    Debug.LogWarning($"{state?.walletId} | Loaded avatar has more than one renderer component | Loading the default avatar...");
+                    Debug.LogWarning(
+                        $"{state?.walletId} | Loaded avatar has more than one renderer component | Loading the default avatar...");
                     MetaBlockObject.DeepDestroy3DObject(args.Avatar);
                     avatarLoader.LoadAvatar(DefaultAvatarUrl);
                     return;
                 }
-                
+
                 if (isAnotherPlayer)
                     Debug.Log($"{state?.walletId} | Avatar loaded");
-                if (Avatar != null) MetaBlockObject.DeepDestroy3DObject(Avatar);
+                if (Avatar != null)
+                    MetaBlockObject.DeepDestroy3DObject(Avatar);
                 Avatar = args.Avatar;
                 Avatar.gameObject.transform.SetParent(transform);
                 Avatar.gameObject.transform.localPosition = Vector3.zero;
@@ -367,7 +369,6 @@ namespace Source
         {
             if (Avatar != null)
                 MetaBlockObject.DeepDestroy3DObject(Avatar);
-
             if (nameLabel != null)
                 DestroyImmediate(nameLabel);
             if (namePanel != null)

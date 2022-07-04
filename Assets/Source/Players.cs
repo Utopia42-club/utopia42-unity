@@ -8,23 +8,25 @@ namespace Source
 {
     public class Players : MonoBehaviour
     {
-        private const int MaxInactivityDelay = 2; // in seconds
+        [SerializeField] private int maxPlayersAllowed = 10;
+        [SerializeField] private int maxInactivityDelay = 2; // in seconds
+        [SerializeField] private int maxCreateAvatarDistance = 100;
+        [SerializeField] private int minDestroyAvatarDistance = 200;
+        [SerializeField] private GameObject avatarPrefab;
+
         private double lastInActivityCheck = 0;
-
-        [SerializeField] public GameObject avatarPrefab;
-
-        public readonly ConcurrentDictionary<string, AvatarController> playersMap = new();
+        private readonly ConcurrentDictionary<string, AvatarController> playersMap = new();
 
         private void Update()
         {
-            if (Time.unscaledTimeAsDouble - lastInActivityCheck < MaxInactivityDelay) return; // TODO?
+            if (Time.unscaledTimeAsDouble - lastInActivityCheck < maxInactivityDelay) return; // TODO?
             lastInActivityCheck = Time.unscaledTimeAsDouble;
             var walletIds = playersMap.Keys.ToList();
             foreach (var id in walletIds)
             {
                 var controller = playersMap[id];
-                if (Time.unscaledTimeAsDouble - controller.UpdatedTime < MaxInactivityDelay) continue;
-                Debug.LogWarning($"{id} | Player was inactive for too long. Removing avatar...");
+                if (Time.unscaledTimeAsDouble - controller.UpdatedTime < maxInactivityDelay) continue;
+                Debug.LogWarning($"{id} | Player was inactive for too long. Removing player...");
                 playersMap.TryRemove(id, out _);
                 DestroyImmediate(controller.gameObject);
             }
@@ -40,13 +42,20 @@ namespace Source
             if (playerState?.walletId == null) return;
             if (playerState.walletId.Equals(AuthService.WalletId()))
             {
-                Debug.LogWarning($"Cannot add another player with the same wallet ({playerState.walletId}). Ignoring state...");
+                Debug.LogWarning(
+                    $"Cannot add another player with the same wallet ({playerState.walletId}). Ignoring state...");
             }
             else if (playersMap.TryGetValue(playerState.walletId, out var controller))
             {
-                controller.UpdatePlayerState(playerState);
+                if (ShouldDestroyAvatar(playerState))
+                {
+                    Debug.Log($"{playerState.walletId} | Player distance is too far. Removing player...");
+                    DestroyImmediate(controller.gameObject);
+                }
+                else
+                    controller.UpdatePlayerState(playerState);
             }
-            else
+            else if (ShouldCreateAvatar(playerState))
             {
                 var avatar = Instantiate(avatarPrefab, transform);
                 var c = avatar.GetComponent<AvatarController>();
@@ -60,6 +69,32 @@ namespace Source
                 else
                     DestroyImmediate(c.gameObject);
             }
+            else if (playersMap.Count < maxPlayersAllowed)
+                Debug.Log($"{playerState.walletId} | New player detected but it is too far. Ignoring state...");
+            else
+                Debug.Log(
+                    $"{playerState.walletId} | New player detected but exceeds the total number of players. Ignoring state...");
+        }
+
+        private bool ShouldCreateAvatar(AvatarController.PlayerState state)
+        {
+            if (state?.position == null || playersMap.Count >= maxPlayersAllowed)
+                return false;
+            return GetDistanceToMainPlayer(state) <= maxCreateAvatarDistance;
+        }
+
+        private bool ShouldDestroyAvatar(AvatarController.PlayerState state)
+        {
+            if (state?.position == null)
+                return true;
+            return GetDistanceToMainPlayer(state) >= minDestroyAvatarDistance;
+        }
+
+        private static float GetDistanceToMainPlayer(AvatarController.PlayerState state)
+        {
+            var distance = state.GetPosition() - Player.INSTANCE.GetPosition();
+            distance.y = 0;
+            return distance.magnitude;
         }
 
         private static IEnumerator UpdatePlayerStateInNextFrame(AvatarController controller,
