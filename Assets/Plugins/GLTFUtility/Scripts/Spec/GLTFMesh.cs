@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Scripting;
+using Object = UnityEngine.Object;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh
@@ -200,6 +201,7 @@ namespace Siccity.GLTFUtility {
 								break;
 							default:
 								Debug.LogWarning("GLTF rendering mode " + submeshTrisMode[i] + " not supported.");
+								Object.Destroy(mesh);
 								return null;
 						}
 					}
@@ -281,6 +283,7 @@ namespace Siccity.GLTFUtility {
 						}
 					}
 
+					Object.Destroy(selected);
 					return newMesh;
 				}
 

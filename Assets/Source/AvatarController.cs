@@ -10,7 +10,6 @@ using Source.Utils;
 using TMPro;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
-using Random = System.Random;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Source
@@ -18,12 +17,10 @@ namespace Source
     public class AvatarController : MonoBehaviour
     {
         public static readonly string DefaultAvatarUrl =
-            "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb"; //FIXME Configuration?
+            "https://d1a370nemizbjq.cloudfront.net/8b6189f0-c999-4a6a-bffc-7f68d66b39e6.glb"; //FIXME Configuration?
 
         private const int MaxReportDelay = 1; // in seconds 
         private const float AnimationUpdateRate = 0.1f; // in seconds
-
-        private static readonly Random random = new();
 
         private AvatarLoader avatarLoader;
 
@@ -308,9 +305,17 @@ namespace Source
             avatarLoader = new AvatarLoader {UseAvatarCaching = true};
             avatarLoader.OnCompleted += (_, args) =>
             {
+                if (args.Avatar.GetComponentsInChildren<Renderer>().Length > 1)
+                {
+                    Debug.LogWarning($"{state?.walletId} | Loaded avatar has more than one renderer component | Loading the default avatar...");
+                    MetaBlockObject.DeepDestroy3DObject(args.Avatar);
+                    avatarLoader.LoadAvatar(DefaultAvatarUrl);
+                    return;
+                }
+                
                 if (isAnotherPlayer)
                     Debug.Log($"{state?.walletId} | Avatar loaded");
-                if (Avatar != null) DestroyImmediate(Avatar);
+                if (Avatar != null) MetaBlockObject.DeepDestroy3DObject(Avatar);
                 Avatar = args.Avatar;
                 Avatar.gameObject.transform.SetParent(transform);
                 Avatar.gameObject.transform.localPosition = Vector3.zero;
@@ -321,28 +326,18 @@ namespace Source
             avatarLoader.OnFailed += (_, args) =>
             {
                 remainingAvatarLoadAttempts -= 1;
-                switch (args.Type)
+                if (remainingAvatarLoadAttempts > 0)
                 {
-                    // case FailureType.None or FailureType.ModelDownloadError or FailureType.MetadataDownloadError
-                    //     or FailureType.NoInternetConnection:
-                    default:
-                        if (remainingAvatarLoadAttempts > 0)
-                        {
-                            Debug.Log($"{state?.walletId} | Failed to load the avatar: {args.Type} | Remaining attempts: " +
-                                      remainingAvatarLoadAttempts);
-                            avatarLoader.LoadAvatar(url);
-                        }
-                        else
-                        {
-                            Debug.Log($"{state?.walletId} | Failed to load the avatar: {args.Type} | Loading the default avatar...");
-                            LoadDefaultAvatar();
-                        }
-                        break;
-                    //retry 
-                    // default:
-                    //     Debug.Log("Invalid avatar: " + args.Type + " (Loading the default avatar)");
-                    //     LoadDefaultAvatar();
-                    //     break;
+                    Debug.LogWarning(
+                        $"{state?.walletId} | Failed to load the avatar: {args.Type} | Remaining attempts: " +
+                        remainingAvatarLoadAttempts);
+                    avatarLoader.LoadAvatar(url);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"{state?.walletId} | Failed to load the avatar: {args.Type} | Loading the default avatar...");
+                    LoadDefaultAvatar();
                 }
             };
             avatarLoader.LoadAvatar(url);
@@ -371,7 +366,8 @@ namespace Source
         private void OnDestroy()
         {
             if (Avatar != null)
-                MetaBlockObject.DeepDestroy3DObject(Avatar); // TODO: incomplete destroy
+                MetaBlockObject.DeepDestroy3DObject(Avatar);
+
             if (nameLabel != null)
                 DestroyImmediate(nameLabel);
             if (namePanel != null)
