@@ -38,6 +38,9 @@ namespace Source.Canvas
             manager = GameManager.INSTANCE;
             profileLoader = ProfileLoader.INSTANCE;
             openProfileButton.AddListener(() => manager.ShowProfile(currentProfile, null));
+            
+            view.SetActive(false); // TODO ?
+            ShowShortcutsSnack();
         }
 
         void Update()

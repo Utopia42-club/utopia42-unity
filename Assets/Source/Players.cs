@@ -25,9 +25,9 @@ namespace Source
             foreach (var id in walletIds)
             {
                 var controller = playersMap[id];
-                if (Time.unscaledTimeAsDouble - controller.UpdatedTime < maxInactivityDelay) continue;
+                if (Time.unscaledTimeAsDouble - controller.UpdatedTime < maxInactivityDelay ||
+                    !playersMap.TryRemove(id, out _)) continue;
                 Debug.LogWarning($"{id} | Player was inactive for too long. Removing player...");
-                playersMap.TryRemove(id, out _);
                 DestroyImmediate(controller.gameObject);
             }
         }
@@ -50,7 +50,8 @@ namespace Source
                 if (ShouldDestroyAvatar(playerState))
                 {
                     Debug.Log($"{playerState.walletId} | Player distance is too far. Removing player...");
-                    DestroyImmediate(controller.gameObject);
+                    if (playersMap.TryRemove(playerState.walletId, out _))
+                        DestroyImmediate(controller.gameObject);
                 }
                 else
                     controller.UpdatePlayerState(playerState);
@@ -68,12 +69,13 @@ namespace Source
                 }
                 else
                     DestroyImmediate(c.gameObject);
+                
             }
-            else if (playersMap.Count < maxPlayersAllowed)
-                Debug.Log($"{playerState.walletId} | New player detected but it is too far. Ignoring state...");
-            else
-                Debug.Log(
-                    $"{playerState.walletId} | New player detected but exceeds the total number of players. Ignoring state...");
+            // else if (playersMap.Count < maxPlayersAllowed)
+            //     Debug.Log($"{playerState.walletId} | New player detected but it is too far. Ignoring state...");
+            // else
+            //     Debug.Log(
+            //         $"{playerState.walletId} | New player detected but exceeds the total number of players. Ignoring state...");
         }
 
         private bool ShouldCreateAvatar(AvatarController.PlayerState state)
