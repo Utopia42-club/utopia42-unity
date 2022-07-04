@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Source.Canvas;
-using Source.Ui.AssetInventory;
 using Source.Ui.Utils;
 using Source.Utils;
 using UnityEngine;
@@ -32,6 +31,8 @@ namespace Source.Ui.Profile
                 GameManager.INSTANCE.StartCoroutine(
                     UiImageUtils.SetBackGroundImageFromUrl(url, emptyUserIcon, imageElement));
             }
+            else
+                UiImageUtils.SetBackground(imageElement, emptyUserIcon);
 
             nameLabel = this.Q<Label>("name");
             if (profile.name != null)
