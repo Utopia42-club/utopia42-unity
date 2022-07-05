@@ -331,6 +331,7 @@ MonoBehaviour:
     ownerIndex: 0
   cameraContainerHeight: 1.74
   cameraZOffset: 3.5
+  cameraXOffset: 0.2
   viewModeChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -1762,6 +1763,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cd933a592ae4ac09c3af1df3b6061e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxPlayersAllowed: 10
+  maxInactivityDelay: 2
+  maxCreateAvatarDistance: 100
+  minDestroyAvatarDistance: 200
   avatarPrefab: {fileID: 7620900103328517206, guid: ac3aee3b658d8df63b9e59d17355a0f2, type: 3}
 --- !u!4 &1090085033
 Transform:

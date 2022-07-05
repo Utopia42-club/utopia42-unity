@@ -93,6 +93,7 @@ namespace Source
 
         [SerializeField] private float cameraContainerHeight;
         [SerializeField] private float cameraZOffset;
+        [SerializeField] private float cameraXOffset;
 
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
         public UnityEvent<ViewMode> viewModeChanged;
@@ -346,7 +347,9 @@ namespace Source
             var isNowFirstPerson = viewMode == ViewMode.FIRST_PERSON;
             viewMode = isNowFirstPerson ? ViewMode.THIRD_PERSON : ViewMode.FIRST_PERSON;
             camContainer.localPosition = cameraContainerHeight * Vector3.up;
-            cam.localPosition = (isNowFirstPerson ? cameraZOffset : 0) * Vector3.back;
+            cam.localPosition = isNowFirstPerson
+                ? cameraZOffset * Vector3.back + cameraXOffset * Vector3.right
+                : Vector3.zero;
             avatarController.SetAvatarBodyActive(isNowFirstPerson);
             viewModeChanged.Invoke(viewMode);
         }

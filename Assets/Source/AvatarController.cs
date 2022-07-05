@@ -51,11 +51,15 @@ namespace Source
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private GameObject namePanel;
         private bool controllerDisabled;
+        private GameObject avatarContainer;
 
         private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
 
         public void Start()
         {
+            avatarContainer = new GameObject {name = "AvatarContainer"};
+            avatarContainer.transform.SetParent(transform);
+            avatarContainer.transform.localPosition = Vector3.zero;
             controller = GetComponent<CharacterController>();
             UpdatedTime = -2 * AnimationUpdateRate;
             animIDSpeed = Animator.StringToHash("Speed");
@@ -176,7 +180,7 @@ namespace Source
         private void LookAt(Vector3 forward)
         {
             forward.y = 0;
-            Avatar.transform.rotation = Quaternion.LookRotation(forward);
+            avatarContainer.transform.rotation = Quaternion.LookRotation(forward);
         }
 
         public void SetTargetPosition(Vector3 target)
@@ -215,8 +219,7 @@ namespace Source
 
             var pos = state.GetPosition();
             movement = pos - (lastPerformedState?.GetPosition() ?? pos);
-            if (Avatar != null)
-                UpdateLookDirection(movement);
+            UpdateLookDirection(movement);
 
             var floatOrJumpStateChanged =
                 playerState.floating != lastPerformedState?.floating || playerState.jump != lastPerformedState?.jump;
@@ -318,8 +321,8 @@ namespace Source
                 if (Avatar != null)
                     MetaBlockObject.DeepDestroy3DObject(Avatar);
                 Avatar = args.Avatar;
-                Avatar.gameObject.transform.SetParent(transform);
-                Avatar.gameObject.transform.localPosition = Vector3.zero;
+                Avatar.gameObject.transform.SetParent(avatarContainer.transform);
+                Avatar.gameObject.transform.localPosition = new Vector3(.06f, 0, -.02f);
                 animator = Avatar.GetComponent<Animator>();
                 onDone?.Invoke();
                 remainingAvatarLoadAttempts = 0;
