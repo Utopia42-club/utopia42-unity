@@ -40,7 +40,7 @@ namespace Source.Ui.AssetInventory
         private Sprite removeFromFavoriteIcon;
         private Sprite hammerIcon;
 
-        private List<InventorySlotWrapper> handyBarSlots = new();
+        private readonly List<InventorySlotWrapper> handyBarSlots = new();
 
         private InventorySlot selectedSlot;
         public readonly UnityEvent<SlotInfo> selectedSlotChanged = new();
@@ -56,14 +56,6 @@ namespace Source.Ui.AssetInventory
 
         void Start()
         {
-            openIcon = Resources.Load<Sprite>("Icons/openPane");
-            closeIcon = Resources.Load<Sprite>("Icons/closePane");
-
-            addToFavoriteIcon = Resources.Load<Sprite>("Icons/whiteHeart");
-            removeFromFavoriteIcon = Resources.Load<Sprite>("Icons/redHeart");
-
-            hammerIcon = Resources.Load<Sprite>("Icons/hammer");
-
             GameManager.INSTANCE.stateChange.AddListener(_ => UpdateVisibility());
             Player.INSTANCE.viewModeChanged.AddListener(_ => UpdateVisibility());
             UpdateVisibility();
@@ -76,8 +68,15 @@ namespace Source.Ui.AssetInventory
             if (firstTime)
             {
                 firstTime = false;
-                instance = this;
                 PlayerPrefs.SetString(HANDY_SLOTS_KEY, "[]");
+                instance = this;
+                openIcon = Resources.Load<Sprite>("Icons/openPane");
+                closeIcon = Resources.Load<Sprite>("Icons/closePane");
+
+                addToFavoriteIcon = Resources.Load<Sprite>("Icons/whiteHeart");
+                removeFromFavoriteIcon = Resources.Load<Sprite>("Icons/redHeart");
+
+                hammerIcon = Resources.Load<Sprite>("Icons/hammer");
             }
 
             root = GetComponent<UIDocument>().rootVisualElement;
