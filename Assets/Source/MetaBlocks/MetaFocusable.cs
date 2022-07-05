@@ -8,6 +8,7 @@ namespace Source
     {
         public MetaBlockObject MetaBlockObject { protected set; get; }
         public bool Focused => MetaBlockObject.Focused;
+
         public void Initialize(MetaBlockObject metaBlockObject)
         {
             if (initialized) return;
@@ -25,10 +26,13 @@ namespace Source
         {
             if (!initialized) return;
 
-            if (World.INSTANCE.SelectionActive)
-                MetaBlockObject.ShowFocusHighlight();
-            else
-                MetaBlockObject.Focus();
+            if (!BlockSelectionController.INSTANCE.Dragging)
+            {
+                if (World.INSTANCE.SelectionActive)
+                    MetaBlockObject.ShowFocusHighlight();
+                else
+                    MetaBlockObject.Focus();
+            }
 
             if (point.HasValue)
                 Player.INSTANCE.PlaceCursors(point.Value);
