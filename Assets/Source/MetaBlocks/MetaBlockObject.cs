@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Source.Canvas;
+using Source.MetaBlocks.ImageBlock;
+using Source.MetaBlocks.TdObjectBlock;
+using Source.MetaBlocks.VideoBlock;
 using Source.Model;
 using Source.Utils;
 using UnityEngine;
@@ -157,8 +160,15 @@ namespace Source.MetaBlocks
                 if (max.y > maxY) maxY = max.y;
             }
 
-            height = maxY - minY;
+            height = (maxY - minY) + GetGroundGap();
             return (minY + maxY) / 2;
+        }
+
+        private float GetGroundGap() // TODO
+        {
+            if (this is TdObjectBlockObject or ImageBlockObject or VideoBlockObject)
+                return 0.1f;
+            return 0;
         }
 
         public float? GetHeight()

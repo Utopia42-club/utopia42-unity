@@ -275,10 +275,10 @@ namespace Source
                 Mathf.Abs(reportVelocityY), false));
         }
 
-        public void ReloadAvatar(string avatarUrl)
+        public void DoReloadAvatar(string avatarUrl)
         {
             if (avatarController != null)
-                avatarController.ReloadAvatar(avatarUrl);
+                avatarController.ReloadAvatar(avatarUrl, null, true);
         }
 
         // ReSharper disable Unity.PerformanceAnalysis

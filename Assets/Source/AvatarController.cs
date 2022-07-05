@@ -183,7 +183,7 @@ namespace Source
             avatarContainer.transform.rotation = Quaternion.LookRotation(forward);
         }
 
-        public void SetTargetPosition(Vector3 target)
+        private void SetTargetPosition(Vector3 target)
         {
             targetPosition = Vectors.Truncate(target, Precision);
         }
@@ -298,9 +298,9 @@ namespace Source
             Player.INSTANCE.mainPlayerStateReport.Invoke(state);
         }
 
-        public void ReloadAvatar(string url, Action onDone = null)
+        public void ReloadAvatar(string url, Action onDone = null, bool ignorePreviousUrl = false)
         {
-            if (url == null || url.Equals(loadingAvatarUrl) || remainingAvatarLoadAttempts != 0) return;
+            if (url == null || !ignorePreviousUrl && url.Equals(loadingAvatarUrl) || remainingAvatarLoadAttempts != 0) return;
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
