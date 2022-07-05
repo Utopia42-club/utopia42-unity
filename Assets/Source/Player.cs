@@ -347,7 +347,7 @@ namespace Source
             viewMode = isNowFirstPerson ? ViewMode.THIRD_PERSON : ViewMode.FIRST_PERSON;
             camContainer.localPosition = cameraContainerHeight * Vector3.up;
             cam.localPosition = (isNowFirstPerson ? cameraZOffset : 0) * Vector3.back;
-            avatarController.SetAvatarBodyDisabled(!isNowFirstPerson);
+            avatarController.SetAvatarBodyActive(isNowFirstPerson);
             viewModeChanged.Invoke(viewMode);
         }
 
