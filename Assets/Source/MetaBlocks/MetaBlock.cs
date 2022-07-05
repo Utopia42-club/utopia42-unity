@@ -18,7 +18,7 @@ namespace Source.MetaBlocks
         private object properties;
         public bool IsCursor { private set; get; } = false;
 
-        public bool IsActive => blockObject.gameObject.activeSelf;
+        public bool IsActive => blockObject != null && blockObject.gameObject.activeSelf;
 
         public MetaBlock(MetaBlockType type, Land land, object properties, bool isCursor = false)
         {

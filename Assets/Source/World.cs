@@ -780,6 +780,7 @@ namespace Source
 
         public void TryPutVoxel(VoxelPosition vp, BlockType type)
         {
+            if (!Player.INSTANCE.CanEdit(vp.ToWorld(), out _)) return;
             var chunk = GetChunkIfInited(vp.chunk);
             if (chunk == null) return;
             if (type is not MetaBlockType)
@@ -788,6 +789,7 @@ namespace Source
 
         public void TryDeleteVoxel(VoxelPosition vp)
         {
+            if (!Player.INSTANCE.CanEdit(vp.ToWorld(), out _)) return;
             var chunk = GetChunkIfInited(vp.chunk);
             if (chunk == null) return;
             chunk.DeleteVoxel(vp, player.HighlightLand);
@@ -795,6 +797,7 @@ namespace Source
 
         public void TryDeleteMeta(MetaPosition mp)
         {
+            if (!Player.INSTANCE.CanEdit(mp.ToVoxelPosition().ToWorld(), out _)) return;
             var chunk = GetChunkIfInited(mp.chunk);
             if (chunk == null) return;
             chunk.DeleteMeta(mp);
@@ -802,6 +805,7 @@ namespace Source
 
         public void TryPutMeta(MetaPosition mp, BlockType type)
         {
+            if (!Player.INSTANCE.CanEdit(mp.ToVoxelPosition().ToWorld(), out _)) return;
             var chunk = GetChunkIfInited(mp.chunk);
             if (chunk == null) return;
             if (type is MetaBlockType blockType)
