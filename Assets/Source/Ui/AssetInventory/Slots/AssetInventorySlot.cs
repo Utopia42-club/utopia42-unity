@@ -24,10 +24,8 @@ namespace Source.Ui.AssetInventory.Slots
 
         public override object Clone()
         {
-            var clone = new AssetInventorySlot(IsLoadingImage());
+            var clone = new AssetInventorySlot();
             clone.SetSlotInfo(slotInfo);
-            if (!IsLoadingImage())
-                clone.SetBackground(GetBackground());
             return clone;
         }
     }

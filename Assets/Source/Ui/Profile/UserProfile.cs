@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Source.Canvas;
 using Source.Ui.Utils;
 using Source.Utils;
+using Source.UtopiaException;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -13,6 +14,7 @@ namespace Source.Ui.Profile
         private VisualElement imageElement;
         private Label nameLabel;
         private ScrollView body;
+        private Texture2D loadedProfileImage;
 
         public UserProfile(Model.Profile profile) : base("Ui/Profile/UserProfile", true)
         {
@@ -21,6 +23,12 @@ namespace Source.Ui.Profile
 
         public void SetProfile(Model.Profile profile)
         {
+            if (loadedProfileImage != null)
+            {
+                Object.Destroy(loadedProfileImage);
+                loadedProfileImage = null;
+            }
+
             if (profile == null)
                 return;
 
@@ -29,10 +37,22 @@ namespace Source.Ui.Profile
             {
                 var url = Constants.ApiURL + "/profile/image/" + profile.imageUrl;
                 GameManager.INSTANCE.StartCoroutine(
-                    UiImageUtils.SetBackGroundImageFromUrl(url, emptyUserIcon, imageElement));
+                    UiImageUtils.SetBackGroundImageFromUrl(url, emptyUserIcon, false, imageElement, () =>
+                    {
+                        if (loadedProfileImage != null)
+                        {
+                            Object.Destroy(loadedProfileImage);
+                            loadedProfileImage = null;
+                        }
+
+                        var texture = imageElement.style.backgroundImage.value.texture;
+                        if (texture == null)
+                            throw new IllegalStateException();
+                        loadedProfileImage = texture;
+                    }));
             }
             else
-                UiImageUtils.SetBackground(imageElement, emptyUserIcon);
+                UiImageUtils.SetBackground(imageElement, emptyUserIcon, false);
 
             nameLabel = this.Q<Label>("name");
             if (profile.name != null)

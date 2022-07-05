@@ -12,7 +12,7 @@ namespace Source.Ui.Profile
             AddToClassList("social-link");
             var icon = new VisualElement();
             icon.AddToClassList("social-link__icon");
-            UiImageUtils.SetBackground(icon, link.GetMedia().GetIcon());
+            UiImageUtils.SetBackground(icon, link.GetMedia().GetIcon(), false);
             Add(icon);
 
             var label = new Label();
@@ -24,6 +24,7 @@ namespace Source.Ui.Profile
                 label.tooltip = link.link;
                 label.AddManipulator(new ToolTipManipulator(Side.TopRight));
             }
+
             Add(label);
 
             style.alignItems = Align.Center;

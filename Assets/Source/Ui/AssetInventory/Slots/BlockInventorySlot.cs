@@ -10,7 +10,7 @@ namespace Source.Ui.AssetInventory.Slots
             var block = slotInfo.block;
             if (block == null) return;
             SetTooltip(block.name);
-            SetBackground(block.GetIcon());
+            SetBackground(block.GetIcon(), false);
         }
 
         public override object Clone()

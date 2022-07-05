@@ -41,7 +41,7 @@ namespace Source.Ui.Map
                         right = 2
                     }
                 };
-                UiImageUtils.SetBackground(visualElement, nftLogo);
+                UiImageUtils.SetBackground(visualElement, nftLogo, false);
                 Add(visualElement);
             }
 

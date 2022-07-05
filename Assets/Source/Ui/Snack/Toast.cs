@@ -17,7 +17,7 @@ namespace Source.Ui.Snack
                 ToastType.Warning => Resources.Load<Sprite>("Icons/warning"),
                 ToastType.Error => Resources.Load<Sprite>("Icons/error"),
                 _ => Resources.Load<Sprite>("Icons/info")
-            });
+            }, false);
         }
 
         public SnackController Show()

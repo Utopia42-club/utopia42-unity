@@ -107,7 +107,7 @@ namespace Source.Ui.AssetInventory
             hammerModeArea = handyPanel.Q<VisualElement>("hammerModeArea");
             hammerSlot = new SimpleInventorySlot();
             hammerSlot.HideSlotBackground();
-            hammerSlot.SetBackground(hammerIcon);
+            hammerSlot.SetBackground(hammerIcon, false);
             hammerSlot.SetSlotInfo(new SlotInfo());
             hammerSlot.SetSize(80, 10);
             hammerModeArea.Add(hammerSlot.VisualElement());

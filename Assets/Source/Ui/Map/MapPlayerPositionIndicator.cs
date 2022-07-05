@@ -15,7 +15,7 @@ namespace Source.Ui.Map
         {
             this.map = map;
             AddToClassList("map-position-indicator");
-            UiImageUtils.SetBackground(this, icon);
+            UiImageUtils.SetBackground(this, icon, false);
             geomListener = evt => UpdatePosition();
             RegisterCallback(geomListener);
         }

@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using Source.Ui.AssetInventory.Models;
 using Source.Ui.Utils;
+using Source.UtopiaException;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace Source.Ui.AssetInventory.Slots
 {
@@ -19,11 +21,11 @@ namespace Source.Ui.AssetInventory.Slots
         protected SlotInfo slotInfo;
 
         private IEnumerator imageCoroutine;
-        private bool isLoadingImage = false;
         private ToolTipManipulator toolTipManipulator;
         private readonly VisualElement selectedBorder;
         private bool selectable = true;
         private Action onSelect;
+        private Texture2D loadedBackground;
 
         public BaseInventorySlot()
             : base(typeof(BaseInventorySlot))
@@ -95,24 +97,31 @@ namespace Source.Ui.AssetInventory.Slots
 
         protected void LoadImage(string url)
         {
-            imageCoroutine = UiImageUtils.SetBackGroundImageFromUrl(url, slotIcon, () => isLoadingImage = false);
-            isLoadingImage = true;
-            assetsInventory.StartCoroutine(imageCoroutine);
-            slotIcon.RegisterCallback<DetachFromPanelEvent>(evt =>
+            imageCoroutine = UiImageUtils.SetBackGroundImageFromUrl(url, slotIcon, () =>
             {
-                assetsInventory.StopCoroutine(imageCoroutine);
-                isLoadingImage = false;
+                DestroyLoadedBackground();
+
+                var texture = slotIcon.style.backgroundImage.value.texture;
+                if (texture == null)
+                    throw new IllegalStateException();
+                loadedBackground = texture;
             });
+            assetsInventory.StartCoroutine(imageCoroutine);
         }
 
-        public void SetBackground(Sprite sprite)
+        private void DestroyLoadedBackground()
         {
-            UiImageUtils.SetBackground(slotIcon, sprite);
+            if (loadedBackground != null)
+            {
+                Object.Destroy(loadedBackground);
+                loadedBackground = null;
+            }
         }
 
-        public bool IsLoadingImage()
+        public void SetBackground(Sprite sprite, bool destroyOnDetach)
         {
-            return isLoadingImage;
+            DestroyLoadedBackground();
+            UiImageUtils.SetBackground(slotIcon, sprite, destroyOnDetach);
         }
 
         public void HideSlotBackground()
@@ -123,11 +132,6 @@ namespace Source.Ui.AssetInventory.Slots
         public VisualElement VisualElement()
         {
             return this;
-        }
-
-        public Sprite GetBackground()
-        {
-            return slotIcon.style.backgroundImage.value.sprite;
         }
 
         public void ConfigLeftAction(string tooltip = null, Sprite background = null, Action action = null)
