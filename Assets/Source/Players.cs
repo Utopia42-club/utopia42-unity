@@ -69,7 +69,6 @@ namespace Source
                 }
                 else
                     DestroyImmediate(c.gameObject);
-                
             }
             // else if (playersMap.Count < maxPlayersAllowed)
             //     Debug.Log($"{playerState.walletId} | New player detected but it is too far. Ignoring state...");
@@ -94,9 +93,7 @@ namespace Source
 
         private static float GetDistanceToMainPlayer(AvatarController.PlayerState state)
         {
-            var distance = state.GetPosition() - Player.INSTANCE.GetPosition();
-            distance.y = 0;
-            return distance.magnitude;
+            return (state.GetPosition() - Player.INSTANCE.GetPosition()).magnitude;
         }
 
         private static IEnumerator UpdatePlayerStateInNextFrame(AvatarController controller,

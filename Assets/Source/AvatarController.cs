@@ -143,14 +143,13 @@ namespace Source
         {
             controllerDisabled = true;
             yield return null;
-            if (Avatar != null)
-                Avatar.SetActive(false);
+            var active = Avatar != null && Avatar.activeSelf;
+            SetAvatarBodyActive(false);
             controller.enabled = false;
             yield return null;
             transform.position = position;
             controller.enabled = true;
-            if (Avatar != null)
-                Avatar.SetActive(true);
+            if (active) SetAvatarBodyActive(true);
             controllerDisabled = false;
         }
 
@@ -190,10 +189,10 @@ namespace Source
             return Vectors.Truncate(transform.position, Precision);
         }
 
-        public void SetAvatarBodyDisabled(bool disabled)
+        public void SetAvatarBodyActive(bool active)
         {
             if (Avatar != null)
-                Avatar.SetActive(!disabled);
+                Avatar.SetActive(active);
         }
 
         public void UpdatePlayerState(PlayerState playerState)
