@@ -315,10 +315,10 @@ namespace Source
             avatarLoader = new AvatarLoader {UseAvatarCaching = true};
             avatarLoader.OnCompleted += (_, args) =>
             {
-                if (args.Avatar.GetComponentsInChildren<Renderer>().Length > 1)
+                if (args.Avatar.GetComponentsInChildren<Renderer>().Length > 2)
                 {
                     Debug.LogWarning(
-                        $"{state?.walletId} | Loaded avatar has more than one renderer component | Loading the default avatar...");
+                        $"{state?.walletId} | Loaded avatar has more than two renderer components | Loading the default avatar...");
                     MetaBlockObject.DeepDestroy3DObject(args.Avatar);
                     avatarLoader.LoadAvatar(DefaultAvatarUrl);
                     return;

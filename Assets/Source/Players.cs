@@ -60,7 +60,11 @@ namespace Source
                     else
                     {
                         if (makeVisible && !controller.AvatarAllowed)
+                        {
                             controller.LoadAnotherPlayerAvatar(playerState.walletId);
+                            Debug.Log($"{playerState.walletId} | Loading the avatar...");
+                        }
+
                         controller.UpdatePlayerState(playerState);
                     }
                 }
