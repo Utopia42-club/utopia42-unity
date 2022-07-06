@@ -8,7 +8,7 @@ namespace Source
 {
     public class Players : MonoBehaviour
     {
-        [SerializeField] private int maxPlayersAllowed = 10;
+        [SerializeField] private int maxAvatarsAllowed = 20;
         [SerializeField] private int maxInactivityDelay = 2; // in seconds
         [SerializeField] private int maxCreateAvatarDistance = 100;
         [SerializeField] private int minDestroyAvatarDistance = 200;
@@ -45,55 +45,65 @@ namespace Source
                 Debug.LogWarning(
                     $"Cannot add another player with the same wallet ({playerState.walletId}). Ignoring state...");
             }
-            else if (playersMap.TryGetValue(playerState.walletId, out var controller))
+            else
             {
-                if (ShouldDestroyAvatar(playerState))
+                CheckDistanceAndLimit(playerState, out var makeVisible, out var destroy);
+
+                if (playersMap.TryGetValue(playerState.walletId, out var controller))
                 {
-                    Debug.Log($"{playerState.walletId} | Player distance is too far. Removing player...");
-                    if (playersMap.TryRemove(playerState.walletId, out _))
-                        DestroyImmediate(controller.gameObject);
+                    if (destroy)
+                    {
+                        Debug.Log($"{playerState.walletId} | Player distance is too far. Removing player...");
+                        if (playersMap.TryRemove(playerState.walletId, out _))
+                            DestroyImmediate(controller.gameObject);
+                    }
+                    else
+                    {
+                        if (makeVisible && !controller.AvatarAllowed)
+                        {
+                            controller.LoadAnotherPlayerAvatar(playerState.walletId);
+                            Debug.Log($"{playerState.walletId} | Loading the avatar...");
+                        }
+
+                        controller.UpdatePlayerState(playerState);
+                    }
                 }
-                else
-                    controller.UpdatePlayerState(playerState);
-            }
-            else if (ShouldCreateAvatar(playerState))
-            {
-                var avatar = Instantiate(avatarPrefab, transform);
-                var c = avatar.GetComponent<AvatarController>();
-                c.SetAnotherPlayer(playerState.walletId, playerState.GetPosition());
-                if (playersMap.TryAdd(playerState.walletId, c))
+                else if (!destroy)
                 {
-                    playerState.teleport = true;
-                    StartCoroutine(UpdatePlayerStateInNextFrame(c, playerState));
-                    Debug.Log($"{playerState.walletId} | New player detected");
+                    var avatar = Instantiate(avatarPrefab, transform);
+                    avatar.name = "AnotherPlayer";
+                    var c = avatar.GetComponent<AvatarController>();
+                    c.SetAnotherPlayer(playerState.walletId, playerState.GetPosition(), makeVisible);
+                    if (playersMap.TryAdd(playerState.walletId, c))
+                    {
+                        playerState.teleport = true;
+                        StartCoroutine(UpdatePlayerStateInNextFrame(c, playerState));
+                        Debug.Log($"{playerState.walletId} | New player detected " +
+                                  (makeVisible ? "(Loading the avatar...)" : "(Label only)"));
+                    }
+                    else
+                        DestroyImmediate(c.gameObject);
                 }
-                else
-                    DestroyImmediate(c.gameObject);
+                // else if (playersMap.Count < maxPlayersAllowed)
+                //     Debug.Log($"{playerState.walletId} | New player detected but it is too far. Ignoring state...");
+                // else
+                //     Debug.Log(
+                //         $"{playerState.walletId} | New player detected but exceeds the total number of players. Ignoring state...");}
             }
-            // else if (playersMap.Count < maxPlayersAllowed)
-            //     Debug.Log($"{playerState.walletId} | New player detected but it is too far. Ignoring state...");
-            // else
-            //     Debug.Log(
-            //         $"{playerState.walletId} | New player detected but exceeds the total number of players. Ignoring state...");
         }
 
-        private bool ShouldCreateAvatar(AvatarController.PlayerState state)
+        private void CheckDistanceAndLimit(AvatarController.PlayerState state, out bool makeVisible,
+            out bool destroy)
         {
-            if (state?.position == null || playersMap.Count >= maxPlayersAllowed)
-                return false;
-            return GetDistanceToMainPlayer(state) <= maxCreateAvatarDistance;
-        }
-
-        private bool ShouldDestroyAvatar(AvatarController.PlayerState state)
-        {
-            if (state?.position == null)
-                return true;
-            return GetDistanceToMainPlayer(state) >= minDestroyAvatarDistance;
-        }
-
-        private static float GetDistanceToMainPlayer(AvatarController.PlayerState state)
-        {
-            return (state.GetPosition() - Player.INSTANCE.GetPosition()).magnitude;
+            makeVisible = false;
+            destroy = true;
+            if (state?.position == null) return;
+            var distance = (state.GetPosition() - Player.INSTANCE.GetPosition()).magnitude;
+            if (distance > minDestroyAvatarDistance) return;
+            destroy = false;
+            if (distance <= maxCreateAvatarDistance &&
+                playersMap.Values.Count(controller => controller.AvatarAllowed) < maxAvatarsAllowed)
+                makeVisible = true;
         }
 
         private static IEnumerator UpdatePlayerStateInNextFrame(AvatarController controller,

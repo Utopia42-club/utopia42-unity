@@ -51,6 +51,7 @@ namespace Source
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private GameObject namePanel;
         private bool controllerDisabled;
+        public bool AvatarAllowed { get; private set; }
 
         private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
 
@@ -128,15 +129,23 @@ namespace Source
             }
         }
 
-        public void SetAnotherPlayer(string walletId, Vector3 position)
+        public void SetAnotherPlayer(string walletId, Vector3 position, bool makeVisible)
         {
             isAnotherPlayer = true;
+            AvatarAllowed = false;
             ProfileLoader.INSTANCE.load(walletId,
                 profile => nameLabel.text = profile?.name ?? MakeWalletShorter(walletId),
                 () => nameLabel.text = MakeWalletShorter(walletId));
-            StartCoroutine(LoadAvatarFromWallet(walletId));
+            if (makeVisible)
+                LoadAnotherPlayerAvatar(walletId);
             var target = Vectors.Truncate(position, Precision);
             SetTargetPosition(target);
+        }
+
+        public void LoadAnotherPlayerAvatar(string walletId)
+        {
+            AvatarAllowed = true;
+            StartCoroutine(LoadAvatarFromWallet(walletId));
         }
 
         private IEnumerator SetTransformPosition(Vector3 position)
@@ -156,6 +165,7 @@ namespace Source
         public void SetMainPlayer(string walletId)
         {
             isAnotherPlayer = false;
+            AvatarAllowed = true;
             namePanel.gameObject.SetActive(false);
             StartCoroutine(LoadAvatarFromWallet(walletId));
             SetTargetPosition(transform.position);
@@ -179,7 +189,7 @@ namespace Source
             Avatar.transform.rotation = Quaternion.LookRotation(forward);
         }
 
-        public void SetTargetPosition(Vector3 target)
+        private void SetTargetPosition(Vector3 target)
         {
             targetPosition = Vectors.Truncate(target, Precision);
         }
@@ -295,19 +305,20 @@ namespace Source
             Player.INSTANCE.mainPlayerStateReport.Invoke(state);
         }
 
-        public void ReloadAvatar(string url, Action onDone = null)
+        public void ReloadAvatar(string url, Action onDone = null, bool ignorePreviousUrl = false)
         {
-            if (url == null || url.Equals(loadingAvatarUrl) || remainingAvatarLoadAttempts != 0) return;
+            if (url == null || !ignorePreviousUrl && url.Equals(loadingAvatarUrl) ||
+                remainingAvatarLoadAttempts != 0) return;
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
             avatarLoader = new AvatarLoader {UseAvatarCaching = true};
             avatarLoader.OnCompleted += (_, args) =>
             {
-                if (args.Avatar.GetComponentsInChildren<Renderer>().Length > 1)
+                if (args.Avatar.GetComponentsInChildren<Renderer>().Length > 2)
                 {
                     Debug.LogWarning(
-                        $"{state?.walletId} | Loaded avatar has more than one renderer component | Loading the default avatar...");
+                        $"{state?.walletId} | Loaded avatar has more than two renderer components | Loading the default avatar...");
                     MetaBlockObject.DeepDestroy3DObject(args.Avatar);
                     avatarLoader.LoadAvatar(DefaultAvatarUrl);
                     return;
@@ -315,12 +326,8 @@ namespace Source
 
                 if (isAnotherPlayer)
                     Debug.Log($"{state?.walletId} | Avatar loaded");
-                if (Avatar != null)
-                    MetaBlockObject.DeepDestroy3DObject(Avatar);
-                Avatar = args.Avatar;
-                Avatar.gameObject.transform.SetParent(transform);
-                Avatar.gameObject.transform.localPosition = Vector3.zero;
-                animator = Avatar.GetComponent<Animator>();
+                PrepareAvatar(args.Avatar);
+                animator = Avatar.GetComponentInChildren<Animator>();
                 onDone?.Invoke();
                 remainingAvatarLoadAttempts = 0;
             };
@@ -342,6 +349,27 @@ namespace Source
                 }
             };
             avatarLoader.LoadAvatar(url);
+        }
+
+        private void PrepareAvatar(GameObject go)
+        {
+            if (Avatar != null)
+                MetaBlockObject.DeepDestroy3DObject(Avatar);
+
+            if (isAnotherPlayer)
+            {
+                go.transform.SetParent(transform);
+                go.transform.localPosition = Vector3.zero;
+                Avatar = go;
+                return;
+            }
+
+            var container = new GameObject {name = "AvatarContainer"};
+            container.transform.SetParent(transform);
+            container.transform.localPosition = Vector3.zero;
+            go.transform.SetParent(container.transform);
+            go.transform.localPosition = new Vector3(.06f, 0, -.02f);
+            Avatar = container;
         }
 
         private void SetJump(bool jump)

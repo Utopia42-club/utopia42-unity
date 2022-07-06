@@ -87,12 +87,13 @@ namespace Source
             {
                 var v = cam.transform.forward;
                 v.y = 0;
-                return v;
+                return v.normalized;
             }
         }
 
         [SerializeField] private float cameraContainerHeight;
         [SerializeField] private float cameraZOffset;
+        [SerializeField] private float cameraXOffset;
 
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
         public UnityEvent<ViewMode> viewModeChanged;
@@ -131,6 +132,7 @@ namespace Source
 
             // AvatarId = Guid.NewGuid().ToString(); // test only
             avatar = Instantiate(avatarPrefab, gameObject.transform);
+            avatar.name = "MainPlayer";
             avatarController = avatar.GetComponent<AvatarController>();
             avatarController.SetMainPlayer(AuthService.WalletId());
             AuthService.WalletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });
@@ -274,10 +276,10 @@ namespace Source
                 Mathf.Abs(reportVelocityY), false));
         }
 
-        public void ReloadAvatar(string avatarUrl)
+        public void DoReloadAvatar(string avatarUrl)
         {
             if (avatarController != null)
-                avatarController.ReloadAvatar(avatarUrl);
+                avatarController.ReloadAvatar(avatarUrl, null, true);
         }
 
         // ReSharper disable Unity.PerformanceAnalysis
@@ -346,7 +348,9 @@ namespace Source
             var isNowFirstPerson = viewMode == ViewMode.FIRST_PERSON;
             viewMode = isNowFirstPerson ? ViewMode.THIRD_PERSON : ViewMode.FIRST_PERSON;
             camContainer.localPosition = cameraContainerHeight * Vector3.up;
-            cam.localPosition = (isNowFirstPerson ? cameraZOffset : 0) * Vector3.back;
+            cam.localPosition = isNowFirstPerson
+                ? cameraZOffset * Vector3.back + cameraXOffset * Vector3.right
+                : Vector3.zero;
             avatarController.SetAvatarBodyActive(isNowFirstPerson);
             viewModeChanged.Invoke(viewMode);
         }

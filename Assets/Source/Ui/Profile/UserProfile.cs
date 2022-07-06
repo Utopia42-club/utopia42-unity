@@ -107,7 +107,7 @@ namespace Source.Ui.Profile
                     ProfileLoader.INSTANCE.load(profile.walletId, p =>
                     {
                         SetProfile(p);
-                        Player.INSTANCE.ReloadAvatar(p.avatarUrl);
+                        Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
                     }, () =>
                     {
                         //FIXME Show error snack

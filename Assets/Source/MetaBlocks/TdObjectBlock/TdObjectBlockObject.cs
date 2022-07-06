@@ -12,8 +12,6 @@ namespace Source.MetaBlocks.TdObjectBlock
 {
     public class TdObjectBlockObject : MetaBlockObject
     {
-        private const float GroundGap = 0.1f;
-
         private GameObject objContainer;
         public GameObject Obj { private set; get; }
 
@@ -390,14 +388,6 @@ namespace Source.MetaBlocks.TdObjectBlock
                         break;
                 }
             });
-        }
-
-        public override float? GetCenterY(out float? height)
-        {
-            var centerY = base.GetCenterY(out height);
-            if (height.HasValue)
-                height = height.Value + GroundGap;
-            return centerY;
         }
 
         protected override void OnDestroy()

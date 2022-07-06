@@ -59,7 +59,7 @@ namespace Source
                                     ProfileLoader.INSTANCE.load(AuthService.WalletId(),
                                         p =>
                                         {
-                                            if (p != null) Player.INSTANCE.ReloadAvatar(p.avatarUrl);
+                                            if (p != null) Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
                                         }, () => { });
                                 }, () => { });
                             }
