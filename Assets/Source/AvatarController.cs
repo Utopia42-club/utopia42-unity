@@ -17,15 +17,13 @@ namespace Source
 {
     public class AvatarController : MonoBehaviour
     {
-        public static readonly string DefaultAvatarUrl =
+        private const string DefaultAvatarUrl =
             "https://d1a370nemizbjq.cloudfront.net/8b6189f0-c999-4a6a-bffc-7f68d66b39e6.glb"; //FIXME Configuration?
 
-        private static readonly string RendererWarningMessage =
-            "Loaded avatar has more than two renderer components. Loading the default...";
-
-        private static readonly string AvatarLoadedMessage = "Avatar loaded";
-        private static readonly string AvatarLoadRetryMessage = "Failed to load the avatar. Retrying...";
-        private static readonly string AvatarLoadFailedMessage = "Failed to load the avatar. Loading the default...";
+        private const string RendererWarningMessage = "Your avatar is too complex. Loading the default...";
+        private const string AvatarLoadedMessage = "Avatar loaded";
+        private const string AvatarLoadRetryMessage = "Failed to load the avatar. Retrying...";
+        private const string AvatarLoadFailedMessage = "Failed to load the avatar. Loading the default...";
 
         private const int MaxReportDelay = 1; // in seconds 
         private const float AnimationUpdateRate = 0.1f; // in seconds
@@ -81,9 +79,9 @@ namespace Source
             namePanel.transform.rotation = Camera.main.transform.rotation;
         }
 
-        private void LoadDefaultAvatar()
+        private void LoadDefaultAvatar(bool resetAvatarMsg = true)
         {
-            ReloadAvatar(DefaultAvatarUrl);
+            ReloadAvatar(DefaultAvatarUrl, null, false, resetAvatarMsg);
         }
 
         private IEnumerator LoadAvatarFromWallet(string walletId)
@@ -95,7 +93,7 @@ namespace Source
                     ReloadAvatar(profile.avatarUrl);
                 else
                     LoadDefaultAvatar();
-            }, LoadDefaultAvatar);
+            }, () => LoadDefaultAvatar());
         }
 
         private void FixedUpdate()
@@ -317,11 +315,13 @@ namespace Source
             Player.INSTANCE.mainPlayerStateReport.Invoke(state);
         }
 
-        public void ReloadAvatar(string url, Action onDone = null, bool ignorePreviousUrl = false)
+        public void ReloadAvatar(string url, Action onDone = null, bool ignorePreviousUrl = false,
+            bool resetAvatarMsg = true)
         {
             if (url == null || !ignorePreviousUrl && url.Equals(loadingAvatarUrl) ||
                 remainingAvatarLoadAttempts != 0) return;
-            GameManager.INSTANCE.ResetAvatarMsg();
+            if (resetAvatarMsg)
+                GameManager.INSTANCE.ResetAvatarMsg();
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
@@ -361,7 +361,7 @@ namespace Source
                         $"{state?.walletId} | {args.Type} : {AvatarLoadFailedMessage}");
                     GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadFailedMessage, true);
                     remainingAvatarLoadAttempts = 0;
-                    LoadDefaultAvatar();
+                    LoadDefaultAvatar(false);
                 }
             };
             avatarLoader.LoadAvatar(url);

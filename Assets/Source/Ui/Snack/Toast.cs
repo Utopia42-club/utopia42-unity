@@ -26,6 +26,13 @@ namespace Source.Ui.Snack
                 new SnackConfig(this)
             );
         }
+        
+        public SnackController ShowWithCloseButtonDisabled()
+        {
+            return SnackService.INSTANCE.Show(
+                new SnackConfig(this).WithCloseButtonVisible(false)
+            );
+        }
 
         public enum ToastType
         {

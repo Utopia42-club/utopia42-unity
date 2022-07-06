@@ -185,9 +185,17 @@ namespace Source
         private IEnumerator LoadAvatar()
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText(avatarLoadingMsg);
+            var msg = "";
             while (Player.INSTANCE.AvatarNotLoaded)
+            {
+                if (!msg.Equals(avatarLoadingMsg))
+                {
+                    msg = avatarLoadingMsg;
+                    Loading.INSTANCE.UpdateText(msg);
+                }
+
                 yield return new WaitForSeconds(0.1f);
+            }
         }
 
         public void ResetAvatarMsg()
@@ -206,7 +214,7 @@ namespace Source
             }
 
             if (worldInited || forceToast)
-                new Toast(msg, Toast.ToastType.Warning).Show();
+                new Toast(msg, Toast.ToastType.Warning).ShowWithCloseButtonDisabled();
         }
 
         public void MovePlayerTo(Vector3 pos)
