@@ -2,6 +2,7 @@
 using System.Linq;
 using Source.Model;
 using Source.Service;
+using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -53,9 +54,9 @@ namespace Source.Ui.Map
                 e.StopPropagation();
                 this.map.ReleaseMouse();
             });
-            Utils.Utils.RegisterOnDoubleClick(map, evt =>
+            new DoubleClickEventObserver(map, e =>
             {
-                var realPosition = map.ScreenToUtopia(evt.mousePosition);
+                var realPosition = map.ScreenToUtopia(e.mousePosition);
                 GameManager.INSTANCE.MovePlayerTo(new Vector3(realPosition.x, 0, realPosition.y));
             });
             mapPlayerPositionIndicator = new MapPlayerPositionIndicator(map);
