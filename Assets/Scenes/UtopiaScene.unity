@@ -1763,7 +1763,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cd933a592ae4ac09c3af1df3b6061e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxPlayersAllowed: 10
+  maxAvatarsAllowed: 20
   maxInactivityDelay: 2
   maxCreateAvatarDistance: 100
   minDestroyAvatarDistance: 200

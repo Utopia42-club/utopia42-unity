@@ -51,6 +51,7 @@ namespace Source
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private GameObject namePanel;
         private bool controllerDisabled;
+        public bool AvatarAllowed { get; private set; }
 
         private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
 
@@ -128,15 +129,23 @@ namespace Source
             }
         }
 
-        public void SetAnotherPlayer(string walletId, Vector3 position)
+        public void SetAnotherPlayer(string walletId, Vector3 position, bool makeVisible)
         {
             isAnotherPlayer = true;
+            AvatarAllowed = false;
             ProfileLoader.INSTANCE.load(walletId,
                 profile => nameLabel.text = profile?.name ?? MakeWalletShorter(walletId),
                 () => nameLabel.text = MakeWalletShorter(walletId));
-            StartCoroutine(LoadAvatarFromWallet(walletId));
+            if (makeVisible)
+                LoadAnotherPlayerAvatar(walletId);
             var target = Vectors.Truncate(position, Precision);
             SetTargetPosition(target);
+        }
+
+        public void LoadAnotherPlayerAvatar(string walletId)
+        {
+            AvatarAllowed = true;
+            StartCoroutine(LoadAvatarFromWallet(walletId));
         }
 
         private IEnumerator SetTransformPosition(Vector3 position)
@@ -156,6 +165,7 @@ namespace Source
         public void SetMainPlayer(string walletId)
         {
             isAnotherPlayer = false;
+            AvatarAllowed = true;
             namePanel.gameObject.SetActive(false);
             StartCoroutine(LoadAvatarFromWallet(walletId));
             SetTargetPosition(transform.position);

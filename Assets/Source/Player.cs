@@ -87,7 +87,7 @@ namespace Source
             {
                 var v = cam.transform.forward;
                 v.y = 0;
-                return v;
+                return v.normalized;
             }
         }
 
