@@ -79,6 +79,16 @@ namespace Source
             }
         }
 
+        public void UpdateClipboard(string content)
+        {
+            GUIUtility.systemCopyBuffer = content;
+        }
+
+        public string ReadClipboard()
+        {
+            return GUIUtility.systemCopyBuffer;
+        }
+        
         public void Request(string req)
         {
             var request = JsonConvert.DeserializeObject<WebToUnityRequest>(req);
