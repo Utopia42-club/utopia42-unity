@@ -329,7 +329,7 @@ MonoBehaviour:
     isNft: 0
     owner: 
     ownerIndex: 0
-  cameraContainerHeight: 1.74
+  cameraContainerHeight: 1.94
   cameraZOffset: 3.5
   cameraXOffset: 0.2
   viewModeChanged:
