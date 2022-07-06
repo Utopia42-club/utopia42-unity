@@ -132,6 +132,7 @@ namespace Source
 
             // AvatarId = Guid.NewGuid().ToString(); // test only
             avatar = Instantiate(avatarPrefab, gameObject.transform);
+            avatar.name = "MainPlayer";
             avatarController = avatar.GetComponent<AvatarController>();
             avatarController.SetMainPlayer(AuthService.WalletId());
             AuthService.WalletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });

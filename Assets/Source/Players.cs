@@ -59,6 +59,7 @@ namespace Source
             else if (ShouldCreateAvatar(playerState))
             {
                 var avatar = Instantiate(avatarPrefab, transform);
+                avatar.name = "AnotherPlayer";
                 var c = avatar.GetComponent<AvatarController>();
                 c.SetAnotherPlayer(playerState.walletId, playerState.GetPosition());
                 if (playersMap.TryAdd(playerState.walletId, c))

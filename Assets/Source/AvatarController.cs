@@ -51,15 +51,11 @@ namespace Source
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private GameObject namePanel;
         private bool controllerDisabled;
-        private GameObject avatarContainer;
 
         private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
 
         public void Start()
         {
-            avatarContainer = new GameObject {name = "AvatarContainer"};
-            avatarContainer.transform.SetParent(transform);
-            avatarContainer.transform.localPosition = Vector3.zero;
             controller = GetComponent<CharacterController>();
             UpdatedTime = -2 * AnimationUpdateRate;
             animIDSpeed = Animator.StringToHash("Speed");
@@ -180,7 +176,7 @@ namespace Source
         private void LookAt(Vector3 forward)
         {
             forward.y = 0;
-            avatarContainer.transform.rotation = Quaternion.LookRotation(forward);
+            Avatar.transform.rotation = Quaternion.LookRotation(forward);
         }
 
         private void SetTargetPosition(Vector3 target)
@@ -219,7 +215,8 @@ namespace Source
 
             var pos = state.GetPosition();
             movement = pos - (lastPerformedState?.GetPosition() ?? pos);
-            UpdateLookDirection(movement);
+            if (Avatar != null)
+                UpdateLookDirection(movement);
 
             var floatOrJumpStateChanged =
                 playerState.floating != lastPerformedState?.floating || playerState.jump != lastPerformedState?.jump;
@@ -300,7 +297,8 @@ namespace Source
 
         public void ReloadAvatar(string url, Action onDone = null, bool ignorePreviousUrl = false)
         {
-            if (url == null || !ignorePreviousUrl && url.Equals(loadingAvatarUrl) || remainingAvatarLoadAttempts != 0) return;
+            if (url == null || !ignorePreviousUrl && url.Equals(loadingAvatarUrl) ||
+                remainingAvatarLoadAttempts != 0) return;
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
@@ -318,12 +316,8 @@ namespace Source
 
                 if (isAnotherPlayer)
                     Debug.Log($"{state?.walletId} | Avatar loaded");
-                if (Avatar != null)
-                    MetaBlockObject.DeepDestroy3DObject(Avatar);
-                Avatar = args.Avatar;
-                Avatar.gameObject.transform.SetParent(avatarContainer.transform);
-                Avatar.gameObject.transform.localPosition = new Vector3(.06f, 0, -.02f);
-                animator = Avatar.GetComponent<Animator>();
+                PrepareAvatar(args.Avatar);
+                animator = Avatar.GetComponentInChildren<Animator>();
                 onDone?.Invoke();
                 remainingAvatarLoadAttempts = 0;
             };
@@ -345,6 +339,27 @@ namespace Source
                 }
             };
             avatarLoader.LoadAvatar(url);
+        }
+
+        private void PrepareAvatar(GameObject go)
+        {
+            if (Avatar != null)
+                MetaBlockObject.DeepDestroy3DObject(Avatar);
+
+            if (isAnotherPlayer)
+            {
+                go.transform.SetParent(transform);
+                go.transform.localPosition = Vector3.zero;
+                Avatar = go;
+                return;
+            }
+
+            var container = new GameObject {name = "AvatarContainer"};
+            container.transform.SetParent(transform);
+            container.transform.localPosition = Vector3.zero;
+            go.transform.SetParent(container.transform);
+            go.transform.localPosition = new Vector3(.06f, 0, -.02f);
+            Avatar = container;
         }
 
         private void SetJump(bool jump)
