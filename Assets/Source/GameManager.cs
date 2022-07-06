@@ -38,8 +38,11 @@ namespace Source
         private readonly List<int> engagedUIs = new();
         private int uiId;
 
+        private string avatarLoadingMsg;
+
         void Start()
         {
+            ResetAvatarMsg();
             SetState(State.LOGIN);
             var checkedForProfile = false;
             stateChange.AddListener(newState =>
@@ -182,9 +185,28 @@ namespace Source
         private IEnumerator LoadAvatar()
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Loading the avatar...");
+            Loading.INSTANCE.UpdateText(avatarLoadingMsg);
             while (Player.INSTANCE.AvatarNotLoaded)
                 yield return new WaitForSeconds(0.1f);
+        }
+
+        public void ResetAvatarMsg()
+        {
+            avatarLoadingMsg = "Loading the avatar...";
+        }
+
+        public void ShowAvatarStateMessage(string msg, bool forceToast)
+        {
+            avatarLoadingMsg = msg;
+
+            if (worldInited && GetState() == State.LOADING)
+            {
+                Loading.INSTANCE.UpdateText(msg);
+                return;
+            }
+
+            if (worldInited || forceToast)
+                new Toast(msg, Toast.ToastType.Warning).Show();
         }
 
         public void MovePlayerTo(Vector3 pos)

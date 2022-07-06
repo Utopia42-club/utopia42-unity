@@ -6,6 +6,7 @@ using Source.MetaBlocks;
 using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
 using Source.Ui.Profile;
+using Source.Ui.Snack;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
@@ -18,6 +19,13 @@ namespace Source
     {
         public static readonly string DefaultAvatarUrl =
             "https://d1a370nemizbjq.cloudfront.net/8b6189f0-c999-4a6a-bffc-7f68d66b39e6.glb"; //FIXME Configuration?
+
+        private static readonly string RendererWarningMessage =
+            "Loaded avatar has more than two renderer components. Loading the default...";
+
+        private static readonly string AvatarLoadedMessage = "Avatar loaded";
+        private static readonly string AvatarLoadRetryMessage = "Failed to load the avatar. Retrying...";
+        private static readonly string AvatarLoadFailedMessage = "Failed to load the avatar. Loading the default...";
 
         private const int MaxReportDelay = 1; // in seconds 
         private const float AnimationUpdateRate = 0.1f; // in seconds
@@ -37,6 +45,7 @@ namespace Source
         private PlayerState state;
         private Vector3 targetPosition;
         private bool isAnotherPlayer = false;
+        public bool Initialized { get; private set; }
 
         private int animIDSpeed;
         private int animIDGrounded;
@@ -57,6 +66,7 @@ namespace Source
 
         public void Start()
         {
+            Initialized = false;
             controller = GetComponent<CharacterController>();
             UpdatedTime = -2 * AnimationUpdateRate;
             animIDSpeed = Animator.StringToHash("Speed");
@@ -131,6 +141,7 @@ namespace Source
 
         public void SetAnotherPlayer(string walletId, Vector3 position, bool makeVisible)
         {
+            Initialized = true;
             isAnotherPlayer = true;
             AvatarAllowed = false;
             ProfileLoader.INSTANCE.load(walletId,
@@ -164,6 +175,7 @@ namespace Source
 
         public void SetMainPlayer(string walletId)
         {
+            Initialized = true;
             isAnotherPlayer = false;
             AvatarAllowed = true;
             namePanel.gameObject.SetActive(false);
@@ -309,6 +321,7 @@ namespace Source
         {
             if (url == null || !ignorePreviousUrl && url.Equals(loadingAvatarUrl) ||
                 remainingAvatarLoadAttempts != 0) return;
+            GameManager.INSTANCE.ResetAvatarMsg();
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
@@ -317,15 +330,15 @@ namespace Source
             {
                 if (args.Avatar.GetComponentsInChildren<Renderer>().Length > 2)
                 {
-                    Debug.LogWarning(
-                        $"{state?.walletId} | Loaded avatar has more than two renderer components | Loading the default avatar...");
+                    Debug.LogWarning($"{state?.walletId} | {RendererWarningMessage}");
+                    GameManager.INSTANCE.ShowAvatarStateMessage(RendererWarningMessage, true);
                     MetaBlockObject.DeepDestroy3DObject(args.Avatar);
                     avatarLoader.LoadAvatar(DefaultAvatarUrl);
                     return;
                 }
 
                 if (isAnotherPlayer)
-                    Debug.Log($"{state?.walletId} | Avatar loaded");
+                    Debug.Log($"{state?.walletId} | {AvatarLoadedMessage}");
                 PrepareAvatar(args.Avatar);
                 animator = Avatar.GetComponentInChildren<Animator>();
                 onDone?.Invoke();
@@ -334,17 +347,20 @@ namespace Source
             avatarLoader.OnFailed += (_, args) =>
             {
                 remainingAvatarLoadAttempts -= 1;
-                if (remainingAvatarLoadAttempts > 0)
+                if (remainingAvatarLoadAttempts > 0 && args.Type != FailureType.UrlProcessError)
                 {
                     Debug.LogWarning(
-                        $"{state?.walletId} | Failed to load the avatar: {args.Type} | Remaining attempts: " +
+                        $"{state?.walletId} | {args.Type} : {AvatarLoadRetryMessage} | Remaining attempts: " +
                         remainingAvatarLoadAttempts);
+                    GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadRetryMessage, false);
                     avatarLoader.LoadAvatar(url);
                 }
                 else
                 {
                     Debug.LogWarning(
-                        $"{state?.walletId} | Failed to load the avatar: {args.Type} | Loading the default avatar...");
+                        $"{state?.walletId} | {args.Type} : {AvatarLoadFailedMessage}");
+                    GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadFailedMessage, true);
+                    remainingAvatarLoadAttempts = 0;
                     LoadDefaultAvatar();
                 }
             };

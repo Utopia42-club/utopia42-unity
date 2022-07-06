@@ -4,9 +4,11 @@ using System.Numerics;
 using Source.Canvas;
 using Source.MetaBlocks;
 using Source.Model;
+using Source.Ui.Snack;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
+using Snack = Source.Canvas.Snack;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Source
@@ -302,6 +304,7 @@ namespace Source
             else if (Input.GetKeyDown(KeyCode.C) && player.CtrlHeld && !selectionDisplaced)
             {
                 World.INSTANCE.ResetClipboard();
+                new Toast("Selection copied!", Toast.ToastType.Info).Show();
             }
 
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))

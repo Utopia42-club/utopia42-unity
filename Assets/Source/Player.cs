@@ -128,14 +128,19 @@ namespace Source
                     ResetRaycastMemory();
                 else
                     HideCursors();
+
+                if (avatarController != null && !avatarController.Initialized &&
+                    state == GameManager.State.LOADING) // only once 
+                {
+                    avatarController.SetMainPlayer(AuthService.WalletId());
+                    AuthService.WalletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });
+                }
             });
 
             // AvatarId = Guid.NewGuid().ToString(); // test only
             avatar = Instantiate(avatarPrefab, gameObject.transform);
             avatar.name = "MainPlayer";
             avatarController = avatar.GetComponent<AvatarController>();
-            avatarController.SetMainPlayer(AuthService.WalletId());
-            AuthService.WalletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });
 
             characterController = avatar.GetComponent<CharacterController>();
             camContainer.SetParent(avatar.transform);
