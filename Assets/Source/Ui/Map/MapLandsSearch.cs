@@ -4,7 +4,6 @@ using Source.Model;
 using Source.Service;
 using Source.Ui.Popup;
 using Source.Ui.Utils;
-using UnityEngine;
 using UnityEngine.UIElements;
 using Position = UnityEngine.UIElements.Position;
 
@@ -23,7 +22,7 @@ namespace Source.Ui.Map
         private MapLandsList popupLandsList;
         private readonly Button saveButton;
 
-        public MapLandsSearch(Map map) : base("Ui/Map/MapLandsSearch")
+        public MapLandsSearch(Map map) : base(typeof(MapLandsSearch))
         {
             myLands = this.Q<VisualElement>("myLands");
             myLands.style.width = 0;
@@ -99,10 +98,7 @@ namespace Source.Ui.Map
             else
             {
                 myLands.style.width = 0;
-                myLands.schedule.Execute(() =>
-                {
-                    myLands.style.display = DisplayStyle.None;
-                }).StartingIn(500);
+                myLands.schedule.Execute(() => { myLands.style.display = DisplayStyle.None; }).StartingIn(500);
             }
         }
 

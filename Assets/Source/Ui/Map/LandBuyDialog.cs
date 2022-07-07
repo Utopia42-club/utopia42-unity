@@ -6,7 +6,7 @@ namespace Source.Ui.Map
 {
     public class LandBuyDialog : UxmlElement
     {
-        public LandBuyDialog(Land land) : base("Ui/Map/LandBuyDialog")
+        public LandBuyDialog(Land land) : base(typeof(LandBuyDialog))
         {
             var sizeLabel = this.Q<Label>("sizeLabel");
             var priceLabel = this.Q<Label>("priceLabel");

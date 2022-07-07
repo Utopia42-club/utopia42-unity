@@ -45,7 +45,7 @@ namespace Source.Canvas
 
         public static Color GetLandOutlineColor(Land land)
         {
-            var owner = land.owner.Equals(AuthService.WalletId());
+            var owner = AuthService.IsCurrentUser(land.owner);
             return owner
                 ? (land.isNft ? MAP_OWNED_LAND_NFT : MAP_OWNED_LAND)
                 : (land.isNft ? MAP_OTHERS_LAND_NFT : MAP_OTHERS_LAND);

@@ -46,6 +46,11 @@ namespace Source
             return PlayerPrefs.GetString(Keys.WALLET)?.ToLower();
         }
 
+        public static bool IsCurrentUser(string walletId)
+        {
+            return walletId != null && walletId.ToLower().Equals(walletId);
+        }
+
         public static EthNetwork Network()
         {
             var nets = EthNetwork.GetNetworksIfPresent();

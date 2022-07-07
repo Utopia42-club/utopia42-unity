@@ -17,7 +17,8 @@ namespace Source.Ui.TabPane
         private readonly VisualElement rightActions;
         private readonly Dictionary<int, VisualElement> tabBodiesCache = new();
 
-        public TabPane(List<TabConfiguration> tabConfigs, bool useCache = true) : base("Ui/TebPane/TabPane", true)
+        public TabPane(List<TabConfiguration> tabConfigs, bool useCache = true) 
+            : base(typeof(TabPane), true)
         {
             this.tabConfigs = tabConfigs;
             this.useCache = useCache;

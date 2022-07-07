@@ -7,7 +7,7 @@ namespace Source.Ui.Map
 {
     public class MapActionsLayer : UxmlElement
     {
-        public MapActionsLayer(Map map) : base("Ui/Map/MapActionsLayer")
+        public MapActionsLayer(Map map) : base(typeof(MapActionsLayer))
         {
             var actions = this.Q<VisualElement>("actions");
             var showYourLocationButton = this.Q<Button>("showYourLocationButton");

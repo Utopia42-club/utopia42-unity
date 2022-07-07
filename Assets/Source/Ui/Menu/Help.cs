@@ -5,7 +5,7 @@ namespace Source.Ui.Menu
 {
     public class Help : UxmlElement
     {
-        public Help():base("Ui/Menu/Help",true)
+        public Help():base(typeof(Help),true)
         {
             var content = this.Q<ScrollView>("content");
             Scrolls.IncreaseScrollSpeed(content);

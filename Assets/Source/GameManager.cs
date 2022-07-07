@@ -1,19 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Source.Canvas;
 using Source.Model;
 using Source.Service;
 using Source.Service.Ethereum;
 using Source.Ui.Dialog;
-using Source.Ui.Login;
 using Source.Ui.Map;
 using Source.Ui.Profile;
 using Source.Ui.Snack;
 using Source.Utils;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
@@ -82,20 +79,23 @@ namespace Source
             }
             else if (state == State.PLAYING && !IsUiEngaged())
             {
-                if (IsControlKeyDown() && doubleCtrlTap)
+                if (IsControlKeyDown())
                 {
-                    if (Time.time - doubleCtrlTapTime < 0.4f)
+                    if (doubleCtrlTap)
                     {
-                        OpenPluginsDialog();
-                        doubleCtrlTapTime = 0f;
-                    }
+                        if ((Time.time - doubleCtrlTapTime) < Mathf.Max(0.4f, Time.deltaTime + 0.1f))
+                        {
+                            OpenPluginsDialog();
+                            doubleCtrlTapTime = 0f;
+                        }
 
-                    doubleCtrlTap = false;
-                }
-                else if (IsControlKeyDown() && !doubleCtrlTap)
-                {
-                    doubleCtrlTap = true;
-                    doubleCtrlTapTime = Time.time;
+                        doubleCtrlTap = false;
+                    }
+                    else
+                    {
+                        doubleCtrlTap = true;
+                        doubleCtrlTapTime = Time.time;
+                    }
                 }
                 else if (Input.GetButtonDown("Menu") || Input.GetButtonDown("Map"))
                     SetState(State.MENU);

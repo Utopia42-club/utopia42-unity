@@ -16,7 +16,7 @@ namespace Source.Ui.Profile
         private ScrollView body;
         private Texture2D loadedProfileImage;
 
-        public UserProfile(Model.Profile profile) : base("Ui/Profile/UserProfile", true)
+        public UserProfile(Model.Profile profile) : base(typeof(UserProfile), true)
         {
             SetProfile(profile);
         }
@@ -98,7 +98,7 @@ namespace Source.Ui.Profile
 
             var editButton = this.Q<Button>("userEditButton");
             var designerButton = this.Q<Button>("openAvatarDesigner");
-            if (!AuthService.IsGuest() && Equals(profile.walletId, AuthService.WalletId()))
+            if (!AuthService.IsGuest() && AuthService.IsCurrentUser(profile.walletId))
             {
                 editButton.clickable = new Clickable(() => { });
                 editButton.clickable.clicked += () => BrowserConnector.INSTANCE.EditProfile(() =>

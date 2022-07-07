@@ -40,7 +40,7 @@ namespace Source
         public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
         {
             if (playerState?.walletId == null) return;
-            if (playerState.walletId.Equals(AuthService.WalletId()))
+            if (AuthService.IsCurrentUser(playerState.walletId))
             {
                 Debug.LogWarning(
                     $"Cannot add another player with the same wallet ({playerState.walletId}). Ignoring state...");

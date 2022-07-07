@@ -4,7 +4,7 @@ namespace Source.Ui.Snack
 {
     public class Snack : UxmlElement
     {
-        public Snack(SnackConfig config, int id) : base("Ui/Snack/Snack")
+        public Snack(SnackConfig config, int id) : base(typeof(Snack))
         {
             var header = this.Q<VisualElement>("header");
             var content = this.Q<VisualElement>("content");

@@ -1,13 +1,15 @@
-using Source;
 using UnityEngine;
 
-public class Container : MonoBehaviour
+namespace Source
 {
-    public Menu menu;
-    private GameManager _gameManager;
-
-    void Start()
+    public class Container : MonoBehaviour
     {
-        _gameManager = GameManager.INSTANCE;
+        public Menu menu;
+        private GameManager _gameManager;
+
+        void Start()
+        {
+            _gameManager = GameManager.INSTANCE;
+        }
     }
 }

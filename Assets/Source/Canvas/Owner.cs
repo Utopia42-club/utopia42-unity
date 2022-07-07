@@ -100,7 +100,7 @@ namespace Source.Canvas
         {
             var owner = AuthService.WalletId();
             profileLoader.InvalidateProfile(owner);
-            if (currentWallet != null && currentWallet.Equals(owner))
+            if (AuthService.IsCurrentUser(currentWallet))
                 LoadProfile();
         }
 

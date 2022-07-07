@@ -2,10 +2,7 @@ using Source.Canvas;
 using Source.Model;
 using Source.Service;
 using Source.Ui.CustomUi;
-using Source.Ui.Menu;
 using Source.Ui.Popup;
-using Source.Ui.Utils;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.Profile
@@ -30,7 +27,7 @@ namespace Source.Ui.Profile
         private Land land;
         private readonly VisualElement userProfileContainer;
 
-        public LandProfile(Land land) : base("Ui/Profile/LandProfile", true)
+        public LandProfile(Land land) : base(typeof(LandProfile), true)
         {
             userProfileContainer = this.Q<VisualElement>("userProfileContainer");
             userProfile = new UserProfile(null);
@@ -99,7 +96,7 @@ namespace Source.Ui.Profile
             sizeLabel.text = (rect.width * rect.height).ToString();
             nftLogo.style.display = land.isNft ? DisplayStyle.Flex : DisplayStyle.None;
             transferButton.style.display = land.isNft ? DisplayStyle.None : DisplayStyle.Flex;
-            var isOwner = land.owner.Equals(AuthService.WalletId());
+            var isOwner = AuthService.IsCurrentUser(land.owner);
             actions.style.display = isOwner ? DisplayStyle.Flex : DisplayStyle.None;
 
             var landColor = Colors.GetLandColor(land);

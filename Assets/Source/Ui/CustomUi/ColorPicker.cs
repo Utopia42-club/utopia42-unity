@@ -16,7 +16,7 @@ namespace Source.Ui.CustomUi
         private Color color;
         private bool updatingUi = false;
 
-        public ColorPicker(Action<Color> onSubmit) : base("Ui/CustomUi/ColorPicker")
+        public ColorPicker(Action<Color> onSubmit) : base(typeof(ColorPicker))
         {
             colorPreview = this.Q<VisualElement>("colorPreview");
             redSlider = this.Q<SliderInt>("red");

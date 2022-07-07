@@ -57,7 +57,6 @@ namespace Source.Utils
             var worldService = WorldService.INSTANCE;
 
             var lands = worldService.GetLandsForChunk(new Vector2Int(position.x, position.z));
-            var wallet = AuthService.WalletId();
 
             Land land = null;
             var chunkSize = Chunk.CHUNK_SIZE;
@@ -75,7 +74,7 @@ namespace Source.Utils
                         if (land != null)
                         {
                             body = DIRT.id;
-                            top = land.owner.Equals(wallet) ? DARK_GRASS.id : GRASS.id;
+                            top = AuthService.IsCurrentUser(land.owner) ? DARK_GRASS.id : GRASS.id;
                         }
                     }
 

@@ -10,7 +10,7 @@ namespace Source.Ui.Map
     {
         private readonly Land land;
 
-        public MapLandListItemView(Land land, Map map) : base("Ui/Map/LandListItemView")
+        public MapLandListItemView(Land land, Map map) : base(typeof(MapLandListItemView))
         {
             this.land = land;
             var nameLabel = this.Q<Label>("landNameLabel");

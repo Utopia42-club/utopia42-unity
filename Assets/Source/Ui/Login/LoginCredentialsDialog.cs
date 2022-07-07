@@ -1,8 +1,5 @@
-using System;
 using System.Linq;
 using Source.Service.Ethereum;
-using Source.Ui.Snack;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.Login
@@ -12,7 +9,7 @@ namespace Source.Ui.Login
         private readonly TextField walletField;
         private readonly DropdownField networkField;
 
-        public LoginCredentialsDialog() : base("Ui/Login/LoginCredentialsDialog")
+        public LoginCredentialsDialog() : base(typeof(LoginCredentialsDialog))
         {
             walletField = this.Q<TextField>("walletField");
             networkField = this.Q<DropdownField>("networkField");

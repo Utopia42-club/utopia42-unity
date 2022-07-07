@@ -111,7 +111,6 @@ namespace Source.Ui.Map
             lands.FocusOnLand(land);
             yield return new WaitForEndOfFrame();
 
-            // var screenshot = ScreenCapture.CaptureScreenshotAsTexture();
             var width = (int) worldBound.width - 1;
             var height = (int) worldBound.height - 1;
             var screenshot = new Texture2D(width, height, TextureFormat.ARGB32, false);

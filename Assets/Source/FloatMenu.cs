@@ -1,32 +1,34 @@
-using Source;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
 
-public class FloatMenu : MonoBehaviour
+namespace Source
 {
-    private VisualElement root;
-    private GameManager _gameManager;
-    private UnityAction<bool> focusListener;
-
-    void OnEnable()
+    public class FloatMenu : MonoBehaviour
     {
-        root = GetComponent<UIDocument>().rootVisualElement;
-        _gameManager = GameManager.INSTANCE;
+        private VisualElement root;
+        private GameManager _gameManager;
+        private UnityAction<bool> focusListener;
 
-        var menu = root.Q<Button>("menu");
-        menu.clicked += () => _gameManager.OpenMenu();
-
-        var locked = MouseLook.INSTANCE.cursorLocked;
-        root.focusable = !locked;
-        root.SetEnabled(!locked);
-        if (focusListener != null)
-            MouseLook.INSTANCE.cursorLockedStateChanged.RemoveListener(focusListener);
-        focusListener = locked =>
+        void OnEnable()
         {
+            root = GetComponent<UIDocument>().rootVisualElement;
+            _gameManager = GameManager.INSTANCE;
+
+            var menu = root.Q<Button>("menu");
+            menu.clicked += () => _gameManager.OpenMenu();
+
+            var locked = MouseLook.INSTANCE.cursorLocked;
             root.focusable = !locked;
             root.SetEnabled(!locked);
-        };
-        MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(focusListener);
+            if (focusListener != null)
+                MouseLook.INSTANCE.cursorLockedStateChanged.RemoveListener(focusListener);
+            focusListener = locked =>
+            {
+                root.focusable = !locked;
+                root.SetEnabled(!locked);
+            };
+            MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(focusListener);
+        }
     }
 }

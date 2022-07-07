@@ -11,7 +11,7 @@ namespace Source.Ui.CustomUi
         private readonly Button pickerButton;
         private Color color;
 
-        public ColorField(string labelText) : base("Ui/CustomUi/ColorField")
+        public ColorField(string labelText) : base(typeof(ColorField))
         {
             colorPreview = this.Q<VisualElement>("colorPreview");
             label = this.Q<Label>("label");

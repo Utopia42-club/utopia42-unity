@@ -8,7 +8,7 @@ namespace Source.Ui.Profile
         private readonly TextField urlField;
         private readonly Button deleteButton;
 
-        public SocialLinkEditor() : base("Ui/Profile/SocialLinkEditor")
+        public SocialLinkEditor() : base(typeof(SocialLinkEditor))
         {
             typeField = this.Q<DropdownField>("typeField");
             urlField = this.Q<TextField>("urlField");
