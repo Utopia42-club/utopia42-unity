@@ -48,7 +48,7 @@ namespace Source
 
         public static bool IsCurrentUser(string walletId)
         {
-            return walletId != null && walletId.ToLower().Equals(walletId);
+            return walletId != null && walletId.ToLower().Equals(WalletId());
         }
 
         public static EthNetwork Network()
