@@ -49,7 +49,7 @@ namespace Source.Ui.Map
             {
                 if (evt.button == (int) MouseButton.RightMouse)
                 {
-                    var landProfile = new LandProfile(land);
+                    var landProfile = new LandProfile(map, land);
                     var controller = DialogService.INSTANCE.Show(new DialogConfig("Land Profile", landProfile)
                         .WithWidth(new Length(100, LengthUnit.Percent))
                         .WithHeight(new Length(100, LengthUnit.Percent))

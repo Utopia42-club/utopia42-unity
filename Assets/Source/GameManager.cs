@@ -435,11 +435,11 @@ namespace Source
                 () => { });
         }
 
-        public void SetNFT(Land land, bool convertToNft)
+        public void SetNFT(Map map, Land land, bool convertToNft)
         {
             if (convertToNft)
             {
-                StartCoroutine(Map.INSTANCE.TakeNftScreenShot(land, screenshot =>
+                StartCoroutine(map.TakeNftScreenShot(land, screenshot =>
                 {
                     // using (var ms = new MemoryStream(screenshot))
                     // {
@@ -491,27 +491,27 @@ namespace Source
             }));
         }
 
-        public void ShowProfile(Profile profile, Land currentLand)
-        {
-            if (GetState() == State.PLAYING)
-            {
-                if (currentLand == null)
-                {
-                    var userProfile = new UserProfile(profile);
-                    DialogService.INSTANCE.Show(new DialogConfig("User Profile", userProfile));
-                }
-                else
-                {
-                    var landProfile = new LandProfile(currentLand);
-                    landProfile.SetProfile(profile);
-                    DialogService.INSTANCE.Show(
-                        new DialogConfig("Land Profile", landProfile)
-                            .WithWidth(new Length(70, LengthUnit.Percent))
-                            .WithHeight(new Length(60, LengthUnit.Percent))
-                    );
-                }
-            }
-        }
+        // public void ShowProfile(Profile profile, Land currentLand)
+        // {
+        //     if (GetState() == State.PLAYING)
+        //     {
+        //         if (currentLand == null)
+        //         {
+        //             var userProfile = new UserProfile(profile);
+        //             DialogService.INSTANCE.Show(new DialogConfig("User Profile", userProfile));
+        //         }
+        //         else
+        //         {
+        //             var landProfile = new LandProfile(currentLand);
+        //             landProfile.SetProfile(profile);
+        //             DialogService.INSTANCE.Show(
+        //                 new DialogConfig("Land Profile", landProfile)
+        //                     .WithWidth(new Length(70, LengthUnit.Percent))
+        //                     .WithHeight(new Length(60, LengthUnit.Percent))
+        //             );
+        //         }
+        //     }
+        // }
 
         private IEnumerator ReloadLandOwnerAndNft(long id, bool reCreateWorld)
         {

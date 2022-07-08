@@ -10,9 +10,6 @@ namespace Source.Ui.Map
 {
     public class Map : UxmlElement
     {
-        private static Map instance;
-        public static Map INSTANCE => instance;
-
         private readonly MapLandLayer lands;
         private readonly MapViewportController viewportController;
         private readonly MapPointerPositionLabel mapPointerPositionLabel;
@@ -21,7 +18,6 @@ namespace Source.Ui.Map
 
         public Map() : base(typeof(Map), true)
         {
-            instance = this;
             var root = this.Q("Root");
             var grid = new MapGrid(this);
             root.Add(grid);

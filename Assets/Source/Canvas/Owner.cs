@@ -37,7 +37,7 @@ namespace Source.Canvas
             instance = this;
             manager = GameManager.INSTANCE;
             profileLoader = ProfileLoader.INSTANCE;
-            openProfileButton.AddListener(() => manager.ShowProfile(currentProfile, null));
+            // openProfileButton.AddListener(() => manager.ShowProfile(currentProfile, null));
             
             view.SetActive(false); // TODO ?
             ShowShortcutsSnack();
@@ -54,11 +54,11 @@ namespace Source.Canvas
                 if (changed || !view.activeSelf && currentWallet != null)
                     OnOwnerChanged();
 
-                if (Input.GetButtonDown("Profile")
-                    && currentWallet != null
-                    && !profileLoader.IsWalletLoading(currentWallet)
-                    && !manager.IsUiEngaged())
-                    manager.ShowProfile(currentProfile, currentLand);
+                // if (Input.GetButtonDown("Profile")
+                //     && currentWallet != null
+                //     && !profileLoader.IsWalletLoading(currentWallet)
+                //     && !manager.IsUiEngaged())
+                    // manager.ShowProfile(currentProfile, currentLand);
             }
             else
             {

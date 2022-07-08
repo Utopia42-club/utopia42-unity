@@ -9,6 +9,7 @@ namespace Source.Ui.Profile
 {
     public class LandProfile : UxmlElement
     {
+        private readonly Map.Map map;
         private static readonly string colorPickerPrefab = "Prefabs/FloatColorPicker";
 
         private Label nameLabel;
@@ -27,8 +28,9 @@ namespace Source.Ui.Profile
         private Land land;
         private readonly VisualElement userProfileContainer;
 
-        public LandProfile(Land land) : base(typeof(LandProfile), true)
+        public LandProfile(Map.Map map, Land land) : base(typeof(LandProfile), true)
         {
+            this.map = map;
             userProfileContainer = this.Q<VisualElement>("userProfileContainer");
             userProfile = new UserProfile(null);
             userProfileContainer.Add(userProfile);
@@ -43,7 +45,7 @@ namespace Source.Ui.Profile
             transferButton = this.Q<Button>("transferButton");
             toggleNftButton = this.Q<Button>("toggleNftButton");
             transferButton.clickable.clicked += () => GameManager.INSTANCE.Transfer(land.id);
-            toggleNftButton.clickable.clicked += () => GameManager.INSTANCE.SetNFT(land, !land.isNft);
+            toggleNftButton.clickable.clicked += () => GameManager.INSTANCE.SetNFT(map, land, !land.isNft);
             SetLand(land);
             editButton.clicked += OnEditButtonClicked;
             colorValueClickCallback = evt =>
