@@ -325,12 +325,11 @@ namespace Source
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
-            AvatarLoader.INSTANCE.AddJob(url, OnAvatarLoad, OnAvatarLoadFailure);
+            AvatarLoader.INSTANCE.AddJob(gameObject, url, OnAvatarLoad, OnAvatarLoadFailure);
         }
 
         private void OnAvatarLoadFailure(FailureType failureType)
         {
-            if (gameObject == null) return;
             remainingAvatarLoadAttempts -= 1;
             if (remainingAvatarLoadAttempts > 0 && failureType != FailureType.UrlProcessError)
             {
@@ -339,7 +338,7 @@ namespace Source
                     remainingAvatarLoadAttempts);
                 if (!isAnotherPlayer)
                     GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadRetryMessage, false);
-                AvatarLoader.INSTANCE.AddJob(loadingAvatarUrl, OnAvatarLoad, OnAvatarLoadFailure);
+                AvatarLoader.INSTANCE.AddJob(gameObject, loadingAvatarUrl, OnAvatarLoad, OnAvatarLoadFailure);
             }
             else
             {
@@ -354,12 +353,6 @@ namespace Source
 
         private void OnAvatarLoad(GameObject avatar)
         {
-            if (gameObject == null)
-            {
-                MetaBlockObject.DeepDestroy3DObject(avatar);
-                return;
-            }
-
             if (avatar.GetComponentsInChildren<Renderer>().Length > 2)
             {
                 Debug.LogWarning($"{state?.walletId} | {RendererWarningMessage}");

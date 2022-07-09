@@ -1792,8 +1792,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxAvatarsAllowed: 20
   maxInactivityDelay: 2
-  maxCreateAvatarDistance: 100
-  minDestroyAvatarDistance: 200
+  maxCreateAvatarDistance: 70
+  minDestroyAvatarDistance: 100
   avatarPrefab: {fileID: 7620900103328517206, guid: ac3aee3b658d8df63b9e59d17355a0f2, type: 3}
 --- !u!4 &1090085033
 Transform:

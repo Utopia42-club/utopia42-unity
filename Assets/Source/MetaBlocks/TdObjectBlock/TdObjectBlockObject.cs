@@ -203,12 +203,6 @@ namespace Source.MetaBlocks.TdObjectBlock
 
                 CreateGameObject(p.url, p.type, loadedGo =>
                 {
-                    if (gameObject == null)
-                    {
-                        DeepDestroy3DObject(loadedGo);
-                        return;
-                    }
-
                     LoadGameObject(scale, rotation, initialPosition, p.initialScale,
                         p.detectCollision, p.type, reinitialize, loadedGo);
                 });
@@ -380,18 +374,14 @@ namespace Source.MetaBlocks.TdObjectBlock
                     return;
                 }
 
-                Action<int> onFailure = _ =>
-                {
-                    if (gameObject != null)
-                        UpdateState(State.InvalidData);
-                };
+                Action<int> onFailure = _ => { UpdateState(State.InvalidData); };
                 switch (type)
                 {
                     case TdObjectBlockProperties.TdObjectType.OBJ:
-                        ObjLoader.INSTANCE.AddJob(bytes, onSuccess, onFailure);
+                        ObjLoader.INSTANCE.AddJob(gameObject, bytes, onSuccess, onFailure);
                         break;
                     case TdObjectBlockProperties.TdObjectType.GLB:
-                        GlbLoader.INSTANCE.AddJob(bytes, onSuccess, onFailure);
+                        GlbLoader.INSTANCE.AddJob(gameObject, bytes, onSuccess, onFailure);
                         break;
                     default:
                         onFailure.Invoke(0);

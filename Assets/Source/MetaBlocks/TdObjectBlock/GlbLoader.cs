@@ -16,17 +16,39 @@ namespace Source.MetaBlocks.TdObjectBlock
             useLegacyClips = true
         };
 
-        protected override IEnumerator GetJob(byte[] data, Action<GameObject> onSuccess, Action<int> onFailure)
+        protected override IEnumerator GetJob(GameObject refGo, byte[] data, Action<GameObject> onSuccess,
+            Action<int> onFailure)
         {
+            if (refGo == null)
+            {
+                Debug.Log("GlbLoader job skipped since the reference game object has been destroyed");
+                yield break;
+            }
+
             var done = false;
             InitTask(data, go =>
             {
-                onSuccess.Invoke(go);
                 done = true;
+                if (refGo == null)
+                {
+                    Debug.Log(
+                        "GlbLoader job success handling skipped since the reference game object has been destroyed");
+                    MetaBlockObject.DeepDestroy3DObject(go);
+                    return;
+                }
+
+                onSuccess.Invoke(go);
             }, () =>
             {
-                onFailure.Invoke(0);
                 done = true;
+                if (refGo == null)
+                {
+                    Debug.Log(
+                        "GlbLoader job failure handling skipped since the reference game object has been destroyed");
+                    return;
+                }
+
+                onFailure.Invoke(0);
             });
             while (!done)
                 yield return null;
