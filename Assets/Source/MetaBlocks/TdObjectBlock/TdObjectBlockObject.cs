@@ -374,17 +374,17 @@ namespace Source.MetaBlocks.TdObjectBlock
                     return;
                 }
 
-                Action onFailure = () => { UpdateState(State.InvalidData); };
+                Action<int> onFailure = _ => { UpdateState(State.InvalidData); };
                 switch (type)
                 {
                     case TdObjectBlockProperties.TdObjectType.OBJ:
-                        ObjLoader.INSTANCE.InitTask(bytes, onSuccess, onFailure);
+                        ObjLoader.INSTANCE.AddJob(bytes, onSuccess, onFailure);
                         break;
                     case TdObjectBlockProperties.TdObjectType.GLB:
-                        GlbLoader.InitTask(bytes, onSuccess, onFailure);
+                        GlbLoader.INSTANCE.AddJob(bytes, onSuccess, onFailure);
                         break;
                     default:
-                        onFailure.Invoke();
+                        onFailure.Invoke(0);
                         break;
                 }
             });

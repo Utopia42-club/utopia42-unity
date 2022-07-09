@@ -38,7 +38,7 @@ namespace Source
 
         public static bool IsGuest()
         {
-            return WalletId().Equals(GUEST);
+            return GUEST.Equals(WalletId());
         }
 
         public static string WalletId()
