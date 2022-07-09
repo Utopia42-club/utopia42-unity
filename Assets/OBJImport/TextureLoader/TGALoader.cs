@@ -119,6 +119,7 @@ namespace Dummiesman
                 }
 
                 tex.Apply();
+                tex.Compress(false);
                 return tex;
 
             }

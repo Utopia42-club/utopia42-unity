@@ -68,6 +68,7 @@ namespace Dummiesman
 
                 Texture2D texture = new Texture2D(1, 1);
                 texture.LoadImage(buffer);
+                texture.Compress(false);
                 return texture;
             }
             else if (format == TextureFormat.TGA)
@@ -88,7 +89,6 @@ namespace Dummiesman
         /// <param name="normalMap"></param>
         /// <param name="zipMap"></param>
         /// <returns></returns>
-
         private static byte[] LoadTextureBytes(string fn)
         {
             if (!File.Exists(fn))
@@ -159,11 +159,12 @@ namespace Dummiesman
             {
                 returnTex = ImageLoaderHelper.VerifyFormat(returnTex);
                 returnTex.name = Path.GetFileNameWithoutExtension(fn);
+                returnTex.Compress(false);
             }
 
             return returnTex;
         }
-        
+
         public static Texture2D LoadTexture(string fn) // not thread safe
         {
             return LoadTextureFromBytes(LoadTextureBytes(fn), fn);

@@ -284,7 +284,7 @@ namespace Source
         public void DoReloadAvatar(string avatarUrl)
         {
             if (avatarController != null)
-                avatarController.ReloadAvatar(avatarUrl, null, true);
+                avatarController.ReloadAvatar(avatarUrl, true);
         }
 
         // ReSharper disable Unity.PerformanceAnalysis

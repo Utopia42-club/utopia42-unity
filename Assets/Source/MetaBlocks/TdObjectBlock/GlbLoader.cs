@@ -1,19 +1,36 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using Siccity.GLTFUtility;
+using Source.Utils;
 using UnityEngine;
 
 namespace Source.MetaBlocks.TdObjectBlock
 {
-    public class GlbLoader : MonoBehaviour
+    public class GlbLoader : TdObjectLoader<byte[], int>
     {
         private static readonly ImportSettings ImportSettings = new()
         {
             useLegacyClips = true
         };
 
+        protected override IEnumerator GetJob(byte[] data, Action<GameObject> onSuccess, Action<int> onFailure)
+        {
+            var done = false;
+            InitTask(data, go =>
+            {
+                onSuccess.Invoke(go);
+                done = true;
+            }, () =>
+            {
+                onFailure.Invoke(0);
+                done = true;
+            });
+            while (!done)
+                yield return null;
+        }
 
         public static void InitTask(byte[] data, Action<GameObject> onSuccess, Action onFailure)
         {
@@ -38,5 +55,7 @@ namespace Source.MetaBlocks.TdObjectBlock
                 onFailure.Invoke();
             }
         }
+
+        public static GlbLoader INSTANCE => GameObject.Find("TdObjectLoader").GetComponent<GlbLoader>();
     }
 }

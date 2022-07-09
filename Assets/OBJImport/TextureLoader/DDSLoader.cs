@@ -48,6 +48,7 @@ namespace Dummiesman
                 Texture2D texture = new Texture2D(width, height, textureFormat, mipmaps);
                 texture.LoadRawTextureData(dxtBytes);
                 texture.Apply();
+                texture.Compress(false);
 
                 return texture;
             }

@@ -56,7 +56,7 @@ namespace Source
             return meshRenderer;
         }
 
-        protected void OnDestroy()
+        protected virtual void OnDestroy()
         {
             if (meshFilter != null)
                 Destroy(meshFilter.sharedMesh);
