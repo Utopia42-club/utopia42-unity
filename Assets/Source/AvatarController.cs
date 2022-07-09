@@ -88,8 +88,8 @@ namespace Source
             ProfileLoader.INSTANCE.load(walletId, profile =>
             {
                 if (profile != null && profile.avatarUrl != null && profile.avatarUrl.Length > 0)
-                    // ReloadAvatar(profile.avatarUrl);
-                    ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb");
+                    ReloadAvatar(profile.avatarUrl);
+                    // ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb");
                 else
                     LoadDefaultAvatar();
             }, () => LoadDefaultAvatar());

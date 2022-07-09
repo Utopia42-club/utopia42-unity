@@ -38,7 +38,7 @@ namespace Source
 
         public static bool IsGuest()
         {
-            return WalletId().Equals(GUEST);
+            return GUEST.Equals(WalletId());
         }
 
         public static string WalletId()
@@ -48,7 +48,7 @@ namespace Source
 
         public static bool IsCurrentUser(string walletId)
         {
-            return walletId != null && walletId.ToLower().Equals(walletId);
+            return walletId != null && walletId.ToLower().Equals(WalletId());
         }
 
         public static EthNetwork Network()
