@@ -6,7 +6,7 @@ namespace Source.TestUtils
 {
     public class TestAvatarImport : MonoBehaviour
     {
-        private readonly AvatarLoader avatarLoader = new() {UseAvatarCaching = true};
+        private readonly ReadyPlayerMe.AvatarLoader avatarLoader = new() {UseAvatarCaching = true};
         private int avatarIndex = -1;
 
         private static readonly List<string> Urls = new()

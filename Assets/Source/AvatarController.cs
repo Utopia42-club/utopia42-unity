@@ -6,7 +6,6 @@ using Source.MetaBlocks;
 using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
 using Source.Ui.Profile;
-using Source.Ui.Snack;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
@@ -19,6 +18,7 @@ namespace Source
     {
         private const string DefaultAvatarUrl =
             "https://d1a370nemizbjq.cloudfront.net/8b6189f0-c999-4a6a-bffc-7f68d66b39e6.glb"; //FIXME Configuration?
+            // "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb";
 
         private const string RendererWarningMessage = "Your avatar is too complex. Loading the default...";
         private const string AvatarLoadedMessage = "Avatar loaded";
@@ -27,8 +27,6 @@ namespace Source
 
         private const int MaxReportDelay = 1; // in seconds 
         private const float AnimationUpdateRate = 0.1f; // in seconds
-
-        private AvatarLoader avatarLoader;
 
         private Animator animator;
         private CharacterController controller;
@@ -81,7 +79,7 @@ namespace Source
 
         private void LoadDefaultAvatar(bool resetAvatarMsg = true)
         {
-            ReloadAvatar(DefaultAvatarUrl, null, false, resetAvatarMsg);
+            ReloadAvatar(DefaultAvatarUrl, false, resetAvatarMsg);
         }
 
         private IEnumerator LoadAvatarFromWallet(string walletId)
@@ -90,7 +88,8 @@ namespace Source
             ProfileLoader.INSTANCE.load(walletId, profile =>
             {
                 if (profile != null && profile.avatarUrl != null && profile.avatarUrl.Length > 0)
-                    ReloadAvatar(profile.avatarUrl);
+                    // ReloadAvatar(profile.avatarUrl);
+                    ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb");
                 else
                     LoadDefaultAvatar();
             }, () => LoadDefaultAvatar());
@@ -315,7 +314,7 @@ namespace Source
             Player.INSTANCE.mainPlayerStateReport.Invoke(state);
         }
 
-        public void ReloadAvatar(string url, Action onDone = null, bool ignorePreviousUrl = false,
+        public void ReloadAvatar(string url, bool ignorePreviousUrl = false,
             bool resetAvatarMsg = true)
         {
             if (url == null || !ignorePreviousUrl && url.Equals(loadingAvatarUrl) ||
@@ -325,46 +324,47 @@ namespace Source
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
-            avatarLoader = new AvatarLoader {UseAvatarCaching = true};
-            avatarLoader.OnCompleted += (_, args) =>
-            {
-                if (args.Avatar.GetComponentsInChildren<Renderer>().Length > 2)
-                {
-                    Debug.LogWarning($"{state?.walletId} | {RendererWarningMessage}");
-                    GameManager.INSTANCE.ShowAvatarStateMessage(RendererWarningMessage, true);
-                    MetaBlockObject.DeepDestroy3DObject(args.Avatar);
-                    avatarLoader.LoadAvatar(DefaultAvatarUrl);
-                    return;
-                }
+            AvatarLoader.INSTANCE.AddJob(url, OnAvatarLoad, OnAvatarLoadFailure);
+        }
 
-                if (isAnotherPlayer)
-                    Debug.Log($"{state?.walletId} | {AvatarLoadedMessage}");
-                PrepareAvatar(args.Avatar);
-                animator = Avatar.GetComponentInChildren<Animator>();
-                onDone?.Invoke();
-                remainingAvatarLoadAttempts = 0;
-            };
-            avatarLoader.OnFailed += (_, args) =>
+        private void OnAvatarLoadFailure(FailureType failureType)
+        {
+            remainingAvatarLoadAttempts -= 1;
+            if (remainingAvatarLoadAttempts > 0 && failureType != FailureType.UrlProcessError)
             {
-                remainingAvatarLoadAttempts -= 1;
-                if (remainingAvatarLoadAttempts > 0 && args.Type != FailureType.UrlProcessError)
-                {
-                    Debug.LogWarning(
-                        $"{state?.walletId} | {args.Type} : {AvatarLoadRetryMessage} | Remaining attempts: " +
-                        remainingAvatarLoadAttempts);
-                    GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadRetryMessage, false);
-                    avatarLoader.LoadAvatar(url);
-                }
-                else
-                {
-                    Debug.LogWarning(
-                        $"{state?.walletId} | {args.Type} : {AvatarLoadFailedMessage}");
-                    GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadFailedMessage, true);
-                    remainingAvatarLoadAttempts = 0;
-                    LoadDefaultAvatar(false);
-                }
-            };
-            avatarLoader.LoadAvatar(url);
+                Debug.LogWarning(
+                    $"{state?.walletId} | {failureType} : {AvatarLoadRetryMessage} | Remaining attempts: " +
+                    remainingAvatarLoadAttempts);
+                GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadRetryMessage, false);
+                AvatarLoader.INSTANCE.AddJob(loadingAvatarUrl, OnAvatarLoad, OnAvatarLoadFailure);
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"{state?.walletId} | {failureType} : {AvatarLoadFailedMessage}");
+                GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadFailedMessage, true);
+                remainingAvatarLoadAttempts = 0;
+                LoadDefaultAvatar(false);
+            }
+        }
+
+        private void OnAvatarLoad(GameObject avatar)
+        {
+            if (avatar.GetComponentsInChildren<Renderer>().Length > 2)
+            {
+                Debug.LogWarning($"{state?.walletId} | {RendererWarningMessage}");
+                GameManager.INSTANCE.ShowAvatarStateMessage(RendererWarningMessage, true);
+                MetaBlockObject.DeepDestroy3DObject(avatar);
+                remainingAvatarLoadAttempts = 0;
+                LoadDefaultAvatar(false);
+                return;
+            }
+
+            if (isAnotherPlayer)
+                Debug.Log($"{state?.walletId} | {AvatarLoadedMessage}");
+            PrepareAvatar(avatar);
+            animator = Avatar.GetComponentInChildren<Animator>();
+            remainingAvatarLoadAttempts = 0;
         }
 
         private void PrepareAvatar(GameObject go)
