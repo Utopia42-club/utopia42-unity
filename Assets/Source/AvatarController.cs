@@ -33,7 +33,7 @@ namespace Source
         public GameObject Avatar { private set; get; }
         private string loadingAvatarUrl;
         private int remainingAvatarLoadAttempts;
-        public double UpdatedTime { private set; get; }
+        public double UpdatedTime;
         private double lastPerformedStateTime;
         private double lastReportedTime;
         private PlayerState lastPerformedState;
@@ -282,7 +282,6 @@ namespace Source
         private void SetPlayerState(PlayerState playerState)
         {
             state = playerState;
-            UpdatedTime = Time.unscaledTimeAsDouble;
         }
 
         private void UpdateAnimation()
