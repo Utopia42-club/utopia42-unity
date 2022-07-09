@@ -27,7 +27,8 @@ namespace Dummiesman
             
             returnTex.SetPixels(pixels);
             returnTex.Apply(true);
-            returnTex.Compress(false);
+            if (returnTex.width % 4 == 0 && returnTex.height % 4 == 0)
+                returnTex.Compress(false);
             return returnTex;
         }
         

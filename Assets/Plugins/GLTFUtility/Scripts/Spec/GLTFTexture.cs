@@ -27,7 +27,8 @@ namespace Siccity.GLTFUtility {
 				if (cache == null) {
 					IEnumerator en = image.CreateTextureAsync(linear, x =>
 					{
-						x.Compress(false);
+						if (x.width % 4 == 0 && x.height % 4 == 0)
+							x.Compress(false);
 						cache = x;
 					}, onProgress);
 					while (en.MoveNext()) { yield return null; };

@@ -110,7 +110,8 @@ namespace B83.Image.BMP
             var tex = new Texture2D(info.absWidth, info.absHeight);
             tex.SetPixels32(imageData);
             tex.Apply();
-            tex.Compress(false);
+            if (tex.width % 4 == 0 && tex.height % 4 == 0)
+                tex.Compress(false);
             return tex;
         }
     }
