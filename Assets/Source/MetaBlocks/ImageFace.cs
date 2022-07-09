@@ -1,6 +1,7 @@
 using System.Collections;
 using Source.MetaBlocks;
 using Source.MetaBlocks.ImageBlock;
+using Source.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -40,7 +41,7 @@ namespace Source
             }
 
             var tex = ((DownloadHandlerTexture) request.downloadHandler).texture;
-            tex.Compress(false);
+            Textures.TryCompress(tex);
             material.mainTexture = tex;
             block.UpdateState(State.Ok);
         }

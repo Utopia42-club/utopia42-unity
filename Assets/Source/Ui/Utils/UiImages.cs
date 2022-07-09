@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Source.Ui.LoadingLayer;
+using Source.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UIElements;
@@ -24,7 +25,7 @@ namespace Source.Ui.Utils
                 var tex = ((DownloadHandlerTexture) request.downloadHandler).texture;
                 if (tex != null)
                 {
-                    tex.Compress(false);
+                    Textures.TryCompress(tex);
                     onSuccess(tex);
                 }
             }
