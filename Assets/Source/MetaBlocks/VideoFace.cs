@@ -107,7 +107,7 @@ namespace Source
             return prepared && videoPlayer.isPlaying;
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             if (videoPlayer != null)
             {

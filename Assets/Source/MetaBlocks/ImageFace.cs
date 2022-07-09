@@ -33,13 +33,15 @@ namespace Source
             if (request.result == UnityWebRequest.Result.ProtocolError ||
                 request.result == UnityWebRequest.Result.DataProcessingError)
             {
-                if (retries > 0 && request.responseCode == 504)// && url.StartsWith(IpfsClient.SERVER_URL))
+                if (retries > 0 && request.responseCode == 504) // && url.StartsWith(IpfsClient.SERVER_URL))
                     yield return LoadImage(material, url, block, retries - 1);
                 else block.UpdateState(State.InvalidUrlOrData);
                 yield break;
             }
 
-            material.mainTexture = ((DownloadHandlerTexture) request.downloadHandler).texture;
+            var tex = ((DownloadHandlerTexture) request.downloadHandler).texture;
+            tex.Compress(false);
+            material.mainTexture = tex;
             block.UpdateState(State.Ok);
         }
     }
