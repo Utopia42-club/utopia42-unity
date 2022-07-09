@@ -37,6 +37,7 @@ namespace Dummiesman
                 var tex24 = new Texture2D(tex.width, tex.height, UnityEngine.TextureFormat.RGB24, tex.mipmapCount > 0);
                 tex24.SetPixels32(pixels);
                 tex24.Apply(true);
+                tex24.Compress(false);
                 return tex24;
             }
 

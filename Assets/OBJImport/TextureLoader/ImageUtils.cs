@@ -27,6 +27,7 @@ namespace Dummiesman
             
             returnTex.SetPixels(pixels);
             returnTex.Apply(true);
+            returnTex.Compress(false);
             return returnTex;
         }
         
