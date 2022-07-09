@@ -203,6 +203,12 @@ namespace Source.MetaBlocks.TdObjectBlock
 
                 CreateGameObject(p.url, p.type, loadedGo =>
                 {
+                    if (gameObject == null)
+                    {
+                        DeepDestroy3DObject(loadedGo);
+                        return;
+                    }
+
                     LoadGameObject(scale, rotation, initialPosition, p.initialScale,
                         p.detectCollision, p.type, reinitialize, loadedGo);
                 });
@@ -374,7 +380,11 @@ namespace Source.MetaBlocks.TdObjectBlock
                     return;
                 }
 
-                Action<int> onFailure = _ => { UpdateState(State.InvalidData); };
+                Action<int> onFailure = _ =>
+                {
+                    if (gameObject != null)
+                        UpdateState(State.InvalidData);
+                };
                 switch (type)
                 {
                     case TdObjectBlockProperties.TdObjectType.OBJ:

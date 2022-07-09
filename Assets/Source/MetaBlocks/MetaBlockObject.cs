@@ -30,7 +30,16 @@ namespace Source.MetaBlocks
         protected void Start()
         {
             canEditPosition = Player.INSTANCE.CanEdit(Vectors.FloorToInt(transform.position), out land);
-            stateChange.AddListener(OnStateChanged);
+            stateChange.AddListener(state =>
+            {
+                if (MetaBlockState.IsErrorState(state) && !canEditPosition)
+                {
+                    OnDestroy();
+                    return;
+                }
+
+                OnStateChanged(state);
+            });
             gameObject.name = Block.type.name + " block object";
             Started = true;
         }
