@@ -18,7 +18,7 @@ namespace Source
     {
         private const string DefaultAvatarUrl =
             "https://d1a370nemizbjq.cloudfront.net/8b6189f0-c999-4a6a-bffc-7f68d66b39e6.glb"; //FIXME Configuration?
-            // "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb";
+        // "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb";
 
         private const string RendererWarningMessage = "Your avatar is too complex. Loading the default...";
         private const string AvatarLoadedMessage = "Avatar loaded";
@@ -89,7 +89,8 @@ namespace Source
             {
                 if (profile != null && profile.avatarUrl != null && profile.avatarUrl.Length > 0)
                     ReloadAvatar(profile.avatarUrl);
-                    // ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb");
+                // ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb"); // complex default
+                // ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/3343c701-0f84-4a57-8c0e-eb25724a2133.glb"); // simple with transparent
                 else
                     LoadDefaultAvatar();
             }, () => LoadDefaultAvatar());
@@ -329,20 +330,23 @@ namespace Source
 
         private void OnAvatarLoadFailure(FailureType failureType)
         {
+            if (gameObject == null) return;
             remainingAvatarLoadAttempts -= 1;
             if (remainingAvatarLoadAttempts > 0 && failureType != FailureType.UrlProcessError)
             {
                 Debug.LogWarning(
                     $"{state?.walletId} | {failureType} : {AvatarLoadRetryMessage} | Remaining attempts: " +
                     remainingAvatarLoadAttempts);
-                GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadRetryMessage, false);
+                if (!isAnotherPlayer)
+                    GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadRetryMessage, false);
                 AvatarLoader.INSTANCE.AddJob(loadingAvatarUrl, OnAvatarLoad, OnAvatarLoadFailure);
             }
             else
             {
                 Debug.LogWarning(
                     $"{state?.walletId} | {failureType} : {AvatarLoadFailedMessage}");
-                GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadFailedMessage, true);
+                if (!isAnotherPlayer)
+                    GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadFailedMessage, true);
                 remainingAvatarLoadAttempts = 0;
                 LoadDefaultAvatar(false);
             }
@@ -350,10 +354,17 @@ namespace Source
 
         private void OnAvatarLoad(GameObject avatar)
         {
+            if (gameObject == null)
+            {
+                MetaBlockObject.DeepDestroy3DObject(avatar);
+                return;
+            }
+
             if (avatar.GetComponentsInChildren<Renderer>().Length > 2)
             {
                 Debug.LogWarning($"{state?.walletId} | {RendererWarningMessage}");
-                GameManager.INSTANCE.ShowAvatarStateMessage(RendererWarningMessage, true);
+                if (!isAnotherPlayer)
+                    GameManager.INSTANCE.ShowAvatarStateMessage(RendererWarningMessage, true);
                 MetaBlockObject.DeepDestroy3DObject(avatar);
                 remainingAvatarLoadAttempts = 0;
                 LoadDefaultAvatar(false);

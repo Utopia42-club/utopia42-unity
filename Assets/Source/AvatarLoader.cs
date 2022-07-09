@@ -8,11 +8,14 @@ namespace Source
 {
     public class AvatarLoader : TdObjectLoader<string, FailureType>
     {
-        private ReadyPlayerMe.AvatarLoader loader = new() {UseAvatarCaching = true};
-
         protected override IEnumerator GetJob(string url, Action<GameObject> onSuccess, Action<FailureType> onFailure)
         {
             var done = false;
+
+            var loader = new ReadyPlayerMe.AvatarLoader
+            {
+                UseAvatarCaching = true
+            };
 
             loader.OnCompleted += (_, args) =>
             {
@@ -27,7 +30,6 @@ namespace Source
             loader.LoadAvatar(url);
 
             while (!done) yield return null;
-            loader = new ReadyPlayerMe.AvatarLoader() {UseAvatarCaching = true};
         }
 
         protected override bool IsCritical()

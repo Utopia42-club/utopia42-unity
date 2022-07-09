@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -16,9 +17,13 @@ namespace Source
 
         private double lastInActivityCheck = 0;
         private readonly ConcurrentDictionary<string, AvatarController> playersMap = new();
+        private readonly Queue<GameObject> destroyQueue = new();
 
         private void Update()
         {
+            if (destroyQueue.Count > 0 && destroyQueue.TryDequeue(out var go))
+                DestroyImmediate(go);
+
             if (Time.unscaledTimeAsDouble - lastInActivityCheck < maxInactivityDelay) return; // TODO?
             lastInActivityCheck = Time.unscaledTimeAsDouble;
             var walletIds = playersMap.Keys.ToList();
@@ -28,7 +33,7 @@ namespace Source
                 if (Time.unscaledTimeAsDouble - controller.UpdatedTime < maxInactivityDelay ||
                     !playersMap.TryRemove(id, out _)) continue;
                 Debug.LogWarning($"{id} | Player was inactive for too long. Removing player...");
-                DestroyImmediate(controller.gameObject);
+                destroyQueue.Enqueue(controller.gameObject);
             }
         }
 
