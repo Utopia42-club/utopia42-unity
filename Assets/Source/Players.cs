@@ -44,6 +44,7 @@ namespace Source
 
             for (var i = 0; i < maxStatesToProcessCount; i++)
             {
+                if (walletsUpdateStateQueue.Count == 0) break;
                 if (!walletsUpdateStateQueue.TryDequeue(out var walletId) ||
                     !playersMap.TryGetValue(walletId, out var controller) || controller == null ||
                     !states.TryGetValue(walletId, out var playerState) || !states.TryRemove(walletId, out _)) continue;
@@ -112,6 +113,12 @@ namespace Source
                         DestroyImmediate(c.gameObject);
                 }
             }
+        }
+
+        public void GetStatistics(out int totalTrackedPlayersCount, out int totalAvatarsCount)
+        {
+            totalTrackedPlayersCount = playersMap.Count;
+            totalAvatarsCount = playersMap.Values.Count(controller => controller != null && controller.Avatar != null);
         }
 
         private void CheckDistanceAndLimit(AvatarController.PlayerState state, out bool makeVisible,
