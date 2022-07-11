@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Source.Canvas;
+using Source.Service;
+using Source.Service.Auth;
 using Source.Ui.Utils;
 using Source.Utils;
 using Source.UtopiaException;
@@ -35,7 +37,7 @@ namespace Source.Ui.Profile
             imageElement = this.Q<VisualElement>("profileImage");
             if (profile.imageUrl != null)
             {
-                var url = Constants.ApiURL + "/profile/image/" + profile.imageUrl;
+                var url = ProfileRestClient.INSTANCE.GetImageUrl(profile.imageUrl);
                 GameManager.INSTANCE.StartCoroutine(
                     UiImageUtils.SetBackGroundImageFromUrl(url, emptyUserIcon, false, imageElement, () =>
                     {
@@ -98,7 +100,7 @@ namespace Source.Ui.Profile
 
             var editButton = this.Q<Button>("userEditButton");
             var designerButton = this.Q<Button>("openAvatarDesigner");
-            if (!AuthService.IsGuest() && AuthService.IsCurrentUser(profile.walletId))
+            if (!AuthService.Instance.IsGuest() && AuthService.Instance.IsCurrentUser(profile.walletId))
             {
                 editButton.clickable = new Clickable(() => { });
                 editButton.clickable.clicked += () => BrowserConnector.INSTANCE.EditProfile(() =>

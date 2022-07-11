@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Source.Model;
+using Source.Model.Inventory;
 using Source.Service;
-using Source.Ui.AssetInventory.Models;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.AssetInventory.Assets

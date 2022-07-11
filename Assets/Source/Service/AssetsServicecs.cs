@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Source.Ui.AssetInventory.Models;
+using Source.Model;
+using Source.Model.Inventory;
+using Source.Service.Auth;
 using Source.Utils;
 using UnityEngine;
 
@@ -82,7 +84,7 @@ namespace Source.Service
         {
             var done = false;
             string token = null;
-            AuthService.GetAuthToken(t =>
+            AuthService.Instance.GetAuthToken(t =>
             {
                 done = true;
                 token = t;
@@ -96,7 +98,7 @@ namespace Source.Service
         {
             var done = false;
             string token = null;
-            AuthService.GetAuthToken(t =>
+            AuthService.Instance.GetAuthToken(t =>
             {
                 done = true;
                 token = t;
@@ -110,7 +112,7 @@ namespace Source.Service
         {
             var done = false;
             string token = null;
-            AuthService.GetAuthToken(t =>
+            AuthService.Instance.GetAuthToken(t =>
             {
                 done = true;
                 token = t;
@@ -124,7 +126,7 @@ namespace Source.Service
         {
             var done = false;
             string token = null;
-            AuthService.GetAuthToken(t =>
+            AuthService.Instance.GetAuthToken(t =>
             {
                 done = true;
                 token = t;

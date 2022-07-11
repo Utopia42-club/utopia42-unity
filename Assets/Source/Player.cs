@@ -6,8 +6,10 @@ using Source.Canvas;
 using Source.MetaBlocks;
 using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
+using Source.Model.Inventory;
 using Source.Service;
-using Source.Ui.AssetInventory.Models;
+using Source.Service.Auth;
+using Source.Ui.AssetInventory;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -73,7 +75,8 @@ namespace Source
 
         public float MinFreeFallSpeed => minFreeFallSpeed;
 
-        public bool ChangeForbidden => AuthService.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
+        public bool ChangeForbidden => AuthService.Instance.HasSession() &&
+                                       (AuthService.Instance.IsGuest() || viewMode != ViewMode.FIRST_PERSON);
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
 
@@ -122,19 +125,18 @@ namespace Source
 
             Snack.INSTANCE.ShowObject("Owner", null);
 
+            AuthService.Instance.walletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING)
                     ResetRaycastMemory();
                 else
                     HideCursors();
-
-                if (avatarController != null && !avatarController.Initialized &&
-                    state == GameManager.State.LOADING) // only once 
-                {
-                    avatarController.SetMainPlayer(AuthService.WalletId());
-                    AuthService.WalletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });
-                }
+                // if (avatarController != null && !avatarController.Initialized &&
+                // state == GameManager.State.LOADING) // only once 
+                // {
+                // avatarController.SetMainPlayer(AuthService.Instance.WalletId());
+                // }
             });
 
             // AvatarId = Guid.NewGuid().ToString(); // test only
@@ -183,7 +185,7 @@ namespace Source
             {
                 blockSelectionController.DoUpdate();
                 if (!HammerMode && Input.GetButtonDown("Delete") && !SelectionActiveBeforeAtFrameBeginning)
-                    Ui.AssetInventory.AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
+                    AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
             }
 
             if (lastChunk == null)
@@ -276,7 +278,7 @@ namespace Source
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
                 // AvatarId, // test only
-                AuthService.WalletId(),
+                AuthService.Instance.WalletId(),
                 new SerializableVector3(pos), floating, jumpRequest, sprinting,
                 Mathf.Abs(reportVelocityY), false));
         }
@@ -338,7 +340,7 @@ namespace Source
         public void ResetLands()
         {
             List<Land> lands = null;
-            if (AuthService.WalletId() != null)
+            if (AuthService.Instance.WalletId() != null)
             {
                 var service = WorldService.INSTANCE;
                 lands = service.GetPlayerLands();
@@ -440,7 +442,7 @@ namespace Source
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
-            if (AuthService.IsGuest())
+            if (AuthService.Instance.IsGuest())
             {
                 land = null;
                 return false;
@@ -516,7 +518,7 @@ namespace Source
         public void SetTeleportTarget(Vector3 pos)
         {
             avatarController.UpdatePlayerState(
-                AvatarController.PlayerState.CreateTeleportState(AuthService.WalletId(), pos));
+                AvatarController.PlayerState.CreateTeleportState(AuthService.Instance.WalletId(), pos));
         }
 
         public Vector3 GetPosition()
@@ -593,7 +595,7 @@ namespace Source
 
         public void InitOnSelectedAssetChanged()
         {
-            Ui.AssetInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
+            AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
         }
     }
 }

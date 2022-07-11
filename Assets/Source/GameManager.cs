@@ -5,7 +5,7 @@ using System.Linq;
 using Source.Canvas;
 using Source.Model;
 using Source.Service;
-using Source.Service.Ethereum;
+using Source.Service.Auth;
 using Source.Ui.Dialog;
 using Source.Ui.Map;
 using Source.Ui.Profile;
@@ -24,8 +24,7 @@ namespace Source
         public readonly UnityEvent<State> stateChange = new();
         public readonly List<Func<State, State, bool>> stateGuards = new();
 
-        private State state = State.LOADING;
-        private State? previousState;
+        private State state = State.INITIAL;
 
         private bool captureAllKeyboardInputOrig;
 
@@ -48,15 +47,16 @@ namespace Source
                 if (!checkedForProfile && state == State.PLAYING)
                 {
                     checkedForProfile = true;
-                    if (!AuthService.IsGuest())
-                        ProfileLoader.INSTANCE.load(AuthService.WalletId(), profile =>
+                    var authService = AuthService.Instance;
+                    if (!authService.IsGuest())
+                        ProfileLoader.INSTANCE.load(authService.WalletId(), profile =>
                         {
                             if (profile == null)
                             {
                                 BrowserConnector.INSTANCE.EditProfile(() =>
                                 {
-                                    ProfileLoader.INSTANCE.InvalidateProfile(AuthService.WalletId());
-                                    ProfileLoader.INSTANCE.load(AuthService.WalletId(),
+                                    ProfileLoader.INSTANCE.InvalidateProfile(authService.WalletId());
+                                    ProfileLoader.INSTANCE.load(authService.WalletId(),
                                         p =>
                                         {
                                             if (p != null) Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
@@ -119,14 +119,10 @@ namespace Source
             return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
         }
 
-        public bool IsWorldInited()
-        {
-            return worldInited;
-        }
-
         private void InitPlayerForWallet(Vector3? startingPosition)
         {
-            if (string.IsNullOrWhiteSpace(AuthService.WalletId()))
+            Debug.Log("initing  player for wallet.");
+            if (!AuthService.Instance.HasSession())
             {
                 SetState(State.LOGIN);
                 return;
@@ -139,21 +135,15 @@ namespace Source
 
             if (startingPosition == null)
             {
-                startingPosition = Player.GetSavedPosition();
-                if (startingPosition.HasValue)
-                    pos = startingPosition.Value;
-                else
+                var chunkSize = Chunk.CHUNK_SIZE;
+                pos = new Vector3(0, chunkSize.y + 10, 0);
+                var lands = player.GetOwnedLands();
+                if (lands.Count > 0)
                 {
-                    var chunkSize = Chunk.CHUNK_SIZE;
-                    pos = new Vector3(0, chunkSize.y + 10, 0);
-                    var lands = player.GetOwnedLands();
-                    if (lands.Count > 0)
-                    {
-                        var land = lands[0];
-                        pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
-                        pos /= 2;
-                        pos.y = chunkSize.y + 10;
-                    }
+                    var land = lands[0];
+                    pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
+                    pos /= 2;
+                    pos.y = chunkSize.y + 10;
                 }
             }
             else pos = startingPosition.Value;
@@ -297,26 +287,12 @@ namespace Source
             }
         }
 
-        internal void ExitSettings(Vector3? startingPosition)
+        internal void SessionChanged(Vector3? startingPosition)
         {
-            if (worldInited) SetState(State.PLAYING);
-            else InitPlayerForWallet(startingPosition);
-        }
-
-        internal void SettingsChanged(EthNetwork network, Vector3? startingPosition)
-        {
-            if (!EthereumClientService.INSTANCE.IsInitialized())
-            {
-                EthereumClientService.INSTANCE.SetNetwork(network);
-                SetState(State.LOADING);
-                StartCoroutine(WorldService.INSTANCE.Initialize(Loading.INSTANCE,
-                    () => InitPlayerForWallet(startingPosition), () => { Loading.INSTANCE.ShowConnectionError(); }));
-            }
-            else
-            {
-                SetState(State.LOADING);
-                InitPlayerForWallet(startingPosition);
-            }
+            WorldService.Invalidate();
+            SetState(State.LOADING);
+            StartCoroutine(WorldService.INSTANCE.Initialize(Loading.INSTANCE,
+                () => InitPlayerForWallet(startingPosition), () => { Loading.INSTANCE.ShowConnectionError(); }));
         }
 
         public void CopyPositionLink()
@@ -342,7 +318,6 @@ namespace Source
                 return false;
             }
 
-            previousState = this.state;
             this.state = state;
             stateChange.Invoke(state);
 
@@ -373,7 +348,7 @@ namespace Source
 
             var lands = Player.INSTANCE.GetOwnedLands();
             if (lands == null || lands.Count == 0) yield break;
-            var wallet = AuthService.WalletId();
+            var wallet = AuthService.Instance.WalletId();
             var service = WorldService.INSTANCE;
             if (!service.HasChange())
             {
@@ -473,7 +448,9 @@ namespace Source
 
         private void SetLandNftImage(string key, Land land)
         {
-            StartCoroutine(WorldRestClient.INSTANCE.SetLandMetadata(new LandMetadata(land.id, key), () =>
+            var contract = AuthService.Instance.CurrentContract;
+            StartCoroutine(LandMetadataRestClient.INSTANCE.
+                SetLandMetadata(new LandMetadata(contract.networkId, contract.address, land.id, key), () =>
             {
                 BrowserConnector.INSTANCE.SetNft(land.id, true,
                     () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
@@ -589,6 +566,7 @@ namespace Source
             PLAYING,
             MENU,
             LOGIN,
+            INITIAL,
         }
 
         public void ShowConnectionError()

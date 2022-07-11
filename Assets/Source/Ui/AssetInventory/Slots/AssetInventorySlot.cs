@@ -1,4 +1,4 @@
-using Source.Ui.AssetInventory.Models;
+using Source.Model.Inventory;
 
 namespace Source.Ui.AssetInventory.Slots
 {

@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Source.Canvas;
 using Source.Model;
+using Source.Service;
+using Source.Service.Auth;
 using Source.Ui.Login;
 using Source.Ui.Menu;
 using UnityEngine;
@@ -36,7 +38,7 @@ namespace Source
         public static string PrepareParameters(object parameter)
         {
             var req = new UnityToWebRequest<object>();
-            req.connection = AuthService.ConnectionDetail();
+            req.connection = AuthService.Instance.ConnectionDetail();
             req.body = parameter;
 
             return JsonConvert.SerializeObject(req);

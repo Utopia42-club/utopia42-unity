@@ -4,9 +4,10 @@ using System.Linq;
 using Newtonsoft.Json;
 using Source.MetaBlocks;
 using Source.Model;
+using Source.Model.Inventory;
 using Source.Service;
+using Source.Service.Auth;
 using Source.Ui.AssetInventory.Assets;
-using Source.Ui.AssetInventory.Models;
 using Source.Ui.AssetInventory.Slots;
 using Source.Ui.CustomUi;
 using Source.Ui.Popup;
@@ -137,7 +138,7 @@ namespace Source.Ui.AssetInventory
         {
             var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
-                         && !AuthService.IsGuest()
+                         && !AuthService.Instance.IsGuest()
                 ; // && Can Edit Land 
             gameObject.SetActive(active);
             inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !

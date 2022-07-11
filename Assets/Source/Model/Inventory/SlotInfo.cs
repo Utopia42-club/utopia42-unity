@@ -1,7 +1,6 @@
-using Source.Model;
 using Source.Utils;
 
-namespace Source.Ui.AssetInventory.Models
+namespace Source.Model.Inventory
 {
     public class SlotInfo
     {

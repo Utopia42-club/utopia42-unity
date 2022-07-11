@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Source.Model;
-using Source.Service.Ethereum;
+using Source.Service.Auth;
 using Source.Ui.Dialog;
-using Source.Ui.Login;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -95,11 +94,11 @@ namespace Source.Canvas
             }
         }
 
-        public void ReportLoggedInUser(User user)
+        public void ReportLoggedInUser(Session session)
         {
             if (WebBridge.IsPresent())
             {
-                WebBridge.Call<object>("reportLoggedInUser", user);
+                WebBridge.Call<object>("reportLoggedInUser", session);
             }
         }
 
@@ -113,15 +112,14 @@ namespace Source.Canvas
 
         private void CallUrl(string method, string parameters, Action onDone, Action onCancel, string message = null)
         {
-            var wallet = AuthService.WalletId();
-            int network = EthereumClientService.INSTANCE.GetNetwork().id;
+            var wallet = AuthService.Instance.WalletId();
+            var contract = AuthService.Instance.CurrentContract;
             if (parameters != null)
-                currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}",
-                    Constants.WebAppRpcURL, method,
-                    parameters, wallet, network);
+                currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}&contract={5}",
+                    Constants.WebAppRpcURL, method, parameters, wallet, contract.networkId, contract.address);
             else
-                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", Constants.WebAppRpcURL,
-                    method, wallet, network);
+                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}&contract={4}", Constants.WebAppRpcURL,
+                    method, wallet, contract.networkId, contract.address);
 
             Application.OpenURL(currentUrl);
             OpenDialog(onDone, onCancel, message);

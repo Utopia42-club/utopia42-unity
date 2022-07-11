@@ -1,4 +1,4 @@
-namespace Source.Ui.AssetInventory.Models
+namespace Source.Model.Inventory
 {
     public class Pack
     {

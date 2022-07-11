@@ -1,5 +1,4 @@
-using System.Linq;
-using Source.Service.Ethereum;
+using Source.Service.Auth;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.Login
@@ -7,43 +6,23 @@ namespace Source.Ui.Login
     public class LoginCredentialsDialog : UxmlElement
     {
         private readonly TextField walletField;
-        private readonly DropdownField networkField;
 
         public LoginCredentialsDialog() : base(typeof(LoginCredentialsDialog))
         {
             walletField = this.Q<TextField>("walletField");
-            networkField = this.Q<DropdownField>("networkField");
-            var nets = EthNetwork.GetNetworksIfPresent();
-            networkField.choices = nets.Select(network => network.name).ToList();
-            ResetInputs();
+
+            var savedSession = Session.Load();
+            walletField.value = savedSession.IsGuest ? null : savedSession.WalletId;
         }
 
-        private void ResetInputs()
+        public string GetWallet()
         {
-            walletField.value = AuthService.IsGuest() ? null : AuthService.WalletId();
-
-            var net = AuthService.Network();
-            networkField.value = null;
-
-            var nets = EthNetwork.GetNetworksIfPresent();
-            for (int i = 0; i < networkField.choices.Count; i++)
-            {
-                if (nets[i].Equals(net))
-                {
-                    networkField.index = i;
-                    break;
-                }
-            }
-        }
-
-        public void SaveInputs()
-        {
-            AuthService.Save(EthNetwork.GetNetworksIfPresent()[networkField.index].id, walletField.text);
+            return walletField.text;
         }
 
         public bool AreInputsValid()
         {
-            return networkField.index >= 0 && !string.IsNullOrEmpty(walletField.text);
+            return !string.IsNullOrEmpty(walletField.text);
         }
     }
 }

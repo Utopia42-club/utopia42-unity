@@ -1,6 +1,7 @@
 using Source.Canvas;
 using Source.Model;
 using Source.Service;
+using Source.Service.Auth;
 using Source.Ui.CustomUi;
 using Source.Ui.Popup;
 using UnityEngine.UIElements;
@@ -98,7 +99,7 @@ namespace Source.Ui.Profile
             sizeLabel.text = (rect.width * rect.height).ToString();
             nftLogo.style.display = land.isNft ? DisplayStyle.Flex : DisplayStyle.None;
             transferButton.style.display = land.isNft ? DisplayStyle.None : DisplayStyle.Flex;
-            var isOwner = AuthService.IsCurrentUser(land.owner);
+            var isOwner = AuthService.Instance.IsCurrentUser(land.owner);
             actions.style.display = isOwner ? DisplayStyle.Flex : DisplayStyle.None;
 
             var landColor = Colors.GetLandColor(land);

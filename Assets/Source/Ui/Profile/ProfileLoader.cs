@@ -39,7 +39,7 @@ namespace Source.Ui.Profile
         {
             loadingWallets.Add(walletId);
             bool success = true;
-            yield return WorldRestClient.INSTANCE.GetProfile(walletId, profile =>
+            yield return ProfileRestClient.INSTANCE.GetProfile(walletId, profile =>
             {
                 loadingWallets.Remove(walletId);
                 profileCache[walletId] = profile;

@@ -1,4 +1,4 @@
-using Source.Ui.AssetInventory.Models;
+using Source.Model.Inventory;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;

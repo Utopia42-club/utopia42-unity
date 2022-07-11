@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Source.Model;
 using Source.Service;
+using Source.Service.Auth;
 using Source.Ui.Login;
 using Source.Ui.Menu;
 using Source.Ui.Profile;
@@ -98,9 +99,9 @@ namespace Source.Canvas
 
         internal void OnProfileEdited()
         {
-            var owner = AuthService.WalletId();
+            var owner = AuthService.Instance.WalletId();
             profileLoader.InvalidateProfile(owner);
-            if (AuthService.IsCurrentUser(currentWallet))
+            if (AuthService.Instance.IsCurrentUser(currentWallet))
                 LoadProfile();
         }
 

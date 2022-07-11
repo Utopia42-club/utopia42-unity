@@ -6,10 +6,21 @@ using UnityEngine.UIElements;
 
 namespace Source.Ui.LoadingLayer
 {
-    public static class LoadingLayer
+    public class LoadingLayer : MonoBehaviour
     {
         private static int id;
         private static readonly Dictionary<int, Tuple<VisualElement, VisualElement>> loadingLayers = new();
+        private static VisualElement defaultElement;
+
+        private void OnEnable()
+        {
+            defaultElement = GetComponent<UIDocument>().rootVisualElement;
+        }
+
+        public static LoadingController Show()
+        {
+            return Show(defaultElement);
+        }
 
         public static LoadingController Show(VisualElement root)
         {

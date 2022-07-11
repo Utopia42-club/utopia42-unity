@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using Source.Ui.AssetInventory.Models;
+using Source.Model;
+using Source.Model.Inventory;
 using Source.Ui.AssetInventory.Slots;
 using UnityEngine;
 using UnityEngine.UIElements;

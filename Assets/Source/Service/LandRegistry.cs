@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Source.Model;
+using Source.Service.Auth;
 using Source.Service.Ethereum;
 using Source.Utils;
 using UnityEngine;
@@ -13,10 +14,14 @@ namespace Source.Service
     internal class LandRegistry
     {
         // private readonly Dictionary<long, Land> ignoredLands = new Dictionary<long, Land>();
-        private readonly HashSet<long> ignoredLands = new HashSet<long>();
-        private readonly Dictionary<string, List<Land>> ownersLands = new Dictionary<string, List<Land>>();
-        private readonly Dictionary<long, Land> validLands = new Dictionary<long, Land>();
-        private readonly Dictionary<Vector2Int, HashSet<Land>> chunkLands = new Dictionary<Vector2Int, HashSet<Land>>();
+        private string landUrl =>
+            $"{Constants.ApiURL}/world/lands?network={AuthService.Instance.CurrentContract.networkId}" +
+            $"&contract={AuthService.Instance.CurrentContract.address}";
+
+        private readonly HashSet<long> ignoredLands = new();
+        private readonly Dictionary<string, List<Land>> ownersLands = new();
+        private readonly Dictionary<long, Land> validLands = new();
+        private readonly Dictionary<Vector2Int, HashSet<Land>> chunkLands = new();
 
         private IEnumerator SetLands(List<Land> lands)
         {
@@ -155,7 +160,7 @@ namespace Source.Service
             var lands = new List<Land>();
 
             bool failed = false;
-            yield return LoadLandsPaginated(Constants.ApiURL + "/world/lands", lands, () =>
+            yield return LoadLandsPaginated(landUrl, lands, () =>
             {
                 onFailed();
                 failed = true;
@@ -170,11 +175,12 @@ namespace Source.Service
             var lands = new List<Land>();
 
             bool failed = false;
-            yield return LoadLandsPaginated($"{Constants.ApiURL}/world/owner/{wallet}/lands", lands, () =>
-            {
-                onFailed();
-                failed = true;
-            });
+            yield return LoadLandsPaginated(
+                $"{landUrl}&owner={wallet}", lands, () =>
+                {
+                    onFailed();
+                    failed = true;
+                });
             if (failed) yield break;
 
             yield return ReSetOwnerLands(wallet, lands, onFailed);
@@ -183,7 +189,7 @@ namespace Source.Service
         private static IEnumerator LoadLandsPaginated(string url, List<Land> lands, Action onFailed)
         {
             const int pageSize = 200;
-            url = url + "?pageSize=" + pageSize;
+            url = url + "&pageSize=" + pageSize;
             var hasNext = true;
             while (hasNext)
             {

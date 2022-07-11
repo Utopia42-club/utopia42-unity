@@ -2,17 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Source;
 using Source.Model;
-using Source.Service.Ethereum;
+using Source.Service.Auth;
 using Source.Ui;
 using Source.Ui.Dialog;
 using Source.Ui.LoadingLayer;
-using Source.Ui.Login;
 using Source.Ui.Map;
 using Source.Ui.Menu;
 using Source.Ui.Profile;
 using Source.Ui.TabPane;
-using Source.Ui.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UIElements;
 
 public class Menu : MonoBehaviour, UiProvider
@@ -25,10 +24,18 @@ public class Menu : MonoBehaviour, UiProvider
     private Button exitButton;
     private Button closeButton;
 
+
     void OnEnable()
     {
-        instance = this;
         gameManager = GameManager.INSTANCE;
+        if (instance == null)
+        {
+            instance = this;
+            gameManager.stateChange.AddListener(OnGameStateChanged);
+            OnGameStateChanged(gameManager.GetState());
+        }
+        if (gameManager.GetState() != GameManager.State.MENU)
+            return;
         root = GetComponent<UIDocument>().rootVisualElement;
         rootPane = root.Q<VisualElement>("root");
         rootPane.Clear();
@@ -40,7 +47,7 @@ public class Menu : MonoBehaviour, UiProvider
             {
                 var userProfile = tabPane.GetTabBody().Children().First() as UserProfile;
                 var loading = LoadingLayer.Show(userProfile);
-                ProfileLoader.INSTANCE.load(AuthService.WalletId(),
+                ProfileLoader.INSTANCE.load(AuthService.Instance.WalletId(),
                     profile =>
                     {
                         userProfile.SetProfile(profile);
@@ -55,23 +62,30 @@ public class Menu : MonoBehaviour, UiProvider
         };
         tabPane = new TabPane(tabConfigs, false);
         rootPane.Add(tabPane);
-        gameManager.stateChange.AddListener(state =>
-        {
-            switch (state)
-            {
-                case GameManager.State.MENU:
-                {
-                    gameObject.SetActive(true);
-                    tabPane.OpenTab(0);
-                    break;
-                }
-                default:
-                    gameObject.SetActive(false);
-                    tabPane.CloseCurrent();
-                    break;
-            }
-        });
         CreateActions();
+        tabPane.OpenTab(0);
+    }
+
+    private void OnGameStateChanged(GameManager.State state)
+    {
+        switch (state)
+        {
+            case GameManager.State.MENU:
+            {
+                gameObject.SetActive(true);
+                break;
+            }
+            default:
+                tabPane?.CloseCurrent();
+                gameObject.SetActive(false);
+                break;
+        }
+    }
+
+    private void OnDisable()
+    {
+        rootPane?.Clear();
+        tabPane = null;
     }
 
     private void CreateActions()

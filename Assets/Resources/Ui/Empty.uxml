@@ -1,7 +1,3 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
-    <ui:VisualElement name="root">
-        <ui:Label text="Failed connecting to metamask. Please provide your credentials" display-tooltip-when-elided="true" style="white-space: normal; margin-left: 6px;" />
-        <ui:TextField picking-mode="Ignore" label="Wallet Id" name="walletField" />
-    </ui:VisualElement>
 </ui:UXML>

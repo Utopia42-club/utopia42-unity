@@ -8,9 +8,8 @@ using Source.Canvas;
 using Source.MetaBlocks;
 using Source.MetaBlocks.MarkerBlock;
 using Source.Model;
+using Source.Service.Auth;
 using Source.Service.Ethereum;
-using Source.Ui.Login;
-using Source.Ui.Menu;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -20,18 +19,19 @@ namespace Source.Service
 {
     public class WorldService
     {
-        public static WorldService INSTANCE = new WorldService();
+        public static WorldService INSTANCE { get; private set; } = new();
 
-        private readonly Dictionary<Vector3Int, ChunkData> changes = new Dictionary<Vector3Int, ChunkData>();
-        private readonly LandRegistry landRegistry = new LandRegistry();
-        private HashSet<Land> changedLands = new HashSet<Land>();
-        public readonly UnityEvent<object> blockPlaced = new UnityEvent<object>();
-        private Dictionary<Vector3Int, MetaBlock> markerBlocks = new Dictionary<Vector3Int, MetaBlock>();
+        private readonly WorldSliceService sliceService = new();
+        private readonly Dictionary<Vector3Int, ChunkData> changes = new();
+        private readonly LandRegistry landRegistry = new();
+        private HashSet<Land> changedLands = new();
+        public readonly UnityEvent<object> blockPlaced = new();
+        private Dictionary<Vector3Int, MetaBlock> markerBlocks = new();
         private bool initialized = false;
 
         public void GetChunkData(Vector3Int coordinate, Action<ChunkData> consumer)
         {
-            WorldSliceService.INSTANCE.GetChunk(coordinate, data =>
+            sliceService.GetChunk(coordinate, data =>
             {
                 var cloned = data?.Clone() ?? new ChunkData(coordinate, null, null);
                 if (changes.TryGetValue(coordinate, out var c))
@@ -49,7 +49,7 @@ namespace Source.Service
                 return;
             }
 
-            WorldSliceService.INSTANCE.GetChunk(vp.chunk, chunkData =>
+            sliceService.GetChunk(vp.chunk, chunkData =>
             {
                 if (chunkData?.metaBlocks != null &&
                     chunkData.metaBlocks.TryGetValue(vp.local, out var metaBlock))
@@ -57,8 +57,14 @@ namespace Source.Service
                     consumer.Invoke(metaBlock);
                     return;
                 }
+
                 consumer.Invoke(null);
             });
+        }
+
+        public static void Invalidate()
+        {
+            INSTANCE = new();
         }
 
         public IEnumerator Initialize(Loading loading, Action onDone, Action onFailed)
@@ -74,6 +80,7 @@ namespace Source.Service
 
             if (failed) yield break;
             initialized = true;
+            Debug.Log("world initialized!");
             onDone.Invoke();
         }
 
@@ -86,7 +93,7 @@ namespace Source.Service
                 return;
             }
 
-            WorldSliceService.INSTANCE.GetChunk(voxelPosition.chunk, chunk =>
+            sliceService.GetChunk(voxelPosition.chunk, chunk =>
             {
                 var type = chunk?.GetBlockTypeAt(voxelPosition.local);
                 consumer.Invoke(type?.isSolid ?? ChunkInitializer.IsDefaultSolidAt(voxelPosition));
@@ -107,7 +114,7 @@ namespace Source.Service
                 return;
             }
 
-            WorldSliceService.INSTANCE.GetChunk(voxelPosition.chunk,
+            sliceService.GetChunk(voxelPosition.chunk,
                 chunk => { consumer.Invoke(chunk?.GetBlockTypeAt(voxelPosition.local)); });
         }
 
@@ -118,13 +125,13 @@ namespace Source.Service
                 && chunkChange.blocks != null && chunkChange.blocks.TryGetValue(vp.local, out var block))
                 return Blocks.GetBlockType(block);
 
-            var type = WorldSliceService.INSTANCE.GetChunkIfLoaded(vp.chunk)?.GetBlockTypeAt(vp.local);
+            var type = sliceService.GetChunkIfLoaded(vp.chunk)?.GetBlockTypeAt(vp.local);
             return type;
         }
 
         public List<Land> GetPlayerLands()
         {
-            return landRegistry.GetLandsForOwner(AuthService.WalletId());
+            return landRegistry.GetLandsForOwner(AuthService.Instance.WalletId());
         }
 
         public IEnumerator GetLandsChanges(string wallet, List<Land> lands,
@@ -180,7 +187,7 @@ namespace Source.Service
 
                     return null;
                 });
-                
+
                 var findDetails = new Func<MetaLocalPosition, Tuple<LandDetails, string>>(changePos =>
                 {
                     var pos = MetaPosition.ToWorld(changeEntry.Key, changePos);
@@ -310,7 +317,7 @@ namespace Source.Service
 
             if (chunkChanges.metaBlocks.TryGetValue(pos.local, out var prev))
                 prev.DestroyView();
-            WorldSliceService.INSTANCE.GetChunk(pos.chunk, data =>
+            sliceService.GetChunk(pos.chunk, data =>
             {
                 if (data != null && data.metaBlocks != null && data.metaBlocks.TryGetValue(pos.local, out var prev))
                     prev.DestroyView();
@@ -410,7 +417,7 @@ namespace Source.Service
 
         public IEnumerator ReloadPlayerLands(Action onFailed)
         {
-            yield return landRegistry.ReloadLandsForOwner(AuthService.WalletId(), onFailed);
+            yield return landRegistry.ReloadLandsForOwner(AuthService.Instance.WalletId(), onFailed);
         }
 
         public bool IsInitialized()

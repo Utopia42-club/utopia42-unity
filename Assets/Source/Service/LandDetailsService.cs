@@ -8,7 +8,7 @@ namespace Source.Service
 {
     public class LandDetailsService
     {
-        public static readonly LandDetailsService INSTANCE = new LandDetailsService();
+        public static readonly LandDetailsService INSTANCE = new ();
         private readonly MigrationService migrationService;
 
         LandDetailsService()
