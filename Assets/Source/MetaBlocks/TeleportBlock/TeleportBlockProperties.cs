@@ -6,6 +6,8 @@ namespace Source.MetaBlocks.TeleportBlock
     [Serializable]
     public class TeleportBlockProperties : ICloneable
     {
+        public int networkId;
+        public string contractAddress;
         public int[] destination;
 
         public TeleportBlockProperties()

@@ -7,6 +7,7 @@ using Source.Ui.Login;
 using Source.Ui.Snack;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace Source.Service.Auth
 {
@@ -71,7 +72,8 @@ namespace Source.Service.Auth
             var detail = new ConnectionDetail
             {
                 wallet = WalletId(),
-                network = session.Network
+                network = session?.Network ?? -1,
+                contractAddress = CurrentContract?.address
             };
             return detail;
         }
@@ -86,25 +88,54 @@ namespace Source.Service.Auth
 
             session = s;
             session.Save();
-            if (CurrentContract == null || CurrentContract.networkId != s.Network
-                                        || !Equals(CurrentContract.address, s.Contract))
+            ChangeContract(s.Network, s.Contract);
+        }
+
+        private void ChangeContract(int network, string contract)
+        {
+            if (contract == null || CurrentContract == null || CurrentContract.networkId != network
+                || !Equals(CurrentContract.address, contract))
             {
                 var loading = LoadingLayer.Show();
-                World.INSTANCE.StartCoroutine(MultiverseService.Instance.GetContract(s.Network, s.Contract,
-                    (c) =>
+                Action<MetaverseContract> success = (c) =>
+                {
+                    loading.Close();
+                    if (c == null)
+                        OpenContractNotFoundDialog();
+                    else
                     {
                         CurrentContract = c;
-                        loading.Close();
+                        session = new Session(c.networkId, c.address, session.WalletId);
+                        session.Save();
                         EnterMetaverse(null);
-                    },
-                    () =>
-                    {
-                        loading.Close();
-                        new Toast("Failed to connect server", Toast.ToastType.Error).Show();
-                    }));
+                    }
+                };
+                Action failure = () =>
+                {
+                    loading.Close();
+                    new Toast("Failed to connect server", Toast.ToastType.Error).Show();
+                };
+                if (contract != null)
+                    World.INSTANCE.StartCoroutine(
+                        MultiverseService.Instance.GetContract(network, contract, success, failure));
+                else
+                    World.INSTANCE.StartCoroutine(
+                        MultiverseService.Instance.GetDefaultContract(success, failure));
             }
             else
                 EnterMetaverse(null);
+        }
+
+        private static void OpenContractNotFoundDialog()
+        {
+            DialogService.INSTANCE.Show(new DialogConfig("Could not find the requested metaverse",
+                    new Label("Do you want to enter the default metaverse?"))
+                .WithCloseOnBackdropClick(false)
+                .WithWidth(400)
+                .WithHeight(100)
+                .WithAction(new DialogAction("EXIT", () => GameManager.INSTANCE.Exit(), "utopia-button-warn"))
+                .WithAction(new DialogAction("YES", () => Instance.ChangeContract(-1, null), "utopia-button-primary"))
+            );
         }
 
         private void EnterMetaverse(Vector3? startingPosition)

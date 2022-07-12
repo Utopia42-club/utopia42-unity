@@ -114,13 +114,10 @@ namespace Source.Canvas
         {
             var wallet = AuthService.Instance.WalletId();
             var contract = AuthService.Instance.CurrentContract;
+            currentUrl =
+                $"{Constants.WebAppRpcURL}?method={method}&wallet={wallet}&network={contract.networkId}&contract={contract.address}";
             if (parameters != null)
-                currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}&contract={5}",
-                    Constants.WebAppRpcURL, method, parameters, wallet, contract.networkId, contract.address);
-            else
-                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}&contract={4}", Constants.WebAppRpcURL,
-                    method, wallet, contract.networkId, contract.address);
-
+                currentUrl = $"{currentUrl}&param={parameters}";
             Application.OpenURL(currentUrl);
             OpenDialog(onDone, onCancel, message);
         }

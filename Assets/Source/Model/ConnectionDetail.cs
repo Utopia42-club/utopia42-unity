@@ -7,7 +7,6 @@ namespace Source.Model
     {
         public string wallet;
         public int network;
-        public string networkName;
-        public string networkRpc;
+        public string contractAddress;
     }
 }

@@ -7,7 +7,7 @@ namespace Source.Model
     public class MetaverseNetwork
     {
         public int networkId;
-        public int networkName;
+        public string networkName;
         public List<string> contracts;
     }
 }

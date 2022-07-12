@@ -121,7 +121,6 @@ namespace Source
 
         private void InitPlayerForWallet(Vector3? startingPosition)
         {
-            Debug.Log("initing  player for wallet.");
             if (!AuthService.Instance.HasSession())
             {
                 SetState(State.LOGIN);

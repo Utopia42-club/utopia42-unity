@@ -80,7 +80,6 @@ namespace Source.Service
 
             if (failed) yield break;
             initialized = true;
-            Debug.Log("world initialized!");
             onDone.Invoke();
         }
 
