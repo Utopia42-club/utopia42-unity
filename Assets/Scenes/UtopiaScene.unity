@@ -1234,7 +1234,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4089cd5b9cc4644aa19f184cb3ad59c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  delay: 0.2
+  jobDelay: 0.001
+  criticalDelay: 0.4
 --- !u!114 &810079083
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1853,9 +1854,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxAvatarsAllowed: 20
-  maxInactivityDelay: 2
-  maxCreateAvatarDistance: 100
-  minDestroyAvatarDistance: 200
+  maxInactivityDelay: 10
+  maxCreateAvatarDistance: 70
+  minDestroyAvatarDistance: 100
+  maxStatesToProcessCount: 10
   avatarPrefab: {fileID: 7620900103328517206, guid: ac3aee3b658d8df63b9e59d17355a0f2, type: 3}
 --- !u!4 &1090085033
 Transform:

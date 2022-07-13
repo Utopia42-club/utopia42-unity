@@ -3,11 +3,14 @@ using System.Collections;
 using ReadyPlayerMe;
 using Source.Canvas;
 using Source.MetaBlocks;
+using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
 using Source.Ui.Profile;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Source
 {
@@ -25,34 +28,34 @@ namespace Source
         private const int MaxReportDelay = 1; // in seconds 
         private const float AnimationUpdateRate = 0.1f; // in seconds
 
-        private const int Precision = 5;
-        private static readonly float FloatPrecision = Mathf.Pow(10, -Precision);
-        [SerializeField] private TextMeshProUGUI nameLabel;
-        [SerializeField] private GameObject namePanel;
-
         private Animator animator;
-        private int animIDFreeFall;
-        private int animIDGrounded;
-        private int animIDJump;
-
-        private int animIDSpeed;
         private CharacterController controller;
-        private bool controllerDisabled;
-        private bool isAnotherPlayer;
-        private PlayerState lastPerformedState;
-        private double lastPerformedStateTime;
-        private PlayerState lastReportedState;
-        private double lastReportedTime;
+        public GameObject Avatar { private set; get; }
         private string loadingAvatarUrl;
-        private Vector3 movement;
         private int remainingAvatarLoadAttempts;
+        public double UpdatedTime;
+        private double lastPerformedStateTime;
+        private double lastReportedTime;
+        private PlayerState lastPerformedState;
+        private PlayerState lastReportedState;
         private PlayerState state;
         private Vector3 targetPosition;
+        private bool isAnotherPlayer = false;
+        public bool Initialized { get; private set; }
+
+        private int animIDSpeed;
+        private int animIDGrounded;
+        private int animIDJump;
+        private int animIDFreeFall;
 
         private IEnumerator teleportCoroutine;
-        public GameObject Avatar { private set; get; }
-        public double UpdatedTime { private set; get; }
-        public bool Initialized { get; private set; }
+
+        private const int Precision = 5;
+        private static readonly float FloatPrecision = Mathf.Pow(10, -Precision);
+        private Vector3 movement;
+        [SerializeField] private TextMeshProUGUI nameLabel;
+        [SerializeField] private GameObject namePanel;
+        private bool controllerDisabled;
         public bool AvatarAllowed { get; private set; }
 
         private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
@@ -72,6 +75,25 @@ namespace Source
         private void Update()
         {
             namePanel.transform.rotation = Camera.main.transform.rotation;
+        }
+
+        private void LoadDefaultAvatar(bool resetAvatarMsg = true)
+        {
+            ReloadAvatar(DefaultAvatarUrl, false, resetAvatarMsg);
+        }
+
+        private IEnumerator LoadAvatarFromWallet(string walletId)
+        {
+            yield return null;
+            ProfileLoader.INSTANCE.load(walletId, profile =>
+            {
+                if (profile != null && profile.avatarUrl != null && profile.avatarUrl.Length > 0)
+                    ReloadAvatar(profile.avatarUrl);
+                // ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb"); // complex default
+                // ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/3343c701-0f84-4a57-8c0e-eb25724a2133.glb"); // simple with transparent
+                else
+                    LoadDefaultAvatar();
+            }, () => LoadDefaultAvatar());
         }
 
         private void FixedUpdate()
@@ -113,35 +135,6 @@ namespace Source
                 SetFreeFall(false);
                 SetJump(false);
             }
-        }
-
-        private void OnDestroy()
-        {
-            if (Avatar != null)
-                MetaBlockObject.DeepDestroy3DObject(Avatar);
-            if (nameLabel != null)
-                DestroyImmediate(nameLabel);
-            if (namePanel != null)
-                DestroyImmediate(namePanel);
-        }
-
-        private void LoadDefaultAvatar(bool resetAvatarMsg = true)
-        {
-            ReloadAvatar(DefaultAvatarUrl, false, resetAvatarMsg);
-        }
-
-        private IEnumerator LoadAvatarFromWallet(string walletId)
-        {
-            yield return null;
-            ProfileLoader.INSTANCE.load(walletId, profile =>
-            {
-                if (profile != null && profile.avatarUrl != null && profile.avatarUrl.Length > 0)
-                    ReloadAvatar(profile.avatarUrl);
-                // ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb"); // complex default
-                // ReloadAvatar("https://d1a370nemizbjq.cloudfront.net/3343c701-0f84-4a57-8c0e-eb25724a2133.glb"); // simple with transparent
-                else
-                    LoadDefaultAvatar();
-            }, () => LoadDefaultAvatar());
         }
 
         public void SetAnotherPlayer(string walletId, Vector3 position, bool makeVisible)
@@ -224,7 +217,7 @@ namespace Source
 
         public void UpdatePlayerState(PlayerState playerState)
         {
-            if (playerState == null || (isAnotherPlayer && !ControllerEnabled)) return;
+            if (playerState == null || isAnotherPlayer && !ControllerEnabled) return;
             SetTargetPosition(playerState.position.ToVector3());
             SetPlayerState(playerState);
             if (state.teleport)
@@ -248,7 +241,10 @@ namespace Source
             var floatOrJumpStateChanged =
                 playerState.floating != lastPerformedState?.floating || playerState.jump != lastPerformedState?.jump;
 
-            if ((isAnotherPlayer || floatOrJumpStateChanged) && Avatar != null && ControllerEnabled) UpdateAnimation();
+            if ((isAnotherPlayer || floatOrJumpStateChanged) && Avatar != null && ControllerEnabled)
+            {
+                UpdateAnimation();
+            }
 
             if (!isAnotherPlayer && floatOrJumpStateChanged)
                 ReportToServer();
@@ -271,7 +267,9 @@ namespace Source
                 if (Avatar != null && Time.unscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate
                                    && !PlayerState.Equals(state, lastPerformedState)
                                    && state != null && ControllerEnabled)
+                {
                     UpdateAnimation();
+                }
 
                 if (state != null && Time.unscaledTimeAsDouble - lastReportedTime >
                     (PlayerState.Equals(lastReportedState, state)
@@ -284,7 +282,6 @@ namespace Source
         private void SetPlayerState(PlayerState playerState)
         {
             state = playerState;
-            UpdatedTime = Time.unscaledTimeAsDouble;
         }
 
         private void UpdateAnimation()
@@ -320,19 +317,18 @@ namespace Source
         public void ReloadAvatar(string url, bool ignorePreviousUrl = false,
             bool resetAvatarMsg = true)
         {
-            if (url == null || (!ignorePreviousUrl && url.Equals(loadingAvatarUrl)) ||
+            if (url == null || !ignorePreviousUrl && url.Equals(loadingAvatarUrl) ||
                 remainingAvatarLoadAttempts != 0) return;
             if (resetAvatarMsg)
                 GameManager.INSTANCE.ResetAvatarMsg();
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
-            AvatarLoader.INSTANCE.AddJob(url, OnAvatarLoad, OnAvatarLoadFailure);
+            AvatarLoader.INSTANCE.AddJob(gameObject, url, OnAvatarLoad, OnAvatarLoadFailure);
         }
 
         private void OnAvatarLoadFailure(FailureType failureType)
         {
-            if (gameObject == null) return;
             remainingAvatarLoadAttempts -= 1;
             if (remainingAvatarLoadAttempts > 0 && failureType != FailureType.UrlProcessError)
             {
@@ -341,7 +337,7 @@ namespace Source
                     remainingAvatarLoadAttempts);
                 if (!isAnotherPlayer)
                     GameManager.INSTANCE.ShowAvatarStateMessage(AvatarLoadRetryMessage, false);
-                AvatarLoader.INSTANCE.AddJob(loadingAvatarUrl, OnAvatarLoad, OnAvatarLoadFailure);
+                AvatarLoader.INSTANCE.AddJob(gameObject, loadingAvatarUrl, OnAvatarLoad, OnAvatarLoadFailure);
             }
             else
             {
@@ -356,12 +352,6 @@ namespace Source
 
         private void OnAvatarLoad(GameObject avatar)
         {
-            if (gameObject == null)
-            {
-                MetaBlockObject.DeepDestroy3DObject(avatar);
-                return;
-            }
-
             if (avatar.GetComponentsInChildren<Renderer>().Length > 2)
             {
                 Debug.LogWarning($"{state?.walletId} | {RendererWarningMessage}");
@@ -421,16 +411,26 @@ namespace Source
             animator.SetFloat(animIDSpeed, speed);
         }
 
+        private void OnDestroy()
+        {
+            if (Avatar != null)
+                MetaBlockObject.DeepDestroy3DObject(Avatar);
+            if (nameLabel != null)
+                DestroyImmediate(nameLabel);
+            if (namePanel != null)
+                DestroyImmediate(namePanel);
+        }
+
         public class PlayerState
         {
+            public string rid;
+            public string walletId;
+            public SerializableVector3 position;
             public bool floating;
             public bool jump;
-            public SerializableVector3 position;
-            public string rid;
             public bool sprinting;
-            public bool teleport;
             public float velocityY;
-            public string walletId;
+            public bool teleport;
 
             public PlayerState(string walletId, SerializableVector3 position, bool floating, bool jump,
                 bool sprinting, float velocityY, bool teleport)
@@ -475,6 +475,51 @@ namespace Source
                        && s1.sprinting == s2.sprinting
                        && s1.teleport == s2.teleport
                        && Math.Abs(s1.velocityY - s2.velocityY) < FloatPrecision;
+            }
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!other.CompareTag("TeleportPortal")) return;
+            var metaBlock = other.GetComponent<MetaFocusable>()?.MetaBlockObject;
+            if (metaBlock == null || metaBlock is not TeleportBlockObject teleportBlockObject) return;
+            var props = teleportBlockObject.Block.GetProps() as TeleportBlockProperties;
+            if (props == null) return;
+
+            teleportCoroutine = CountDownTimer(5, _ => { },
+                () =>
+                {
+                    GameManager.INSTANCE.MovePlayerTo(new Vector3(props.destination[0], props.destination[1],
+                        props.destination[2]));
+                });
+            StartCoroutine(teleportCoroutine);
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (other.CompareTag("TeleportPortal"))
+            {
+                if (teleportCoroutine != null)
+                    StopCoroutine(teleportCoroutine);
+            }
+        }
+
+        private IEnumerator CountDownTimer(int time, Action<int> onValueChanged, Action onFinish)
+        {
+            while (true)
+            {
+                if (time == 0)
+                {
+                    onFinish();
+                    yield break;
+                }
+                else
+                {
+                    onValueChanged(time);
+                    time = time - 1;
+                }
+
+                yield return new WaitForSeconds(1);
             }
         }
     }

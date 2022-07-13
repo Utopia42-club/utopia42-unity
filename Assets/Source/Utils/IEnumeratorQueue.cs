@@ -7,29 +7,34 @@ namespace Source.Utils
 {
     public class IEnumeratorQueue : MonoBehaviour
     {
-        [SerializeField] private float delay;
+        [SerializeField] private float jobDelay;
+        [SerializeField] private float criticalDelay;
         private readonly ConcurrentQueue<IEnumerator> jobs = new();
         private readonly ConcurrentQueue<IEnumerator> criticalJobs = new();
 
         private void Start()
         {
             StartCoroutine(DoJobs());
+            StartCoroutine(DoCriticalJobs());
         }
 
         private IEnumerator DoJobs()
         {
             while (true)
             {
-                yield return new WaitForSeconds(delay);
-
-                if (criticalJobs.Count != 0 && criticalJobs.TryDequeue(out var job))
-                {
+                if (jobs.Count != 0 && jobs.TryDequeue(out var job))
                     yield return job;
-                    continue;
-                }
+                yield return new WaitForSeconds(jobDelay);
+            }
+        }
 
-                if (jobs.Count != 0 && jobs.TryDequeue(out job))
-                    yield return job; // do we have to wait for the job to be done?
+        private IEnumerator DoCriticalJobs()
+        {
+            while (true)
+            {
+                if (criticalJobs.Count != 0 && criticalJobs.TryDequeue(out var job))
+                    yield return job;
+                yield return new WaitForSeconds(criticalDelay);
             }
         }
 

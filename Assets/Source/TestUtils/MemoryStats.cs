@@ -14,6 +14,7 @@ namespace Source.TestUtils
         private ProfilerRecorder systemUsedMemoryRecorder;
         private ProfilerRecorder textureMemoryRecorder;
         private ProfilerRecorder meshMemoryRecorder;
+        private bool visible = false;
 
         private void Enable()
         {
@@ -22,6 +23,7 @@ namespace Source.TestUtils
             systemUsedMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "System Used Memory");
             textureMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Texture Memory");
             meshMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Mesh Memory");
+            visible = true;
         }
 
         private void Disable()
@@ -31,6 +33,7 @@ namespace Source.TestUtils
             systemUsedMemoryRecorder.Dispose();
             textureMemoryRecorder.Dispose();
             meshMemoryRecorder.Dispose();
+            visible = false;
         }
 
         private void Start()
@@ -49,6 +52,8 @@ namespace Source.TestUtils
                     Enable();
             }
 
+            if (!visible) return;
+
             var sb = new StringBuilder(800);
             if (totalReservedMemoryRecorder.Valid)
                 sb.AppendLine($"Total Reserved Memory: {Mathf.Floor(totalReservedMemoryRecorder.LastValue / 1000000)}");
@@ -60,13 +65,18 @@ namespace Source.TestUtils
                 sb.AppendLine($"Texture Memory: {Mathf.Floor(textureMemoryRecorder.LastValue / 1000000)}");
             if (meshMemoryRecorder.Valid)
                 sb.AppendLine($"Mesh Memory: {Mathf.Floor(meshMemoryRecorder.LastValue / 1000000)}");
+
+            Players.INSTANCE.GetStatistics(out var playersCount, out var avatarsCount);
+            sb.AppendLine($"Other Players Count: {playersCount}");
+            sb.AppendLine($"Other Players Avatar Count: {avatarsCount}");
+
             statsText = sb.ToString();
         }
 
         private void OnGUI()
         {
-            if(totalReservedMemoryRecorder.Valid)
-                GUI.TextArea(new Rect(10, 30, 250, 80), statsText);
+            if (visible)
+                GUI.TextArea(new Rect(10, 30, 250, 110), statsText);
         }
     }
 }

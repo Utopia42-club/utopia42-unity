@@ -45,6 +45,11 @@ namespace Source.Ui.Map
             });
             this.map.RegisterCallback<GeometryChangedEvent>(e => UpdateSize(e.newRect.width, e.newRect.height));
             this.map.RegisterCallback<WheelEvent>(OnMouseWheelEvent);
+            // this.map.RegisterCallback<KeyDownEvent>(evt => // TODO ?
+            // {
+            //     if (evt.keyCode == KeyCode.M)
+            //         MoveToPosition(new Vector2(0, 0));
+            // });
         }
 
         private void OnMouseWheelEvent(WheelEvent e)

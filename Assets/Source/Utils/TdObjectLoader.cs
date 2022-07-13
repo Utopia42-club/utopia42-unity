@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using UnityEngine;
 
 namespace Source.Utils
@@ -14,9 +13,9 @@ namespace Source.Utils
             queue = gameObject.GetComponent<IEnumeratorQueue>();
         }
 
-        public void AddJob(T data, Action<GameObject> onSuccess, Action<K> onFailure)
+        public void AddJob(GameObject refGo, T data, Action<GameObject> onSuccess, Action<K> onFailure)
         {
-            var job = GetJob(data, onSuccess, onFailure);
+            var job = GetJob(refGo, data, onSuccess, onFailure);
             queue.AddJob(job, IsCritical());
         }
 
@@ -25,6 +24,6 @@ namespace Source.Utils
             return false;
         }
 
-        protected abstract IEnumerator GetJob(T data, Action<GameObject> onSuccess, Action<K> onFailure);
+        protected abstract IEnumerator GetJob(GameObject refGo, T data, Action<GameObject> onSuccess, Action<K> onFailure);
     }
 }
