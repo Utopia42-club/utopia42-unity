@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Source.Service.Auth;
 using UnityEngine;
 
 namespace Source
@@ -79,7 +80,7 @@ namespace Source
 
         public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
         {
-            if (AuthService.IsCurrentUser(playerState.walletId))
+            if (AuthService.Instance.IsCurrentUser(playerState.walletId))
             {
                 Debug.LogWarning(
                     $"Cannot add another player with the same wallet ({playerState.walletId}). Ignoring state...");

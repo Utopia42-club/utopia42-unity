@@ -3,14 +3,11 @@ using System.Collections;
 using ReadyPlayerMe;
 using Source.Canvas;
 using Source.MetaBlocks;
-using Source.MetaBlocks.TeleportBlock;
 using Source.Model;
 using Source.Ui.Profile;
 using Source.Utils;
 using TMPro;
 using UnityEngine;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
 
 namespace Source
 {
@@ -475,51 +472,6 @@ namespace Source
                        && s1.sprinting == s2.sprinting
                        && s1.teleport == s2.teleport
                        && Math.Abs(s1.velocityY - s2.velocityY) < FloatPrecision;
-            }
-        }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (!other.CompareTag("TeleportPortal")) return;
-            var metaBlock = other.GetComponent<MetaFocusable>()?.MetaBlockObject;
-            if (metaBlock == null || metaBlock is not TeleportBlockObject teleportBlockObject) return;
-            var props = teleportBlockObject.Block.GetProps() as TeleportBlockProperties;
-            if (props == null) return;
-
-            teleportCoroutine = CountDownTimer(5, _ => { },
-                () =>
-                {
-                    GameManager.INSTANCE.MovePlayerTo(new Vector3(props.destination[0], props.destination[1],
-                        props.destination[2]));
-                });
-            StartCoroutine(teleportCoroutine);
-        }
-
-        private void OnTriggerExit(Collider other)
-        {
-            if (other.CompareTag("TeleportPortal"))
-            {
-                if (teleportCoroutine != null)
-                    StopCoroutine(teleportCoroutine);
-            }
-        }
-
-        private IEnumerator CountDownTimer(int time, Action<int> onValueChanged, Action onFinish)
-        {
-            while (true)
-            {
-                if (time == 0)
-                {
-                    onFinish();
-                    yield break;
-                }
-                else
-                {
-                    onValueChanged(time);
-                    time = time - 1;
-                }
-
-                yield return new WaitForSeconds(1);
             }
         }
     }
