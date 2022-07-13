@@ -26,8 +26,14 @@ namespace Source
 
         private void Update()
         {
-            if (destroyQueue.Count > 0 && destroyQueue.TryDequeue(out var go))
-                DestroyImmediate(go);
+            while (destroyQueue.Count > 0 && destroyQueue.TryDequeue(out var go))
+            {
+                if (go != null)
+                {
+                    DestroyImmediate(go);
+                    break;
+                }
+            }
 
             if (Time.unscaledTimeAsDouble - lastInActivityCheck > maxInactivityDelay)
             {
@@ -141,6 +147,16 @@ namespace Source
         {
             yield return null;
             controller.UpdatePlayerState(playerState);
+        }
+
+        public void Clear()
+        {
+            var controllers = playersMap.Values.ToList();
+            playersMap.Clear();
+            foreach (var controller in controllers)
+                destroyQueue.Enqueue(controller.gameObject);
+            states.Clear();
+            walletsUpdateStateQueue.Clear();
         }
 
         public static Players INSTANCE => GameObject.Find("Players").GetComponent<Players>();

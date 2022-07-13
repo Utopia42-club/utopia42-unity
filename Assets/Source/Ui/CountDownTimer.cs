@@ -31,8 +31,14 @@ namespace Source.Ui
             label = new Label();
             label.AddToClassList("label");
             int current = startValue + 1;
-            label.schedule.Execute(state =>
+            label.schedule.Execute(() =>
                 {
+                    if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING)
+                    {
+                        current = startValue + 1;
+                        return;
+                    }
+
                     if (!Contains(label))
                     {
                         current = 0;

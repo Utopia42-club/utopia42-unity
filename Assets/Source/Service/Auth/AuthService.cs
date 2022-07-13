@@ -108,7 +108,7 @@ namespace Source.Service.Auth
                         CurrentContract = c;
                         session = new Session(c.networkId, c.address, session.WalletId);
                         session.Save();
-                        EnterMetaverse(null);
+                        EnterMetaverse(startingPosition);
                     }
                 };
                 Action failure = () =>
@@ -124,7 +124,7 @@ namespace Source.Service.Auth
                         MultiverseService.Instance.GetDefaultContract(success, failure));
             }
             else
-                EnterMetaverse(null);
+                EnterMetaverse(startingPosition);
         }
 
         private static void OpenContractNotFoundDialog()

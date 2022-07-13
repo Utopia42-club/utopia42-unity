@@ -323,6 +323,7 @@ namespace Source
         internal void SessionChanged(Vector3? startingPosition)
         {
             WorldService.Invalidate();
+            Players.INSTANCE.Clear();
             SetState(State.LOADING);
             StartCoroutine(WorldService.INSTANCE.Initialize(Loading.INSTANCE,
                 () => InitPlayerForWallet(startingPosition), () => { Loading.INSTANCE.ShowConnectionError(); }));

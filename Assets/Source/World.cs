@@ -21,15 +21,14 @@ namespace Source
 
         //TODO take care of size/time limit
         //Deactivated chunks are added to this collection for possible future reuse
-        private Dictionary<Vector3Int, Chunk> garbageChunks = new Dictionary<Vector3Int, Chunk>();
-        private readonly Dictionary<Vector3Int, Chunk> chunks = new Dictionary<Vector3Int, Chunk>();
+        private readonly Dictionary<Vector3Int, Chunk> garbageChunks = new();
+        private readonly Dictionary<Vector3Int, Chunk> chunks = new();
 
-        private readonly ConcurrentDictionary<Vector3Int, HighlightChunk> highlightChunks =
-            new ConcurrentDictionary<Vector3Int, HighlightChunk>(); // chunk coordinate -> highlight chunk
+        private readonly ConcurrentDictionary<Vector3Int, HighlightChunk> highlightChunks = new(); // chunk coordinate -> highlight chunk
 
-        private readonly HashSet<VoxelPosition> clipboard = new HashSet<VoxelPosition>();
-        private readonly HashSet<MetaPosition> metaClipboard = new HashSet<MetaPosition>();
-        private ConcurrentQueue<HighlightChunk> highlightChunksToRedraw = new ConcurrentQueue<HighlightChunk>();
+        private readonly HashSet<VoxelPosition> clipboard = new();
+        private readonly HashSet<MetaPosition> metaClipboard = new();
+        private ConcurrentQueue<HighlightChunk> highlightChunksToRedraw = new();
 
         public Vector3Int HighlightOffset { private set; get; } = Vector3Int.zero;
 
@@ -39,13 +38,13 @@ namespace Source
 
 
         private bool creatingChunks = false;
-        private List<Chunk> chunkRequests = new List<Chunk>();
+        private List<Chunk> chunkRequests = new();
 
         public GameObject debugScreen;
         public Player player;
         private VoxelPosition firstSelectedPosition;
-        private readonly Color highlightMatDefaultColor = new Color(0.2f, 0.6f, 0.86f, 0.3f);
-        private readonly Color highlightMatHammerModeColor = new Color(0.85f, 0, 0, 0.4f);
+        private readonly Color highlightMatDefaultColor = new(0.2f, 0.6f, 0.86f, 0.3f);
+        private readonly Color highlightMatHammerModeColor = new(0.85f, 0, 0, 0.4f);
         public VoxelPosition LastSelectedPosition { get; private set; }
         public MetaPosition LastSelectedMetaPosition { get; private set; }
 
@@ -618,7 +617,12 @@ namespace Source
 
         public bool Initialize(Vector3Int currChunk, bool clean)
         {
-            if (clean) chunkRequests.Clear();
+            if (clean)
+            {
+                chunkRequests.Clear();
+                BlockSelectionController.INSTANCE.ExitSelectionMode();
+                ResetClipboard();
+            }
             else
             {
                 while (0 != chunkRequests.Count)
