@@ -80,7 +80,7 @@ namespace Source.Service.Auth
 
         private void SetSession(Session s)
         {
-            if (!Equals(s.WalletId, lastWallet))
+            if (!string.Equals(s.WalletId, lastWallet, StringComparison.OrdinalIgnoreCase))
             {
                 lastWallet = s.WalletId;
                 walletIdChanged.Invoke(s.WalletId);
@@ -91,7 +91,8 @@ namespace Source.Service.Auth
             ChangeContract(s.Network, s.Contract);
         }
 
-        private void ChangeContract(int network, string contract)
+        internal void ChangeContract(int network, string contract,
+            Vector3? startingPosition = null)
         {
             if (contract == null || CurrentContract == null || CurrentContract.networkId != network
                 || !Equals(CurrentContract.address, contract))

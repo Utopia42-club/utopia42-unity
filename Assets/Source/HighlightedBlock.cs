@@ -1,6 +1,3 @@
-using System;
-using Source.MetaBlocks;
-using Source.Utils;
 using UnityEngine;
 
 namespace Source
@@ -9,7 +6,7 @@ namespace Source
     {
         public uint BlockTypeId { get; private set; }
 
-        public Vector3Int Offset { get; private set; } = Vector3Int.zero; // might change because of rotation only
+        public Vector3Int Offset { get; } = Vector3Int.zero; // might change because of rotation only
         public Vector3Int Position { get; private set; } // original local position to highlight chunk
         public Vector3Int CurrentPosition => Position + Offset;
 

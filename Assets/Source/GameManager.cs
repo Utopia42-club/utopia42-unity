@@ -19,24 +19,34 @@ namespace Source
 {
     public class GameManager : MonoBehaviour
     {
-        private bool worldInited = false;
+        public enum State
+        {
+            LOADING,
+            PLAYING,
+            MENU,
+            LOGIN,
+            INITIAL
+        }
+
+        private readonly List<int> engagedUIs = new();
 
         public readonly UnityEvent<State> stateChange = new();
         public readonly List<Func<State, State, bool>> stateGuards = new();
 
-        private State state = State.INITIAL;
+        private string avatarLoadingMsg;
 
         private bool captureAllKeyboardInputOrig;
 
-        private bool doubleCtrlTap = false;
+        private bool doubleCtrlTap;
         private double doubleCtrlTapTime;
 
-        private readonly List<int> engagedUIs = new();
+        private State state = State.INITIAL;
         private int uiId;
+        private bool worldInited;
 
-        private string avatarLoadingMsg;
+        public static GameManager INSTANCE => GameObject.Find("GameManager").GetComponent<GameManager>();
 
-        void Start()
+        private void Start()
         {
             ResetAvatarMsg();
             SetState(State.LOGIN);
@@ -52,7 +62,6 @@ namespace Source
                         ProfileLoader.INSTANCE.load(authService.WalletId(), profile =>
                         {
                             if (profile == null)
-                            {
                                 BrowserConnector.INSTANCE.EditProfile(() =>
                                 {
                                     ProfileLoader.INSTANCE.InvalidateProfile(authService.WalletId());
@@ -62,13 +71,12 @@ namespace Source
                                             if (p != null) Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
                                         }, () => { });
                                 }, () => { });
-                            }
                         }, () => { });
                 }
             });
         }
 
-        void Update()
+        private void Update()
         {
             if (Input.GetButtonDown("Cancel"))
             {
@@ -83,7 +91,7 @@ namespace Source
                 {
                     if (doubleCtrlTap)
                     {
-                        if ((Time.time - doubleCtrlTapTime) < Mathf.Max(0.4f, Time.deltaTime + 0.1f))
+                        if (Time.time - doubleCtrlTapTime < Mathf.Max(0.4f, Time.deltaTime + 0.1f))
                         {
                             OpenPluginsDialog();
                             doubleCtrlTapTime = 0f;
@@ -98,20 +106,21 @@ namespace Source
                     }
                 }
                 else if (Input.GetButtonDown("Menu") || Input.GetButtonDown("Map"))
+                {
                     SetState(State.MENU);
+                }
             }
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.MENU)
+            {
                 SetState(State.PLAYING);
+            }
         }
 
         public void OpenPluginsDialog()
         {
             if (state != State.PLAYING)
                 SetState(State.PLAYING);
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("openPluginsDialog", "menu");
-            }
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("openPluginsDialog", "menu");
         }
 
         private bool IsControlKeyDown()
@@ -145,7 +154,10 @@ namespace Source
                     pos.y = chunkSize.y + 10;
                 }
             }
-            else pos = startingPosition.Value;
+            else
+            {
+                pos = startingPosition.Value;
+            }
 
             StartCoroutine(DoMovePlayerTo(pos, true));
         }
@@ -206,6 +218,28 @@ namespace Source
                 new Toast(msg, Toast.ToastType.Warning).ShowWithCloseButtonDisabled();
         }
 
+        public void Teleport(int networkId, string contract, Vector3 position)
+        {
+            var current = AuthService.Instance.CurrentContract;
+            if (current.networkId == networkId &&
+                string.Equals(current.address, contract, StringComparison.OrdinalIgnoreCase))
+            {
+                MovePlayerTo(position);
+            }
+            else
+            {
+                if (WorldService.INSTANCE.HasChange())
+                    DialogService.INSTANCE.Show(new DialogConfig("Unsaved Changes!",
+                            new Label("Your changes will be discarded, Are you sure?"))
+                        .WithAction(new DialogAction("YES",
+                            () => AuthService.Instance.ChangeContract(networkId, contract, position)))
+                        .WithAction(new DialogAction("CANCEL", () => { }))
+                    );
+                else
+                    AuthService.Instance.ChangeContract(networkId, contract, position);
+            }
+        }
+
         public void MovePlayerTo(Vector3 pos)
         {
             StartCoroutine(DoMovePlayerTo(pos, false));
@@ -233,8 +267,8 @@ namespace Source
             var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, .5f, .5f);
             while (true)
             {
-                bool coll = false;
-                for (int i = -1; i < 3; i++)
+                var coll = false;
+                for (var i = -1; i < 3; i++)
                 {
                     var loaded = false;
                     service.IsSolid(new VoxelPosition(feet + Vector3Int.up * i), s =>
@@ -389,7 +423,7 @@ namespace Source
                 Loading.INSTANCE.UpdateText($"Saving data on IPFS...\n {done}/{worldChanges.Count}");
             }
 
-            Loading.INSTANCE.UpdateText($"Issuing transaction...");
+            Loading.INSTANCE.UpdateText("Issuing transaction...");
             //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
             BrowserConnector.INSTANCE.Save(hashes, () => StartCoroutine(ReloadOwnerLands()),
                 () => SetState(State.PLAYING));
@@ -412,7 +446,6 @@ namespace Source
         public void SetNFT(Map map, Land land, bool convertToNft)
         {
             if (convertToNft)
-            {
                 StartCoroutine(map.TakeNftScreenShot(land, screenshot =>
                 {
                     // using (var ms = new MemoryStream(screenshot))
@@ -436,35 +469,32 @@ namespace Source
                             );
                         }));
                 }));
-            }
             else
-            {
                 BrowserConnector.INSTANCE.SetNft(land.id, false,
                     () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
                     () => { });
-            }
         }
 
         private void SetLandNftImage(string key, Land land)
         {
             var contract = AuthService.Instance.CurrentContract;
-            StartCoroutine(LandMetadataRestClient.INSTANCE.
-                SetLandMetadata(new LandMetadata(contract.networkId, contract.address, land.id, key), () =>
-            {
-                BrowserConnector.INSTANCE.SetNft(land.id, true,
-                    () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
-                    () => SetState(State.PLAYING));
-            }, () =>
-            {
-                var label = new Label
+            StartCoroutine(LandMetadataRestClient.INSTANCE.SetLandMetadata(
+                new LandMetadata(contract.networkId, contract.address, land.id, key), () =>
                 {
-                    text = "Conversion to NFT cancelled. Click OK to continue."
-                };
-                DialogService.INSTANCE.Show(
-                    new DialogConfig("Failed to update land metadata", label)
-                        .WithAction(new DialogAction("Ok", () => { }))
-                );
-            }));
+                    BrowserConnector.INSTANCE.SetNft(land.id, true,
+                        () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
+                        () => SetState(State.PLAYING));
+                }, () =>
+                {
+                    var label = new Label
+                    {
+                        text = "Conversion to NFT cancelled. Click OK to continue."
+                    };
+                    DialogService.INSTANCE.Show(
+                        new DialogConfig("Failed to update land metadata", label)
+                            .WithAction(new DialogAction("Ok", () => { }))
+                    );
+                }));
         }
 
         // public void ShowProfile(Profile profile, Land currentLand)
@@ -557,17 +587,6 @@ namespace Source
 #endif
         }
 
-        public static GameManager INSTANCE => GameObject.Find("GameManager").GetComponent<GameManager>();
-
-        public enum State
-        {
-            LOADING,
-            PLAYING,
-            MENU,
-            LOGIN,
-            INITIAL,
-        }
-
         public void ShowConnectionError()
         {
             SetState(State.LOADING);
@@ -593,13 +612,9 @@ namespace Source
         public void Exit()
         {
             if (WebBridge.IsPresent())
-            {
                 WebBridge.Call<object>("moveToHome", null);
-            }
             else
-            {
                 Application.Quit();
-            }
         }
 
         public void OpenMenu()

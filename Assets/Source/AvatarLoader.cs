@@ -8,6 +8,8 @@ namespace Source
 {
     public class AvatarLoader : TdObjectLoader<string, FailureType>
     {
+        public static AvatarLoader INSTANCE => GameObject.Find("TdObjectLoader").GetComponent<AvatarLoader>();
+
         protected override IEnumerator GetJob(string url, Action<GameObject> onSuccess, Action<FailureType> onFailure)
         {
             var done = false;
@@ -36,7 +38,5 @@ namespace Source
         {
             return true;
         }
-
-        public static AvatarLoader INSTANCE => GameObject.Find("TdObjectLoader").GetComponent<AvatarLoader>();
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using Source.Model;
 
 namespace Source.MetaBlocks.ImageBlock
 {
@@ -11,7 +10,7 @@ namespace Source.MetaBlocks.ImageBlock
         public MediaBlockProperties()
         {
         }
-        
+
         public MediaBlockProperties(MediaBlockProperties obj)
         {
             if (obj != null)
@@ -23,7 +22,19 @@ namespace Source.MetaBlocks.ImageBlock
                 rotation = obj.rotation;
             }
         }
-        
+
+        public object Clone()
+        {
+            return new MediaBlockProperties
+            {
+                url = url,
+                width = width,
+                height = height,
+                detectCollision = detectCollision,
+                rotation = rotation.Clone()
+            };
+        }
+
         public void UpdateProps(MediaBlockProperties props)
         {
             if (props == null) return;
@@ -37,23 +48,11 @@ namespace Source.MetaBlocks.ImageBlock
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            if (obj == null || !GetType().Equals(obj.GetType()))
                 return false;
             var prop = obj as MediaBlockProperties;
             return Equals(url, prop.url) && Equals(width, prop.width) && Equals(height, prop.height) &&
                    Equals(detectCollision, prop.detectCollision) && Equals(rotation, prop.rotation);
-        }
-
-        public object Clone()
-        {
-            return new MediaBlockProperties()
-            {
-                url = url,
-                width = width,
-                height = height,
-                detectCollision = detectCollision,
-                rotation = rotation.Clone()
-            };
         }
 
         public bool IsEmpty()

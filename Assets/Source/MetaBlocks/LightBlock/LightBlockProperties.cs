@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 namespace Source.MetaBlocks.LightBlock
 {
@@ -24,23 +23,24 @@ namespace Source.MetaBlocks.LightBlock
             }
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj == this) return true;
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
-                return false;
-
-            return obj is LightBlockProperties props && intensity == props.intensity && range == props.range && hexColor.Equals(props.hexColor);
-        }
-
         public object Clone()
         {
             return new LightBlockProperties
             {
                 range = range,
                 intensity = intensity,
-                hexColor = hexColor,
+                hexColor = hexColor
             };
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return true;
+            if (obj == null || !GetType().Equals(obj.GetType()))
+                return false;
+
+            return obj is LightBlockProperties props && intensity == props.intensity && range == props.range &&
+                   hexColor.Equals(props.hexColor);
         }
     }
 }

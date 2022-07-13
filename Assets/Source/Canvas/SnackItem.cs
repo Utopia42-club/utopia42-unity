@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Source.Canvas
 {
     public abstract class SnackItem
     {
-        private readonly Snack snack;
         private readonly Action onUpdate;
+        private readonly Snack snack;
         private bool expired;
 
         protected SnackItem(Snack snack, Action onUpdate)
@@ -38,9 +40,9 @@ namespace Source.Canvas
 
         public class Text : SnackItem
         {
-            private string text;
-            private readonly GameObject textPanel;
             private readonly GameObject textObject;
+            private readonly GameObject textPanel;
+            private string text;
 
             public Text(Snack snack, Action onUpdate, string text, GameObject textPanel, GameObject textObject)
                 : base(snack, onUpdate)
@@ -59,13 +61,13 @@ namespace Source.Canvas
             internal override void Show()
             {
                 textPanel.SetActive(true);
-                textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
+                textObject.GetComponent<TextMeshProUGUI>().text = text;
             }
 
             public void UpdateText(string newText)
             {
                 text = newText;
-                textObject.GetComponent<TMPro.TextMeshProUGUI>().text = text;
+                textObject.GetComponent<TextMeshProUGUI>().text = text;
             }
 
             public void UpdateLines(List<string> lines)
@@ -76,8 +78,8 @@ namespace Source.Canvas
 
         public class Graphic : SnackItem
         {
-            private GameObject gameObject;
             public readonly string prefab;
+            private GameObject gameObject;
 
             public Graphic(Snack snack, Action onUpdate, string prefab) : base(snack, onUpdate)
             {
@@ -89,7 +91,7 @@ namespace Source.Canvas
             {
                 base.Remove();
                 if (gameObject != null)
-                    UnityEngine.Object.DestroyImmediate(gameObject);
+                    Object.DestroyImmediate(gameObject);
             }
 
             internal override void Hide()
@@ -101,7 +103,7 @@ namespace Source.Canvas
             internal override void Show()
             {
                 if (gameObject == null)
-                    gameObject = UnityEngine.Object.Instantiate(Resources.Load(prefab), snack.transform) as GameObject;
+                    gameObject = Object.Instantiate(Resources.Load(prefab), snack.transform) as GameObject;
                 gameObject.SetActive(true);
             }
         }

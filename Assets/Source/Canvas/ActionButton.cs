@@ -8,24 +8,22 @@ namespace Source.Canvas
 {
     public class ActionButton : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     {
+        [SerializeField] public Color pressedColor = Color.gray;
         private Image image;
+
+        private readonly List<UnityAction> listeners = new();
         private Color orgColor;
 
-        [SerializeField] public Color pressedColor = Color.gray;
-
-        private List<UnityAction> listeners = new List<UnityAction>();
-
         // Start is called before the first frame update
-        void Start()
+        private void Start()
         {
             image = GetComponent<Image>();
             orgColor = image.color;
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
-
         }
 
         public void OnPointerDown(PointerEventData eventData)
@@ -49,6 +47,5 @@ namespace Source.Canvas
         {
             listeners.Add(action);
         }
-
     }
 }

@@ -14,6 +14,8 @@ namespace Source.Canvas
     {
         private string currentUrl;
 
+        public static BrowserConnector INSTANCE => GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>();
+
         public void EditProfile(Action onDone, Action onCancel)
         {
             const string msg = "Edit your profile on your browser. Click RELOAD when it is done.";
@@ -23,7 +25,9 @@ namespace Source.Canvas
                 OpenDialog(onDone, onCancel, msg);
             }
             else
+            {
                 CallUrl("editProfile", onDone, onCancel, msg);
+            }
         }
 
 
@@ -35,7 +39,9 @@ namespace Source.Canvas
                 OpenDialog(onDone, onCancel);
             }
             else
+            {
                 CallUrl("transfer", landId.ToString(), onDone, onCancel);
+            }
         }
 
         public void SetNft(long landId, bool value, Action onDone, Action onCancel)
@@ -49,7 +55,9 @@ namespace Source.Canvas
                 OpenDialog(onDone, onCancel);
             }
             else
+            {
                 CallUrl("setNft", $"{landId}_{value}", onDone, onCancel);
+            }
         }
 
         public void Save(Dictionary<long, string> data, Action onDone, Action onCancel)
@@ -78,7 +86,7 @@ namespace Source.Canvas
             }
             else
             {
-                List<string> parameters = new List<string>();
+                var parameters = new List<string>();
                 foreach (var l in lands)
                     parameters.Add(string.Join("_",
                         new long[] {l.startCoordinate.x, l.startCoordinate.z, l.endCoordinate.x, l.endCoordinate.z}));
@@ -88,26 +96,17 @@ namespace Source.Canvas
 
         public void ReportGameState(GameManager.State state)
         {
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("reportGameState", state.ToString());
-            }
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("reportGameState", state.ToString());
         }
 
         public void ReportLoggedInUser(Session session)
         {
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("reportLoggedInUser", session);
-            }
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("reportLoggedInUser", session);
         }
 
         public void ReportPlayerState(AvatarController.PlayerState state)
         {
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("reportPlayerState", JsonConvert.SerializeObject(state));
-            }
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("reportPlayerState", JsonConvert.SerializeObject(state));
         }
 
         private void CallUrl(string method, string parameters, Action onDone, Action onCancel, string message = null)
@@ -132,7 +131,7 @@ namespace Source.Canvas
             OpenDialog(message, onDone, onCancel);
         }
 
-        private void OpenDialog(String message, Action onDone, Action onCancel)
+        private void OpenDialog(string message, Action onDone, Action onCancel)
         {
             var label = new Label
             {
@@ -140,12 +139,11 @@ namespace Source.Canvas
             };
             DialogService.INSTANCE.Show(
                 new DialogConfig(label)
+                    .WithCloseOnBackdropClick(false)
                     .WithCancelAction(onCancel)
                     .WithAction(new DialogAction("Reload", onDone.Invoke, "utopia-button-secondary"))
                     .WithOnClose(onCancel)
             );
         }
-
-        public static BrowserConnector INSTANCE => GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>();
     }
 }

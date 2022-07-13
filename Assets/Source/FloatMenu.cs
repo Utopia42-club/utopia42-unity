@@ -6,11 +6,11 @@ namespace Source
 {
     public class FloatMenu : MonoBehaviour
     {
-        private VisualElement root;
         private GameManager _gameManager;
         private UnityAction<bool> focusListener;
+        private VisualElement root;
 
-        void OnEnable()
+        private void OnEnable()
         {
             root = GetComponent<UIDocument>().rootVisualElement;
             _gameManager = GameManager.INSTANCE;

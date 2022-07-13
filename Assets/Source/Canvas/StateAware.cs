@@ -7,7 +7,7 @@ namespace Source.Canvas
     {
         [SerializeField] private GameManager.State[] states;
 
-        void Start()
+        private void Start()
         {
             GameManager.INSTANCE.stateChange.AddListener(UpdateVisibility);
             UpdateVisibility(GameManager.INSTANCE.GetState());

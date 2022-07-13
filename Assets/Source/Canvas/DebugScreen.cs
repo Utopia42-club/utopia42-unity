@@ -5,18 +5,18 @@ namespace Source.Canvas
 {
     public class DebugScreen : MonoBehaviour
     {
-        World world;
-        Text text;
-        Player player;
+        private Player player;
+        private Text text;
+        private World world;
 
-        void Start()
+        private void Start()
         {
             text = GetComponent<Text>();
             world = GameObject.Find("World").GetComponent<World>();
             player = GameObject.Find("Player").GetComponent<Player>();
         }
 
-        void Update()
+        private void Update()
         {
             text.text = player.GetPosition().ToString();
         }

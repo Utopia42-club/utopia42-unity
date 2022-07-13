@@ -7,9 +7,9 @@ namespace Source.MetaBlocks.LinkBlock
 {
     public class LinkBlockEditor
     {
+        private readonly VisualElement positionBox;
         private readonly DropdownField typeField;
         private readonly TextField urlField;
-        private readonly VisualElement positionBox;
         private readonly TextField xField;
         private readonly TextField yField;
         private readonly TextField zField;
@@ -92,9 +92,9 @@ namespace Source.MetaBlocks.LinkBlock
 
         public void SetValue(LinkBlockProperties value)
         {
-            typeField.index = (value == null || value.pos != null) ? 1 : 0;
+            typeField.index = value == null || value.pos != null ? 1 : 0;
             urlField.value = value == null ? "" : value.url;
-            bool noPos = value == null || value.pos == null;
+            var noPos = value == null || value.pos == null;
             if (noPos)
             {
                 xField.value = null;

@@ -19,19 +19,6 @@ namespace Source.MetaBlocks.LinkBlock
             pos = obj.pos;
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj == this) return true;
-            if (obj == null || GetType() != obj.GetType())
-                return false;
-
-            return obj is LinkBlockProperties props
-                   && url == props.url
-                   && pos?[0] == props.pos?[0]
-                   && pos?[1] == props.pos?[1]
-                   && pos?[2] == props.pos?[2];
-        }
-
         public object Clone()
         {
             var obj = new LinkBlockProperties();
@@ -43,6 +30,19 @@ namespace Source.MetaBlocks.LinkBlock
             }
 
             return obj;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return true;
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            return obj is LinkBlockProperties props
+                   && url == props.url
+                   && pos?[0] == props.pos?[0]
+                   && pos?[1] == props.pos?[1]
+                   && pos?[2] == props.pos?[2];
         }
 
         public bool IsEmpty()

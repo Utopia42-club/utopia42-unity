@@ -1,27 +1,33 @@
 using System;
 using Source.MetaBlocks;
 using Source.Model;
-using Source.Utils;
 using UnityEngine;
 
 namespace Source
 {
     public class HighlightedMetaBlock : MonoBehaviour
     {
+        private Action cleanUpAction;
+
+        private GameObject metaBlockHighlight;
+        private Vector3 metaBlockHighlightPosition;
+
+        private Transform rotationTransform;
+        private Transform scaleTransform;
         public MetaBlockType type { get; private set; }
         public uint MetaBlockTypeId => type.id;
         public object MetaProperties { get; private set; }
 
-        private GameObject metaBlockHighlight;
-        private Vector3 metaBlockHighlightPosition;
-        private Action cleanUpAction;
-
-        private Transform rotationTransform;
-        private Transform scaleTransform;
-
-        public Vector3 Offset { get; private set; } = Vector3.zero; // might change because of rotation only
+        public Vector3 Offset { get; } = Vector3.zero; // might change because of rotation only
         public MetaLocalPosition Position { get; private set; }
-        public MetaLocalPosition CurrentPosition => new MetaLocalPosition(Position.position + Offset);
+        public MetaLocalPosition CurrentPosition => new(Position.position + Offset);
+
+        private void OnDestroy()
+        {
+            cleanUpAction?.Invoke();
+            if (metaBlockHighlight != null)
+                DestroyImmediate(metaBlockHighlight);
+        }
 
         public static void CreateAndAddToChunk(MetaLocalPosition localPos, HighlightChunk highlightChunk,
             MetaBlock meta, Action<HighlightedMetaBlock> onLoad = null)
@@ -86,13 +92,6 @@ namespace Source
         {
             if (metaBlockHighlight == null) return;
             metaBlockHighlight.transform.localPosition = metaBlockHighlightPosition + Offset;
-        }
-
-        private void OnDestroy()
-        {
-            cleanUpAction?.Invoke();
-            if (metaBlockHighlight != null)
-                DestroyImmediate(metaBlockHighlight);
         }
     }
 }

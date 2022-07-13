@@ -1,5 +1,4 @@
 using System;
-using Source.Model;
 
 namespace Source.MetaBlocks.TeleportBlock
 {
@@ -34,9 +33,14 @@ namespace Source.MetaBlocks.TeleportBlock
             if ((obj == null) || !this.GetType().Equals(obj.GetType()))
                 return false;
             var prop = obj as TeleportBlockProperties;
-            return destination[0] == prop.destination[0] &&
-                   destination[1] == prop.destination[1] &&
-                   destination[2] == prop.destination[2];
+            return
+                (destination == prop.destination
+                 || destination.Length == prop.destination.Length &&
+                 destination[0] == prop.destination[0] &&
+                 destination[1] == prop.destination[1] &&
+                 destination[2] == prop.destination[2]) &&
+                networkId == prop.networkId &&
+                string.Equals(contractAddress, prop.contractAddress, StringComparison.OrdinalIgnoreCase);
         }
 
         public object Clone()

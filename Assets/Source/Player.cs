@@ -47,7 +47,6 @@ namespace Source
         private bool floating = false;
         private Vector3Int? lastChunk;
         private List<Land> ownedLands = new List<Land>();
-        private Collider hitCollider;
         private RaycastHit raycastHit;
         private CharacterController characterController;
         private BlockSelectionController blockSelectionController;
@@ -251,7 +250,6 @@ namespace Source
 
             var xzVelocity = moveDirection.normalized * (sprinting ? sprintSpeed : walkSpeed);
             characterController.Move(xzVelocity * Time.fixedDeltaTime);
-
             if (jumpRequest)
             {
                 // if (!floating && isGrounded)
@@ -301,7 +299,6 @@ namespace Source
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
             {
                 var focusable = raycastHit.collider.GetComponent<Focusable>();
-                hitCollider = raycastHit.collider;
                 if (focusable != null)
                 {
                     if (focusable != FocusedFocusable && FocusedFocusable != null)
@@ -585,7 +582,6 @@ namespace Source
             if (FocusedFocusable != null)
                 FocusedFocusable.UnFocus();
             FocusedFocusable = null;
-            hitCollider = null;
         }
 
         public void ResetVelocity()
@@ -596,6 +592,12 @@ namespace Source
         public void InitOnSelectedAssetChanged()
         {
             AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
+        }
+
+        public bool IsPlayerCollider(Collider coll)
+        {
+            return characterController != null &&
+                   coll == characterController.GetComponent<Collider>();
         }
     }
 }

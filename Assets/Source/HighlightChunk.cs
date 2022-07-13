@@ -1,9 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Source.Model;
-using Source.Service;
 using Source.Utils;
 using UnityEngine;
 
@@ -17,11 +14,11 @@ namespace Source
         private readonly Dictionary<MetaLocalPosition, HighlightedMetaBlock>
             highlightedMetaBlocks = new();
 
-        public Vector3Int Position { get; private set; }
-
         // TODO: The parent of each selected block should be highlight chunk so that they would be destroyed with it   
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
+
+        public Vector3Int Position { get; private set; }
         public GameObject HighlightChunkGameObject { get; private set; }
 
         public Transform transform => HighlightChunkGameObject.transform;
@@ -32,15 +29,13 @@ namespace Source
             TotalNonMetaBlocksHighlighted + highlightedMetaBlocks.Count(pair => pair.Value != null);
 
 
-        public List<HighlightedBlock> HighlightedBlocks => new List<HighlightedBlock>(highlightedBlocks.Values);
+        public List<HighlightedBlock> HighlightedBlocks => new(highlightedBlocks.Values);
 
-        public List<HighlightedMetaBlock> HighlightedMetaBlocks =>
-            new List<HighlightedMetaBlock>(highlightedMetaBlocks.Values);
+        public List<HighlightedMetaBlock> HighlightedMetaBlocks => new(highlightedMetaBlocks.Values);
 
-        public HashSet<Vector3Int> HighlightedLocalPositions => new HashSet<Vector3Int>(highlightedBlocks.Keys);
+        public HashSet<Vector3Int> HighlightedLocalPositions => new(highlightedBlocks.Keys);
 
-        public HashSet<MetaLocalPosition> HighlightedMetaLocalPositions =>
-            new HashSet<MetaLocalPosition>(highlightedMetaBlocks.Keys);
+        public HashSet<MetaLocalPosition> HighlightedMetaLocalPositions => new(highlightedMetaBlocks.Keys);
 
         public bool SelectionDisplaced =>
             highlightedBlocks.Values.Any(highlightedBlock => highlightedBlock.Offset != Vector3Int.zero) ||
@@ -51,6 +46,12 @@ namespace Source
             meshFilter = HighlightChunkGameObject.AddComponent<MeshFilter>();
             meshRenderer = HighlightChunkGameObject.AddComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = World.INSTANCE.SelectedBlock;
+        }
+
+        private void OnDestroy()
+        {
+            DestroyMeshAndMaterial();
+            Destroy(HighlightChunkGameObject);
         }
 
         public static HighlightChunk Create(GameObject parent, Vector3Int coordinate)
@@ -226,12 +227,6 @@ namespace Source
             if (meshFilter == null || meshFilter.sharedMesh == null) return;
             Destroy(meshFilter.sharedMesh);
             meshFilter.sharedMesh = null;
-        }
-
-        private void OnDestroy()
-        {
-            DestroyMeshAndMaterial();
-            Destroy(HighlightChunkGameObject);
         }
     }
 }

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3730420167716570005}
   - component: {fileID: 5162221118003144155}
   - component: {fileID: 3494161699483150616}
+  - component: {fileID: 5785004272227100576}
   m_Layer: 0
   m_Name: Portal
   m_TagString: TeleportPortal
@@ -111,3 +112,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5785004272227100576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8648569460091782449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PanelSettings: {fileID: 11400000, guid: b960450d96d10076fa593216bbd51bb1, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: f733c86a9e5ff4d429b47b824a9480a0, type: 3}
+  m_SortingOrder: -1

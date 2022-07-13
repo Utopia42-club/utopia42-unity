@@ -7,7 +7,7 @@ namespace Source
         public Menu menu;
         private GameManager _gameManager;
 
-        void Start()
+        private void Start()
         {
             _gameManager = GameManager.INSTANCE;
         }

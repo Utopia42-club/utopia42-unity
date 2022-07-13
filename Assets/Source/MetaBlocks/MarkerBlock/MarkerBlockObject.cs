@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using Source.Canvas;
-using Source.Model;
 using UnityEngine;
 
 namespace Source.MetaBlocks.MarkerBlock
@@ -9,6 +7,12 @@ namespace Source.MetaBlocks.MarkerBlock
     public class MarkerBlockObject : MetaBlockObject
     {
         private GameObject placeHolder;
+
+        protected override void OnDestroy()
+        {
+            DestroyPlaceHolder(false);
+            base.OnDestroy();
+        }
 
         public override void OnDataUpdate()
         {
@@ -54,7 +58,7 @@ namespace Source.MetaBlocks.MarkerBlock
         {
             var lines = new List<string>();
             lines.Add("Press E for details");
-            if(Player.INSTANCE.HammerMode)
+            if (Player.INSTANCE.HammerMode)
                 lines.Add("Press DEL to delete object");
             return lines;
         }
@@ -85,7 +89,7 @@ namespace Source.MetaBlocks.MarkerBlock
 
         private void EditProps()
         {
-            var editor = new MarkerBlockEditor((value) =>
+            var editor = new MarkerBlockEditor(value =>
             {
                 var props = new MarkerBlockProperties(Block.GetProps() as MarkerBlockProperties);
                 if (value != null)
@@ -96,18 +100,12 @@ namespace Source.MetaBlocks.MarkerBlock
             editor.SetValue(Block.GetProps() as MarkerBlockProperties);
             editor.Show();
         }
-        
+
         private void DestroyPlaceHolder(bool immediate = true)
         {
             if (placeHolder == null) return;
             DeepDestroy3DObject(placeHolder, immediate);
             placeHolder = null;
-        }
-
-        protected override void OnDestroy()
-        {
-            DestroyPlaceHolder(false);
-            base.OnDestroy();
         }
     }
 }

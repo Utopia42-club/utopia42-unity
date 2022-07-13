@@ -34,6 +34,7 @@ namespace Source.MetaBlocks.TeleportBlock
             posX = root.Q<TextField>("x");
             posY = root.Q<TextField>("y");
             posZ = root.Q<TextField>("z");
+            TextFields.RegisterUiEngagementCallbacksForTextField(contract);
             TextFields.RegisterUiEngagementCallbacksForTextField(posX);
             TextFields.RegisterUiEngagementCallbacksForTextField(posY);
             TextFields.RegisterUiEngagementCallbacksForTextField(posZ);
