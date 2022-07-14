@@ -187,13 +187,13 @@ namespace Source.Service.Auth
                 contract = loaded.Contract;
             }
 
-            if (network > 0 || !string.IsNullOrEmpty(contract))
+            if (network <= 0 || string.IsNullOrEmpty(contract))
             {
                 var loading = LoadingLayer.Show();
                 World.INSTANCE.StartCoroutine(MultiverseService.Instance.GetDefaultContract(
-                    s =>
+                    mc =>
                     {
-                        SetSession(new Session(s.networkId, s.address, walletId));
+                        SetSession(new Session(mc.networkId, mc.address, walletId));
                         loading.Close();
                     },
                     () =>
