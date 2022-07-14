@@ -39,15 +39,16 @@ public class TeleportPortal : MonoBehaviour
         }
     }
 
+    private static bool IsValid(TeleportBlockProperties props)
+    {
+        return props != null && props.destination != null && props.destination.Length == 3 &&
+               !string.IsNullOrWhiteSpace(props.contractAddress) && props.networkId > 0;
+    }
+
     private void DoTeleport()
     {
         Clear();
-        var props = GetProps();
-        if (!IsValid(props))
-            return;
-        GameManager.INSTANCE.Teleport(props.networkId, props.contractAddress, new Vector3(props.destination[0],
-            props.destination[1],
-            props.destination[2]));
+        TeleportIfValid(GetProps());
     }
 
     private TeleportBlockProperties GetProps()
@@ -55,15 +56,17 @@ public class TeleportPortal : MonoBehaviour
         return GetComponent<MetaFocusable>().GetBlock().GetProps() as TeleportBlockProperties;
     }
 
-    private bool IsValid(TeleportBlockProperties props)
-    {
-        return props != null && props.destination != null && props.destination.Length == 3 &&
-               !string.IsNullOrWhiteSpace(props.contractAddress) && props.networkId > 0;
-    }
-
     private void OnTriggerExit(Collider other)
     {
         if (Player.INSTANCE.IsPlayerCollider(other))
             timer.Stop();
+    }
+
+    public static void TeleportIfValid(TeleportBlockProperties props)
+    {
+        if (IsValid(props))
+            GameManager.INSTANCE.Teleport(props.networkId, props.contractAddress, new Vector3(props.destination[0],
+                props.destination[1],
+                props.destination[2]));
     }
 }

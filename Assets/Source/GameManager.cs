@@ -217,7 +217,6 @@ namespace Source
             if (worldInited || forceToast)
                 new Toast(msg, Toast.ToastType.Warning).ShowWithCloseButtonDisabled();
         }
-
         public void Teleport(int networkId, string contract, Vector3 position)
         {
             var current = AuthService.Instance.CurrentContract;
@@ -331,14 +330,16 @@ namespace Source
 
         public void CopyPositionLink()
         {
+            var contract = AuthService.Instance.CurrentContract;
             var currentPosition = Player.INSTANCE.GetPosition();
             var url = Constants.WebAppBaseURL +
-                      $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}";
+                      $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}&network={contract.networkId}&contract={contract.address}";
 
             if (WebBridge.IsPresent())
                 WebBridge.Call<object>("copyToClipboard", url);
             else
                 GUIUtility.systemCopyBuffer = url;
+            new Toast("Url copied to clipboard!", Toast.ToastType.Info).Show();
         }
 
         private bool SetState(State state)

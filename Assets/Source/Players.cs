@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -79,7 +80,9 @@ namespace Source
         public void ReportOtherPlayersStateFromWeb(string state)
         {
             var s = JsonConvert.DeserializeObject<AvatarController.PlayerState>(state);
-            if (s?.walletId == null) return;
+            var contract = AuthService.Instance.CurrentContract;
+            if (s?.walletId == null || s.network != contract.networkId ||
+                !string.Equals(s.contract, contract.address, StringComparison.OrdinalIgnoreCase)) return;
             s.walletId = s.walletId?.ToLower();
             ReportOtherPlayersState(s);
         }

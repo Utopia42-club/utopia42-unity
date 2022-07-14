@@ -37,12 +37,11 @@ namespace Source.Service.Auth
         private void ConnectProvider()
         {
             var metamaskLoading = LoadingLayer.Show();
-
             WebBridge.CallAsync<ConnectionDetail>("connectMetamask", null, (cd) =>
             {
                 metamaskLoading.Close();
                 if (cd.wallet != null)
-                    SetupSessionFroWallet(cd.wallet);
+                    Login(cd.wallet);
                 else OpenCredentialsDialog();
             });
         }
@@ -167,13 +166,28 @@ namespace Source.Service.Auth
 
         public void SetUpGuestSession()
         {
-            SetupSessionFroWallet(Session.GUEST_WALLET);
+            Login(Session.GUEST_WALLET);
         }
 
-        private void SetupSessionFroWallet(string walletId)
+        private void Login(string walletId)
+        {
+            if (WebBridge.IsPresent())
+                WebBridge.CallAsync<MetaverseContract>("getStartingContract", "", (contract) =>
+                    Login(walletId, contract.networkId, contract.address));
+            else
+                Login(walletId, -1, null);
+        }
+
+        private void Login(string walletId, int network, string contract)
         {
             var loaded = Session.Load();
-            if (!loaded.HasNetwork() || string.IsNullOrWhiteSpace(loaded.Contract))
+            if (network <= 0 || string.IsNullOrEmpty(contract))
+            {
+                network = loaded.Network;
+                contract = loaded.Contract;
+            }
+
+            if (network > 0 || !string.IsNullOrEmpty(contract))
             {
                 var loading = LoadingLayer.Show();
                 World.INSTANCE.StartCoroutine(MultiverseService.Instance.GetDefaultContract(
@@ -189,7 +203,7 @@ namespace Source.Service.Auth
                     }));
             }
             else
-                SetSession(new Session(loaded.Network, loaded.Contract, walletId));
+                SetSession(new Session(network, contract, walletId));
         }
 
         private void OpenCredentialsDialog()
@@ -208,7 +222,7 @@ namespace Source.Service.Auth
                         return;
                     }
 
-                    SetupSessionFroWallet(loginCredentialsDialog.GetWallet());
+                    Login(loginCredentialsDialog.GetWallet());
                     dialog.Close();
                 }, "utopia-button-secondary", false))
             );

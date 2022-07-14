@@ -13,8 +13,6 @@ namespace Source.Utils
         // public static readonly string ApiURL = "http://192.168.1.196:8080";
         public static readonly string ApiURL = "http://localhost:8080";
 
-        public static readonly string NetsURL = ApiURL + "/static/networks.json";
-        // public static readonly string NetsURL = "https://api.utopia42.club" + "/static/networks.json";
         public static readonly string WebAppRpcURL = WebAppBaseURL + "/rpc";
         
         public static readonly string AvatarDesignerURL = "https://utopia42club.readyplayer.me/avatar";

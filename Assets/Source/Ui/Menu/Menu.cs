@@ -42,6 +42,7 @@ public class Menu : MonoBehaviour, UiProvider
         var tabConfigs = new List<TabConfiguration>
         {
             new("Map", () => new Map()),
+            new("Metaverse", () => new MetaverseMenu()),
             new("Help", () => new Help()),
             new("Profile", () => new UserProfile(null), (e) =>
             {

@@ -40,12 +40,17 @@ namespace Source
 
         public VisualElement Setup(string uxmlPath, string header, Action onSave, int referenceObjectID)
         {
+            return Setup(Ui.Utils.Utils.Create(uxmlPath), header, onSave, referenceObjectID);
+        }
+
+        public T Setup<T>(T editor, string header, Action onSave, int referenceObjectID)
+            where T : VisualElement
+        {
             root = GetComponent<UIDocument>().rootVisualElement;
             body = root.Q<ScrollView>("body");
             Scrolls.IncreaseScrollSpeed(body);
             label = root.Q<Label>("label");
             label.text = header;
-            var editor = Ui.Utils.Utils.Create(uxmlPath);
             body.Clear();
             body.Add(editor);
 

@@ -274,8 +274,10 @@ namespace Source
 
             playerPos = Vectors.TruncateFloor(pos);
 
+            var contract = AuthService.Instance.CurrentContract;
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
                 // AvatarId, // test only
+                contract.networkId, contract.address,
                 AuthService.Instance.WalletId(),
                 new SerializableVector3(pos), floating, jumpRequest, sprinting,
                 Mathf.Abs(reportVelocityY), false));
@@ -514,8 +516,10 @@ namespace Source
 
         public void SetTeleportTarget(Vector3 pos)
         {
+            var contract = AuthService.Instance.CurrentContract;
             avatarController.UpdatePlayerState(
-                AvatarController.PlayerState.CreateTeleportState(AuthService.Instance.WalletId(), pos));
+                AvatarController.PlayerState.CreateTeleportState(contract.networkId, contract.address,
+                    AuthService.Instance.WalletId(), pos));
         }
 
         public Vector3 GetPosition()

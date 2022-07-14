@@ -421,6 +421,8 @@ namespace Source
         public class PlayerState
         {
             public string rid;
+            public int network;
+            public string contract;
             public string walletId;
             public SerializableVector3 position;
             public bool floating;
@@ -429,11 +431,14 @@ namespace Source
             public float velocityY;
             public bool teleport;
 
-            public PlayerState(string walletId, SerializableVector3 position, bool floating, bool jump,
+            public PlayerState(int network, string contract, string walletId, SerializableVector3 position,
+                bool floating, bool jump,
                 bool sprinting, float velocityY, bool teleport)
             {
                 // rid = random.Next(0, int.MaxValue);
                 rid = Guid.NewGuid().ToString();
+                this.network = network;
+                this.contract = contract;
                 this.walletId = walletId;
                 this.position = position;
                 this.floating = floating;
@@ -443,16 +448,18 @@ namespace Source
                 this.teleport = teleport;
             }
 
-            private PlayerState(string walletId, SerializableVector3 position)
+            private PlayerState(int network, string contract, string walletId, SerializableVector3 position)
             {
+                this.network = network;
+                this.contract = contract;
                 this.walletId = walletId;
                 this.position = position;
                 teleport = true;
             }
 
-            public static PlayerState CreateTeleportState(string walletId, Vector3 position)
+            public static PlayerState CreateTeleportState(int network, string contract, string walletId, Vector3 position)
             {
-                return new PlayerState(walletId, new SerializableVector3(position));
+                return new PlayerState(network ,contract,walletId, new SerializableVector3(position));
             }
 
             public Vector3 GetPosition()
