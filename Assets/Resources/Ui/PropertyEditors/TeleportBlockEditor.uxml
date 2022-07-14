@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <ui:VisualElement name="propertyEditor" style="flex-grow: 1; flex-shrink: 1; align-items: stretch; justify-content: center;">
+        <ui:TextField picking-mode="Ignore" label="Metaverse ID" name="metaverseId" class="utopia-field" />
+        <ui:VisualElement name="destination" class="utopia-fields-group">
+            <ui:Label text="Destination" display-tooltip-when-elided="true" name="destinationLabel" focusable="false" class="utopia-fields-group__label" />
+            <ui:VisualElement name="destinationFields" style="flex-direction: row; flex-wrap: nowrap; flex-grow: 1;">
+                <ui:TextField picking-mode="Ignore" label="X" name="x" class="utopia-field" style="flex-grow: 1;" />
+                <ui:TextField picking-mode="Ignore" label="Y (Height)" name="y" class="utopia-field" style="flex-grow: 1;" />
+                <ui:TextField picking-mode="Ignore" label="Z" name="z" class="utopia-field" style="flex-grow: 1;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

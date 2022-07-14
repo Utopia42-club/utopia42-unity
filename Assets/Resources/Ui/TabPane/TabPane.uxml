@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/TebPane/tab-pane.uss?fileID=7433441132597879392&amp;guid=48a311b4a4965de0d946fc2aead50834&amp;type=3#tab-pane" />
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <ui:VisualElement name="tabPane" style="flex-grow: 1; flex-shrink: 1; width: 100%; align-items: stretch; right: auto; position: relative; height: 100%; justify-content: center; transition-property: visibility; transition-duration: 200ms;">
+        <ui:VisualElement name="root" style="flex-grow: 1; flex-shrink: 1; width: 100%; align-items: stretch; right: 0; position: absolute; height: 100%;">
+            <ui:VisualElement name="header" style="height: 10%; max-height: 40px; flex-direction: row; flex-grow: 1;">
+                <ui:VisualElement name="tabs" style="flex-direction: row; justify-content: center; flex-grow: 1;" />
+                <ui:VisualElement name="leftActions" style="flex-direction: row; position: absolute; left: 5px; top: 5px;" />
+                <ui:VisualElement name="rightActions" style="flex-direction: row; position: absolute; right: 5px; top: 5px;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="tabBody" class="tabBody" style="align-items: center; padding-top: 10px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

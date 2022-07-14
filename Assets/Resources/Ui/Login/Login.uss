@@ -1,0 +1,10 @@
+.login-tab-button {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.selected-login-tab-button{
+    background-color: var(--accent-color);
+    border-color: var(--darker-accent-color);
+    color: black;
+}

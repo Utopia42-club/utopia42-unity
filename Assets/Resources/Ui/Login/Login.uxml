@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <Style src="project://database/Assets/Resources/Ui/Login/Login.uss?fileID=7433441132597879392&amp;guid=bbaabb05f5124a979b4fc6b8471806dc&amp;type=3#Login" />
+    <ui:VisualElement class="utopia-background" style="flex-grow: 1; align-items: center; width: 100%; justify-content: center;">
+        <ui:VisualElement name="root" style="flex-grow: 1; justify-content: center; width: 50%; max-width: 400px; flex-direction: column; align-items: center;">
+            <ui:VisualElement name="header" style="width: 100%; flex-direction: row;">
+                <ui:Button text="Member" display-tooltip-when-elided="true" name="memberTabButton" class="utopia-button-primary login-tab-button" style="flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; min-width: 50%;" />
+                <ui:Button text="Guest" display-tooltip-when-elided="true" name="guestTabButton" class="utopia-button-primary login-tab-button" style="flex-grow: 1; border-top-left-radius: 0; border-bottom-left-radius: 0; min-width: 50%;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="body" style="flex-direction: row; width: 100%;">
+                <ui:VisualElement name="guestTile" class="utopia-tile" style="flex-grow: 0; flex-direction: column; height: 300px; width: 100%; display: none;">
+                    <ui:VisualElement style="flex-grow: 1; padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px;">
+                        <ui:VisualElement style="background-image: url(&apos;project://database/Assets/Images/user.png?fileID=2800000&amp;guid=65e6c50c85dfba44895e64de548958bc&amp;type=3#user&apos;); flex-grow: 1;" />
+                    </ui:VisualElement>
+                    <ui:Label text="You will have a limited experience" display-tooltip-when-elided="true" style="-unity-text-align: upper-center; white-space: normal; display: none;" />
+                    <ui:Button text="Enter As Guest" display-tooltip-when-elided="true" name="guestButton" class="utopia-button-accent" style="height: 40px; margin-bottom: 20px; margin-right: 8px; margin-left: 8px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="memberTile" class="utopia-tile" style="flex-grow: 0; flex-direction: column; height: 300px; width: 100%; display: flex;">
+                    <ui:VisualElement style="flex-grow: 1; padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px;">
+                        <ui:VisualElement style="background-image: resource(&apos;Icons/metamask&apos;); flex-grow: 1;" />
+                    </ui:VisualElement>
+                    <ui:Label text="Connect your account and get the full experience" display-tooltip-when-elided="true" style="white-space: normal; -unity-text-align: upper-center; display: none;" />
+                    <ui:Button text="Enter" display-tooltip-when-elided="true" name="enterButton" class="utopia-button-accent" style="height: 40px; margin-bottom: 20px; margin-left: 8px; margin-right: 8px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

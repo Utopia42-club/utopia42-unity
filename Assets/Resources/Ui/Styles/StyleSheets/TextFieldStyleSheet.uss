@@ -1,0 +1,63 @@
+.no-label-field > .unity-base-field__label {
+    display: none;
+}
+
+.unity-base-field__label {
+    min-width: auto;
+    margin: 0;
+    padding: 0;
+    padding-left: 3px;
+    font-size: var(--small-font-size);
+}
+
+.unity-base-text-field {
+    white-space: nowrap;
+    --unity-selection-color: var(--text-darker-color);
+    --unity-cursor-color: var(--text-color);
+    color: var(--text-color);
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    border-width: 1px;
+    border-radius: var(--default-border-radius);
+    border-color: var(--default-border-color);
+    background-color: var(--background-color);
+    padding: 2px;
+    margin: 3px;
+}
+
+.unity-text-element {
+    color: var(--text-color);
+}
+
+.unity-base-text-field:hover {
+    border-color: var(--lighter-primary-color);
+}
+
+.unity-base-text-field:focus {
+    border-color: var(--lighter-primary-color);
+}
+
+.unity-base-text-field:focus > .unity-base-field__label {
+    color: var(--secondary-color);
+}
+
+.unity-base-text-field__input {
+    --unity-sync-text-editor-engine: true;
+    -unity-overflow-clip-box: content-box;
+    flex: 1 1 auto;
+    border-width: 0;
+    background-color: transparent;
+    padding: 4px;
+    width: 100%;
+}
+
+.unity-base-text-field__input--single-line {
+    -unity-text-align: middle-left;
+}
+
+.unity-base-text-field__input--multiline {
+    -unity-text-align: upper-left;
+    white-space: normal;
+}

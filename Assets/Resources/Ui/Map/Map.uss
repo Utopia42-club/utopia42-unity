@@ -1,0 +1,128 @@
+* {
+    --map-background: var(--primary-color);
+    --map-land-background: rgb(149, 165, 166);
+    --map-grid-origin-color: rgb(192, 57, 43);
+    --map-grid-line-width: 1px;
+    --map-grid-line-color: var(--lighter-primary-color);
+    --map-minor-grid-line-color: var(--darker-primary-color);
+    --map-owned-land-color: rgb(22, 160, 133);
+    --map-others-land-color: rgb(149, 165, 166);
+    --map-owned-land-nft-color: rgb(241, 196, 15);
+    --map-others-land-nft-color: rgb(241, 196, 15);
+    --map-default-land-color: var(--map-others-land-color);
+}
+
+#Root {
+    background-color: var(--map-background);
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.map-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.map-land-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.map-subgrid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.map-land {
+    background-color: var(--map-land-background);
+    position: absolute;
+}
+
+.map-vertical-grid-line {
+    border-left-color: var(--map-grid-line-color);
+    border-left-width: var(--map-grid-line-width);
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+}
+
+.map-vertical-grid-line.minor-grid-line {
+    border-left-color: var(--map-minor-grid-line-color);
+    border-left-width: var(--map-grid-line-width);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+
+.map-horizontal-grid-line {
+    border-top-color: var(--map-grid-line-color);
+    border-top-width: var(--map-grid-line-width);
+    position: absolute;
+    left: -10%;
+    right: -10%;
+}
+
+.map-horizontal-grid-line.minor-grid-line {
+    border-top-color: var(--map-minor-grid-line-color);
+    border-top-width: var(--map-grid-line-width);
+    position: absolute;
+    left: 0;
+    right: 0;
+}
+
+.map-origin-grid-line {
+    border-color: var(--map-grid-origin-color);
+}
+
+.map-mouse-label {
+    color: var(--text-color);
+    position: absolute;
+}
+
+.map-owned-land-nft {
+    border-width: 2;
+    border-color: var(--map-owned-land-nft-color);
+}
+
+.map-owned-land {
+    border-width: 2;
+    border-color: var(--map-owned-land-color);
+}
+
+.map-others-land-nft {
+    border-width: 2;
+    border-color: var(--map-others-land-nft-color);
+}
+
+.map-others-land {
+    border-width: 2;
+    border-color: var(--map-others-land-color);
+}
+
+.map-position-indicator {
+    position: absolute;
+    width: 30;
+    height: 30;
+}
+
+.map-default-land-background {
+    background-color: var(--map-default-land-color);
+}
+
+.current-location-box:hover {
+    background-color: var(--darker-primary-color);
+}
+
+.map-new-drawing-land{
+    background-color: var(--secondary-color);
+}

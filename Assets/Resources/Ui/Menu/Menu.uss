@@ -1,0 +1,11 @@
+.exit-button {
+    background-color: var(--danger-color);
+    border-color: var(--darker-danger-color);
+    border-radius: var(--default-border-radius);
+    margin-left: 0;
+}
+
+.exit-button:hover {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}

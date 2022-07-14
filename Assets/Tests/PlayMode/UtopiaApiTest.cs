@@ -1,6 +1,6 @@
 using System.Collections;
 using NUnit.Framework;
-using src;
+using Source;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 

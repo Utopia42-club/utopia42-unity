@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <Style src="project://database/Assets/Resources/Ui/Profile/UserProfile.uss?fileID=7433441132597879392&amp;guid=c31bcd65131e47bba209b6de1368fd35&amp;type=3#UserProfile" />
+    <Style src="project://database/Assets/Resources/Ui/Menu/Menu.uss?fileID=7433441132597879392&amp;guid=05d3cf0ea89e4d348a04c6b7770a462c&amp;type=3#Menu" />
+    <ui:VisualElement name="root" class="utopia-background" style="flex-grow: 1; width: 100%; height: 100%;" />
+</ui:UXML>

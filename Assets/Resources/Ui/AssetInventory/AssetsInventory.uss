@@ -1,0 +1,40 @@
+.slot-container {
+    background-image: url('project://database/Assets/Images/Cell.png?fileID=2800000&guid=343203b5ff8d853dbae497531c270bab&type=3#Cell');
+    transition-duration: 200ms;
+    transition-delay: 10ms;
+    transition-property: padding;
+    padding: 3px;
+}
+
+#blockPacks{
+    width: 100%;    
+}
+#favorites{
+    width: 100%;
+}
+
+.slot-container:hover {
+    padding: 0;
+}
+
+.handy-bar {
+    padding-top: 6px;
+}
+
+.hammer-mode-area {
+    padding-bottom: 3px;
+    border-bottom-width: 1px;
+    border-color: var(--text-darker-color);
+}
+
+.selected-slot-border {
+    border-width: 5px;
+    border-color: var(--secondary-color);
+}
+
+.slots-wrapper{
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+}

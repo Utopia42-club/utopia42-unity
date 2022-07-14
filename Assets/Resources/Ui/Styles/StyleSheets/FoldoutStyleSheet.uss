@@ -1,0 +1,63 @@
+.unity-foldout__text {
+    color: var(--text-color);
+}
+
+.unity-foldout__text:active {
+    color: var(--text-color);
+}
+
+.unity-foldout {
+    margin: 10px 5px 0 5px;
+    padding: 0;
+    border-radius: var(--default-border-radius);
+    background-color: var(--primary-color);
+    height: auto;
+}
+
+.unity-foldout__toggle .unity-toggle__checkmark {
+    margin: 4px;
+    border-width: 0;
+    border-radius: 0;
+    align-self: center;
+    -unity-slice-left: 0;
+    -unity-slice-top: 0;
+    width: 12px;
+    height: 12px;
+    background-color: transparent;
+    background-image: url('/Assets/Resources/Icons/arrow_right.png');
+    -unity-background-image-tint-color: var(--text-color);
+}
+
+.unity-foldout__toggle .unity-text-element {
+    flex-grow: 1;
+    /*-unity-font-definition: var(--font-bold);*/
+    color: var(--text-color);
+}
+
+.unity-foldout__content {
+    margin-left: 0;
+    padding: 0 5px 5px 5px;
+}
+
+.unity-foldout__toggle > .unity-toggle__input:hover > .unity-toggle__checkmark {
+    -unity-background-image-tint-color: var(--text-color);
+    background-image: url('/Assets/Resources/Icons/arrow_right.png');
+}
+
+.unity-foldout__toggle > .unity-toggle__input:focus > .unity-toggle__checkmark {
+    background-image: url('/Assets/Resources/Icons/arrow_right.png');
+    -unity-background-image-tint-color: var(--text-color);
+}
+
+.unity-foldout__toggle > .unity-toggle__input:checked > .unity-toggle__checkmark,
+.unity-foldout__toggle > .unity-toggle__input:active > .unity-toggle__checkmark,
+.unity-foldout__toggle > .unity-toggle__input:focus:checked > .unity-toggle__checkmark {
+    background-image: url('/Assets/Resources/Icons/arrow_down.png');
+    -unity-background-image-tint-color: var(--text-color);
+}
+
+.unity-foldout__toggle > .unity-toggle__input:hover:checked > .unity-toggle__checkmark,
+.unity-foldout__toggle > .unity-toggle__input:hover:active > .unity-toggle__checkmark {
+    background-image: url('/Assets/Resources/Icons/arrow_down.png');
+    -unity-background-image-tint-color: var(--text-color);
+}

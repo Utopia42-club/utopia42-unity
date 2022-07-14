@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <ui:VisualElement name="topLeft" style="width: 25%; position: absolute; left: 5px; top: 5px; flex-grow: 1;" />
+    <ui:VisualElement name="topMiddle" style="width: 25%; position: absolute; left: 36%; top: 5px; flex-grow: 1;" />
+    <ui:VisualElement name="topRight" style="width: 25%; position: absolute; top: 5px; right: 5px; flex-grow: 1;" />
+    <ui:VisualElement name="middleLeft" style="width: 25%; position: absolute; left: 5px; top: 33%; flex-grow: 1;" />
+    <ui:VisualElement name="middleMiddle" style="width: 25%; position: absolute; left: 36%; top: 33%; flex-grow: 1;" />
+    <ui:VisualElement name="middleRight" style="width: 25%; position: absolute; top: 33%; right: 5px; flex-grow: 1;" />
+    <ui:VisualElement name="bottomLeft" style="width: 25%; position: absolute; left: 5px; bottom: 5px; flex-grow: 1;" />
+    <ui:VisualElement name="bottomMiddle" style="width: 25%; position: absolute; left: 36%; bottom: 5px; flex-grow: 1;" />
+    <ui:VisualElement name="bottomRight" style="width: 25%; position: absolute; right: 5px; bottom: 5px; flex-grow: 1;" />
+</ui:UXML>

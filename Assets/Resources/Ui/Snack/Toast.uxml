@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <ui:VisualElement name="root" style="height: 45px; min-height: 45px; width: 100%; min-width: 100%; justify-content: center;">
+        <ui:VisualElement name="panel" style="align-items: center; flex-direction: row; flex-grow: 0; -unity-text-align: upper-left; white-space: nowrap;">
+            <ui:VisualElement name="icon" style="background-color: rgba(255, 255, 255, 0); background-image: resource(&apos;Icons/error&apos;); width: 40px; height: 40px; min-width: 40px;" />
+            <ui:VisualElement name="spacer" style="width: 5px; height: 10px; min-width: 5px;" />
+            <ui:Label text="Label" display-tooltip-when-elided="true" name="message" style="flex-grow: 1; white-space: normal;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

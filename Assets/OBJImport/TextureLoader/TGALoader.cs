@@ -119,6 +119,8 @@ namespace Dummiesman
                 }
 
                 tex.Apply();
+                if (tex.width % 4 == 0 && tex.height % 4 == 0)
+                    tex.Compress(false);
                 return tex;
 
             }

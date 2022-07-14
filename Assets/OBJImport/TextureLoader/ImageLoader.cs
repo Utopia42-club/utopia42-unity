@@ -4,12 +4,9 @@
 */
 
 using System;
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using B83.Image.BMP;
+using UnityEngine;
 
 namespace Dummiesman
 {
@@ -68,6 +65,8 @@ namespace Dummiesman
 
                 Texture2D texture = new Texture2D(1, 1);
                 texture.LoadImage(buffer);
+                if (texture.width % 4 == 0 && texture.height % 4 == 0)
+                    texture.Compress(false);
                 return texture;
             }
             else if (format == TextureFormat.TGA)
@@ -88,7 +87,6 @@ namespace Dummiesman
         /// <param name="normalMap"></param>
         /// <param name="zipMap"></param>
         /// <returns></returns>
-
         private static byte[] LoadTextureBytes(string fn)
         {
             if (!File.Exists(fn))
@@ -121,8 +119,8 @@ namespace Dummiesman
                     break;
                 case ".crn":
                     byte[] crnBytes = textureBytes;
-                    ushort crnWidth = System.BitConverter.ToUInt16(new byte[2] {crnBytes[13], crnBytes[12]}, 0);
-                    ushort crnHeight = System.BitConverter.ToUInt16(new byte[2] {crnBytes[15], crnBytes[14]}, 0);
+                    ushort crnWidth = BitConverter.ToUInt16(new byte[2] {crnBytes[13], crnBytes[12]}, 0);
+                    ushort crnHeight = BitConverter.ToUInt16(new byte[2] {crnBytes[15], crnBytes[14]}, 0);
                     byte crnFormatByte = crnBytes[18];
 
                     var crnTextureFormat = UnityEngine.TextureFormat.RGB24;
@@ -159,11 +157,13 @@ namespace Dummiesman
             {
                 returnTex = ImageLoaderHelper.VerifyFormat(returnTex);
                 returnTex.name = Path.GetFileNameWithoutExtension(fn);
+                if (returnTex.width % 4 == 0 && returnTex.height % 4 == 0)
+                    returnTex.Compress(false);
             }
 
             return returnTex;
         }
-        
+
         public static Texture2D LoadTexture(string fn) // not thread safe
         {
             return LoadTextureFromBytes(LoadTextureBytes(fn), fn);

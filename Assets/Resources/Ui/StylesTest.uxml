@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <ui:VisualElement name="layer" class="utopia-background" style="flex-grow: 1; justify-content: center; align-items: center;">
+        <ui:Button text="Button" display-tooltip-when-elided="true" class="utopia-button-primary" />
+        <ui:Button text="Button" display-tooltip-when-elided="true" class="utopia-button-secondary" />
+        <ui:Button text="Button" display-tooltip-when-elided="true" class="utopia-button-accent" />
+        <ui:Button text="Button" display-tooltip-when-elided="true" class="utopia-basic-button-primary" />
+        <ui:Button text="Button" display-tooltip-when-elided="true" class="utopia-basic-button-secondary" />
+        <ui:Button text="Button" display-tooltip-when-elided="true" class="utopia-basic-button-accent" />
+        <ui:TextField picking-mode="Ignore" label="Text Field" value="filler text" text="filler text" style="width: 195px;" />
+        <ui:DropdownField label="Dropdown" index="-1" choices="System.Collections.Generic.List`1[System.String]" style="width: 195px;" />
+    </ui:VisualElement>
+</ui:UXML>

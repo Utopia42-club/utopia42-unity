@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <ui:VisualElement name="root" style="flex-grow: 1; align-items: flex-start; justify-content: flex-start; padding-left: 10px; padding-right: 10px; padding-top: 0; padding-bottom: 10px;">
+        <ui:Label text="Basic Shortcuts" display-tooltip-when-elided="true" style="-unity-font-style: bold; font-size: 16px;" />
+        <ui:VisualElement style="flex-direction: column; align-items: flex-start; left: 170px;">
+            <ui:VisualElement name="float" style="flex-direction: row; align-items: center; margin-left: 5px; margin-right: 5px; margin-top: 5px; margin-bottom: 5px; flex-grow: 1;">
+                <ui:Label text="Floating Mode: " display-tooltip-when-elided="true" style="width: 130px; -unity-text-align: upper-right; margin-top: 2px;" />
+                <Shortcut value="F" focusable="false" />
+            </ui:VisualElement>
+            <ui:VisualElement name="jump" style="flex-direction: row; align-items: center; margin-left: 5px; margin-right: 5px; margin-top: 5px; margin-bottom: 5px; flex-grow: 1;">
+                <ui:Label text="Jump: " display-tooltip-when-elided="true" enable-rich-text="false" style="width: 130px; -unity-text-align: upper-right; margin-top: 2px;" />
+                <Shortcut value="SPACE" focusable="false" />
+            </ui:VisualElement>
+            <ui:VisualElement name="light" style="flex-direction: row; align-items: center; margin-left: 5px; margin-right: 5px; margin-top: 5px; margin-bottom: 5px;">
+                <ui:Label text="Light: " display-tooltip-when-elided="true" style="width: 130px; -unity-text-align: upper-right; margin-top: 2px;" />
+                <Shortcut value="L" focusable="true" />
+            </ui:VisualElement>
+            <ui:VisualElement name="cameraView" style="flex-direction: row; align-items: center; margin-left: 5px; margin-right: 5px; margin-top: 5px; margin-bottom: 5px;">
+                <ui:Label text="Change View: " display-tooltip-when-elided="true" style="width: 130px; -unity-text-align: upper-right; margin-top: 2px;" />
+                <Shortcut value="B" focusable="true" />
+            </ui:VisualElement>
+            <ui:VisualElement name="esc" style="flex-direction: row; align-items: center; margin-left: 5px; margin-right: 5px; margin-top: 5px; margin-bottom: 5px;">
+                <ui:Label text="Unlock Cursor: " display-tooltip-when-elided="true" enable-rich-text="true" style="width: 130px; -unity-text-align: upper-right; margin-top: 2px;" />
+                <Shortcut value="ESC" focusable="true" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
