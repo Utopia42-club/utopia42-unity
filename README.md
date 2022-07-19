@@ -1,3 +1,18 @@
+# Utopia42
+Utopia42 is a decentralized Multiverse. Different organizations, communities and
+projects can deploy their own Metaverse and start to build their own 3D world. Utopia42
+was launched on Polygon as the first blockchain. The protocol is multichain and soon
+will use the Muon Network to support other blockchains.
+
+Utopia42 is not just a platform for entertainment. We invite organizations and
+businesses to offer their services to everyone on a borderless and decentralized
+platform. Utopia42 can provide real world people, groups and places a virtual platform
+for Universities, Virtual Offices, Museums, Libraries and more.
+
+Users on Utopia42 can have an unique ID and prove their uniqueness using BrightID.
+Users can browse all of the 'Verses using their own ID and avatar and all of the activities
+of the users can be attached to their IDs as soulbound tokens.
+
 # utopia42-unity
 Utopia42 Unity client
 
