@@ -236,7 +236,9 @@ namespace Source
                 UpdateLookDirection(movement);
 
             var floatOrJumpStateChanged =
-                playerState.floating != lastPerformedState?.floating || playerState.jump != lastPerformedState?.jump;
+                playerState.teleport != lastPerformedState?.teleport ||
+                playerState.floating != lastPerformedState?.floating ||
+                playerState.jump != lastPerformedState?.jump;
 
             if ((isAnotherPlayer || floatOrJumpStateChanged) && Avatar != null && ControllerEnabled)
             {
@@ -294,10 +296,10 @@ namespace Source
 
             if (state is {jump: true} && !PlayerState.Equals(state, lastPerformedState))
                 SetJump(true);
-            SetFreeFall(Mathf.Abs(state.velocityY) > Player.INSTANCE.MinFreeFallSpeed
-                        && !grounded && state is not {floating: true});
+            SetFreeFall(state is {floating: true} ||
+                        Mathf.Abs(state.velocityY) > Player.INSTANCE.MinFreeFallSpeed && !grounded);
 
-            SetGrounded(grounded);
+            SetGrounded(state is not {floating: true} && grounded);
             SetSpeed(xzVelocity.magnitude);
 
             SetLastPerformedState(state);
@@ -457,9 +459,10 @@ namespace Source
                 teleport = true;
             }
 
-            public static PlayerState CreateTeleportState(int network, string contract, string walletId, Vector3 position)
+            public static PlayerState CreateTeleportState(int network, string contract, string walletId,
+                Vector3 position)
             {
-                return new PlayerState(network ,contract,walletId, new SerializableVector3(position));
+                return new PlayerState(network, contract, walletId, new SerializableVector3(position));
             }
 
             public Vector3 GetPosition()
