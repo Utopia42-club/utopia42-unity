@@ -323,7 +323,8 @@ namespace Source
             remainingAvatarLoadAttempts = 3;
             loadingAvatarUrl = url;
 
-            AvatarLoader.INSTANCE.AddJob(gameObject, url, OnAvatarLoad, OnAvatarLoadFailure);
+            if (this != null)
+                AvatarLoader.INSTANCE.AddJob(gameObject, url, OnAvatarLoad, OnAvatarLoadFailure);
         }
 
         private void OnAvatarLoadFailure(FailureType failureType)
