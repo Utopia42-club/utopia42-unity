@@ -7,6 +7,8 @@ namespace Source.Ui
 {
     public class UxmlElement : VisualElement
     {
+        public static readonly StyleSheet GlobalStyleSheet = LoadStyleSheet("Ui/Styles/Styles");
+
         public UxmlElement(Type type)
             : this(ResourcePaths.ForType(type))
         {
@@ -49,7 +51,7 @@ namespace Source.Ui
                 style.height = height;
             }
         }
-        
+
         public static StyleSheet LoadStyleSheet(Type type)
         {
             return LoadStyleSheet(ResourcePaths.ForType(type));

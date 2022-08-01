@@ -98,6 +98,14 @@
     opacity: 0.8;
 }
 
+.utopia-primary-background{
+    background-color: var(--primary-color);
+}
+
+.utopia-accent-background{
+    background-color: var(--accent-color);
+}
+
 .utopia-background {
     background-color: var(--background-color);
 }

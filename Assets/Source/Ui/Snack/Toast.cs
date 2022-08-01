@@ -6,7 +6,7 @@ namespace Source.Ui.Snack
 {
     public class Toast : UxmlElement
     {
-        public Toast(string message, ToastType type) : base("Ui/Snack/Toast")
+        public Toast(string message, ToastType type) : base(typeof(Toast))
         {
             var msg = this.Q<Label>("message");
             msg.text = message;
@@ -26,7 +26,7 @@ namespace Source.Ui.Snack
                 new SnackConfig(this)
             );
         }
-        
+
         public SnackController ShowWithCloseButtonDisabled()
         {
             return SnackService.INSTANCE.Show(

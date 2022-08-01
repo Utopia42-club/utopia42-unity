@@ -29,7 +29,7 @@ namespace Source.Ui.Map
             var currentLocationBox = this.Q<VisualElement>("currentLocationBox");
             currentLocationBox.tooltip = "Click to copy";
             currentLocationBox.AddManipulator(new ToolTipManipulator(Side.TopLeft));
-            currentLocationBox.RegisterCallback<MouseMoveEvent>(evt => GameManager.INSTANCE.CopyPositionLink());
+            currentLocationBox.RegisterCallback<MouseDownEvent>(evt => GameManager.INSTANCE.CopyPositionLink());
 
             style.position = Position.Absolute;
             style.overflow = Overflow.Visible;
