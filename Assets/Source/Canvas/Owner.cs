@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Source.Configuration;
 using Source.Model;
 using Source.Service;
 using Source.Service.Auth;
@@ -91,7 +92,7 @@ namespace Source.Canvas
                 currentProfile = profile;
                 profileIcon.SetUrl(profile.imageUrl == null
                     ? null
-                    : Constants.ApiURL + "/profile/image/" + profile.imageUrl);
+                    : Configurations.Instance.apiURL + "/profile/image/" + profile.imageUrl);
                 label.SetText(profile.name);
             }
         }

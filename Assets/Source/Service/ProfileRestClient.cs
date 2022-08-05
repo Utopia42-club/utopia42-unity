@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using Source.Configuration;
 using Source.Model;
 using Source.Utils;
 using UnityEngine.Networking;
@@ -9,7 +10,7 @@ namespace Source.Service
     public class ProfileRestClient
     {
         public static readonly ProfileRestClient INSTANCE = new();
-        private readonly string baseUrl = $"{Constants.ApiURL}/profile";
+        private string baseUrl => $"{Configurations.Instance.apiURL}/profile";
 
         public IEnumerator GetProfile(string walletId, Action<Profile> consumer, Action failed)
         {

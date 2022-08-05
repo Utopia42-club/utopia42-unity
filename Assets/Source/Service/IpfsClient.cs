@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Source.Configuration;
 using Source.Utils;
 using UnityEngine.Networking;
 
@@ -17,7 +18,7 @@ namespace Source.Service
 
         public static string ToUrl(string key)
         {
-            return Constants.IpfsServerURL + "/cat?arg=/ipfs/" + key;
+            return Configurations.Instance.ipfsServerURL + "/cat?arg=/ipfs/" + key;
         }
 
         public IEnumerator DownloadJson<TR>(string key, Action<TR> onSuccess, Action onFailure)
@@ -41,7 +42,7 @@ namespace Source.Service
         private static IEnumerator Upload(List<IMultipartFormSection> form, Action<string> onSuccess,
             Action onFailure)
         {
-            var url = Constants.IpfsServerURL + "/add?stream-channels=true&progress=false";
+            var url = Configurations.Instance.ipfsServerURL + "/add?stream-channels=true&progress=false";
             using (var webRequest = UnityWebRequest.Post(url, form))
             {
                 yield return RestClient.ExecuteRequest<IpfsResponse>(webRequest,

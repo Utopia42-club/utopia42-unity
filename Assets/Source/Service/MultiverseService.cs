@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Source.Configuration;
 using Source.Model;
 using Source.Utils;
 using Source.Utils.Tasks;
@@ -9,8 +10,8 @@ namespace Source.Service
 {
     public class MultiverseService
     {
-        public static MultiverseService Instance = new();
-        private readonly string baseUrl = Constants.ApiURL + "/world";
+        public static readonly MultiverseService Instance = new();
+        private string baseUrl => Configurations.Instance.apiURL + "/world";
         private readonly CachingTask<List<MetaverseNetwork>> networksTask;
 
         private MultiverseService()

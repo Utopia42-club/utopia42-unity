@@ -146,13 +146,13 @@ namespace Source.Service.Auth
                 WebBridge.CallAsync<SerializableVector3>("getStartingPosition", "", (pos) =>
                 {
                     GameManager.INSTANCE.SessionChanged(pos?.ToVector3() ?? startingPosition);
-                    BrowserConnector.INSTANCE.ReportLoggedInUser(session);
+                    BrowserConnector.INSTANCE.ReportSession(session);
                 });
             }
             else
             {
                 GameManager.INSTANCE.SessionChanged(startingPosition);
-                BrowserConnector.INSTANCE.ReportLoggedInUser(session);
+                BrowserConnector.INSTANCE.ReportSession(session);
             }
         }
 

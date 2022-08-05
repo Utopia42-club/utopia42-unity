@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Source.Configuration;
 using Source.Model;
 using Source.Service.Auth;
 using Source.Service.Ethereum;
@@ -15,7 +16,7 @@ namespace Source.Service
     {
         // private readonly Dictionary<long, Land> ignoredLands = new Dictionary<long, Land>();
         private string landUrl =>
-            $"{Constants.ApiURL}/world/lands?network={AuthService.Instance.CurrentContract.networkId}" +
+            $"{Configurations.Instance.apiURL}/world/lands?network={AuthService.Instance.CurrentContract.networkId}" +
             $"&contract={AuthService.Instance.CurrentContract.address}";
 
         private readonly HashSet<long> ignoredLands = new();

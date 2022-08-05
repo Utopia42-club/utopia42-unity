@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Source.Canvas;
+using Source.Configuration;
 using Source.Service;
 using Source.Service.Auth;
 using Source.Ui.Utils;
@@ -116,7 +117,7 @@ namespace Source.Ui.Profile
                     });
                 }, () => { });
                 designerButton.clickable = new Clickable(() => { });
-                designerButton.clickable.clicked += () => Application.OpenURL(Constants.AvatarDesignerURL);
+                designerButton.clickable.clicked += () => Application.OpenURL(Configurations.Instance.avatarDesignerURL);
             }
             else
             {

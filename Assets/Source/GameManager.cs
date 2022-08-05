@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Source.Canvas;
+using Source.Configuration;
 using Source.Model;
 using Source.Service;
 using Source.Service.Auth;
@@ -332,7 +333,7 @@ namespace Source
         {
             var contract = AuthService.Instance.CurrentContract;
             var currentPosition = Player.INSTANCE.GetPosition();
-            var url = Constants.WebAppBaseURL +
+            var url = Configurations.Instance.webAppBaseURL +
                       $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}&network={contract.networkId}&contract={contract.address}";
 
             if (WebBridge.IsPresent())

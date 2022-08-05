@@ -3,23 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
-using Source.Canvas;
 using Source.Model;
-using Source.Service;
 using Source.Service.Auth;
-using Source.Ui.Login;
-using Source.Ui.Menu;
 using UnityEngine;
 using UnityEngine.Events;
-using Object = System.Object;
 
 namespace Source
 {
     public class WebBridge : MonoBehaviour
     {
-        private static Dictionary<string, Action<string>> responseListeners = new Dictionary<string, Action<string>>();
+        private static Dictionary<string, Action<string>> responseListeners = new();
 
-        private static Dictionary<string, Action> unityToWebResponseTeardownLogics = new Dictionary<string, Action>();
+        private static Dictionary<string, Action> unityToWebResponseTeardownLogics = new();
 
         [DllImport("__Internal")]
         private static extern string callOnBridge(string functionName, string parameter);
@@ -90,7 +85,7 @@ namespace Source
         {
             return GUIUtility.systemCopyBuffer;
         }
-        
+
         public void Request(string req)
         {
             var request = JsonConvert.DeserializeObject<WebToUnityRequest>(req);

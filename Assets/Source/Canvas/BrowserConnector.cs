@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Source.Configuration;
 using Source.Model;
 using Source.Service.Auth;
 using Source.Ui.Dialog;
@@ -99,9 +100,9 @@ namespace Source.Canvas
             if (WebBridge.IsPresent()) WebBridge.Call<object>("reportGameState", state.ToString());
         }
 
-        public void ReportLoggedInUser(Session session)
+        public void ReportSession(Session session)
         {
-            if (WebBridge.IsPresent()) WebBridge.Call<object>("reportLoggedInUser", session);
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("reportSession", session);
         }
 
         public void ReportPlayerState(AvatarController.PlayerState state)
@@ -114,7 +115,7 @@ namespace Source.Canvas
             var wallet = AuthService.Instance.WalletId();
             var contract = AuthService.Instance.CurrentContract;
             currentUrl =
-                $"{Constants.WebAppRpcURL}?method={method}&wallet={wallet}&network={contract.networkId}&contract={contract.address}";
+                $"{Configurations.Instance.webAppRpcURL}?method={method}&wallet={wallet}&network={contract.networkId}&contract={contract.address}";
             if (parameters != null)
                 currentUrl = $"{currentUrl}&param={parameters}";
             Application.OpenURL(currentUrl);
