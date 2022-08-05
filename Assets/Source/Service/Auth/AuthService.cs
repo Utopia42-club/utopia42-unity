@@ -70,7 +70,7 @@ namespace Source.Service.Auth
         {
             var detail = new ConnectionDetail
             {
-                wallet = WalletId(),
+                wallet = session?.WalletId,
                 network = session?.Network ?? -1,
                 contractAddress = CurrentContract?.address
             };
