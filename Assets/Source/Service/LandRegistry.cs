@@ -189,12 +189,13 @@ namespace Source.Service
         private static IEnumerator LoadLandsPaginated(string url, List<Land> lands, Action onFailed)
         {
             const int pageSize = 200;
-            url = url + "&pageSize=" + pageSize;
+            url = $"{url}&pageSize={pageSize}";
             var hasNext = true;
             while (hasNext)
             {
                 var failed = false;
-                yield return RestClient.Post<Land, List<Land>>(url, lands.Count == 0 ? new Land() : lands.Last(),
+                yield return RestClient.Post<Land, List<Land>>(
+                    lands.Count == 0 ? url : $"{url}&lastLandId={lands.Last().id}", null,
                     response =>
                     {
                         if (response != null)
