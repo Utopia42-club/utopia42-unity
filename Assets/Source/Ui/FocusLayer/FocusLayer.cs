@@ -9,6 +9,8 @@ namespace Source.Ui.FocusLayer
 
         private VisualElement root;
 
+        private VisualElement fe;
+
         private void Start()
         {
             Instance = this;
@@ -29,9 +31,10 @@ namespace Source.Ui.FocusLayer
             });
         }
 
-        public bool IsFocused()
+        public bool IsTextInputFocused()
         {
-            return root.focusController.focusedElement == root;
+            return root.focusController.focusedElement != null &&
+                  root.focusController.focusedElement is TextField;
         }
     }
 }

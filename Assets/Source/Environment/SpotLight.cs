@@ -18,7 +18,7 @@ namespace Source.Environment
 
         private void Update()
         {
-            if (GameManager.INSTANCE.IsGameLayerFocused() && Input.GetButtonDown("Light"))
+            if (!GameManager.INSTANCE.IsTextInputFocused() && Input.GetButtonDown("Light"))
                 spotLight.range = spotLight.range > 0 ? 0 : 20;
         }
     }

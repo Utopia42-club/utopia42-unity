@@ -223,7 +223,7 @@ namespace Source.MetaBlocks
         {
             if (!PropertyEditor.INSTANCE.IsActive)
                 onDone.Invoke();
-            else if (GameManager.INSTANCE.IsGameLayerFocused())
+            else if (!GameManager.INSTANCE.IsTextInputFocused())
                 PropertyEditor.INSTANCE.Hide();
         }
 

@@ -84,7 +84,7 @@ namespace Source
                 else
                     ReturnToGame();
             }
-            else if (state == State.PLAYING && IsGameLayerFocused())
+            else if (state == State.PLAYING && !IsTextInputFocused())
             {
                 if (IsControlKeyDown())
                 {
@@ -595,9 +595,9 @@ namespace Source
             Loading.INSTANCE.ShowConnectionError();
         }
 
-        public bool IsGameLayerFocused()
+        public bool IsTextInputFocused()
         {
-            return FocusLayer.Instance != null && FocusLayer.Instance.IsFocused();
+            return FocusLayer.Instance == null || FocusLayer.Instance.IsTextInputFocused();
         }
 
         public void Exit()
