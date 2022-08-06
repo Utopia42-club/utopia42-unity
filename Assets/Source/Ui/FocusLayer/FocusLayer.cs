@@ -9,8 +9,6 @@ namespace Source.Ui.FocusLayer
 
         private VisualElement root;
 
-        private VisualElement fe;
-
         private void Start()
         {
             Instance = this;
