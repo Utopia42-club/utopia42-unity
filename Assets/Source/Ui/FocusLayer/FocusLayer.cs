@@ -31,8 +31,7 @@ namespace Source.Ui.FocusLayer
 
         public bool IsTextInputFocused()
         {
-            return root.focusController.focusedElement != null &&
-                  root.focusController.focusedElement is TextField;
+            return root.focusController.focusedElement != null && root.focusController.focusedElement is TextField;
         }
     }
 }
