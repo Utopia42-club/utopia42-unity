@@ -25,7 +25,6 @@ namespace Source.Ui.AssetInventory.Assets
             searchField = this.Q<TextField>("searchField");
             searchField.multiline = false;
             TextFields.SetPlaceHolderForTextField(searchField, "Search");
-            TextFields.RegisterUiEngagementCallbacksForTextField(searchField);
             searchField.RegisterValueChangedCallback(new DebounceEventListener<ChangeEvent<string>>
                 (inventory, 0.6f, e => FilterAssets()).Deligate);
         }

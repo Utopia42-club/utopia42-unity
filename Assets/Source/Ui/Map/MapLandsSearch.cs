@@ -39,7 +39,6 @@ namespace Source.Ui.Map
 
             searchField = this.Q<TextField>("searchField");
             TextFields.SetPlaceHolderForTextField(searchField, "Search");
-            TextFields.RegisterUiEngagementCallbacksForTextField(searchField);
 
             mapLandsList = new MapLandsList(map);
             mapLandsList.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());

@@ -3,18 +3,17 @@ using System.Linq;
 using Source;
 using Source.Model;
 using Source.Service.Auth;
-using Source.Ui;
 using Source.Ui.Dialog;
+using Source.Ui.FocusLayer;
 using Source.Ui.LoadingLayer;
 using Source.Ui.Map;
 using Source.Ui.Menu;
 using Source.Ui.Profile;
 using Source.Ui.TabPane;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UIElements;
 
-public class Menu : MonoBehaviour, UiProvider
+public class Menu : MonoBehaviour
 {
     private static Menu instance;
     private VisualElement root;
@@ -34,6 +33,7 @@ public class Menu : MonoBehaviour, UiProvider
             gameManager.stateChange.AddListener(OnGameStateChanged);
             OnGameStateChanged(gameManager.GetState());
         }
+
         if (gameManager.GetState() != GameManager.State.MENU)
             return;
         root = GetComponent<UIDocument>().rootVisualElement;
@@ -69,17 +69,17 @@ public class Menu : MonoBehaviour, UiProvider
 
     private void OnGameStateChanged(GameManager.State state)
     {
-        switch (state)
+        if (state == GameManager.State.MENU)
         {
-            case GameManager.State.MENU:
-            {
-                gameObject.SetActive(true);
-                break;
-            }
-            default:
-                tabPane?.CloseCurrent();
-                gameObject.SetActive(false);
-                break;
+            gameObject.SetActive(true);
+            tabPane?.SetEnabled(true);
+            root.SetEnabled(true);
+        }
+        else
+        {
+            gameObject.SetActive(false);
+            tabPane?.CloseCurrent();
+            root?.SetEnabled(false);
         }
     }
 
@@ -113,11 +113,6 @@ public class Menu : MonoBehaviour, UiProvider
         closeButton.style.marginRight = 0;
         closeButton.clickable.clicked += () => gameManager.ReturnToGame();
         tabPane.AddRightAction(closeButton);
-    }
-
-    public VisualElement VisualElement()
-    {
-        return root;
     }
 
     public static Menu INSTANCE => instance;

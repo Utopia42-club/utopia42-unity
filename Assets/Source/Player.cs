@@ -205,7 +205,7 @@ namespace Source
 
         private void GetInputs()
         {
-            if (GameManager.INSTANCE.IsUiEngaged())
+            if (!GameManager.INSTANCE.IsGameLayerFocused())
                 return;
             CtrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             CtrlDown = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);

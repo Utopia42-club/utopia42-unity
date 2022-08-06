@@ -28,7 +28,7 @@ namespace Source
         private void Update()
         {
             var focusable = Player.INSTANCE.FocusedFocusable;
-            if (!GameManager.INSTANCE.IsUiEngaged() && Input.GetKeyDown(KeyCode.E) && IsActive
+            if (GameManager.INSTANCE.IsGameLayerFocused() && Input.GetKeyDown(KeyCode.E) && IsActive
                 && (focusable == null || focusable is ChunkFocusable or MetaFocusable {Focused: false}))
                 Hide();
         }

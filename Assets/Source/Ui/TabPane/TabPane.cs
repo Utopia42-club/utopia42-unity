@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
@@ -6,6 +7,8 @@ namespace Source.Ui.TabPane
 {
     public class TabPane : UxmlElement
     {
+        public event Action<TabConfiguration, VisualElement> TabClosed = (t, v) => { };
+        public event Action<TabConfiguration, VisualElement> TabOpened = (t, v) => { };
         private readonly TemplateContainer root;
         private readonly List<TabConfiguration> tabConfigs;
         private readonly bool useCache;
@@ -17,7 +20,7 @@ namespace Source.Ui.TabPane
         private readonly VisualElement rightActions;
         private readonly Dictionary<int, VisualElement> tabBodiesCache = new();
 
-        public TabPane(List<TabConfiguration> tabConfigs, bool useCache = true) 
+        public TabPane(List<TabConfiguration> tabConfigs, bool useCache = true)
             : base(typeof(TabPane), true)
         {
             this.tabConfigs = tabConfigs;
@@ -60,13 +63,11 @@ namespace Source.Ui.TabPane
                 button.RemoveFromClassList("selected-tab");
             tabButtons[index].AddToClassList("selected-tab");
             currentTab = index;
-            if (currentTab != -1)
-            {
-                var e = new TabOpenEvent(this);
-                tabConfigs[currentTab].onTabOpen?.Invoke(e);
-                if (GetCurrentTabContent() is TabOpenListener listener)
-                    listener.OnTabOpen(e);
-            }
+            var e = new TabOpenEvent(this);
+            tabConfigs[currentTab].onTabOpen?.Invoke(e);
+            if (tabBodyContent is TabOpenListener listener)
+                listener.OnTabOpen(e);
+            TabOpened.Invoke(config, tabBodyContent);
         }
 
         public VisualElement GetTabBody()
@@ -95,8 +96,10 @@ namespace Source.Ui.TabPane
             {
                 var e = new TabCloseEvent(this);
                 tabConfigs[currentTab].onTabClose?.Invoke(e);
-                if (GetCurrentTabContent() is TabCloseListener listener)
+                var currentTabContent = GetCurrentTabContent();
+                if (currentTabContent is TabCloseListener listener)
                     listener.OnTabClose(e);
+                TabClosed.Invoke(tabConfigs[currentTab], currentTabContent);
             }
 
             tabBody.Clear();

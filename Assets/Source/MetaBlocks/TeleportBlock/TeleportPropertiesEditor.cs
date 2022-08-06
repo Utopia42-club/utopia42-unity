@@ -30,10 +30,6 @@ namespace Source.MetaBlocks.TeleportBlock
             posX = this.Q<TextField>("x");
             posY = this.Q<TextField>("y");
             posZ = this.Q<TextField>("z");
-            TextFields.RegisterUiEngagementCallbacksForTextField(contract);
-            TextFields.RegisterUiEngagementCallbacksForTextField(posX);
-            TextFields.RegisterUiEngagementCallbacksForTextField(posY);
-            TextFields.RegisterUiEngagementCallbacksForTextField(posZ);
             network.choices.Clear();
             var loading = LoadingLayer.Show(this);
             World.INSTANCE.StartCoroutine(MultiverseService.Instance.GetAllNetworks((nets) =>
@@ -129,8 +125,6 @@ namespace Source.MetaBlocks.TeleportBlock
         public void SetDestinationLabel(string text)
         {
             this.Q<Label>("destinationLabel").text = text;
-            var l = new List<VisualElement>(new List<VisualElement>(network.Children())[1].Children());
-            Debug.Log(string.Join(", ", new List<string>(l[1].GetClasses())));
         }
         
     }

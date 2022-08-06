@@ -8,6 +8,7 @@ using Source.Model;
 using Source.Service;
 using Source.Service.Auth;
 using Source.Ui.Dialog;
+using Source.Ui.FocusLayer;
 using Source.Ui.Map;
 using Source.Ui.Profile;
 using Source.Ui.Snack;
@@ -28,9 +29,6 @@ namespace Source
             LOGIN,
             INITIAL
         }
-
-        private readonly List<int> engagedUIs = new();
-
         public readonly UnityEvent<State> stateChange = new();
         public readonly List<Func<State, State, bool>> stateGuards = new();
 
@@ -86,7 +84,7 @@ namespace Source
                 else
                     ReturnToGame();
             }
-            else if (state == State.PLAYING && !IsUiEngaged())
+            else if (state == State.PLAYING && IsGameLayerFocused())
             {
                 if (IsControlKeyDown())
                 {
@@ -218,6 +216,7 @@ namespace Source
             if (worldInited || forceToast)
                 new Toast(msg, Toast.ToastType.Warning).ShowWithCloseButtonDisabled();
         }
+
         public void Teleport(int networkId, string contract, Vector3 position)
         {
             var current = AuthService.Instance.CurrentContract;
@@ -596,20 +595,9 @@ namespace Source
             Loading.INSTANCE.ShowConnectionError();
         }
 
-        public int EngageUi()
+        public bool IsGameLayerFocused()
         {
-            engagedUIs.Add(uiId);
-            return uiId++;
-        }
-
-        public void UnEngageUi(int id)
-        {
-            engagedUIs.Remove(id);
-        }
-
-        public bool IsUiEngaged()
-        {
-            return engagedUIs.Count != 0;
+            return FocusLayer.Instance != null && FocusLayer.Instance.IsFocused();
         }
 
         public void Exit()
