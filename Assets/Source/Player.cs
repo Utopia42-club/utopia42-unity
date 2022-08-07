@@ -36,7 +36,8 @@ namespace Source
         [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] public GameObject avatarPrefab;
         [SerializeField] private float minFreeFallSpeed = 1;
-
+        [SerializeField] public AnimationClip[] customAvatarAnimations;
+        
         public BlockType SelectedBlockType { private set; get; }
 
         private bool sprinting;
@@ -109,6 +110,8 @@ namespace Source
 
         public float Horizontal { get; private set; }
         public float Vertical { get; private set; }
+
+        private int CustomAnimationNumber;
         public Focusable FocusedFocusable { get; private set; }
         public Vector3Int PossiblePlaceBlockPosInt { get; private set; }
         public Vector3 PossiblePlaceMetaBlockPos { get; private set; }
@@ -216,6 +219,7 @@ namespace Source
             CtrlUp = Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
+            CustomAnimationNumber = GetCustomAnimationNumber();
 
             if (Input.GetButtonDown("Sprint"))
                 sprinting = true;
@@ -234,6 +238,14 @@ namespace Source
 
             if (Input.GetButtonDown("Toggle View"))
                 ToggleViewMode();
+        }
+
+        private int GetCustomAnimationNumber()
+        {
+            if (viewMode == ViewMode.FIRST_PERSON) return AvatarController.NoAnimation;
+            if (Input.GetButton("Avatar Custom Animation 1")) return 1;
+            if (Input.GetButton("Avatar Custom Animation 2")) return 2;
+            return AvatarController.NoAnimation;
         }
 
         private void FixedUpdate()
@@ -284,7 +296,7 @@ namespace Source
                 contract.networkId, contract.address,
                 AuthService.Instance.WalletId(),
                 new SerializableVector3(pos), floating, jumpRequest, sprinting,
-                Mathf.Abs(reportVelocityY), false));
+                Mathf.Abs(reportVelocityY), false, CustomAnimationNumber));
         }
 
         public void DoReloadAvatar(string avatarUrl)

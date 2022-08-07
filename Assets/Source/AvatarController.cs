@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using ReadyPlayerMe;
 using Source.Canvas;
 using Source.MetaBlocks;
@@ -13,6 +15,8 @@ namespace Source
 {
     public class AvatarController : MonoBehaviour
     {
+        public const int NoAnimation = 0;
+
         private const string DefaultAvatarUrl =
             "https://d1a370nemizbjq.cloudfront.net/8b6189f0-c999-4a6a-bffc-7f68d66b39e6.glb"; //FIXME Configuration?
         // "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb";
@@ -44,6 +48,7 @@ namespace Source
         private int animIDGrounded;
         private int animIDJump;
         private int animIDFreeFall;
+        private int animIDCustom;
 
         private IEnumerator teleportCoroutine;
 
@@ -66,6 +71,7 @@ namespace Source
             animIDGrounded = Animator.StringToHash("Grounded");
             animIDJump = Animator.StringToHash("Jump");
             animIDFreeFall = Animator.StringToHash("FreeFall");
+            animIDCustom = Animator.StringToHash("Custom");
             StartCoroutine(UpdateAnimationCoroutine());
         }
 
@@ -235,17 +241,18 @@ namespace Source
             if (Avatar != null)
                 UpdateLookDirection(movement);
 
-            var floatOrJumpStateChanged =
+            var forceAnimateAndReport =
+                playerState.customAnimationNumber != NoAnimation ||
                 playerState.teleport != lastPerformedState?.teleport ||
                 playerState.floating != lastPerformedState?.floating ||
                 playerState.jump != lastPerformedState?.jump;
 
-            if ((isAnotherPlayer || floatOrJumpStateChanged) && Avatar != null && ControllerEnabled)
+            if ((isAnotherPlayer || forceAnimateAndReport) && Avatar != null && ControllerEnabled)
             {
                 UpdateAnimation();
             }
 
-            if (!isAnotherPlayer && floatOrJumpStateChanged)
+            if (!isAnotherPlayer && forceAnimateAndReport)
                 ReportToServer();
         }
 
@@ -287,6 +294,9 @@ namespace Source
         {
             var xzVelocity = new Vector3(movement.x, 0, movement.z).normalized *
                              (state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed);
+
+            SetCustomAnimation(state?.customAnimationNumber ?? NoAnimation);
+
             var grounded = controller.isGrounded;
             if (grounded)
             {
@@ -391,6 +401,24 @@ namespace Source
             Avatar = container;
         }
 
+        private void SetCustomAnimation(int animationNumber)
+        {
+            if (animationNumber == NoAnimation)
+            {
+                animator.SetBool(animIDCustom, false);
+                return;
+            }
+
+            var aoc = new AnimatorOverrideController(animator.runtimeAnimatorController);
+            var anims = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            foreach (var animationClip in Player.INSTANCE.customAvatarAnimations)
+                anims.Add(new KeyValuePair<AnimationClip, AnimationClip>(animationClip,
+                    Player.INSTANCE.customAvatarAnimations[animationNumber - 1]));
+            aoc.ApplyOverrides(anims);
+            animator.runtimeAnimatorController = aoc;
+            animator.SetBool(animIDCustom, true);
+        }
+
         private void SetJump(bool jump)
         {
             animator.SetBool(animIDJump, jump);
@@ -433,10 +461,11 @@ namespace Source
             public bool sprinting;
             public float velocityY;
             public bool teleport;
+            public int customAnimationNumber;
 
             public PlayerState(int network, string contract, string walletId, SerializableVector3 position,
                 bool floating, bool jump,
-                bool sprinting, float velocityY, bool teleport)
+                bool sprinting, float velocityY, bool teleport, int customAnimationNumber = 0)
             {
                 // rid = random.Next(0, int.MaxValue);
                 rid = Guid.NewGuid().ToString();
@@ -449,6 +478,7 @@ namespace Source
                 this.sprinting = sprinting;
                 this.velocityY = velocityY;
                 this.teleport = teleport;
+                this.customAnimationNumber = customAnimationNumber;
             }
 
             private PlayerState(int network, string contract, string walletId, SerializableVector3 position)
