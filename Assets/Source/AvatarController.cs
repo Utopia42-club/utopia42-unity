@@ -55,6 +55,7 @@ namespace Source
         private const int Precision = 5;
         private static readonly float FloatPrecision = Mathf.Pow(10, -Precision);
         private Vector3 movement;
+        private Vector3 previousMovement;
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private GameObject namePanel;
         private bool controllerDisabled;
@@ -126,10 +127,9 @@ namespace Source
                     .magnitude;
             controller.Move(m);
 
-            if (Avatar != null && xzMovementMagnitude < FloatPrecision &&
-                PlayerState.Equals(state, lastPerformedState)
-                && Time.fixedUnscaledTimeAsDouble -
-                lastPerformedStateTime > AnimationUpdateRate)
+            if (Avatar != null && xzMovementMagnitude < FloatPrecision
+                               && PlayerState.Equals(state, lastPerformedState)
+                               && Time.fixedUnscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate)
                 SetSpeed(0);
 
             if (Avatar != null && controller.isGrounded)
@@ -237,6 +237,7 @@ namespace Source
             }
 
             var pos = state.GetPosition();
+            previousMovement = movement;
             movement = pos - (lastPerformedState?.GetPosition() ?? pos);
             if (Avatar != null)
                 UpdateLookDirection(movement);
@@ -252,7 +253,9 @@ namespace Source
                 UpdateAnimation();
             }
 
-            if (!isAnotherPlayer && forceAnimateAndReport)
+            if (!isAnotherPlayer && (forceAnimateAndReport ||
+                                     movement.magnitude > FloatPrecision &&
+                                     previousMovement.magnitude < FloatPrecision))
                 ReportToServer();
         }
 
@@ -278,7 +281,7 @@ namespace Source
                 }
 
                 if (state != null && Time.unscaledTimeAsDouble - lastReportedTime >
-                    (PlayerState.Equals(lastReportedState, state)
+                    (PlayerState.Equals(lastReportedState, state, true)
                         ? MaxReportDelay
                         : AnimationUpdateRate))
                     ReportToServer();
@@ -292,9 +295,6 @@ namespace Source
 
         private void UpdateAnimation()
         {
-            var xzVelocity = new Vector3(movement.x, 0, movement.z).normalized *
-                             (state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed);
-
             SetCustomAnimation(state?.customAnimationNumber ?? NoAnimation);
 
             var grounded = controller.isGrounded;
@@ -310,7 +310,8 @@ namespace Source
                         Mathf.Abs(state.velocityY) > Player.INSTANCE.MinFreeFallSpeed && !grounded);
 
             SetGrounded(state is not {floating: true} && grounded);
-            SetSpeed(xzVelocity.magnitude);
+            SetSpeed(movement.magnitude < FloatPrecision ? 0 :
+                state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed);
 
             SetLastPerformedState(state);
         }
@@ -439,6 +440,11 @@ namespace Source
             animator.SetFloat(animIDSpeed, speed);
         }
 
+        private float? GetSpeed()
+        {
+            return Avatar == null ? null : animator.GetFloat(animIDSpeed);
+        }
+
         private void OnDestroy()
         {
             if (Avatar != null)
@@ -452,8 +458,6 @@ namespace Source
         public class PlayerState
         {
             public string rid;
-            public int network;
-            public string contract;
             public string walletId;
             public SerializableVector3 position;
             public bool floating;
@@ -463,14 +467,12 @@ namespace Source
             public bool teleport;
             public int customAnimationNumber;
 
-            public PlayerState(int network, string contract, string walletId, SerializableVector3 position,
+            public PlayerState(string walletId, SerializableVector3 position,
                 bool floating, bool jump,
                 bool sprinting, float velocityY, bool teleport, int customAnimationNumber = 0)
             {
                 // rid = random.Next(0, int.MaxValue);
                 rid = Guid.NewGuid().ToString();
-                this.network = network;
-                this.contract = contract;
                 this.walletId = walletId;
                 this.position = position;
                 this.floating = floating;
@@ -481,10 +483,8 @@ namespace Source
                 this.customAnimationNumber = customAnimationNumber;
             }
 
-            private PlayerState(int network, string contract, string walletId, SerializableVector3 position)
+            private PlayerState(string walletId, SerializableVector3 position)
             {
-                this.network = network;
-                this.contract = contract;
                 this.walletId = walletId;
                 this.position = position;
                 teleport = true;
@@ -493,7 +493,7 @@ namespace Source
             public static PlayerState CreateTeleportState(int network, string contract, string walletId,
                 Vector3 position)
             {
-                return new PlayerState(network, contract, walletId, new SerializableVector3(position));
+                return new PlayerState(walletId, new SerializableVector3(position));
             }
 
             public Vector3 GetPosition()
@@ -501,17 +501,18 @@ namespace Source
                 return position.ToVector3();
             }
 
-            public static bool Equals(PlayerState s1, PlayerState s2)
+            public static bool Equals(PlayerState s1, PlayerState s2, bool ignoreId = false)
             {
                 return s1 != null
                        && s2 != null
                        && s1.walletId == s2.walletId
-                       && s1.rid == s2.rid
+                       && (ignoreId || s1.rid == s2.rid)
                        && Equals(s1.position, s2.position)
                        && s1.floating == s2.floating
                        && s1.jump == s2.jump
                        && s1.sprinting == s2.sprinting
                        && s1.teleport == s2.teleport
+                       && s1.customAnimationNumber == s2.customAnimationNumber
                        && Math.Abs(s1.velocityY - s2.velocityY) < FloatPrecision;
             }
         }

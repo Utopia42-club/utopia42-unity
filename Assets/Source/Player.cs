@@ -290,10 +290,8 @@ namespace Source
 
             playerPos = Vectors.TruncateFloor(pos);
 
-            var contract = AuthService.Instance.CurrentContract;
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
                 // AvatarId, // test only
-                contract.networkId, contract.address,
                 AuthService.Instance.WalletId(),
                 new SerializableVector3(pos), floating, jumpRequest, sprinting,
                 Mathf.Abs(reportVelocityY), false, CustomAnimationNumber));
