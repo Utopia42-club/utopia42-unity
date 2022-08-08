@@ -81,8 +81,7 @@ namespace Source
         {
             var s = JsonConvert.DeserializeObject<AvatarController.PlayerState>(state);
             var contract = AuthService.Instance.CurrentContract;
-            if (s?.walletId == null || s.network != contract.networkId ||
-                !string.Equals(s.contract, contract.address, StringComparison.OrdinalIgnoreCase)) return;
+            if (s?.walletId == null) return;
             s.walletId = s.walletId?.ToLower();
             ReportOtherPlayersState(s);
         }

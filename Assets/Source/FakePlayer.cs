@@ -25,9 +25,8 @@ namespace Source
             yield return new WaitForSeconds(delay);
             var pos = state.GetPosition() + forward * forwardDistance;
             var contract = AuthService.Instance.CurrentContract;
-            var s = new AvatarController.PlayerState(contract.networkId, contract.address,
-                avatarId, new SerializableVector3(pos), state.floating, state.jump,
-                state.sprinting, state.velocityY, state.teleport)
+            var s = new AvatarController.PlayerState(avatarId, new SerializableVector3(pos), state.floating, state.jump,
+                state.sprinting, state.velocityY, state.teleport, state.customAnimationNumber)
             {
                 rid = state.rid
             };

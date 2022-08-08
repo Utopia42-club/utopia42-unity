@@ -36,13 +36,16 @@ namespace Source
         [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] public GameObject avatarPrefab;
         [SerializeField] private float minFreeFallSpeed = 1;
+        [SerializeField] public AnimationClip[] customAvatarAnimations;
+        [SerializeField] private float cameraContainerHeight;
+        [SerializeField] private float cameraZOffset;
+        [SerializeField] private float cameraXOffset;
 
         public BlockType SelectedBlockType { private set; get; }
 
         private bool sprinting;
         private Vector3 velocity = Vector3.zero;
         private Land highlightLand;
-        public Land placeLand;
         private bool jumpRequest;
         private bool floating = false;
         private Vector3Int? lastChunk;
@@ -57,10 +60,6 @@ namespace Source
         private Vector3Int playerPos;
 
         private AvatarController avatarController;
-
-        // public string AvatarId { private set; get; } // test only
-        [NonSerialized] public GameObject avatar;
-        [NonSerialized] public Transform focusHighlight;
 
         public bool AvatarNotLoaded => avatarController == null || avatarController.Avatar == null;
 
@@ -93,12 +92,14 @@ namespace Source
             }
         }
 
-        [SerializeField] private float cameraContainerHeight;
-        [SerializeField] private float cameraZOffset;
-        [SerializeField] private float cameraXOffset;
-
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
-        public UnityEvent<ViewMode> viewModeChanged;
+
+        // public string AvatarId { private set; get; } // test only
+        [NonSerialized] public GameObject avatar;
+        [NonSerialized] public Transform focusHighlight;
+        [NonSerialized] public Land placeLand;
+        [NonSerialized] public UnityEvent<ViewMode> viewModeChanged;
+        [NonSerialized] public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport; // test only
 
         public Player(Transform tdObjectHighlightBox, Transform placeBlock, Transform highlightBlock)
         {
@@ -109,16 +110,18 @@ namespace Source
 
         public float Horizontal { get; private set; }
         public float Vertical { get; private set; }
+
+        private int CustomAnimationNumber;
         public Focusable FocusedFocusable { get; private set; }
         public Vector3Int PossiblePlaceBlockPosInt { get; private set; }
         public Vector3 PossiblePlaceMetaBlockPos { get; private set; }
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
         public Land HighlightLand => highlightLand;
 
-        public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport = new(); // test only
 
         private void Start()
         {
+            mainPlayerStateReport = new UnityEvent<AvatarController.PlayerState>();
             blockSelectionController = GetComponent<BlockSelectionController>();
             placeBlockRenderer = placeBlock.GetComponentInChildren<Renderer>();
 
@@ -211,11 +214,13 @@ namespace Source
                 Vertical = 0;
                 return;
             }
+
             CtrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             CtrlDown = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
             CtrlUp = Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
+            CustomAnimationNumber = GetCustomAnimationNumber();
 
             if (Input.GetButtonDown("Sprint"))
                 sprinting = true;
@@ -234,6 +239,14 @@ namespace Source
 
             if (Input.GetButtonDown("Toggle View"))
                 ToggleViewMode();
+        }
+
+        private int GetCustomAnimationNumber()
+        {
+            if (viewMode == ViewMode.FIRST_PERSON) return AvatarController.NoAnimation;
+            if (Input.GetButton("Avatar Custom Animation 1")) return 1;
+            if (Input.GetButton("Avatar Custom Animation 2")) return 2;
+            return AvatarController.NoAnimation;
         }
 
         private void FixedUpdate()
@@ -278,13 +291,11 @@ namespace Source
 
             playerPos = Vectors.TruncateFloor(pos);
 
-            var contract = AuthService.Instance.CurrentContract;
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
                 // AvatarId, // test only
-                contract.networkId, contract.address,
                 AuthService.Instance.WalletId(),
                 new SerializableVector3(pos), floating, jumpRequest, sprinting,
-                Mathf.Abs(reportVelocityY), false));
+                Mathf.Abs(reportVelocityY), false, CustomAnimationNumber));
         }
 
         public void DoReloadAvatar(string avatarUrl)

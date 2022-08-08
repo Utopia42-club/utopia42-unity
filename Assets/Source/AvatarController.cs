@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using ReadyPlayerMe;
 using Source.Canvas;
 using Source.MetaBlocks;
@@ -13,6 +15,8 @@ namespace Source
 {
     public class AvatarController : MonoBehaviour
     {
+        public const int NoAnimation = 0;
+
         private const string DefaultAvatarUrl =
             "https://d1a370nemizbjq.cloudfront.net/8b6189f0-c999-4a6a-bffc-7f68d66b39e6.glb"; //FIXME Configuration?
         // "https://d1a370nemizbjq.cloudfront.net/d7a562b0-2378-4284-b641-95e5262e28e5.glb";
@@ -44,15 +48,19 @@ namespace Source
         private int animIDGrounded;
         private int animIDJump;
         private int animIDFreeFall;
+        private int animIDCustom;
+        private int animIDCustomChanged;
 
         private IEnumerator teleportCoroutine;
 
         private const int Precision = 5;
         private static readonly float FloatPrecision = Mathf.Pow(10, -Precision);
         private Vector3 movement;
+        private Vector3 previousMovement;
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private GameObject namePanel;
         private bool controllerDisabled;
+        private int previousCustomAnimation;
         public bool AvatarAllowed { get; private set; }
 
         private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
@@ -66,6 +74,8 @@ namespace Source
             animIDGrounded = Animator.StringToHash("Grounded");
             animIDJump = Animator.StringToHash("Jump");
             animIDFreeFall = Animator.StringToHash("FreeFall");
+            animIDCustom = Animator.StringToHash("Custom");
+            animIDCustomChanged = Animator.StringToHash("CustomChanged");
             StartCoroutine(UpdateAnimationCoroutine());
         }
 
@@ -120,11 +130,12 @@ namespace Source
                     .magnitude;
             controller.Move(m);
 
-            if (Avatar != null && xzMovementMagnitude < FloatPrecision &&
-                PlayerState.Equals(state, lastPerformedState)
-                && Time.fixedUnscaledTimeAsDouble -
-                lastPerformedStateTime > AnimationUpdateRate)
-                SetSpeed(0);
+            // if (Avatar != null
+            //     // && xzMovementMagnitude < FloatPrecision
+            //     // && PlayerState.Equals(state, lastPerformedState, true)
+            //     && Time.fixedUnscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate
+            //    )
+            //     SetSpeed(controller.velocity.magnitude);
 
             if (Avatar != null && controller.isGrounded)
             {
@@ -231,21 +242,25 @@ namespace Source
             }
 
             var pos = state.GetPosition();
+            previousMovement = movement;
             movement = pos - (lastPerformedState?.GetPosition() ?? pos);
             if (Avatar != null)
                 UpdateLookDirection(movement);
 
-            var floatOrJumpStateChanged =
+            var forceAnimateAndReport =
+                playerState.customAnimationNumber != NoAnimation ||
                 playerState.teleport != lastPerformedState?.teleport ||
                 playerState.floating != lastPerformedState?.floating ||
                 playerState.jump != lastPerformedState?.jump;
 
-            if ((isAnotherPlayer || floatOrJumpStateChanged) && Avatar != null && ControllerEnabled)
+            if ((isAnotherPlayer || forceAnimateAndReport) && Avatar != null && ControllerEnabled)
             {
                 UpdateAnimation();
             }
 
-            if (!isAnotherPlayer && floatOrJumpStateChanged)
+            if (!isAnotherPlayer && (forceAnimateAndReport ||
+                                     movement.magnitude > FloatPrecision &&
+                                     previousMovement.magnitude < FloatPrecision))
                 ReportToServer();
         }
 
@@ -257,21 +272,27 @@ namespace Source
 
         private IEnumerator UpdateAnimationCoroutine()
         {
+            var wasMoving = false;
             while (true)
             {
                 yield return null;
                 if (isAnotherPlayer)
                     yield break;
 
-                if (Avatar != null && Time.unscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate
-                                   && !PlayerState.Equals(state, lastPerformedState)
-                                   && state != null && ControllerEnabled)
+                if (Time.unscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate
+                    && !PlayerState.Equals(state, lastPerformedState) && ControllerEnabled && state != null)
                 {
-                    UpdateAnimation();
+                    var moving = movement.magnitude > FloatPrecision;
+                    if (wasMoving && !moving)
+                        ReportToServer();
+
+                    wasMoving = moving;
+                    if (Avatar != null)
+                        UpdateAnimation();
                 }
 
                 if (state != null && Time.unscaledTimeAsDouble - lastReportedTime >
-                    (PlayerState.Equals(lastReportedState, state)
+                    (PlayerState.Equals(lastReportedState, state, true)
                         ? MaxReportDelay
                         : AnimationUpdateRate))
                     ReportToServer();
@@ -285,8 +306,8 @@ namespace Source
 
         private void UpdateAnimation()
         {
-            var xzVelocity = new Vector3(movement.x, 0, movement.z).normalized *
-                             (state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed);
+            StartCoroutine(SetCustomAnimation(state?.customAnimationNumber ?? NoAnimation));
+
             var grounded = controller.isGrounded;
             if (grounded)
             {
@@ -300,7 +321,9 @@ namespace Source
                         Mathf.Abs(state.velocityY) > Player.INSTANCE.MinFreeFallSpeed && !grounded);
 
             SetGrounded(state is not {floating: true} && grounded);
-            SetSpeed(xzVelocity.magnitude);
+
+            SetSpeed(movement.magnitude < FloatPrecision ? 0 :
+                state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed);
 
             SetLastPerformedState(state);
         }
@@ -391,6 +414,41 @@ namespace Source
             Avatar = container;
         }
 
+        private IEnumerator SetCustomAnimation(int animationNumber)
+        {
+            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Custom"))
+            {
+                if (previousCustomAnimation != animationNumber)
+                {
+                    animator.SetBool(animIDCustomChanged, true);
+                    yield return null;
+                    yield return SetCustomAnimation(animationNumber);
+                }
+
+                yield break;
+            }
+
+            animator.SetBool(animIDCustomChanged, false);
+
+            if (animationNumber == NoAnimation)
+            {
+                animator.SetBool(animIDCustom, false);
+                previousCustomAnimation = animationNumber;
+                yield break;
+            }
+
+
+            var aoc = new AnimatorOverrideController(animator.runtimeAnimatorController);
+            var anims = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            foreach (var animationClip in Player.INSTANCE.customAvatarAnimations)
+                anims.Add(new KeyValuePair<AnimationClip, AnimationClip>(animationClip,
+                    Player.INSTANCE.customAvatarAnimations[animationNumber - 1]));
+            aoc.ApplyOverrides(anims);
+            animator.runtimeAnimatorController = aoc;
+            animator.SetBool(animIDCustom, true);
+            previousCustomAnimation = animationNumber;
+        }
+
         private void SetJump(bool jump)
         {
             animator.SetBool(animIDJump, jump);
@@ -411,6 +469,11 @@ namespace Source
             animator.SetFloat(animIDSpeed, speed);
         }
 
+        private float? GetSpeed()
+        {
+            return Avatar == null ? null : animator.GetFloat(animIDSpeed);
+        }
+
         private void OnDestroy()
         {
             if (Avatar != null)
@@ -424,8 +487,6 @@ namespace Source
         public class PlayerState
         {
             public string rid;
-            public int network;
-            public string contract;
             public string walletId;
             public SerializableVector3 position;
             public bool floating;
@@ -433,15 +494,14 @@ namespace Source
             public bool sprinting;
             public float velocityY;
             public bool teleport;
+            public int customAnimationNumber;
 
-            public PlayerState(int network, string contract, string walletId, SerializableVector3 position,
+            public PlayerState(string walletId, SerializableVector3 position,
                 bool floating, bool jump,
-                bool sprinting, float velocityY, bool teleport)
+                bool sprinting, float velocityY, bool teleport, int customAnimationNumber = 0)
             {
                 // rid = random.Next(0, int.MaxValue);
                 rid = Guid.NewGuid().ToString();
-                this.network = network;
-                this.contract = contract;
                 this.walletId = walletId;
                 this.position = position;
                 this.floating = floating;
@@ -449,12 +509,11 @@ namespace Source
                 this.sprinting = sprinting;
                 this.velocityY = velocityY;
                 this.teleport = teleport;
+                this.customAnimationNumber = customAnimationNumber;
             }
 
-            private PlayerState(int network, string contract, string walletId, SerializableVector3 position)
+            private PlayerState(string walletId, SerializableVector3 position)
             {
-                this.network = network;
-                this.contract = contract;
                 this.walletId = walletId;
                 this.position = position;
                 teleport = true;
@@ -463,7 +522,7 @@ namespace Source
             public static PlayerState CreateTeleportState(int network, string contract, string walletId,
                 Vector3 position)
             {
-                return new PlayerState(network, contract, walletId, new SerializableVector3(position));
+                return new PlayerState(walletId, new SerializableVector3(position));
             }
 
             public Vector3 GetPosition()
@@ -471,17 +530,18 @@ namespace Source
                 return position.ToVector3();
             }
 
-            public static bool Equals(PlayerState s1, PlayerState s2)
+            public static bool Equals(PlayerState s1, PlayerState s2, bool ignoreId = false)
             {
                 return s1 != null
                        && s2 != null
                        && s1.walletId == s2.walletId
-                       && s1.rid == s2.rid
+                       && (ignoreId || s1.rid == s2.rid)
                        && Equals(s1.position, s2.position)
                        && s1.floating == s2.floating
                        && s1.jump == s2.jump
                        && s1.sprinting == s2.sprinting
                        && s1.teleport == s2.teleport
+                       && s1.customAnimationNumber == s2.customAnimationNumber
                        && Math.Abs(s1.velocityY - s2.velocityY) < FloatPrecision;
             }
         }
