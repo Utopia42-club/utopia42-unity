@@ -49,6 +49,7 @@ namespace Source
         private int animIDJump;
         private int animIDFreeFall;
         private int animIDCustom;
+        private int animIDCustomChanged;
 
         private IEnumerator teleportCoroutine;
 
@@ -59,6 +60,7 @@ namespace Source
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private GameObject namePanel;
         private bool controllerDisabled;
+        private int previousCustomAnimation;
         public bool AvatarAllowed { get; private set; }
 
         private bool ControllerEnabled => controller != null && controller.enabled && !controllerDisabled; // TODO!
@@ -73,6 +75,7 @@ namespace Source
             animIDJump = Animator.StringToHash("Jump");
             animIDFreeFall = Animator.StringToHash("FreeFall");
             animIDCustom = Animator.StringToHash("Custom");
+            animIDCustomChanged = Animator.StringToHash("CustomChanged");
             StartCoroutine(UpdateAnimationCoroutine());
         }
 
@@ -127,10 +130,12 @@ namespace Source
                     .magnitude;
             controller.Move(m);
 
-            if (Avatar != null && xzMovementMagnitude < FloatPrecision
-                               && PlayerState.Equals(state, lastPerformedState)
-                               && Time.fixedUnscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate)
-                SetSpeed(0);
+            // if (Avatar != null
+            //     // && xzMovementMagnitude < FloatPrecision
+            //     // && PlayerState.Equals(state, lastPerformedState, true)
+            //     && Time.fixedUnscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate
+            //    )
+            //     SetSpeed(controller.velocity.magnitude);
 
             if (Avatar != null && controller.isGrounded)
             {
@@ -267,17 +272,23 @@ namespace Source
 
         private IEnumerator UpdateAnimationCoroutine()
         {
+            var wasMoving = false;
             while (true)
             {
                 yield return null;
                 if (isAnotherPlayer)
                     yield break;
 
-                if (Avatar != null && Time.unscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate
-                                   && !PlayerState.Equals(state, lastPerformedState)
-                                   && state != null && ControllerEnabled)
+                if (Time.unscaledTimeAsDouble - lastPerformedStateTime > AnimationUpdateRate
+                    && !PlayerState.Equals(state, lastPerformedState) && ControllerEnabled && state != null)
                 {
-                    UpdateAnimation();
+                    var moving = movement.magnitude > FloatPrecision;
+                    if (wasMoving && !moving)
+                        ReportToServer();
+
+                    wasMoving = moving;
+                    if (Avatar != null)
+                        UpdateAnimation();
                 }
 
                 if (state != null && Time.unscaledTimeAsDouble - lastReportedTime >
@@ -295,7 +306,7 @@ namespace Source
 
         private void UpdateAnimation()
         {
-            SetCustomAnimation(state?.customAnimationNumber ?? NoAnimation);
+            StartCoroutine(SetCustomAnimation(state?.customAnimationNumber ?? NoAnimation));
 
             var grounded = controller.isGrounded;
             if (grounded)
@@ -310,6 +321,7 @@ namespace Source
                         Mathf.Abs(state.velocityY) > Player.INSTANCE.MinFreeFallSpeed && !grounded);
 
             SetGrounded(state is not {floating: true} && grounded);
+
             SetSpeed(movement.magnitude < FloatPrecision ? 0 :
                 state.sprinting ? Player.INSTANCE.sprintSpeed : Player.INSTANCE.walkSpeed);
 
@@ -402,13 +414,29 @@ namespace Source
             Avatar = container;
         }
 
-        private void SetCustomAnimation(int animationNumber)
+        private IEnumerator SetCustomAnimation(int animationNumber)
         {
+            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Custom"))
+            {
+                if (previousCustomAnimation != animationNumber)
+                {
+                    animator.SetBool(animIDCustomChanged, true);
+                    yield return null;
+                    yield return SetCustomAnimation(animationNumber);
+                }
+
+                yield break;
+            }
+
+            animator.SetBool(animIDCustomChanged, false);
+
             if (animationNumber == NoAnimation)
             {
                 animator.SetBool(animIDCustom, false);
-                return;
+                previousCustomAnimation = animationNumber;
+                yield break;
             }
+
 
             var aoc = new AnimatorOverrideController(animator.runtimeAnimatorController);
             var anims = new List<KeyValuePair<AnimationClip, AnimationClip>>();
@@ -418,6 +446,7 @@ namespace Source
             aoc.ApplyOverrides(anims);
             animator.runtimeAnimatorController = aoc;
             animator.SetBool(animIDCustom, true);
+            previousCustomAnimation = animationNumber;
         }
 
         private void SetJump(bool jump)

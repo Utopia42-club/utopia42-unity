@@ -37,13 +37,15 @@ namespace Source
         [SerializeField] public GameObject avatarPrefab;
         [SerializeField] private float minFreeFallSpeed = 1;
         [SerializeField] public AnimationClip[] customAvatarAnimations;
-        
+        [SerializeField] private float cameraContainerHeight;
+        [SerializeField] private float cameraZOffset;
+        [SerializeField] private float cameraXOffset;
+
         public BlockType SelectedBlockType { private set; get; }
 
         private bool sprinting;
         private Vector3 velocity = Vector3.zero;
         private Land highlightLand;
-        public Land placeLand;
         private bool jumpRequest;
         private bool floating = false;
         private Vector3Int? lastChunk;
@@ -58,10 +60,6 @@ namespace Source
         private Vector3Int playerPos;
 
         private AvatarController avatarController;
-
-        // public string AvatarId { private set; get; } // test only
-        [NonSerialized] public GameObject avatar;
-        [NonSerialized] public Transform focusHighlight;
 
         public bool AvatarNotLoaded => avatarController == null || avatarController.Avatar == null;
 
@@ -94,12 +92,14 @@ namespace Source
             }
         }
 
-        [SerializeField] private float cameraContainerHeight;
-        [SerializeField] private float cameraZOffset;
-        [SerializeField] private float cameraXOffset;
-
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
-        public UnityEvent<ViewMode> viewModeChanged;
+
+        // public string AvatarId { private set; get; } // test only
+        [NonSerialized] public GameObject avatar;
+        [NonSerialized] public Transform focusHighlight;
+        [NonSerialized] public Land placeLand;
+        [NonSerialized] public UnityEvent<ViewMode> viewModeChanged;
+        [NonSerialized] public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport; // test only
 
         public Player(Transform tdObjectHighlightBox, Transform placeBlock, Transform highlightBlock)
         {
@@ -118,10 +118,10 @@ namespace Source
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
         public Land HighlightLand => highlightLand;
 
-        public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport = new(); // test only
 
         private void Start()
         {
+            mainPlayerStateReport = new UnityEvent<AvatarController.PlayerState>();
             blockSelectionController = GetComponent<BlockSelectionController>();
             placeBlockRenderer = placeBlock.GetComponentInChildren<Renderer>();
 
@@ -214,6 +214,7 @@ namespace Source
                 Vertical = 0;
                 return;
             }
+
             CtrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             CtrlDown = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
             CtrlUp = Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl);
