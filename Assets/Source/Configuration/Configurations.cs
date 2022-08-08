@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+using UnityEngine;
 
 namespace Source.Configuration
 {
@@ -12,12 +15,13 @@ namespace Source.Configuration
             {
                 if (cachedInstance != null)
                     return cachedInstance;
+                Dictionary<string, string> conf;
 #if UNITY_EDITOR
-                return cachedInstance = new("https://dev.utopia42.club",
-                    "https://demoapi.utopia42.club", "https://utopia42.club/api/v0",
-                    "https://utopia42club.readyplayer.me/avatar");
+                var path = Path.Join(Application.dataPath, "config", "env.json");
+                conf = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(path));
+#else
+                conf = WebBridge.Call<Dictionary<string, string>>("getConfigurations", "");
 #endif
-                var conf = WebBridge.Call<Dictionary<string, string>>("getConfigurations", "");
                 return cachedInstance = new Configurations(
                     conf["webAppBaseURL"], conf["apiURL"],
                     conf["ipfsServerURL"], conf["avatarDesignerURL"]
