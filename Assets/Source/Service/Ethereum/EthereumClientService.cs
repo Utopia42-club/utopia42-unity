@@ -24,9 +24,9 @@ namespace Source.Service.Ethereum
             // consumer(6); yield break; // for test only 
             var contract = AuthService.Instance.CurrentContract;
             var request =
-                new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(contract.networkRpcProvider,
-                    contract.address);
-            yield return request.Query(new LastLandIdFunction() { }, contract.address);
+                new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(contract.network.rpcProvider,
+                    contract.id);
+            yield return request.Query(new LastLandIdFunction() { }, contract.id);
             if (request.Result != null)
                 consumer(request.Result.ReturnValue1);
             else onFailed();
@@ -36,15 +36,15 @@ namespace Source.Service.Ethereum
         {
             var contract = AuthService.Instance.CurrentContract;
             var request =
-                new QueryUnityRequest<LandPriceFunction, LandPriceOutputDTO>(contract.networkRpcProvider,
-                    contract.address);
+                new QueryUnityRequest<LandPriceFunction, LandPriceOutputDTO>(contract.network.rpcProvider,
+                    contract.id);
             yield return request.Query(new LandPriceFunction()
             {
                 X1 = x1,
                 X2 = x2,
                 Y1 = y1,
                 Y2 = y2
-            }, contract.address);
+            }, contract.id);
             if (request.Result != null)
                 consumer(UnitConversion.Convert.FromWei(request.Result.ReturnValue1));
             else onFailed();
@@ -55,10 +55,10 @@ namespace Source.Service.Ethereum
         {
             var contract = AuthService.Instance.CurrentContract;
             var request =
-                new QueryUnityRequest<GetLandsByIdsFunction, GetLandsByIdsOutputDTO>(contract.networkRpcProvider,
-                    contract.address);
+                new QueryUnityRequest<GetLandsByIdsFunction, GetLandsByIdsOutputDTO>(contract.network.rpcProvider,
+                    contract.id);
             //TODO add exception handling
-            yield return request.Query(new GetLandsByIdsFunction() {Ids = ids}, contract.address);
+            yield return request.Query(new GetLandsByIdsFunction() {Ids = ids}, contract.id);
             if (request.Result != null)
                 consumer(MapLands(request.Result.Lands));
             else onFailed();

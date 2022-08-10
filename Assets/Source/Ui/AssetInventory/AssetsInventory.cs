@@ -86,7 +86,7 @@ namespace Source.Ui.AssetInventory
 
             var tabConfigurations = new List<TabConfiguration>
             {
-                new("Assets", new AssetsTab(this, inventory)),
+                new("Assets", new AssetsTab(inventory)),
                 new("Blocks", "Ui/AssetInventory/BlocksTab", e => SetupBlocksTab()),
                 new("Favorites", "Ui/AssetInventory/FavoritesTab", e => SetupFavoritesTab())
             };

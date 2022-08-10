@@ -52,7 +52,8 @@ namespace Source.Service
         private IEnumerator DoLoad(SerializableVector3Int start)
         {
             var contract = AuthService.Instance.CurrentContract;
-            string url = $"{Configurations.Instance.apiURL}/world/slice?network={contract.networkId}&contract={contract.address}";
+            string url =
+                $"{Configurations.Instance.apiURL}/world/slice?network={contract.network.id}&contract={contract.id}";
             bool success = false;
             var timeout = 0.2f;
             while (!success)

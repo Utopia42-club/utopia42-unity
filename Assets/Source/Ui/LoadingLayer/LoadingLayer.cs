@@ -8,7 +8,7 @@ namespace Source.Ui.LoadingLayer
 {
     public class LoadingLayer : MonoBehaviour
     {
-        private static int id;
+        private static int lastId;
         private static readonly Dictionary<int, Tuple<VisualElement, VisualElement>> loadingLayers = new();
         private static VisualElement defaultElement;
 
@@ -26,10 +26,10 @@ namespace Source.Ui.LoadingLayer
         {
             foreach (var keyValuePair in loadingLayers)
             {
-                if (keyValuePair.Value.Item1 == root && keyValuePair.Key != id)
+                if (keyValuePair.Value.Item1 == root && keyValuePair.Key != lastId)
                 {
-                    loadingLayers.Add(id, keyValuePair.Value);
-                    return new LoadingController(id++);
+                    loadingLayers.Add(lastId, keyValuePair.Value);
+                    return new LoadingController(lastId++);
                 }
             }
 
@@ -39,17 +39,22 @@ namespace Source.Ui.LoadingLayer
             // s.position = Position.Absolute;
             // s.top = s.left = s.right = s.bottom = 0;
             // s.flexGrow = 1;
-            loadingLayers.Add(id, new Tuple<VisualElement, VisualElement>(root, layer));
+            loadingLayers.Add(lastId, new Tuple<VisualElement, VisualElement>(root, layer));
             root.Add(layer);
-            return new LoadingController(id++);
+            return new LoadingController(lastId++);
         }
 
         public static void Hide(int id)
         {
-            var (root, layer) = loadingLayers[id];
+            if (!loadingLayers.TryGetValue(id, out var entry))
+                return;
+            var (root, layer) = entry;
             loadingLayers.Remove(id);
             if (!loadingLayers.Any(keyValuePair => keyValuePair.Value.Item1 == root && keyValuePair.Key != id))
-                root.Remove(layer);
+            {
+                if (layer.parent != null)
+                    root.Remove(layer);
+            }
         }
     }
 }

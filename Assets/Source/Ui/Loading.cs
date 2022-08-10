@@ -41,7 +41,7 @@ namespace Source.Canvas
 
         public void ShowConnectionError()
         {
-            UpdateText("An Error Occured While Querying Blockchain\nTry Again Later");
+            UpdateText("An Error Occured While Loading data!\nTry Again Later");
             UiImageUtils.SetBackground(image, errorLogo, false);
         }
 

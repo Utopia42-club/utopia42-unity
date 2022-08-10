@@ -115,7 +115,7 @@ namespace Source.Canvas
             var wallet = AuthService.Instance.WalletId();
             var contract = AuthService.Instance.CurrentContract;
             currentUrl =
-                $"{Configurations.Instance.webAppRpcURL}?method={method}&wallet={wallet}&network={contract.networkId}&contract={contract.address}";
+                $"{Configurations.Instance.webAppRpcURL}?method={method}&wallet={wallet}&network={contract.network.id}&contract={contract.id}";
             if (parameters != null)
                 currentUrl = $"{currentUrl}&param={parameters}";
             Application.OpenURL(currentUrl);

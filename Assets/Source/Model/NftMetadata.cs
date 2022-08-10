@@ -16,11 +16,4 @@ namespace Source.Model
         public string thumbnail;
         public List<Attribute> attributes;
     }
-
-    [Serializable]
-    public class Attribute
-    {
-        [JsonProperty("trait_type")] public string traitType;
-        public string value;
-    }
 }

@@ -20,8 +20,8 @@ namespace Source.Ui.Menu
             var playerPos = Vectors.FloorToInt(Player.INSTANCE.GetPosition());
             currentPositionProps.SetValue(new TeleportBlockProperties()
             {
-                contractAddress = currentContract.address,
-                networkId = currentContract.networkId,
+                contractAddress = currentContract.id,
+                networkId = currentContract.network.id,
                 destination = new[] {playerPos.x, playerPos.y, playerPos.z}
             });
 

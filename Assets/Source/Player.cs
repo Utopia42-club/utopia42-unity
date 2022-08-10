@@ -533,7 +533,7 @@ namespace Source
         {
             var contract = AuthService.Instance.CurrentContract;
             avatarController.UpdatePlayerState(
-                AvatarController.PlayerState.CreateTeleportState(contract.networkId, contract.address,
+                AvatarController.PlayerState.CreateTeleportState(contract.network.id, contract.id,
                     AuthService.Instance.WalletId(), pos));
         }
 

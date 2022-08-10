@@ -16,8 +16,8 @@ namespace Source.Service
     {
         // private readonly Dictionary<long, Land> ignoredLands = new Dictionary<long, Land>();
         private string landUrl =>
-            $"{Configurations.Instance.apiURL}/world/lands?network={AuthService.Instance.CurrentContract.networkId}" +
-            $"&contract={AuthService.Instance.CurrentContract.address}";
+            $"{Configurations.Instance.apiURL}/world/lands?network={AuthService.Instance.CurrentContract.network.id}" +
+            $"&contract={AuthService.Instance.CurrentContract.id}";
 
         private readonly HashSet<long> ignoredLands = new();
         private readonly Dictionary<string, List<Land>> ownersLands = new();

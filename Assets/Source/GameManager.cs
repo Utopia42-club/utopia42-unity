@@ -29,6 +29,7 @@ namespace Source
             LOGIN,
             INITIAL
         }
+
         public readonly UnityEvent<State> stateChange = new();
         public readonly List<Func<State, State, bool>> stateGuards = new();
 
@@ -220,8 +221,8 @@ namespace Source
         public void Teleport(int networkId, string contract, Vector3 position)
         {
             var current = AuthService.Instance.CurrentContract;
-            if (current.networkId == networkId &&
-                string.Equals(current.address, contract, StringComparison.OrdinalIgnoreCase))
+            if (current.network.id == networkId &&
+                string.Equals(current.id, contract, StringComparison.OrdinalIgnoreCase))
             {
                 MovePlayerTo(position);
             }
@@ -333,7 +334,7 @@ namespace Source
             var contract = AuthService.Instance.CurrentContract;
             var currentPosition = Player.INSTANCE.GetPosition();
             var url = Configurations.Instance.webAppBaseURL +
-                      $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}&network={contract.networkId}&contract={contract.address}";
+                      $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}&network={contract.network.id}&contract={contract.id}";
 
             if (WebBridge.IsPresent())
                 WebBridge.Call<object>("copyToClipboard", url);
@@ -481,7 +482,7 @@ namespace Source
         {
             var contract = AuthService.Instance.CurrentContract;
             StartCoroutine(LandMetadataRestClient.INSTANCE.SetLandMetadata(
-                new LandMetadata(contract.networkId, contract.address, land.id, key), () =>
+                new LandMetadata(contract.network.id, contract.id, land.id, key), () =>
                 {
                     BrowserConnector.INSTANCE.SetNft(land.id, true,
                         () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using Source.Model.Inventory;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
+using UnityEngine;
 using UnityEngine.UIElements;
+using static Source.Ui.Utils.Observer.Observers;
 
 namespace Source.Ui.AssetInventory.Assets
 {
@@ -17,7 +19,7 @@ namespace Source.Ui.AssetInventory.Assets
         private TabPane.TabPane tabPane;
         private VisualElement content;
 
-        public AssetsTab(AssetsInventory inventory, VisualElement loadingTarget)
+        public AssetsTab(VisualElement loadingTarget)
             : base(typeof(AssetsTab), true)
         {
             dataLoader = new DataLoader(loadingTarget);
@@ -25,8 +27,11 @@ namespace Source.Ui.AssetInventory.Assets
             searchField = this.Q<TextField>("searchField");
             searchField.multiline = false;
             TextFields.SetPlaceHolderForTextField(searchField, "Search");
-            searchField.RegisterValueChangedCallback(new DebounceEventListener<ChangeEvent<string>>
-                (inventory, 0.6f, e => FilterAssets()).Deligate);
+            searchField.RegisterValueChangedCallback(
+                Map<ChangeEvent<string>, string>(e => e.newValue)
+                    .Pipe(Debounce<string>(searchField, 600))
+                    .Pipe(DistinctUntilChanged<string>())
+                    .Then(e => FilterAssets()));
         }
 
         public void OnTabOpen(TabOpenEvent e)

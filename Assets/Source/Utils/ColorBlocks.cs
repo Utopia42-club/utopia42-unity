@@ -87,10 +87,6 @@ namespace Source.Utils
         public static void SaveBlockColor(Color color)
         {
             var colorBlocks = GetPlayerColorBlocks();
-            Debug.Log("=======");
-            Debug.Log(color);
-            Debug.Log(GetTypeIdFromColor(color));
-            Debug.Log(Blocks.GetBlockType(GetTypeIdFromColor(color)).color);
             
             colorBlocks.Add(GetTypeIdFromColor(color));
             SetPlayerColorBlocks(colorBlocks);

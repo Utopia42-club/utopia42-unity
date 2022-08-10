@@ -326,7 +326,6 @@ namespace Source.Service
             var block = chunkChanges.metaBlocks[pos.local] =
                 type == null ? MetaBlock.DELETED_METABLOCK : type.Instantiate(land, "");
 
-            // Debug.Log(block.type);
             if (type is MarkerBlockType)
                 markerBlocks.Add(pos.ToVoxelPosition().ToWorld(), block);
 

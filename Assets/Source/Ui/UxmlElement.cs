@@ -59,7 +59,9 @@ namespace Source.Ui
 
         public static StyleSheet LoadStyleSheet(string path)
         {
-            return Resources.Load<StyleSheet>(path);
+            var resource = Resources.Load<StyleSheet>(path);
+            if (resource == null) throw new ArgumentException("Could not load uss resource: " + path);
+            return resource;
         }
     }
 }

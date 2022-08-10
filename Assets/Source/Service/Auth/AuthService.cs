@@ -72,7 +72,7 @@ namespace Source.Service.Auth
             {
                 wallet = session?.WalletId,
                 network = session?.Network ?? -1,
-                contractAddress = CurrentContract?.address
+                contractAddress = CurrentContract?.id
             };
             return detail;
         }
@@ -93,8 +93,8 @@ namespace Source.Service.Auth
         internal void ChangeContract(int network, string contract,
             Vector3? startingPosition = null)
         {
-            if (contract == null || CurrentContract == null || CurrentContract.networkId != network
-                || !Equals(CurrentContract.address, contract))
+            if (contract == null || CurrentContract == null || CurrentContract.network.id != network
+                || !Equals(CurrentContract.id, contract))
             {
                 var loading = LoadingLayer.Show();
                 Action<MetaverseContract> success = (c) =>
@@ -105,7 +105,7 @@ namespace Source.Service.Auth
                     else
                     {
                         CurrentContract = c;
-                        session = new Session(c.networkId, c.address, session.WalletId);
+                        session = new Session(c.network.id, c.id, session.WalletId);
                         session.Save();
                         EnterMetaverse(startingPosition);
                     }
@@ -173,7 +173,7 @@ namespace Source.Service.Auth
         {
             if (WebBridge.IsPresent())
                 WebBridge.CallAsync<MetaverseContract>("getStartingContract", "", (contract) =>
-                    Login(walletId, contract.networkId, contract.address));
+                    Login(walletId, contract.network.id, contract.id));
             else
                 Login(walletId, -1, null);
         }
@@ -193,7 +193,7 @@ namespace Source.Service.Auth
                 World.INSTANCE.StartCoroutine(MultiverseService.Instance.GetDefaultContract(
                     mc =>
                     {
-                        SetSession(new Session(mc.networkId, mc.address, walletId));
+                        SetSession(new Session(mc.network.id, mc.id, walletId));
                         loading.Close();
                     },
                     () =>
