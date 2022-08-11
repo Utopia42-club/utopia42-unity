@@ -9,24 +9,24 @@ using static Source.Ui.Utils.Observer.Observers;
 
 namespace Source.Ui.SearchField
 {
-    public class Autocomplete<T>
+    public class Autocomplete<T> //TODO convert to manipulator
     {
         public event Action<T> OptionSelected = a => { };
         private readonly CompositeSubscription subscription = new();
         private readonly TextField textField;
-        private readonly Func<T, VisualElement> optionViewFactory;
+        private Func<T, VisualElement> optionViewFactory;
         private readonly Func<string, Observable<List<T>>> dataLoader;
         private Subscription loadSubscription;
         private PopupController popup;
         private OptionList<T> optionList;
 
         public Autocomplete(TextField textField, Func<string, Observable<List<T>>> dataLoader)
-            : this(textField, (item) => new Label(item.ToString()), dataLoader)
+            : this(textField, dataLoader, (item) => new Label(item.ToString()))
         {
         }
 
-        public Autocomplete(TextField textField, Func<T, VisualElement> optionViewFactory,
-            Func<string, Observable<List<T>>> dataLoader)
+        public Autocomplete(TextField textField, Func<string, Observable<List<T>>> dataLoader,
+            Func<T, VisualElement> optionViewFactory)
         {
             this.textField = textField;
             this.optionViewFactory = optionViewFactory;
@@ -57,6 +57,11 @@ namespace Source.Ui.SearchField
                     Close();
                     loadSubscription?.Unsubscribe();
                 }));
+        }
+
+        public void SetOptionViewFactory(Func<T, VisualElement> optionViewFactory)
+        {
+            this.optionViewFactory = optionViewFactory;
         }
 
         private void Search()

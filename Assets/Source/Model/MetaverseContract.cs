@@ -13,7 +13,8 @@ namespace Source.Model
 
         public override string ToString()
         {
-            return $"{name} ({id.Substring(0, 5)}...{id.Substring(id.Length - 5)})";
+            var idStr = id.Length > 20 ? $"{id.Substring(0, 10)}...{id.Substring(id.Length - 10)}" : id;
+            return $"{name} ({idStr})";
         }
     }
 }

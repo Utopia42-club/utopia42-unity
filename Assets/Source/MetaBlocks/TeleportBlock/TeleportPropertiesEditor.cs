@@ -9,6 +9,7 @@ using Source.Ui.LoadingLayer;
 using Source.Ui.SearchField;
 using Source.Ui.Snack;
 using Source.UtopiaException;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Source.MetaBlocks.TeleportBlock
@@ -26,6 +27,8 @@ namespace Source.MetaBlocks.TeleportBlock
 
         public TeleportPropertiesEditor() : base("Ui/PropertyEditors/TeleportBlockEditor")
         {
+            Debug.Log("Telport props created!");
+
             network = this.Q<DropdownField>("network");
             contract = this.Q<SearchField>("contract")
                 .WithDataLoader(LoadContracts);
@@ -34,6 +37,11 @@ namespace Source.MetaBlocks.TeleportBlock
             posX = this.Q<TextField>("x");
             posY = this.Q<TextField>("y");
             posZ = this.Q<TextField>("z");
+
+            posX.value = "0";
+            posZ.value = "0";
+            posY.value = "32";
+
 
             network.choices.Clear();
             var loading = LoadingLayer.Show(this);
@@ -73,6 +81,7 @@ namespace Source.MetaBlocks.TeleportBlock
         private void NetworkChanged()
         {
             var net = GetNetworkId();
+            Debug.Log("Network changed! has:" + net.HasValue);
             if (!net.HasValue || contract.GetItem<MetaverseContract>()?.network?.id != net.Value)
             {
                 contract.value = null;
@@ -97,7 +106,11 @@ namespace Source.MetaBlocks.TeleportBlock
         private void TrySetNetwork(int id)
         {
             if (netIdToNetKey.TryGetValue(id, out var n))
+            {
                 network.value = n;
+                NetworkChanged();
+            }
+
             lastSetNetworkId = id;
         }
 
@@ -176,5 +189,6 @@ namespace Source.MetaBlocks.TeleportBlock
         {
             this.Q<Label>("destinationLabel").text = text;
         }
+
     }
 }

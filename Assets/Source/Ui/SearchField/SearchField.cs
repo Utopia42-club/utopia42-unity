@@ -8,17 +8,19 @@ namespace Source.Ui.SearchField
     public class SearchField : TextField
     {
         private Autocomplete<object> autocomplete;
-        private readonly Label valueLabel;
+        private readonly VisualElement valueView;
         private object item;
         private Func<object, string> stringifier;
+        private Func<object, VisualElement> viewFactory;
 
         public SearchField()
         {
             styleSheets.Add(UxmlElement.LoadStyleSheet(typeof(SearchField)));
-            valueLabel = new Label();
-            valueLabel.AddToClassList("utopia-search-field-value-label");
-            Add(valueLabel);
-            valueLabel.SendToBack();
+            valueView = new VisualElement();
+            valueView.AddToClassList("utopia-search-field-value-view");
+            Add(valueView);
+            valueView.SendToBack();
+            viewFactory = v => new Label(stringifier?.Invoke(v) ?? v.ToString());
             RegisterCallback<FocusOutEvent>(e => value = null);
             this.RegisterValueChangedCallback(e => UpdateLabel());
         }
@@ -31,9 +33,17 @@ namespace Source.Ui.SearchField
                 autocomplete?.Dispose();
             }
 
-            autocomplete = new Autocomplete<object>(this, dataLoader);
+            autocomplete = new Autocomplete<object>(this, dataLoader, viewFactory);
             autocomplete.OptionSelected += SetItem;
 
+            return this;
+        }
+
+        public SearchField WithViewFactory(Func<object, VisualElement> viewFactory)
+        {
+            autocomplete?.SetOptionViewFactory(viewFactory);
+            this.viewFactory = viewFactory;
+            UpdateLabel();
             return this;
         }
 
@@ -46,10 +56,9 @@ namespace Source.Ui.SearchField
 
         private void UpdateLabel()
         {
-            if (string.IsNullOrEmpty(value))
-                valueLabel.text = item == null ? null : stringifier?.Invoke(item) ?? item.ToString();
-            else
-                valueLabel.text = null;
+            valueView.Clear();
+            if (string.IsNullOrEmpty(value) && item != null)
+                valueView.Add(viewFactory.Invoke(item));
         }
 
         public void SetItem(object item)
