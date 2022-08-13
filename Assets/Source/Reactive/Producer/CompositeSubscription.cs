@@ -8,6 +8,12 @@ namespace Source.Reactive.Producer
     {
         private readonly List<Subscription> subscriptions = new();
 
+        public CompositeSubscription(params Subscription[] subscriptions)
+        {
+            foreach (var subscription in subscriptions)
+                Add(subscription);
+        }
+        
         public CompositeSubscription Add(Action subscription)
         {
             return Add(new CustomSubscription(subscription));

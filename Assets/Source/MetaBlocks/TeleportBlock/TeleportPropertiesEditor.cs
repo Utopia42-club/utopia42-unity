@@ -27,8 +27,6 @@ namespace Source.MetaBlocks.TeleportBlock
 
         public TeleportPropertiesEditor() : base("Ui/PropertyEditors/TeleportBlockEditor")
         {
-            Debug.Log("Telport props created!");
-
             network = this.Q<DropdownField>("network");
             contract = this.Q<SearchField>("contract")
                 .WithDataLoader(LoadContracts);

@@ -33,7 +33,7 @@ namespace Source.Ui.Profile
         {
             this.map = map;
             userProfileContainer = this.Q<VisualElement>("userProfileContainer");
-            userProfile = new UserProfile(null);
+            userProfile = new UserProfile();
             userProfileContainer.Add(userProfile);
             editButton = this.Q<Button>("editButton");
             idLabel = this.Q<Label>("idValue");
@@ -114,9 +114,9 @@ namespace Source.Ui.Profile
             editButton.style.display = isOwner ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        public void SetProfile(Model.Profile profile)
+        public void SetProfile(string wallet, Model.Profile profile)
         {
-            userProfile.SetProfile(profile);
+            userProfile.SetProfile(wallet, profile);
         }
     }
 }

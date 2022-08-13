@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace Source.Ui.Utils.Observer
+namespace Source.Reactive.Consumer
 {
     public static class Observers
     {

@@ -2,13 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 
-namespace Source.Ui.Utils.Observer
+namespace Source.Reactive.Consumer
 {
-    public abstract class Observer<TI, TO>
+    public interface IObserver<in TI, out TO>
+    {
+        IObserver<TI, TO> Then(EventCallback<TO> callback);
+        void Observe(TI e);
+    }
+
+    public abstract class Observer<TI, TO> : IObserver<TI, TO>
     {
         private readonly List<EventCallback<TO>> innerCallbacks = new();
 
-        public Observer<TI, TO> Then(EventCallback<TO> callback)
+        public IObserver<TI, TO> Then(EventCallback<TO> callback)
         {
             innerCallbacks.Add(callback);
             return this;
@@ -26,7 +32,6 @@ namespace Source.Ui.Utils.Observer
 
         public abstract void Observe(TI e);
 
-        public static implicit operator EventCallback<TI>(Observer<TI, TO> d) => d.Observe;
         public static implicit operator Action<TI>(Observer<TI, TO> d) => d.Observe;
     }
 }

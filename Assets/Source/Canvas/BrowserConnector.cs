@@ -17,20 +17,12 @@ namespace Source.Canvas
 
         public static BrowserConnector INSTANCE => GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>();
 
-        public void EditProfile(Action onDone, Action onCancel)
+        public void OpenDApp(Action onDone, Action onCancel)
         {
-            const string msg = "Edit your profile on your browser. Click RELOAD when it is done.";
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("editProfile", null);
-                OpenDialog(onDone, onCancel, msg);
-            }
-            else
-            {
-                CallUrl("editProfile", onDone, onCancel, msg);
-            }
+            const string msg = "Edit your profile on the app. Click RELOAD when it is saved.";
+            Application.OpenURL(Configurations.Instance.dAppUrl);
+            OpenDialog(onDone, onCancel, msg);
         }
-
 
         public void Transfer(long landId, Action onDone, Action onCancel)
         {

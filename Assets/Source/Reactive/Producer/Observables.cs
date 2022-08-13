@@ -16,11 +16,21 @@ namespace Source.Reactive.Producer
         {
             return new CoroutineObservable<TE>(provider);
         }
+        
+        public static StaticObservable<TE> Of<TE>(params TE[] values)
+        {
+            return new StaticObservable<TE>(values);
+        }
 
         public static EventObservable<TE> FromEvent<TE>(VisualElement element)
             where TE : EventBase<TE>, new()
         {
             return new EventObservable<TE>(element);
+        }
+
+        public static MergeObservable<TE> Merge<TE>(params IObservable<TE>[] observables)
+        {
+            return new MergeObservable<TE>(observables);
         }
     }
 }

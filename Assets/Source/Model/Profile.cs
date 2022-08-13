@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Source.Model
@@ -12,25 +13,24 @@ namespace Source.Model
         static Profile()
         {
             LOADING_PROFILE.name = "Loading...";
-            LOADING_PROFILE.imageUrl = null;
             LOADING_PROFILE.avatarUrl = null;
             LOADING_PROFILE.walletId = "";
             LOADING_PROFILE.links = null;
 
             FAILED_TO_LOAD_PROFILE.name = "Failed to load";
-            FAILED_TO_LOAD_PROFILE.imageUrl = null;
             FAILED_TO_LOAD_PROFILE.avatarUrl = null;
             FAILED_TO_LOAD_PROFILE.walletId = "";
             FAILED_TO_LOAD_PROFILE.links = null;
         }
 
+        public long citizenId;
         public string walletId;
         public string name;
         public string bio;
         public List<Link> links;
-        public string imageUrl;
         public string avatarUrl;
-
+        public List<Property> properties;
+        
         public override int GetHashCode()
         {
             return walletId.GetHashCode();
@@ -43,6 +43,13 @@ namespace Source.Model
                 return false;
             var other = (Profile) obj;
             return walletId == other.walletId;
+        }
+
+        [Serializable]
+        public class Property
+        {
+            public string key;
+            public string value;
         }
 
         public class Link

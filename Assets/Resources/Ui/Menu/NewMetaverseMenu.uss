@@ -1,0 +1,123 @@
+.header {
+    background-color: var(--darker-secondary-color);
+    border-radius: var(--default-border-radius);
+}
+
+.metaverse-card {
+    background-color: var(--darker-secondary-color);
+    border-radius: var(--default-border-radius);
+}
+
+.hover-layer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.header:hover > .hover-layer {
+    background-color: var(--secondary-color);
+    opacity: 0.3;
+}
+
+.metaverse-card:hover > .hover-layer {
+    background-color: var(--secondary-color);
+    opacity: 0.3;
+}
+
+.header {
+    width: 100%;
+    padding: 8px;
+    border-radius: var(--default-border-radius);
+    background-color: var(--darker-secondary-color);
+    font-size: 14px;
+}
+
+.header-icon {
+    background-image: resource('Icons/gps');
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.header-contract-name {
+    margin-left: 8px;
+    min-width: 30%;
+    flex-grow: 1;
+    font-size: var(--h1-font-size);
+    overflow: hidden;
+    flex-shrink: 1;
+}
+
+.header-contract-id {
+    margin-left: 8px;
+    min-width: 50%;
+    overflow: hidden;
+    width: 50%;
+    flex-basis: 50%;
+    flex-shrink: 1;
+}
+
+.header-date {
+    font-size: 12px;
+    -unity-text-align: upper-right;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+
+.body {
+    width: 100%;
+    padding: 8px;
+    border-radius: var(--default-border-radius);
+}
+
+.header {
+    height: 64px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.body {
+    flex-grow: 1;
+    margin-top: 8px;
+}
+
+.metaverse-card-container {
+    flex-grow: 1;
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0;
+    overflow: hidden;
+    justify-content: center;
+    top: -4px;
+}
+
+.metaverse-card {
+    margin: 4px;
+    align-items: center;
+    padding-top: 4px;
+    height: 50px;
+    width: 220px;
+}
+
+.metaverse-card > .metaverse-name {
+    margin-top: 0;
+}
+
+.metaverse-card > .metaverse-id {
+    font-size: 8px;
+    -unity-text-align: middle-center;
+    margin-top: 0;
+}
+
+.metaverse-scroll-view {
+    padding-top: 8px;
+    flex-grow: 1;
+}

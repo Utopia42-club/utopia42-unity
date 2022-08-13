@@ -4,7 +4,6 @@ using Source;
 using Source.Model;
 using Source.Service.Auth;
 using Source.Ui.Dialog;
-using Source.Ui.FocusLayer;
 using Source.Ui.LoadingLayer;
 using Source.Ui.Map;
 using Source.Ui.Menu;
@@ -44,19 +43,19 @@ public class Menu : MonoBehaviour
             new("Map", () => new Map()),
             new("Metaverse", () => new MetaverseMenu()),
             new("Help", () => new Help()),
-            new("Profile", () => new UserProfile(null), (e) =>
+            new("Profile", () => new UserProfile(), (e) =>
             {
                 var userProfile = tabPane.GetTabBody().Children().First() as UserProfile;
                 var loading = LoadingLayer.Show(userProfile);
                 ProfileLoader.INSTANCE.load(AuthService.Instance.WalletId(),
                     profile =>
                     {
-                        userProfile.SetProfile(profile);
+                        userProfile.SetProfile(AuthService.Instance.WalletId(), profile);
                         loading.Close();
                     },
                     () =>
                     {
-                        userProfile.SetProfile(Profile.FAILED_TO_LOAD_PROFILE);
+                        userProfile.SetProfile(AuthService.Instance.WalletId(), Profile.FAILED_TO_LOAD_PROFILE);
                         loading.Close();
                     });
             }),
@@ -73,7 +72,7 @@ public class Menu : MonoBehaviour
         {
             gameObject.SetActive(true);
             tabPane?.SetEnabled(true);
-            root.SetEnabled(true);
+            root?.SetEnabled(true);
         }
         else
         {

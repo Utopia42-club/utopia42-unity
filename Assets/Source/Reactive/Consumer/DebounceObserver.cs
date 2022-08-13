@@ -1,6 +1,6 @@
 ﻿using UnityEngine.UIElements;
 
-namespace Source.Ui.Utils.Observer
+namespace Source.Reactive.Consumer
 {
     public class DebounceObserver<TE> : Observer<TE, TE>
     {

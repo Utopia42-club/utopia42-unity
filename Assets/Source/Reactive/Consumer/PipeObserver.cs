@@ -1,13 +1,13 @@
-﻿namespace Source.Ui.Utils.Observer
+﻿namespace Source.Reactive.Consumer
 {
     public class PipeObserver<TI, TM, TO> : Observer<TI, TO>
     {
-        private readonly Observer<TI, TM> first;
+        private readonly IObserver<TI, TM> first;
 
-        public PipeObserver(Observer<TI, TM> first, Observer<TM, TO> second)
+        public PipeObserver(IObserver<TI, TM> first, IObserver<TM, TO> second)
         {
             this.first = first;
-            first.Then(second);
+            first.Then(second.Observe);
             second.Then(ExecuteCallbacks);
         }
 

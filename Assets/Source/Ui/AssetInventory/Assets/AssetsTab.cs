@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using Source.Model.Inventory;
 using Source.Ui.TabPane;
 using Source.Ui.Utils;
-using UnityEngine;
 using UnityEngine.UIElements;
-using static Source.Ui.Utils.Observer.Observers;
+using static Source.Reactive.Consumer.Observers;
 
 namespace Source.Ui.AssetInventory.Assets
 {
@@ -31,7 +30,7 @@ namespace Source.Ui.AssetInventory.Assets
                 Map<ChangeEvent<string>, string>(e => e.newValue)
                     .Pipe(Debounce<string>(searchField, 600))
                     .Pipe(DistinctUntilChanged<string>())
-                    .Then(e => FilterAssets()));
+                    .Then(e => FilterAssets()).Observe);
         }
 
         public void OnTabOpen(TabOpenEvent e)

@@ -62,7 +62,7 @@ namespace Source
                         ProfileLoader.INSTANCE.load(authService.WalletId(), profile =>
                         {
                             if (profile == null)
-                                BrowserConnector.INSTANCE.EditProfile(() =>
+                                BrowserConnector.INSTANCE.OpenDApp(() =>
                                 {
                                     ProfileLoader.INSTANCE.InvalidateProfile(authService.WalletId());
                                     ProfileLoader.INSTANCE.load(authService.WalletId(),

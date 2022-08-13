@@ -72,7 +72,7 @@ namespace Source.Ui.SearchField
             return (T) item;
         }
 
-        public new class UxmlFactory : UxmlFactory<SearchField, TextField.UxmlTraits>
+        public new class UxmlFactory : UxmlFactory<SearchField, UxmlTraits>
         {
         }
     }

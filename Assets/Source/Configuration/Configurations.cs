@@ -24,7 +24,8 @@ namespace Source.Configuration
 #endif
                 return cachedInstance = new Configurations(
                     conf["webAppBaseURL"], conf["apiURL"],
-                    conf["ipfsServerURL"], conf["avatarDesignerURL"]
+                    conf["ipfsServerURL"], conf["avatarDesignerURL"],
+                    conf["dAppUrl"], conf["avatarRenderApi"]
                 );
             }
         }
@@ -34,14 +35,19 @@ namespace Source.Configuration
         public readonly string webAppRpcURL;
         public readonly string ipfsServerURL;
         public readonly string avatarDesignerURL;
+        public readonly string dAppUrl;
+        public readonly string avatarRenderApi;
 
-        internal Configurations(string webAppBaseURL, string apiURL, string ipfsServerURL, string avatarDesignerURL)
+        internal Configurations(string webAppBaseURL, string apiURL, string ipfsServerURL, string avatarDesignerURL,
+            string dAppUrl, string avatarRenderApi)
         {
             this.webAppBaseURL = webAppBaseURL;
             this.apiURL = apiURL;
             webAppRpcURL = webAppBaseURL + "/rpc";
             this.ipfsServerURL = ipfsServerURL;
             this.avatarDesignerURL = avatarDesignerURL;
+            this.dAppUrl = dAppUrl;
+            this.avatarRenderApi = avatarRenderApi;
         }
 
         // public static readonly string WebAppBaseURL = "https://dev.utopia42.club";

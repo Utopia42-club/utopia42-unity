@@ -90,9 +90,9 @@ namespace Source.Canvas
                 // view.SetActive(true);
                 ShowShortcutsSnack();
                 currentProfile = profile;
-                profileIcon.SetUrl(profile.imageUrl == null
-                    ? null
-                    : Configurations.Instance.apiURL + "/profile/image/" + profile.imageUrl);
+                // profileIcon.SetUrl(profile.imageUrl == null
+                    // ? null
+                    // : Configurations.Instance.apiURL + "/profile/image/" + profile.imageUrl);
                 label.SetText(profile.name);
             }
         }

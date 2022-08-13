@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Source.Ui.Utils.Observer
+namespace Source.Reactive.Consumer
 {
     public class FilterObserver<TE> : Observer<TE, TE>
     {

@@ -58,12 +58,12 @@ namespace Source.Ui.Map
                     ProfileLoader.INSTANCE.load(land.owner, profile =>
                         {
                             loading.Close();
-                            landProfile.SetProfile(profile);
+                            landProfile.SetProfile(land.owner, profile);
                         },
                         () =>
                         {
                             loading.Close();
-                            landProfile.SetProfile(Model.Profile.FAILED_TO_LOAD_PROFILE);
+                            landProfile.SetProfile(land.owner, Model.Profile.FAILED_TO_LOAD_PROFILE);
                         });
                 }
             });
