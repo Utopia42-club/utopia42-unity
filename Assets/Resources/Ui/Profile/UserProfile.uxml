@@ -1,8 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
-    <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
     <Style src="project://database/Assets/Resources/Ui/Profile/UserProfile.uss?fileID=7433441132597879392&amp;guid=c31bcd65131e47bba209b6de1368fd35&amp;type=3#UserProfile" />
-    <ui:VisualElement name="Root" style="background-color: rgba(0, 0, 0, 0); flex-direction: row; width: 100%; justify-content: center;">
+    <ui:VisualElement name="Root" style="flex-direction: row; width: 100%; justify-content: center; height: 100%;">
         <ui:VisualElement style="height: 100%; width: 800px; max-width: 100%;">
             <ui:VisualElement name="VisualElement" style="flex-grow: 1; flex-direction: row;">
                 <ui:VisualElement name="leftBar" style="flex-direction: column; align-items: flex-start; padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px;">

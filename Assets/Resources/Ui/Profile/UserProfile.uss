@@ -24,12 +24,9 @@
     flex-wrap: nowrap;
     width: 100%;
     overflow: hidden;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    border-right-width: 0;
-    border-left-width: 0;
+    border-radius: 0;
+    border-color: var(--default-border-color);
+    border-bottom-width: 1px;
 }
 
 .prop-key {
