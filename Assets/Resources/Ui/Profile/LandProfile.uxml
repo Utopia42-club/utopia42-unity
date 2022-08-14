@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
     <Style src="project://database/Assets/Resources/Ui/Map/Map.uss?fileID=7433441132597879392&amp;guid=f64700e43aac0aa479fae05315099134&amp;type=3#Map" />
-    <ui:VisualElement name="Root" style="background-color: rgba(0, 0, 0, 0); flex-direction: row;">
+    <ui:VisualElement name="Root" style="background-color: rgba(0, 0, 0, 0); flex-direction: row; width: 100%; height: 100%;">
         <ui:VisualElement name="userProfileContainer" style="flex-grow: 1;" />
         <ui:VisualElement name="separator" style="justify-content: center;">
             <ui:VisualElement style="width: 1px; background-color: rgb(255, 255, 255); margin-left: 10px; margin-right: 10px; height: 95%;" />

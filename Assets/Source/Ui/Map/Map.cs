@@ -18,7 +18,7 @@ namespace Source.Ui.Map
 
         public Map() : base(typeof(Map), true)
         {
-            var root = this.Q("Root");
+            var root = this.Q("MapRoot");
             var grid = new MapGrid(this);
             root.Add(grid);
             root.Add(lands = new MapLandLayer(this));
