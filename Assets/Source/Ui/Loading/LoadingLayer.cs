@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.Ui.LoadingLayer
+namespace Source.Ui.Loading
 {
     public class LoadingLayer : MonoBehaviour
     {

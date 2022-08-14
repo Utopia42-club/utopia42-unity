@@ -4,7 +4,7 @@ using Source;
 using Source.Model;
 using Source.Service.Auth;
 using Source.Ui.Dialog;
-using Source.Ui.LoadingLayer;
+using Source.Ui.Loading;
 using Source.Ui.Map;
 using Source.Ui.Menu;
 using Source.Ui.Profile;

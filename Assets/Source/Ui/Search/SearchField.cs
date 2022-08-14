@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using Source.Reactive.Producer;
 using UnityEngine.UIElements;
 
-namespace Source.Ui.SearchField
+namespace Source.Ui.Search
 {
     public class SearchField : TextField
     {
-        private Autocomplete<object> autocomplete;
+        private Search.Autocomplete<object> autocomplete;
         private readonly VisualElement valueView;
         private object item;
         private Func<object, string> stringifier;
@@ -33,7 +33,7 @@ namespace Source.Ui.SearchField
                 autocomplete?.Dispose();
             }
 
-            autocomplete = new Autocomplete<object>(this, dataLoader, viewFactory);
+            autocomplete = new Search.Autocomplete<object>(this, dataLoader, viewFactory);
             autocomplete.OptionSelected += SetItem;
 
             return this;

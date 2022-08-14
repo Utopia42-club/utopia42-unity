@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Source.Model;
 using Source.Model.Inventory;
 using Source.Service;
+using Source.Ui.Loading;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.AssetInventory.Assets
@@ -65,7 +66,7 @@ namespace Source.Ui.AssetInventory.Assets
                 {
                     limit = 100
                 };
-                var packsLoading = LoadingLayer.LoadingLayer.Show(loadingTarget); //FIXME target was inventory.content
+                var packsLoading = LoadingLayer.Show(loadingTarget); //FIXME target was inventory.content
                 AssetsInventory.INSTANCE.StartCoroutine(restClient.GetPacks(searchCriteria, packs =>
                 {
                     foreach (var pack in packs)
@@ -79,7 +80,7 @@ namespace Source.Ui.AssetInventory.Assets
                     }
                 }, () => packsLoading.Close()));
 
-                var catsLoading = LoadingLayer.LoadingLayer.Show(loadingTarget); //FIXME target was inventory.content
+                var catsLoading = LoadingLayer.Show(loadingTarget); //FIXME target was inventory.content
                 AssetsInventory.INSTANCE.StartCoroutine(restClient.GetCategories(searchCriteria,
                     categories =>
                     {

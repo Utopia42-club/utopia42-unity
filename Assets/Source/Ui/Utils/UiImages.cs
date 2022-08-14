@@ -1,6 +1,6 @@
 using System;
 using System.Collections;
-using Source.Ui.LoadingLayer;
+using Source.Ui.Loading;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -49,7 +49,7 @@ namespace Source.Ui.Utils
                 SetBackground(visualElement, emptySprite.texture, destroyEmptySprite);
             LoadingController loading = null;
             if (showLoading)
-                loading = LoadingLayer.LoadingLayer.Show(visualElement);
+                loading = LoadingLayer.Show(visualElement);
             yield return LoadImage(url, tex =>
                 {
                     visualElement.UnregisterCallback(listener);

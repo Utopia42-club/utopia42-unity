@@ -2,6 +2,7 @@
 using Source.Model;
 using Source.Model.Inventory;
 using Source.Ui.AssetInventory.Slots;
+using Source.Ui.Loading;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -53,7 +54,7 @@ namespace Source.Ui.AssetInventory.Assets
                 searchCriteria.lastId = null;
 
             // searchCriteria.searchTerms.Clear();
-            var loading = LoadingLayer.LoadingLayer.Show(loadingTarget); //FIXME
+            var loading = LoadingLayer.Show(loadingTarget); //FIXME
             var inventory = AssetsInventory.INSTANCE;
             inventory.StartCoroutine(inventory.restClient.GetAssets(searchCriteria, assets =>
             {

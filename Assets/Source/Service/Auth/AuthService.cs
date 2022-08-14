@@ -2,7 +2,7 @@ using System;
 using Source.Canvas;
 using Source.Model;
 using Source.Ui.Dialog;
-using Source.Ui.LoadingLayer;
+using Source.Ui.Loading;
 using Source.Ui.Login;
 using Source.Ui.Snack;
 using UnityEngine;

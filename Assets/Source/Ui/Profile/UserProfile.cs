@@ -2,7 +2,7 @@ using Source.Canvas;
 using Source.Reactive.Producer;
 using Source.Service;
 using Source.Service.Auth;
-using Source.Ui.LoadingLayer;
+using Source.Ui.Loading;
 using Source.Ui.Utils;
 using Source.UtopiaException;
 using UnityEngine;
@@ -45,7 +45,7 @@ namespace Source.Ui.Profile
             imageElement = this.Q<VisualElement>("profileImage");
             if (profile?.avatarUrl != null)
             {
-                imgLoading = LoadingLayer.LoadingLayer.Show(imageElement);
+                imgLoading = LoadingLayer.Show(imageElement);
                 var urlObs = ProfileRestClient.INSTANCE.GetProfileImageUrl(profile.avatarUrl);
                 imgSubscription = urlObs.Subscribe(url =>
                 {
@@ -142,7 +142,7 @@ namespace Source.Ui.Profile
                 var key = new Label(property.key);
                 key.AddToClassList("prop-key");
                 Add(key);
-                var value = new Label(property.key);
+                var value = new Label(property.value);
                 value.AddToClassList("prop-value");
                 Add(value);
             }

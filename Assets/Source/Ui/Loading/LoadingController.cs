@@ -1,4 +1,4 @@
-namespace Source.Ui.LoadingLayer
+namespace Source.Ui.Loading
 {
     public class LoadingController
     {

@@ -2,6 +2,7 @@
 using Source.Canvas;
 using Source.Model;
 using Source.Ui.Dialog;
+using Source.Ui.Loading;
 using Source.Ui.Profile;
 using Source.Ui.Utils;
 using UnityEngine;
@@ -54,7 +55,7 @@ namespace Source.Ui.Map
                         .WithWidth(new Length(100, LengthUnit.Percent))
                         .WithHeight(new Length(100, LengthUnit.Percent))
                         .WithOnClose(UpdateLandStyle));
-                    var loading = LoadingLayer.LoadingLayer.Show(controller.Dialog);
+                    var loading = LoadingLayer.Show(controller.Dialog);
                     ProfileLoader.INSTANCE.load(land.owner, profile =>
                         {
                             loading.Close();

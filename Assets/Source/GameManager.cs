@@ -9,6 +9,7 @@ using Source.Service;
 using Source.Service.Auth;
 using Source.Ui.Dialog;
 using Source.Ui.FocusLayer;
+using Source.Ui.Loading;
 using Source.Ui.Map;
 using Source.Ui.Profile;
 using Source.Ui.Snack;
@@ -165,7 +166,7 @@ namespace Source
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Creating the world\n0%");
+            LoadingPage.INSTANCE.UpdateText("Creating the world\n0%");
             yield return null;
             var world = World.INSTANCE;
             while (!world.Initialize(new VoxelPosition(pos).chunk, clean)) yield return null;
@@ -173,7 +174,7 @@ namespace Source
             while (world.CountChunksToCreate() > 0)
             {
                 var perc = (total - world.CountChunksToCreate()) / total * 100;
-                Loading.INSTANCE.UpdateText(string.Format("Creating the world\n{0}%", Mathf.FloorToInt(perc)));
+                LoadingPage.INSTANCE.UpdateText(string.Format("Creating the world\n{0}%", Mathf.FloorToInt(perc)));
                 yield return null;
             }
 
@@ -192,7 +193,7 @@ namespace Source
                 if (!msg.Equals(avatarLoadingMsg))
                 {
                     msg = avatarLoadingMsg;
-                    Loading.INSTANCE.UpdateText(msg);
+                    LoadingPage.INSTANCE.UpdateText(msg);
                 }
 
                 yield return new WaitForSeconds(0.1f);
@@ -210,7 +211,7 @@ namespace Source
 
             if (worldInited && GetState() == State.LOADING)
             {
-                Loading.INSTANCE.UpdateText(msg);
+                LoadingPage.INSTANCE.UpdateText(msg);
                 return;
             }
 
@@ -249,7 +250,7 @@ namespace Source
         {
             SetState(State.LOADING);
             Player.INSTANCE.ResetVelocity();
-            Loading.INSTANCE.UpdateText("Positioning the player...");
+            LoadingPage.INSTANCE.UpdateText("Positioning the player...");
             yield return FindStartingY(pos, result => pos = result);
 
             Player.INSTANCE.SetTeleportTarget(pos);
@@ -325,8 +326,8 @@ namespace Source
             WorldService.Invalidate();
             Players.INSTANCE.Clear();
             SetState(State.LOADING);
-            StartCoroutine(WorldService.INSTANCE.Initialize(Loading.INSTANCE,
-                () => InitPlayerForWallet(startingPosition), () => { Loading.INSTANCE.ShowConnectionError(); }));
+            StartCoroutine(WorldService.INSTANCE.Initialize(LoadingPage.INSTANCE,
+                () => InitPlayerForWallet(startingPosition), () => { LoadingPage.INSTANCE.ShowConnectionError(); }));
         }
 
         public void CopyPositionLink()
@@ -395,7 +396,7 @@ namespace Source
             }
 
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Preparing your changes...");
+            LoadingPage.INSTANCE.UpdateText("Preparing your changes...");
 
             Dictionary<long, LandDetails> worldChanges = null;
             yield return service.GetLandsChanges(wallet, lands, changes => worldChanges = changes,
@@ -407,7 +408,7 @@ namespace Source
                 yield break;
             }
 
-            Loading.INSTANCE.UpdateText("Saving data on IPFS...");
+            LoadingPage.INSTANCE.UpdateText("Saving data on IPFS...");
 
             var done = 0;
             var hashes = new Dictionary<long, string>();
@@ -423,10 +424,10 @@ namespace Source
                 }
 
                 done++;
-                Loading.INSTANCE.UpdateText($"Saving data on IPFS...\n {done}/{worldChanges.Count}");
+                LoadingPage.INSTANCE.UpdateText($"Saving data on IPFS...\n {done}/{worldChanges.Count}");
             }
 
-            Loading.INSTANCE.UpdateText("Issuing transaction...");
+            LoadingPage.INSTANCE.UpdateText("Issuing transaction...");
             //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
             BrowserConnector.INSTANCE.Save(hashes, () => StartCoroutine(ReloadOwnerLands()),
                 () => SetState(State.PLAYING));
@@ -525,13 +526,13 @@ namespace Source
         private IEnumerator ReloadLandOwnerAndNft(long id, bool reCreateWorld)
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText($"Reloading Land {id}...");
+            LoadingPage.INSTANCE.UpdateText($"Reloading Land {id}...");
 
             var failed = false;
             yield return WorldService.INSTANCE.ReloadLandOwnerAndNft(id, () => { }, () =>
             {
                 failed = true;
-                Loading.INSTANCE.ShowConnectionError();
+                LoadingPage.INSTANCE.ShowConnectionError();
             });
             if (failed) yield break;
 
@@ -545,13 +546,13 @@ namespace Source
         private IEnumerator ReloadOwnerLands()
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Reloading Your Lands...");
+            LoadingPage.INSTANCE.UpdateText("Reloading Your Lands...");
 
             var failed = false;
             yield return WorldService.INSTANCE.ReloadPlayerLands(() =>
             {
                 failed = true;
-                Loading.INSTANCE.ShowConnectionError();
+                LoadingPage.INSTANCE.ShowConnectionError();
             });
             if (failed) yield break;
 
@@ -593,7 +594,7 @@ namespace Source
         public void ShowConnectionError()
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.ShowConnectionError();
+            LoadingPage.INSTANCE.ShowConnectionError();
         }
 
         public bool IsTextInputFocused()

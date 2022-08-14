@@ -1,5 +1,6 @@
 using Source.Model;
 using Source.Service.Auth;
+using Source.Ui.Loading;
 using Source.Utils;
 using UnityEngine.UIElements;
 
@@ -26,8 +27,13 @@ namespace Source.Ui.Menu
 
             searchResultContainer = this.Q("SearchResult");
             var searchField = this.Q<TextField>();
-            // Autocomplete<object>.CreateSearchRequestObservable(searchField)
-                // .Subscribe(o => );
+            Ui.Search.Autocomplete<object>.CreateSearchRequestObservable(searchField)
+                .Subscribe(o => Search());
+        }
+
+        private void Search()
+        {
+            LoadingLayer.Show(searchResultContainer);
         }
 
         private class MetaverseCard : VisualElement

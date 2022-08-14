@@ -5,8 +5,8 @@ using Source.Reactive.Producer;
 using Source.Service;
 using Source.Service.Auth;
 using Source.Ui;
-using Source.Ui.LoadingLayer;
-using Source.Ui.SearchField;
+using Source.Ui.Loading;
+using Source.Ui.Search;
 using Source.Ui.Snack;
 using Source.UtopiaException;
 using UnityEngine;
@@ -79,7 +79,6 @@ namespace Source.MetaBlocks.TeleportBlock
         private void NetworkChanged()
         {
             var net = GetNetworkId();
-            Debug.Log("Network changed! has:" + net.HasValue);
             if (!net.HasValue || contract.GetItem<MetaverseContract>()?.network?.id != net.Value)
             {
                 contract.value = null;

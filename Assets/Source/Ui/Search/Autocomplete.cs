@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 using static Source.Reactive.Producer.Observables;
 using static Source.Reactive.Consumer.Operators;
 
-namespace Source.Ui.SearchField
+namespace Source.Ui.Search
 {
     public partial class Autocomplete<T> //TODO convert to manipulator
     {

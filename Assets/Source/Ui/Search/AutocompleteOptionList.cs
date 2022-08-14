@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using Source.Reactive.Producer;
+using Source.Ui.Loading;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.Ui.SearchField
+namespace Source.Ui.Search
 {
     public partial class Autocomplete<T>
     {
@@ -86,7 +87,7 @@ namespace Source.Ui.SearchField
                 Clear();
                 autocomplete.loadSubscription?.Unsubscribe();
 
-                var loading = LoadingLayer.LoadingLayer.Show(this);
+                var loading = LoadingLayer.Show(this);
                 autocomplete.loadSubscription = new CompositeSubscription().Add((Subscription) autocomplete.dataLoader(autocomplete.textField.text)
                         .Subscribe(r =>
                         {

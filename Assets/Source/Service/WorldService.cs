@@ -10,6 +10,7 @@ using Source.MetaBlocks.MarkerBlock;
 using Source.Model;
 using Source.Service.Auth;
 using Source.Service.Ethereum;
+using Source.Ui.Loading;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -67,7 +68,7 @@ namespace Source.Service
             INSTANCE = new();
         }
 
-        public IEnumerator Initialize(Loading loading, Action onDone, Action onFailed)
+        public IEnumerator Initialize(LoadingPage loadingPage, Action onDone, Action onFailed)
         {
             if (IsInitialized()) yield break;
             var failed = false;

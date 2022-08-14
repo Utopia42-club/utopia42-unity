@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.Ui
+namespace Source.Ui.Loading
 {
     public class LoadingDots : VisualElement
     {

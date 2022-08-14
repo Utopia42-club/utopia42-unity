@@ -2,11 +2,11 @@ using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Source.Canvas
+namespace Source.Ui.Loading
 {
-    public class Loading : MonoBehaviour
+    public class LoadingPage : MonoBehaviour
     {
-        private static Loading instance;
+        private static LoadingPage instance;
 
         private Label label;
         private VisualElement image;
@@ -45,6 +45,6 @@ namespace Source.Canvas
             UiImageUtils.SetBackground(image, errorLogo, false);
         }
 
-        public static Loading INSTANCE => instance;
+        public static LoadingPage INSTANCE => instance;
     }
 }
