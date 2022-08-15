@@ -7,7 +7,6 @@ using Source.Configuration;
 using Source.Model;
 using Source.Service.Auth;
 using Source.Service.Ethereum;
-using Source.Utils;
 using UnityEngine;
 
 namespace Source.Service
@@ -63,29 +62,37 @@ namespace Source.Service
             var toRemove = new HashSet<Land>(); // If lands are sorted by time, this list will remain empty.
             foreach (var chunk in ChunksForLand(land))
             {
-                HashSet<Land> currChunkLands;
-                if (chunkLands.TryGetValue(chunk, out currChunkLands))
+                if (!land.IsValid())
                 {
-                    foreach (var oLand in currChunkLands)
-                    {
-                        if (rect.Overlaps(oLand.ToRect()))
-                        {
-                            if (land.time > oLand.time)
-                            {
-                                ignored = true;
-                                ignoredLands.Add(land.id);
-                                break;
-                            }
-
-                            toRemove.Add(oLand);
-                        }
-                    }
-
-                    if (ignored)
-                        break;
-                    landLists.Add(currChunkLands);
+                    ignored = true;
+                    ignoredLands.Add(land.id);
                 }
-                else emptyChunks.Add(chunk);
+                else
+                {
+                    HashSet<Land> currChunkLands;
+                    if (chunkLands.TryGetValue(chunk, out currChunkLands))
+                    {
+                        foreach (var oLand in currChunkLands)
+                        {
+                            if (rect.Overlaps(oLand.ToRect()))
+                            {
+                                if (land.time > oLand.time)
+                                {
+                                    ignored = true;
+                                    ignoredLands.Add(land.id);
+                                    break;
+                                }
+
+                                toRemove.Add(oLand);
+                            }
+                        }
+
+                        if (ignored)
+                            break;
+                        landLists.Add(currChunkLands);
+                    }
+                    else emptyChunks.Add(chunk);
+                }
             }
 
             if (!ignored)

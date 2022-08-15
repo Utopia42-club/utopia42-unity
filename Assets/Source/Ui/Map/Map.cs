@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Source.Model;
+using Source.Reactive.Producer;
 using Source.Ui.Dialog;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -10,6 +11,9 @@ namespace Source.Ui.Map
 {
     public class Map : UxmlElement
     {
+        private readonly Subject<float> scaleSubject = new();
+        public Observable<float> scaleObservable => scaleSubject.AsObservable();
+
         private readonly MapLandLayer lands;
         private readonly MapViewportController viewportController;
         private readonly MapPointerPositionLabel mapPointerPositionLabel;
@@ -30,6 +34,7 @@ namespace Source.Ui.Map
                 lands.transform.position = new Vector3(-e.rect.x, -e.rect.y, 0);
                 lands.transform.scale = new Vector3(e.scale, e.scale, 1);
                 grid.UpdateViewport(e.scale);
+                scaleSubject.Next(e.scale);
             });
 
             mapActionsLayer = new MapActionsLayer(this);
