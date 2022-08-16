@@ -5,7 +5,6 @@ using Source.Configuration;
 using Source.Model;
 using Source.Service.Auth;
 using Source.Ui.Dialog;
-using Source.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -55,8 +54,9 @@ namespace Source.Canvas
 
         public void Save(Dictionary<long, string> data, Action onDone, Action onCancel)
         {
-            if (data.Count == 0) onDone();
-            if (WebBridge.IsPresent())
+            if (data.Count == 0)
+                onDone();
+            else if (WebBridge.IsPresent())
             {
                 WebBridge.Call<object>("save", data);
                 OpenDialog(onDone, onCancel);

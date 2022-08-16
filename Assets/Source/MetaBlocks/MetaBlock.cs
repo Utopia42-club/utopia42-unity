@@ -47,7 +47,7 @@ namespace Source.MetaBlocks
         {
             if (Equals(properties, props)) return;
             properties = props;
-            if (land != null)
+            if (land != null && !IsCursor)
                 WorldService.INSTANCE.MarkLandChanged(land);
             if (blockObject != null)
                 blockObject.OnDataUpdate();

@@ -399,8 +399,15 @@ namespace Source
             LoadingPage.INSTANCE.UpdateText("Preparing your changes...");
 
             Dictionary<long, LandDetails> worldChanges = null;
-            yield return service.GetLandsChanges(wallet, lands, changes => worldChanges = changes,
-                () => worldChanges = null);
+            bool canceled = false;
+            yield return service.GetLandsChanges(lands, changes => worldChanges = changes,
+                () => canceled = true);
+
+            if (canceled)
+            {
+                SetState(State.PLAYING);
+                yield break;
+            }
 
             if (worldChanges == null)
             {
@@ -428,8 +435,23 @@ namespace Source
             }
 
             LoadingPage.INSTANCE.UpdateText("Issuing transaction...");
+            if (hashes.Count == 0)
+            {
+                SnackService.INSTANCE.Show(new SnackConfig(
+                        new Toast("Nothing found to save!", Toast.ToastType.Info))
+                    .WithCloseButtonVisible(false));
+                SetState(State.PLAYING);
+            }
+
+
             //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
-            BrowserConnector.INSTANCE.Save(hashes, () => StartCoroutine(ReloadOwnerLands()),
+            BrowserConnector.INSTANCE.Save(hashes, () =>
+                {
+                    List<long> ids = new List<long>();
+                    foreach (var keyValuePair in hashes)
+                        ids.Add(keyValuePair.Key);
+                    StartCoroutine(ReloadLandIpfsKeys(ids));
+                },
                 () => SetState(State.PLAYING));
         }
 
@@ -522,6 +544,25 @@ namespace Source
         //         }
         //     }
         // }
+
+        private IEnumerator ReloadLandIpfsKeys(List<long> ids)
+        {
+            SetState(State.LOADING);
+            LoadingPage.INSTANCE.UpdateText($"Reloading Lands...");
+            
+            var failed = false;
+            yield return WorldService.INSTANCE.ReloadLandIpfsKeys(ids, () => { }, () =>
+            {
+                failed = true;
+                LoadingPage.INSTANCE.ShowConnectionError();
+            });
+            if (failed) yield break;
+
+            var player = Player.INSTANCE;
+            player.ResetLands();
+            yield return InitWorld(player.GetPosition(), true);
+            SetState(State.PLAYING);
+        }
 
         private IEnumerator ReloadLandOwnerAndNft(long id, bool reCreateWorld)
         {

@@ -4,16 +4,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Newtonsoft.Json;
-using Source.Canvas;
 using Source.MetaBlocks;
 using Source.MetaBlocks.MarkerBlock;
 using Source.Model;
 using Source.Service.Auth;
 using Source.Service.Ethereum;
+using Source.Ui.Dialog;
 using Source.Ui.Loading;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Source.Service
@@ -134,14 +135,47 @@ namespace Source.Service
             return landRegistry.GetLandsForOwner(AuthService.Instance.WalletId());
         }
 
-        public IEnumerator GetLandsChanges(string wallet, List<Land> lands,
-            Action<Dictionary<long, LandDetails>> consumer, Action failure)
+        public IEnumerator GetLandsChanges(List<Land> lands,
+            Action<Dictionary<long, LandDetails>> consumer, Action canceled)
         {
             var filteredLands = lands.FindAll(l => changedLands.Contains(l));
 
+            bool Done = false;
+            bool Retry = false;
             yield return LandDetailsService.INSTANCE.GetOrCreate(filteredLands,
-                details => consumer(ClearDefaults(ApplyChanges(details))),
-                failure);
+                loadResult =>
+                {
+                    if (loadResult.IpfsFailures.Count == 0)
+                    {
+                        Done = true;
+                        consumer(ClearDefaults(ApplyChanges(loadResult.DetailsById)));
+                    }
+                    else
+                        DialogService.INSTANCE.Show(
+                            new DialogConfig("Failed to load previous data from Ipfs",
+                                    new Label("Note that you will lose your previously saved changes!"))
+                                .WithCloseOnBackdropClick(false)
+                                .WithAction(new DialogAction("Cancel", () =>
+                                {
+                                    canceled();
+                                    Done = true;
+                                }))
+                                .WithAction(new DialogAction("Retry", () =>
+                                {
+                                    Done = true;
+                                    Retry = true;
+                                }))
+                                .WithAction(new DialogAction("Proceed Anyway", () =>
+                                {
+                                    consumer(ClearDefaults(ApplyChanges(loadResult.DetailsById)));
+                                    Done = true;
+                                }))
+                        );
+                });
+            if (!Done)
+                yield return new WaitUntil(() => Done);
+            if (Retry)
+                yield return GetLandsChanges(lands, consumer, canceled);
         }
 
         private Dictionary<long, LandDetails> ClearDefaults(Dictionary<long, LandDetails> detailsMap)
@@ -168,83 +202,83 @@ namespace Source.Service
         {
             foreach (var changeEntry in changes)
             {
-                var chunkPosition = new Vector2Int(changeEntry.Key.x, changeEntry.Key.z);
-                var candidateLands = new List<Land>(landRegistry.GetLandsForChunk(chunkPosition));
-                candidateLands = candidateLands.FindAll(l => detailsMap.ContainsKey(l.id));
-                if (candidateLands.Count == 0) continue;
-
-                // TODO [detach metablock]: refactor?
-                var findIntDetails = new Func<Vector3Int, Tuple<LandDetails, string>>(changePos =>
-                {
-                    var pos = VoxelPosition.ToWorld(changeEntry.Key, changePos);
-                    var land = candidateLands.Find(l => l.Contains(pos));
-                    if (land != null && detailsMap.TryGetValue(land.id, out var details))
-                    {
-                        pos -= land.startCoordinate.ToVector3();
-                        var key = LandDetails.FormatIntKey(pos);
-                        return new Tuple<LandDetails, string>(details, key);
-                    }
-
-                    return null;
-                });
-
-                var findDetails = new Func<MetaLocalPosition, Tuple<LandDetails, string>>(changePos =>
-                {
-                    var pos = MetaPosition.ToWorld(changeEntry.Key, changePos);
-                    var land = candidateLands.Find(l => l.Contains(pos));
-                    if (land != null && detailsMap.TryGetValue(land.id, out var details))
-                    {
-                        pos -= land.startCoordinate.ToVector3();
-                        var key = LandDetails.FormatKey(pos);
-                        return new Tuple<LandDetails, string>(details, key);
-                    }
-
-                    return null;
-                });
-
-                if (changeEntry.Value.blocks != null)
-                    foreach (var blockEntry in changeEntry.Value.blocks)
-                    {
-                        //FIXME do not save redundant data
-                        var dt = findIntDetails(blockEntry.Key);
-                        if (dt != null)
-                        {
-                            dt.Item1.changes[dt.Item2] =
-                                new Block {name = Blocks.GetBlockType(blockEntry.Value).name};
-                        }
-                    }
-
-
-                if (changeEntry.Value.metaBlocks != null)
-                    foreach (var blockEntry in changeEntry.Value.metaBlocks)
-                    {
-                        var metaBlock = blockEntry.Value;
-                        var metaBlockType = metaBlock.type;
-                        if (metaBlockType != null && metaBlockType.inMemory)
-                            continue;
-
-                        var dt = findDetails(blockEntry.Key);
-                        var props = metaBlock.GetProps();
-                        if (dt != null)
-                        {
-                            if (metaBlockType == null || metaBlock == MetaBlock.DELETED_METABLOCK || props == null)
-                                dt.Item1.metadata.Remove(dt.Item2);
-                            else
-                            {
-                                dt.Item1.metadata[dt.Item2] = new MetaBlockData
-                                {
-                                    properties = JsonConvert.SerializeObject(props),
-                                    type = metaBlockType.name
-                                };
-                            }
-                        }
-                    }
+                ApplyChangesForChunk(detailsMap, changeEntry.Key, changeEntry.Value);
             }
 
             foreach (var entry in detailsMap)
                 entry.Value.properties = landRegistry.GetLands()[entry.Key].properties;
 
             return detailsMap;
+        }
+
+        private void ApplyChangesForChunk(Dictionary<long, LandDetails> detailsMap, Vector3Int chunkPos,
+            ChunkData chunkData)
+        {
+            var chunkPosition = new Vector2Int(chunkPos.x, chunkPos.z);
+            var candidateLands = new List<Land>(landRegistry.GetLandsForChunk(chunkPosition));
+            candidateLands = candidateLands.FindAll(l => detailsMap.ContainsKey(l.id));
+            if (candidateLands.Count == 0) return;
+
+            ApplyBlockChangesForChunk(detailsMap, chunkPos, chunkData, candidateLands);
+
+            ApplyMetaChangesForChunk(detailsMap, chunkPos, chunkData, candidateLands);
+        }
+
+        private static void ApplyMetaChangesForChunk(Dictionary<long, LandDetails> detailsMap, Vector3Int chunkPos,
+            ChunkData chunkData,
+            List<Land> candidateLands)
+        {
+            if (chunkData.metaBlocks != null)
+                foreach (var blockEntry in chunkData.metaBlocks)
+                {
+                    var metaBlock = blockEntry.Value;
+                    var metaBlockType = metaBlock.type;
+                    if (metaBlockType != null && metaBlockType.inMemory)
+                        continue;
+
+
+                    var metaPos = MetaPosition.ToWorld(chunkPos, blockEntry.Key);
+                    var land = candidateLands.Find(l => l.Contains(metaPos));
+                    if (land != null && detailsMap.TryGetValue(land.id, out var details))
+                    {
+                        metaPos -= land.startCoordinate.ToVector3();
+                        var key = LandDetails.FormatKey(metaPos);
+                        var props = metaBlock.GetProps();
+                        if (metaBlockType == null || metaBlock == MetaBlock.DELETED_METABLOCK || props == null)
+                            details.metadata.Remove(key);
+                        else
+                        {
+                            details.metadata[key] = new MetaBlockData
+                            {
+                                properties = JsonConvert.SerializeObject(props),
+                                type = metaBlockType.name
+                            };
+                        }
+                    }
+                }
+        }
+
+
+        private static void ApplyBlockChangesForChunk(Dictionary<long, LandDetails> detailsMap, Vector3Int chunkPos,
+            ChunkData chunkData,
+            List<Land> candidateLands)
+        {
+            if (chunkData.blocks != null)
+                foreach (var blockEntry in chunkData.blocks)
+                {
+                    //FIXME do not save redundant data
+                    // TODO [detach metablock]: refactor?
+
+                    var pos = VoxelPosition.ToWorld(chunkPos, blockEntry.Key);
+                    var land = candidateLands.Find(l => l.Contains(pos));
+                    if (land != null && detailsMap.TryGetValue(land.id, out var details))
+                    {
+                        pos -= land.startCoordinate.ToVector3();
+                        var key = LandDetails.FormatIntKey(pos);
+                        details.changes[key] =
+                            new Block {name = Blocks.GetBlockType(blockEntry.Value).name};
+                    }
+                }
         }
 
         public List<Marker> GetMarkers()
@@ -446,6 +480,31 @@ namespace Source.Service
                 this.position = new SerializableVector3(position);
                 this.type = type;
             }
+        }
+
+        public IEnumerator ReloadLandIpfsKeys(List<long> ids, Action success, Action failure)
+        {
+            var bigIds = new List<BigInteger>();
+            foreach (var id in ids)
+                bigIds.Add(id);
+            
+            yield return EthereumClientService.INSTANCE.GetLandsByIds(bigIds, lands =>
+            {
+                foreach (var loaded in lands)
+                {
+                    var land = landRegistry.Get(loaded.id);
+                    if (land != null)
+                    {
+                        if(!string.Equals(land.ipfsKey, loaded.ipfsKey))
+                        {
+                            land.ipfsKey = loaded.ipfsKey;
+                            changedLands.Remove(land);
+                        }
+                    }
+                }
+
+                success();
+            }, failure);
         }
 
         public IEnumerator ReloadLandOwnerAndNft(long id, Action success, Action failure)

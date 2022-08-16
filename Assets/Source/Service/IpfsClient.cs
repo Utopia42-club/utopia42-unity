@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Source.Configuration;
-using Source.Utils;
 using UnityEngine.Networking;
 
 namespace Source.Service
@@ -49,6 +48,15 @@ namespace Source.Service
                     ipfsResponse => onSuccess.Invoke(ipfsResponse.hash),
                     onFailure);
             }
+        }
+
+        /**
+         * returns true if key is a valid CIDv0 CID (46 char long and starts with Qm)
+         */
+        public static bool IsKeyValid(String key)
+        {
+            return key != null &&
+                   key.Length == 46 && key.StartsWith("Qm");
         }
 
         [Serializable]
