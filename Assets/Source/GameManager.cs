@@ -335,7 +335,7 @@ namespace Source
             var contract = AuthService.Instance.CurrentContract;
             var currentPosition = Player.INSTANCE.GetPosition();
             var url = Configurations.Instance.webAppBaseURL +
-                      $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}&network={contract.network.id}&contract={contract.id}";
+                      $"/{contract.network.id}/{contract.id}?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}";
 
             if (WebBridge.IsPresent())
                 WebBridge.Call<object>("copyToClipboard", url);
@@ -549,7 +549,7 @@ namespace Source
         {
             SetState(State.LOADING);
             LoadingPage.INSTANCE.UpdateText($"Reloading Lands...");
-            
+
             var failed = false;
             yield return WorldService.INSTANCE.ReloadLandIpfsKeys(ids, () => { }, () =>
             {
