@@ -16,14 +16,18 @@ namespace Source.Ui.Map
         private readonly Land land;
         private static readonly Sprite nftLogo = Resources.Load<Sprite>("Icons/nft-logo");
         private readonly Map map;
+        private readonly VisualElement backgroundLayer;
 
         public MapLand(Land land, Map map)
         {
             this.land = land;
             this.map = map;
+            
 
             UpdateLandStyle();
             AddToClassList("map-land");
+            Add(backgroundLayer = new VisualElement());
+            backgroundLayer.AddToClassList("map-land-background-layer");
             UpdateRect();
 
             if (land is {isNft: true})
@@ -80,7 +84,7 @@ namespace Source.Ui.Map
 
             var landColor = Colors.GetLandColor(land);
             if (landColor != null)
-                style.backgroundColor = new StyleColor(landColor.Value);
+                backgroundLayer.style.backgroundColor = new StyleColor(landColor.Value);
             AddToClassList(Colors.GetLandBorderStyle(land));
         }
 

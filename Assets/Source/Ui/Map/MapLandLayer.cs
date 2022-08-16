@@ -103,7 +103,8 @@ namespace Source.Ui.Map
                     var maxX2 = ReduceLands(x2 + dx2, (ox1, ox2, oy1, oy2, maxX2) =>
                     {
                         if (ox2 > x1 && (y1 > oy1 && y1 < oy2 || y2 > oy1 && y2 < oy2
-                                                              || oy1 > y1 && oy1 < y2 || oy2 > y1 && oy2 < y2))
+                                                              || oy1 > y1 && oy1 < y2 || oy2 > y1 && oy2 < y2
+                                                              || y1 == oy1 && y2 == oy2))
                             return Math.Min(maxX2, ox1);
                         return maxX2;
                     });
@@ -117,7 +118,8 @@ namespace Source.Ui.Map
                     var maxY2 = ReduceLands(y2 + dy2, (ox1, ox2, oy1, oy2, maxY2) =>
                     {
                         if (oy2 > y1 && (x1 > ox1 && x1 < ox2 || x2 > ox1 && x2 < ox2
-                                                              || ox1 > x1 && ox1 < x2 || ox2 > x1 && ox2 < x2))
+                                                              || ox1 > x1 && ox1 < x2 || ox2 > x1 && ox2 < x2
+                                                              || x1 == ox1 && x2 == ox2))
                             return Math.Min(maxY2, oy1);
                         return maxY2;
                     });
@@ -134,7 +136,8 @@ namespace Source.Ui.Map
                     var minX1 = ReduceLands(x1 + dx1, (ox1, ox2, oy1, oy2, minX1) =>
                     {
                         if (ox1 < x2 && (y1 > oy1 && y1 < oy2 || y2 > oy1 && y2 < oy2
-                                                              || oy1 > y1 && oy1 < y2 || oy2 > y1 && oy2 < y2))
+                                                              || oy1 > y1 && oy1 < y2 || oy2 > y1 && oy2 < y2
+                                                              || y1 == oy1 && y2 == oy2))
                             return Math.Max(minX1, ox2);
                         return minX1;
                     });
@@ -148,7 +151,8 @@ namespace Source.Ui.Map
                     var minY1 = ReduceLands(y1 + dy1, (ox1, ox2, oy1, oy2, minY1) =>
                     {
                         if (oy1 < y2 && (x1 > ox1 && x1 < ox2 || x2 > ox1 && x2 < ox2
-                                                              || ox1 > x1 && ox1 < x2 || ox2 > x1 && ox2 < x2))
+                                                              || ox1 > x1 && ox1 < x2 || ox2 > x1 && ox2 < x2
+                                                              || x1 == ox1 && x2 == ox2))
                             return Math.Max(minY1, oy2);
                         return minY1;
                     });
@@ -173,13 +177,13 @@ namespace Source.Ui.Map
             var current = seed;
             foreach (var child in Children())
             {
-                if (child is not MapLand || child == drawingLand) continue;
+                if (child is not MapLand mapLand || child == drawingLand) continue;
 
-                var land = ((MapLand) child).GetLand();
+                var land = mapLand.GetLand();
                 var start = MapLand.RoundDown(land.startCoordinate.ToVector3());
                 var end = MapLand.RoundUp(land.endCoordinate.ToVector3());
 
-                current = function.Invoke(start.x, end.x, start.y, end.y, current);
+                current = function.Invoke(start.x, end.x, start.z, end.z, current);
             }
 
             return current;
