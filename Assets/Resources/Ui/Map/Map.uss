@@ -100,12 +100,15 @@
 
 .map-land {
     position: absolute;
-    padding: 2px;
+    /*padding: 2px;*/
 }
 
 .map-land > .map-land-background-layer {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+    right: 2px;
 }
 
 .map-land,
