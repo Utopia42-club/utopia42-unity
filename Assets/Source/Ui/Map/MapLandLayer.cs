@@ -27,7 +27,10 @@ namespace Source.Ui.Map
                 if (e.ctrlKey && drawingLand == null)
                 {
                     startDrawPosition = MapLand.RoundDown(this.map.ScreenToUtopia(e.mousePosition));
-                    if (Children().OfType<MapLand>().Any(child => child.contentRect.Contains(startDrawPosition)))
+                    if (Children().OfType<MapLand>().Any(child => child.GetLand().startCoordinate.x < startDrawPosition.x
+                                                                  && child.GetLand().startCoordinate.z < startDrawPosition.y
+                                                                  && child.GetLand().endCoordinate.x > startDrawPosition.x
+                                                                  && child.GetLand().endCoordinate.z > startDrawPosition.y))
                         return;
 
                     e.StopPropagation();
