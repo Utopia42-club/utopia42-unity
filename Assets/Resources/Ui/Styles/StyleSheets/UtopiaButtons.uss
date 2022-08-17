@@ -12,6 +12,21 @@
     border-color: var(--primary-color);
 }
 
+.utopia-button-warn {
+    border-radius: var(--default-border-radius);
+    border-color: var(--warn-color);
+    background-color: var(--warn-color);
+}
+
+.utopia-button-warn:hover {
+    border-color: var(--primary-color);
+}
+
+.utopia-button-warn:active {
+    border-color: var(--primary-color);
+}
+
+
 .utopia-button-secondary {
     border-radius: var(--default-border-radius);
     border-color: var(--darker-secondary-color);

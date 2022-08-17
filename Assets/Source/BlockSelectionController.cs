@@ -6,17 +6,39 @@ using Source.Ui.Snack;
 using Source.Utils;
 using UnityEngine;
 using Snack = Source.Canvas.Snack;
-using Vector3 = UnityEngine.Vector3;
 
 namespace Source
 {
     public class BlockSelectionController : MonoBehaviour
     {
-        private MouseLook mouseLook;
-        private Player player;
-        private SnackItem snackItem;
+        public enum SelectionMode
+        {
+            Default,
+            Clipboard,
+            Preview
+        }
 
-        private bool movingSelectionAllowed = false;
+        private bool horizontal;
+        private bool horizontalDown;
+        private bool jump;
+        private bool jumpDown;
+
+        private int keyboardFrameCounter;
+        private bool metaSelectionActive;
+        private MouseLook mouseLook;
+
+        private bool movingSelectionAllowed;
+        private bool onlyMetaSelectionActive;
+        private Player player;
+        private bool scalingOrRotatingSelection;
+
+        private bool selectionActive;
+        private bool selectionDisplaced;
+        private bool shiftHeld;
+        private SnackItem snackItem;
+        private bool snackItemInHelpMode;
+        private bool vertical;
+        private bool verticalDown;
         private SelectionMode SMode { set; get; } = SelectionMode.Default;
         private Vector3? DraggedPosition { get; set; }
         private bool KeepSourceAfterSelectionMovement => SMode != SelectionMode.Default;
@@ -24,23 +46,10 @@ namespace Source
         public bool PlayerMovementAllowed =>
             (!selectionActive || !movingSelectionAllowed) && !scalingOrRotatingSelection;
 
-        private bool selectionActive;
-        private bool metaSelectionActive;
-        private bool onlyMetaSelectionActive;
-        private bool selectionDisplaced;
-        private bool scalingOrRotatingSelection;
-
         public bool Dragging => DraggedPosition.HasValue;
 
-        private int keyboardFrameCounter = 0;
-        private bool horizontal;
-        private bool vertical;
-        private bool jump;
-        private bool horizontalDown;
-        private bool verticalDown;
-        private bool jumpDown;
-        private bool shiftHeld;
-        private bool snackItemInHelpMode;
+        public static BlockSelectionController INSTANCE =>
+            GameObject.Find("Player").GetComponent<BlockSelectionController>();
 
         public void Start()
         {
@@ -58,6 +67,13 @@ namespace Source
             });
         }
 
+        private void FixedUpdate()
+        {
+            if (player.ChangeForbidden) return;
+            HandleSelectionKeyboardMovement(true);
+            keyboardFrameCounter++;
+        }
+
         public void DoUpdate()
         {
             GetInputs();
@@ -65,13 +81,6 @@ namespace Source
             HandleSelectionMouseMovement();
             HandlePutBlockAndSelection();
             HandleBlockClipboard();
-        }
-
-        private void FixedUpdate()
-        {
-            if (player.ChangeForbidden) return;
-            HandleSelectionKeyboardMovement(true);
-            keyboardFrameCounter++;
         }
 
         private void GetInputs()
@@ -131,7 +140,9 @@ namespace Source
         {
             if (!selectionActive || player.CtrlHeld || scalingOrRotatingSelection) return;
             if (Input.GetMouseButtonUp(0))
+            {
                 StopDragDropProcess();
+            }
 
             else if (Input.GetMouseButtonDown(0) && DraggedPosition == null && !selectionDisplaced)
             {
@@ -140,10 +151,8 @@ namespace Source
                     DraggedPosition = player.FocusedFocusable.GetBlockPosition();
 
                     if (DraggedPosition.HasValue)
-                    {
                         DraggedPosition = new Vector3(DraggedPosition.Value.x, World.INSTANCE.GetSelectionMinPoint().y,
                             DraggedPosition.Value.z);
-                    }
                 }
             }
 
@@ -241,7 +250,8 @@ namespace Source
             }
             else if (selectionActive)
             {
-                if (Input.GetMouseButtonDown(0) && selectionDisplaced && !player.CtrlHeld && player.FocusedFocusable != null)
+                if (Input.GetMouseButtonDown(0) && selectionDisplaced && !player.CtrlHeld &&
+                    player.FocusedFocusable != null)
                 {
                     ConfirmMove();
                     ReSelectSelection();
@@ -253,24 +263,20 @@ namespace Source
                     DeleteBlock();
                 else if (player.PlaceBlock.gameObject.activeSelf && player.SelectedBlockType != null &&
                          player.SelectedBlockType is not MetaBlockType)
-                {
                     World.INSTANCE.TryPutVoxel(new VoxelPosition(player.PossiblePlaceBlockPosInt),
                         player.SelectedBlockType);
-                }
                 else if (player.MetaBlockPlaceHolder != null && player.MetaBlockPlaceHolder.activeSelf)
-                {
                     World.INSTANCE.TryPutMeta(new MetaPosition(player.MetaBlockPlaceHolder.transform.position),
                         player.SelectedBlockType);
-                }
                 else if (player.PreparedMetaBlock != null && player.PreparedMetaBlock.IsActive)
-                {
                     World.INSTANCE.PutMetaWithProps(
                         new MetaPosition(player.PreparedMetaBlock.blockObject.transform.position),
                         player.PreparedMetaBlock.type, player.PreparedMetaBlock.GetProps(), player.placeLand);
-                }
             }
             else if (player.HammerMode && Input.GetButtonDown("Delete"))
+            {
                 DeleteBlock();
+            }
         }
 
         private void DeleteBlock()
@@ -312,7 +318,9 @@ namespace Source
                     ReSelectSelection();
                 }
                 else
+                {
                     ExitSelectionMode();
+                }
             }
             else if (Input.GetButtonDown("Delete"))
             {
@@ -348,7 +356,9 @@ namespace Source
                         World.INSTANCE.PasteClipboard(player.PossiblePlaceBlockPosInt - minIntPoint);
                 }
                 else
+                {
                     World.INSTANCE.PasteClipboard(player.PossiblePlaceMetaBlockPos - minPoint);
+                }
 
                 PrepareForSelectionMovement(SelectionMode.Clipboard);
             }
@@ -374,10 +384,7 @@ namespace Source
             var selectedMetaPositions = World.INSTANCE.GetSelectedMetaBlocksPositions();
             ExitSelectionMode();
             AddHighlights(selectedPositions);
-            foreach (var metaPosition in selectedMetaPositions)
-            {
-                AddHighlight(metaPosition);
-            }
+            foreach (var metaPosition in selectedMetaPositions) AddHighlight(metaPosition);
         }
 
         private void UpdateSnackText()
@@ -431,15 +438,13 @@ namespace Source
                 lines.Add(
                     "CTRL+SHIFT+CLICK : select/unselect all blocks between the last selected block and current block");
                 if (metaSelectionActive)
-                {
                     lines.AddRange(new[]
                     {
                         "] : scale 3d objects up",
                         "[ : scale 3d objects down",
                         "R + A/D or horizontal mouse movement : rotate objects around y axis",
-                        "R + W/S or vertical mouse movement : rotate objects around player right axis",
+                        "R + W/S or vertical mouse movement : rotate objects around player right axis"
                     });
-                }
             }
             else
             {
@@ -478,7 +483,7 @@ namespace Source
 
         public void AddPreviewHighlights(Dictionary<VoxelPosition, uint> highlights)
         {
-            if (highlights.Count == 0 || SMode != SelectionMode.Preview && selectionActive)
+            if (highlights.Count == 0 || (SMode != SelectionMode.Preview && selectionActive))
                 return; // do not add preview highlights after existing non-preview highlights
             StartCoroutine(World.INSTANCE.AddHighlights(highlights, result =>
             {
@@ -515,24 +520,12 @@ namespace Source
             }
 
             if (setSnack)
-            {
                 // movingSelectionAllowed = false; // TODO
                 // SetBlockSelectionSnack();
                 PrepareForSelectionMovement(SelectionMode.Default);
-            }
             else UpdateSnackText();
 
             PropertyEditor.INSTANCE.Hide();
-        }
-
-        public static BlockSelectionController INSTANCE =>
-            GameObject.Find("Player").GetComponent<BlockSelectionController>();
-
-        public enum SelectionMode
-        {
-            Default,
-            Clipboard,
-            Preview,
         }
     }
 }

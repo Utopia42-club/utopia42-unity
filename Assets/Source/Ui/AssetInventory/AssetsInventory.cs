@@ -4,11 +4,13 @@ using System.Linq;
 using Newtonsoft.Json;
 using Source.MetaBlocks;
 using Source.Model;
+using Source.Model.Inventory;
 using Source.Service;
+using Source.Service.Auth;
 using Source.Ui.AssetInventory.Assets;
-using Source.Ui.AssetInventory.Models;
 using Source.Ui.AssetInventory.Slots;
 using Source.Ui.CustomUi;
+using Source.Ui.Loading;
 using Source.Ui.Popup;
 using Source.Ui.Snack;
 using Source.Ui.TabPane;
@@ -85,7 +87,7 @@ namespace Source.Ui.AssetInventory
 
             var tabConfigurations = new List<TabConfiguration>
             {
-                new("Assets", new AssetsTab(this, inventory)),
+                new("Assets", new AssetsTab(inventory)),
                 new("Blocks", "Ui/AssetInventory/BlocksTab", e => SetupBlocksTab()),
                 new("Favorites", "Ui/AssetInventory/FavoritesTab", e => SetupFavoritesTab())
             };
@@ -137,7 +139,7 @@ namespace Source.Ui.AssetInventory
         {
             var active = GameManager.INSTANCE.GetState() == GameManager.State.PLAYING
                          && Player.INSTANCE.GetViewMode() == Player.ViewMode.FIRST_PERSON
-                         && !AuthService.IsGuest()
+                         && !AuthService.Instance.IsGuest()
                 ; // && Can Edit Land 
             gameObject.SetActive(active);
             inventoryContainer.style.visibility = Visibility.Visible; // is null at start and can't be checked !
@@ -254,7 +256,7 @@ namespace Source.Ui.AssetInventory
 
         private void LoadFavoriteItems(Action onDone = null, Action onFail = null, bool forFavoritesTab = false)
         {
-            var loading = LoadingLayer.LoadingLayer.Show(forFavoritesTab ? inventory : handyPanelRoot);
+            var loading = LoadingLayer.Show(forFavoritesTab ? inventory : handyPanelRoot);
             StartCoroutine(restClient.GetAllFavoriteItems(new SearchCriteria(), favItems =>
             {
                 favoriteItems = favItems;
@@ -408,7 +410,7 @@ namespace Source.Ui.AssetInventory
         public void AddToFavorites(BaseInventorySlot slot)
         {
             var slotInfo = slot.GetSlotInfo();
-            var loading = LoadingLayer.LoadingLayer.Show(inventory);
+            var loading = LoadingLayer.Show(inventory);
             var favoriteItem = new FavoriteItem
             {
                 asset = slotInfo.asset,
@@ -429,7 +431,7 @@ namespace Source.Ui.AssetInventory
 
         public void RemoveFromFavorites(FavoriteItem favoriteItem, BaseInventorySlot slot, Action onDone = null)
         {
-            var loading = LoadingLayer.LoadingLayer.Show(inventory);
+            var loading = LoadingLayer.Show(inventory);
             StartCoroutine(restClient.DeleteFavoriteItem(favoriteItem.id.Value,
                 () =>
                 {

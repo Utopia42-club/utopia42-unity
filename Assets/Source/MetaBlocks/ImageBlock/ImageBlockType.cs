@@ -6,6 +6,7 @@ namespace Source.MetaBlocks.ImageBlock
     public class ImageBlockType : MetaBlockType
     {
         public const float Gap = 0.2f;
+
         public ImageBlockType(byte id) : base(id, "image", typeof(ImageBlockObject), typeof(MediaBlockProperties))
         {
         }

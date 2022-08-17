@@ -12,7 +12,7 @@
     --map-default-land-color: var(--map-others-land-color);
 }
 
-#Root {
+.map-root {
     background-color: var(--map-background);
     width: 100%;
     height: 100%;
@@ -41,11 +41,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-}
-
-.map-land {
-    background-color: var(--map-land-background);
-    position: absolute;
 }
 
 .map-vertical-grid-line {
@@ -89,30 +84,9 @@
     position: absolute;
 }
 
-.map-owned-land-nft {
-    border-width: 2;
-    border-color: var(--map-owned-land-nft-color);
-}
-
-.map-owned-land {
-    border-width: 2;
-    border-color: var(--map-owned-land-color);
-}
-
-.map-others-land-nft {
-    border-width: 2;
-    border-color: var(--map-others-land-nft-color);
-}
-
-.map-others-land {
-    border-width: 2;
-    border-color: var(--map-others-land-color);
-}
-
 .map-position-indicator {
     position: absolute;
-    width: 30;
-    height: 30;
+    opacity: 0.7;
 }
 
 .map-default-land-background {
@@ -123,6 +97,42 @@
     background-color: var(--darker-primary-color);
 }
 
-.map-new-drawing-land{
+
+.map-land {
+    position: absolute;
+    /*padding: 2px;*/
+}
+
+.map-land > .map-land-background-layer {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+    right: 2px;
+}
+
+.map-land,
+.map-land > .map-land-background-layer {
+    background-color: var(--map-land-background);
+}
+
+.map-new-drawing-land,
+.map-new-drawing-land > .map-land-background-layer {
     background-color: var(--secondary-color);
+}
+
+.map-owned-land-nft {
+    background-color: var(--map-owned-land-nft-color);
+}
+
+.map-owned-land {
+    background-color: var(--map-owned-land-color);
+}
+
+.map-others-land-nft {
+    background-color: var(--map-others-land-nft-color);
+}
+
+.map-others-land {
+    background-color: var(--map-others-land-color);
 }

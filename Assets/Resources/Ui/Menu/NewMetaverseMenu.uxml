@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/Ui/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=dc99a61ae08317e469cf4db39b13239e&amp;type=3#Styles" />
+    <Style src="project://database/Assets/Resources/Ui/Menu/MetaverseMenu.uss?fileID=7433441132597879392&amp;guid=76fc7b9030d71a949b7a673fcc9bd28c&amp;type=3#MetaverseMenu" />
+    <ui:VisualElement name="root" class="utopia-background" style="width: 100%; height: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; padding-left: 8px; padding-right: 8px; padding-top: 8px; padding-bottom: 8px;">
+        <ui:VisualElement name="CurrentContract" class="header" style="overflow: hidden;">
+            <ui:VisualElement class="hover-layer" />
+            <ui:VisualElement class="header-icon" />
+            <ui:Label text="The nice land" display-tooltip-when-elided="true" name="ContractName" class="header-contract-name" />
+            <ui:Label text="0xasdfasdffas123e1289qwe9872r91e1298e712e12e" display-tooltip-when-elided="true" name="ContractId" class="header-contract-id" />
+            <ui:Label text="Label" display-tooltip-when-elided="true" name="Date" class="header-date" />
+        </ui:VisualElement>
+        <ui:VisualElement class="utopia-darker-primary-background body">
+            <ui:VisualElement class="utopia-border" style="flex-direction: row; border-bottom-width: 1px; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                <ui:VisualElement name="VisualElement" style="width: 32px; height: 32px; background-image: resource(&apos;Icons/magnify&apos;);" />
+                <ui:TextField picking-mode="Ignore" value="filler text" text="filler text" style="border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; flex-grow: 1; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; background-color: rgba(24, 36, 48, 0);" />
+            </ui:VisualElement>
+            <ui:ScrollView class="metaverse-scroll-view">
+                <ui:VisualElement name="SearchResult" class="metaverse-card-container" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -47,17 +47,17 @@ namespace Source.MetaBlocks
             foreach (var (target, action) in rotateTargets)
             {
                 if (target == null) continue;
-                
+
                 // target.Rotate(target.InverseTransformVector(
                 //     rotation.y * Vector3.up +
                 //     rotation.x * Player.INSTANCE.avatar.transform.right));
-                
+
                 // target.Rotate(rotation.y * Vector3.up + rotation.x * Player.INSTANCE.avatar.transform.right);
 
                 var up = target.InverseTransformDirection(Vector3.up);
                 var right = target.InverseTransformDirection(Player.INSTANCE.CamRight);
                 target.Rotate(rotation.y * up + rotation.x * right);
-                
+
                 if (action != null)
                     afterRotated.Add(action);
             }

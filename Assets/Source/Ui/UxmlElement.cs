@@ -7,6 +7,8 @@ namespace Source.Ui
 {
     public class UxmlElement : VisualElement
     {
+        public static readonly StyleSheet GlobalStyleSheet = LoadStyleSheet("Ui/Styles/Styles");
+
         public UxmlElement(Type type)
             : this(ResourcePaths.ForType(type))
         {
@@ -49,7 +51,7 @@ namespace Source.Ui
                 style.height = height;
             }
         }
-        
+
         public static StyleSheet LoadStyleSheet(Type type)
         {
             return LoadStyleSheet(ResourcePaths.ForType(type));
@@ -57,7 +59,9 @@ namespace Source.Ui
 
         public static StyleSheet LoadStyleSheet(string path)
         {
-            return Resources.Load<StyleSheet>(path);
+            var resource = Resources.Load<StyleSheet>(path);
+            if (resource == null) throw new ArgumentException("Could not load uss resource: " + path);
+            return resource;
         }
     }
 }

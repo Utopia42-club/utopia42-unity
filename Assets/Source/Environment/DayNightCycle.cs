@@ -15,7 +15,6 @@ namespace Source.Environment
 
         [Header("Speed")] public float fullDayLength; //seconds
         public AnimationCurve dayNightSpeed;
-        private float timeRate; //Speed of changing time
 
         [Header("Sun")] public Light sun;
         public Gradient sunColor;
@@ -27,23 +26,15 @@ namespace Source.Environment
 
         [Header("Other Lighting")] public AnimationCurve lightingIntensityMultiplier;
         public AnimationCurve reflectionsIntensityMultiplier;
+        private float timeRate; //Speed of changing time
 
-        void Start()
+        private void Start()
         {
             timeRate = 1.0f / fullDayLength;
             time = startTime;
         }
 
-        private float ComputeSpeed()
-        {
-            if (time < rotationOffset)
-                return 10f;
-            if (time > rotationOffset + 0.5f)
-                return 10f;
-            return 1;
-        }
-
-        void Update()
+        private void Update()
         {
             // update time
             // time += timeRate * ComputeSpeed() * Time.deltaTime;
@@ -77,6 +68,15 @@ namespace Source.Environment
             // lighting and reflection intensity
             RenderSettings.ambientIntensity = lightingIntensityMultiplier.Evaluate(time);
             RenderSettings.reflectionIntensity = reflectionsIntensityMultiplier.Evaluate(time);
+        }
+
+        private float ComputeSpeed()
+        {
+            if (time < rotationOffset)
+                return 10f;
+            if (time > rotationOffset + 0.5f)
+                return 10f;
+            return 1;
         }
     }
 }

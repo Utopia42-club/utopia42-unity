@@ -2,15 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Source.Configuration;
 using UnityEngine.Networking;
 
 namespace Source.Service
 {
     internal class IpfsClient
     {
-        public static readonly string SERVER_URL = "https://utopia42.club/api/v0";
-
-        internal static IpfsClient INSATANCE = new IpfsClient();
+        internal static IpfsClient INSATANCE = new();
 
         private IpfsClient()
         {
@@ -18,7 +17,7 @@ namespace Source.Service
 
         public static string ToUrl(string key)
         {
-            return SERVER_URL + "/cat?arg=/ipfs/" + key;
+            return Configurations.Instance.ipfsServerURL + "/cat?arg=/ipfs/" + key;
         }
 
         public IEnumerator DownloadJson<TR>(string key, Action<TR> onSuccess, Action onFailure)
@@ -42,13 +41,22 @@ namespace Source.Service
         private static IEnumerator Upload(List<IMultipartFormSection> form, Action<string> onSuccess,
             Action onFailure)
         {
-            var url = SERVER_URL + "/add?stream-channels=true&progress=false";
+            var url = Configurations.Instance.ipfsServerURL + "/add?stream-channels=true&progress=false";
             using (var webRequest = UnityWebRequest.Post(url, form))
             {
                 yield return RestClient.ExecuteRequest<IpfsResponse>(webRequest,
                     ipfsResponse => onSuccess.Invoke(ipfsResponse.hash),
                     onFailure);
             }
+        }
+
+        /**
+         * returns true if key is a valid CIDv0 CID (46 char long and starts with Qm)
+         */
+        public static bool IsKeyValid(String key)
+        {
+            return key != null &&
+                   key.Length == 46 && key.StartsWith("Qm");
         }
 
         [Serializable]

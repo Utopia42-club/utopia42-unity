@@ -2,6 +2,7 @@
 using Source.Canvas;
 using Source.Model;
 using Source.Ui.Dialog;
+using Source.Ui.Loading;
 using Source.Ui.Profile;
 using Source.Ui.Utils;
 using UnityEngine;
@@ -15,14 +16,18 @@ namespace Source.Ui.Map
         private readonly Land land;
         private static readonly Sprite nftLogo = Resources.Load<Sprite>("Icons/nft-logo");
         private readonly Map map;
+        private readonly VisualElement backgroundLayer;
 
         public MapLand(Land land, Map map)
         {
             this.land = land;
             this.map = map;
+            
 
-            UpdateLandStyle();
             AddToClassList("map-land");
+            Add(backgroundLayer = new VisualElement());
+            backgroundLayer.AddToClassList("map-land-background-layer");
+            UpdateLandStyle();
             UpdateRect();
 
             if (land is {isNft: true})
@@ -49,21 +54,21 @@ namespace Source.Ui.Map
             {
                 if (evt.button == (int) MouseButton.RightMouse)
                 {
-                    var landProfile = new LandProfile(land);
+                    var landProfile = new LandProfile(map, land);
                     var controller = DialogService.INSTANCE.Show(new DialogConfig("Land Profile", landProfile)
                         .WithWidth(new Length(100, LengthUnit.Percent))
                         .WithHeight(new Length(100, LengthUnit.Percent))
                         .WithOnClose(UpdateLandStyle));
-                    var loading = LoadingLayer.LoadingLayer.Show(controller.Dialog);
+                    var loading = LoadingLayer.Show(controller.Dialog);
                     ProfileLoader.INSTANCE.load(land.owner, profile =>
                         {
                             loading.Close();
-                            landProfile.SetProfile(profile);
+                            landProfile.SetProfile(land.owner, profile);
                         },
                         () =>
                         {
                             loading.Close();
-                            landProfile.SetProfile(Model.Profile.FAILED_TO_LOAD_PROFILE);
+                            landProfile.SetProfile(land.owner, Model.Profile.FAILED_TO_LOAD_PROFILE);
                         });
                 }
             });
@@ -79,7 +84,7 @@ namespace Source.Ui.Map
 
             var landColor = Colors.GetLandColor(land);
             if (landColor != null)
-                style.backgroundColor = new StyleColor(landColor.Value);
+                backgroundLayer.style.backgroundColor = new StyleColor(landColor.Value);
             AddToClassList(Colors.GetLandBorderStyle(land));
         }
 

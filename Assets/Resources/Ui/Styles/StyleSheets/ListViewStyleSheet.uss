@@ -1,7 +1,15 @@
 .unity-list-view__item:hover {
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 .unity-list-view__item:hover:enabled {
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.unity-list-view__item:selected {
+    background-color: var(--secondary-color);
+}
+
+.unity-list-view__item:hover:selected {
+    background-color: var(--darker-secondary-color);
 }

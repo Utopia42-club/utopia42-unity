@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Source.Canvas;
+using Source.Configuration;
 using Source.Model;
 using Source.Service;
-using Source.Service.Ethereum;
+using Source.Service.Auth;
 using Source.Ui.Dialog;
+using Source.Ui.FocusLayer;
+using Source.Ui.Loading;
 using Source.Ui.Map;
 using Source.Ui.Profile;
 using Source.Ui.Snack;
@@ -19,25 +22,32 @@ namespace Source
 {
     public class GameManager : MonoBehaviour
     {
-        private bool worldInited = false;
+        public enum State
+        {
+            LOADING,
+            PLAYING,
+            MENU,
+            LOGIN,
+            INITIAL
+        }
 
         public readonly UnityEvent<State> stateChange = new();
         public readonly List<Func<State, State, bool>> stateGuards = new();
 
-        private State state = State.LOADING;
-        private State? previousState;
+        private string avatarLoadingMsg;
 
         private bool captureAllKeyboardInputOrig;
 
-        private bool doubleCtrlTap = false;
+        private bool doubleCtrlTap;
         private double doubleCtrlTapTime;
 
-        private readonly List<int> engagedUIs = new();
+        private State state = State.INITIAL;
         private int uiId;
+        private bool worldInited;
 
-        private string avatarLoadingMsg;
+        public static GameManager INSTANCE => GameObject.Find("GameManager").GetComponent<GameManager>();
 
-        void Start()
+        private void Start()
         {
             ResetAvatarMsg();
             SetState(State.LOGIN);
@@ -48,27 +58,36 @@ namespace Source
                 if (!checkedForProfile && state == State.PLAYING)
                 {
                     checkedForProfile = true;
-                    if (!AuthService.IsGuest())
-                        ProfileLoader.INSTANCE.load(AuthService.WalletId(), profile =>
+                    var authService = AuthService.Instance;
+                    if (!authService.IsGuest())
+                        ProfileLoader.INSTANCE.load(authService.WalletId(), profile =>
                         {
                             if (profile == null)
                             {
-                                BrowserConnector.INSTANCE.EditProfile(() =>
-                                {
-                                    ProfileLoader.INSTANCE.InvalidateProfile(AuthService.WalletId());
-                                    ProfileLoader.INSTANCE.load(AuthService.WalletId(),
-                                        p =>
+                                DialogService.INSTANCE
+                                    .Show(new DialogConfig("No profile found",
+                                            new Label("You can edit your profile on the DApp."))
+                                        .WithAction(new DialogAction("Cancel", () => { }))
+                                        .WithAction(new DialogAction("Edit profile", () =>
                                         {
-                                            if (p != null) Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
-                                        }, () => { });
-                                }, () => { });
+                                            BrowserConnector.INSTANCE.OpenDApp(() =>
+                                            {
+                                                ProfileLoader.INSTANCE.InvalidateProfile(authService.WalletId());
+                                                ProfileLoader.INSTANCE.load(authService.WalletId(),
+                                                    p =>
+                                                    {
+                                                        if (p != null) Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
+                                                    }, () => { });
+                                            }, () => { });
+                                        }, "utopia-button-secondary")));
+
                             }
                         }, () => { });
                 }
             });
         }
 
-        void Update()
+        private void Update()
         {
             if (Input.GetButtonDown("Cancel"))
             {
@@ -77,13 +96,13 @@ namespace Source
                 else
                     ReturnToGame();
             }
-            else if (state == State.PLAYING && !IsUiEngaged())
+            else if (state == State.PLAYING && !IsTextInputFocused())
             {
                 if (IsControlKeyDown())
                 {
                     if (doubleCtrlTap)
                     {
-                        if ((Time.time - doubleCtrlTapTime) < Mathf.Max(0.4f, Time.deltaTime + 0.1f))
+                        if (Time.time - doubleCtrlTapTime < Mathf.Max(0.4f, Time.deltaTime + 0.1f))
                         {
                             OpenPluginsDialog();
                             doubleCtrlTapTime = 0f;
@@ -98,20 +117,21 @@ namespace Source
                     }
                 }
                 else if (Input.GetButtonDown("Menu") || Input.GetButtonDown("Map"))
+                {
                     SetState(State.MENU);
+                }
             }
             else if (worldInited && Input.GetButtonDown("Menu") && state == State.MENU)
+            {
                 SetState(State.PLAYING);
+            }
         }
 
         public void OpenPluginsDialog()
         {
             if (state != State.PLAYING)
                 SetState(State.PLAYING);
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("openPluginsDialog", "menu");
-            }
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("openPluginsDialog", "menu");
         }
 
         private bool IsControlKeyDown()
@@ -119,14 +139,9 @@ namespace Source
             return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
         }
 
-        public bool IsWorldInited()
-        {
-            return worldInited;
-        }
-
         private void InitPlayerForWallet(Vector3? startingPosition)
         {
-            if (string.IsNullOrWhiteSpace(AuthService.WalletId()))
+            if (!AuthService.Instance.HasSession())
             {
                 SetState(State.LOGIN);
                 return;
@@ -139,24 +154,21 @@ namespace Source
 
             if (startingPosition == null)
             {
-                startingPosition = Player.GetSavedPosition();
-                if (startingPosition.HasValue)
-                    pos = startingPosition.Value;
-                else
+                var chunkSize = Chunk.CHUNK_SIZE;
+                pos = new Vector3(0, chunkSize.y + 10, 0);
+                var lands = player.GetOwnedLands();
+                if (lands.Count > 0)
                 {
-                    var chunkSize = Chunk.CHUNK_SIZE;
-                    pos = new Vector3(0, chunkSize.y + 10, 0);
-                    var lands = player.GetOwnedLands();
-                    if (lands.Count > 0)
-                    {
-                        var land = lands[0];
-                        pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
-                        pos /= 2;
-                        pos.y = chunkSize.y + 10;
-                    }
+                    var land = lands[0];
+                    pos = land.startCoordinate.ToVector3() + land.endCoordinate.ToVector3();
+                    pos /= 2;
+                    pos.y = chunkSize.y + 10;
                 }
             }
-            else pos = startingPosition.Value;
+            else
+            {
+                pos = startingPosition.Value;
+            }
 
             StartCoroutine(DoMovePlayerTo(pos, true));
         }
@@ -164,7 +176,7 @@ namespace Source
         private IEnumerator InitWorld(Vector3 pos, bool clean)
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Creating the world\n0%");
+            LoadingPage.INSTANCE.UpdateText("Creating the world\n0%");
             yield return null;
             var world = World.INSTANCE;
             while (!world.Initialize(new VoxelPosition(pos).chunk, clean)) yield return null;
@@ -172,7 +184,7 @@ namespace Source
             while (world.CountChunksToCreate() > 0)
             {
                 var perc = (total - world.CountChunksToCreate()) / total * 100;
-                Loading.INSTANCE.UpdateText(string.Format("Creating the world\n{0}%", Mathf.FloorToInt(perc)));
+                LoadingPage.INSTANCE.UpdateText(string.Format("Creating the world\n{0}%", Mathf.FloorToInt(perc)));
                 yield return null;
             }
 
@@ -191,7 +203,7 @@ namespace Source
                 if (!msg.Equals(avatarLoadingMsg))
                 {
                     msg = avatarLoadingMsg;
-                    Loading.INSTANCE.UpdateText(msg);
+                    LoadingPage.INSTANCE.UpdateText(msg);
                 }
 
                 yield return new WaitForSeconds(0.1f);
@@ -209,12 +221,34 @@ namespace Source
 
             if (worldInited && GetState() == State.LOADING)
             {
-                Loading.INSTANCE.UpdateText(msg);
+                LoadingPage.INSTANCE.UpdateText(msg);
                 return;
             }
 
             if (worldInited || forceToast)
                 new Toast(msg, Toast.ToastType.Warning).ShowWithCloseButtonDisabled();
+        }
+
+        public void Teleport(int networkId, string contract, Vector3 position)
+        {
+            var current = AuthService.Instance.CurrentContract;
+            if (current.network.id == networkId &&
+                string.Equals(current.id, contract, StringComparison.OrdinalIgnoreCase))
+            {
+                MovePlayerTo(position);
+            }
+            else
+            {
+                if (WorldService.INSTANCE.HasChange())
+                    DialogService.INSTANCE.Show(new DialogConfig("Unsaved Changes!",
+                            new Label("Your changes will be discarded, Are you sure?"))
+                        .WithAction(new DialogAction("YES",
+                            () => AuthService.Instance.ChangeContract(networkId, contract, position)))
+                        .WithAction(new DialogAction("CANCEL", () => { }))
+                    );
+                else
+                    AuthService.Instance.ChangeContract(networkId, contract, position);
+            }
         }
 
         public void MovePlayerTo(Vector3 pos)
@@ -226,7 +260,7 @@ namespace Source
         {
             SetState(State.LOADING);
             Player.INSTANCE.ResetVelocity();
-            Loading.INSTANCE.UpdateText("Positioning the player...");
+            LoadingPage.INSTANCE.UpdateText("Positioning the player...");
             yield return FindStartingY(pos, result => pos = result);
 
             Player.INSTANCE.SetTeleportTarget(pos);
@@ -244,8 +278,8 @@ namespace Source
             var feet = Vectors.FloorToInt(pos) + new Vector3(.5f, .5f, .5f);
             while (true)
             {
-                bool coll = false;
-                for (int i = -1; i < 3; i++)
+                var coll = false;
+                for (var i = -1; i < 3; i++)
                 {
                     var loaded = false;
                     service.IsSolid(new VoxelPosition(feet + Vector3Int.up * i), s =>
@@ -297,38 +331,27 @@ namespace Source
             }
         }
 
-        internal void ExitSettings(Vector3? startingPosition)
+        internal void SessionChanged(Vector3? startingPosition)
         {
-            if (worldInited) SetState(State.PLAYING);
-            else InitPlayerForWallet(startingPosition);
-        }
-
-        internal void SettingsChanged(EthNetwork network, Vector3? startingPosition)
-        {
-            if (!EthereumClientService.INSTANCE.IsInitialized())
-            {
-                EthereumClientService.INSTANCE.SetNetwork(network);
-                SetState(State.LOADING);
-                StartCoroutine(WorldService.INSTANCE.Initialize(Loading.INSTANCE,
-                    () => InitPlayerForWallet(startingPosition), () => { Loading.INSTANCE.ShowConnectionError(); }));
-            }
-            else
-            {
-                SetState(State.LOADING);
-                InitPlayerForWallet(startingPosition);
-            }
+            WorldService.Invalidate();
+            Players.INSTANCE.Clear();
+            SetState(State.LOADING);
+            StartCoroutine(WorldService.INSTANCE.Initialize(LoadingPage.INSTANCE,
+                () => InitPlayerForWallet(startingPosition), () => { LoadingPage.INSTANCE.ShowConnectionError(); }));
         }
 
         public void CopyPositionLink()
         {
+            var contract = AuthService.Instance.CurrentContract;
             var currentPosition = Player.INSTANCE.GetPosition();
-            var url = Constants.WebAppBaseURL +
-                      $"/game?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}";
+            var url = Configurations.Instance.webAppBaseURL +
+                      $"/{contract.network.id}/{contract.id}?position={currentPosition.x}_{currentPosition.y}_{currentPosition.z}";
 
             if (WebBridge.IsPresent())
                 WebBridge.Call<object>("copyToClipboard", url);
             else
                 GUIUtility.systemCopyBuffer = url;
+            new Toast("Url copied to clipboard!", Toast.ToastType.Info).Show();
         }
 
         private bool SetState(State state)
@@ -342,7 +365,6 @@ namespace Source
                 return false;
             }
 
-            previousState = this.state;
             this.state = state;
             stateChange.Invoke(state);
 
@@ -373,7 +395,7 @@ namespace Source
 
             var lands = Player.INSTANCE.GetOwnedLands();
             if (lands == null || lands.Count == 0) yield break;
-            var wallet = AuthService.WalletId();
+            var wallet = AuthService.Instance.WalletId();
             var service = WorldService.INSTANCE;
             if (!service.HasChange())
             {
@@ -384,11 +406,18 @@ namespace Source
             }
 
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Preparing your changes...");
+            LoadingPage.INSTANCE.UpdateText("Preparing your changes...");
 
             Dictionary<long, LandDetails> worldChanges = null;
-            yield return service.GetLandsChanges(wallet, lands, changes => worldChanges = changes,
-                () => worldChanges = null);
+            bool canceled = false;
+            yield return service.GetLandsChanges(lands, changes => worldChanges = changes,
+                () => canceled = true);
+
+            if (canceled)
+            {
+                SetState(State.PLAYING);
+                yield break;
+            }
 
             if (worldChanges == null)
             {
@@ -396,7 +425,7 @@ namespace Source
                 yield break;
             }
 
-            Loading.INSTANCE.UpdateText("Saving data on IPFS...");
+            LoadingPage.INSTANCE.UpdateText("Saving data on IPFS...");
 
             var done = 0;
             var hashes = new Dictionary<long, string>();
@@ -412,12 +441,27 @@ namespace Source
                 }
 
                 done++;
-                Loading.INSTANCE.UpdateText($"Saving data on IPFS...\n {done}/{worldChanges.Count}");
+                LoadingPage.INSTANCE.UpdateText($"Saving data on IPFS...\n {done}/{worldChanges.Count}");
             }
 
-            Loading.INSTANCE.UpdateText($"Issuing transaction...");
+            LoadingPage.INSTANCE.UpdateText("Issuing transaction...");
+            if (hashes.Count == 0)
+            {
+                SnackService.INSTANCE.Show(new SnackConfig(
+                        new Toast("Nothing found to save!", Toast.ToastType.Info))
+                    .WithCloseButtonVisible(false));
+                SetState(State.PLAYING);
+            }
+
+
             //TODO: Reload lands for player and double check saved lands, remove keys from changed lands
-            BrowserConnector.INSTANCE.Save(hashes, () => StartCoroutine(ReloadOwnerLands()),
+            BrowserConnector.INSTANCE.Save(hashes, () =>
+                {
+                    List<long> ids = new List<long>();
+                    foreach (var keyValuePair in hashes)
+                        ids.Add(keyValuePair.Key);
+                    StartCoroutine(ReloadLandIpfsKeys(ids));
+                },
                 () => SetState(State.PLAYING));
         }
 
@@ -435,11 +479,10 @@ namespace Source
                 () => { });
         }
 
-        public void SetNFT(Land land, bool convertToNft)
+        public void SetNFT(Map map, Land land, bool convertToNft)
         {
             if (convertToNft)
-            {
-                StartCoroutine(Map.INSTANCE.TakeNftScreenShot(land, screenshot =>
+                StartCoroutine(map.TakeNftScreenShot(land, screenshot =>
                 {
                     // using (var ms = new MemoryStream(screenshot))
                     // {
@@ -462,67 +505,85 @@ namespace Source
                             );
                         }));
                 }));
-            }
             else
-            {
                 BrowserConnector.INSTANCE.SetNft(land.id, false,
                     () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
                     () => { });
-            }
         }
 
         private void SetLandNftImage(string key, Land land)
         {
-            StartCoroutine(WorldRestClient.INSTANCE.SetLandMetadata(new LandMetadata(land.id, key), () =>
-            {
-                BrowserConnector.INSTANCE.SetNft(land.id, true,
-                    () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
-                    () => SetState(State.PLAYING));
-            }, () =>
-            {
-                var label = new Label
+            var contract = AuthService.Instance.CurrentContract;
+            StartCoroutine(LandMetadataRestClient.INSTANCE.SetLandMetadata(
+                new LandMetadata(contract.network.id, contract.id, land.id, key), () =>
                 {
-                    text = "Conversion to NFT cancelled. Click OK to continue."
-                };
-                DialogService.INSTANCE.Show(
-                    new DialogConfig("Failed to update land metadata", label)
-                        .WithAction(new DialogAction("Ok", () => { }))
-                );
-            }));
+                    BrowserConnector.INSTANCE.SetNft(land.id, true,
+                        () => StartCoroutine(ReloadLandOwnerAndNft(land.id, false)),
+                        () => SetState(State.PLAYING));
+                }, () =>
+                {
+                    var label = new Label
+                    {
+                        text = "Conversion to NFT cancelled. Click OK to continue."
+                    };
+                    DialogService.INSTANCE.Show(
+                        new DialogConfig("Failed to update land metadata", label)
+                            .WithAction(new DialogAction("Ok", () => { }))
+                    );
+                }));
         }
 
-        public void ShowProfile(Profile profile, Land currentLand)
+        // public void ShowProfile(Profile profile, Land currentLand)
+        // {
+        //     if (GetState() == State.PLAYING)
+        //     {
+        //         if (currentLand == null)
+        //         {
+        //             var userProfile = new UserProfile(profile);
+        //             DialogService.INSTANCE.Show(new DialogConfig("User Profile", userProfile));
+        //         }
+        //         else
+        //         {
+        //             var landProfile = new LandProfile(currentLand);
+        //             landProfile.SetProfile(profile);
+        //             DialogService.INSTANCE.Show(
+        //                 new DialogConfig("Land Profile", landProfile)
+        //                     .WithWidth(new Length(70, LengthUnit.Percent))
+        //                     .WithHeight(new Length(60, LengthUnit.Percent))
+        //             );
+        //         }
+        //     }
+        // }
+
+        private IEnumerator ReloadLandIpfsKeys(List<long> ids)
         {
-            if (GetState() == State.PLAYING)
+            SetState(State.LOADING);
+            LoadingPage.INSTANCE.UpdateText($"Reloading Lands...");
+
+            var failed = false;
+            yield return WorldService.INSTANCE.ReloadLandIpfsKeys(ids, () => { }, () =>
             {
-                if (currentLand == null)
-                {
-                    var userProfile = new UserProfile(profile);
-                    DialogService.INSTANCE.Show(new DialogConfig("User Profile", userProfile));
-                }
-                else
-                {
-                    var landProfile = new LandProfile(currentLand);
-                    landProfile.SetProfile(profile);
-                    DialogService.INSTANCE.Show(
-                        new DialogConfig("Land Profile", landProfile)
-                            .WithWidth(new Length(70, LengthUnit.Percent))
-                            .WithHeight(new Length(60, LengthUnit.Percent))
-                    );
-                }
-            }
+                failed = true;
+                LoadingPage.INSTANCE.ShowConnectionError();
+            });
+            if (failed) yield break;
+
+            var player = Player.INSTANCE;
+            player.ResetLands();
+            yield return InitWorld(player.GetPosition(), true);
+            SetState(State.PLAYING);
         }
 
         private IEnumerator ReloadLandOwnerAndNft(long id, bool reCreateWorld)
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText($"Reloading Land {id}...");
+            LoadingPage.INSTANCE.UpdateText($"Reloading Land {id}...");
 
             var failed = false;
             yield return WorldService.INSTANCE.ReloadLandOwnerAndNft(id, () => { }, () =>
             {
                 failed = true;
-                Loading.INSTANCE.ShowConnectionError();
+                LoadingPage.INSTANCE.ShowConnectionError();
             });
             if (failed) yield break;
 
@@ -536,13 +597,13 @@ namespace Source
         private IEnumerator ReloadOwnerLands()
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.UpdateText("Reloading Your Lands...");
+            LoadingPage.INSTANCE.UpdateText("Reloading Your Lands...");
 
             var failed = false;
             yield return WorldService.INSTANCE.ReloadPlayerLands(() =>
             {
                 failed = true;
-                Loading.INSTANCE.ShowConnectionError();
+                LoadingPage.INSTANCE.ShowConnectionError();
             });
             if (failed) yield break;
 
@@ -581,48 +642,23 @@ namespace Source
 #endif
         }
 
-        public static GameManager INSTANCE => GameObject.Find("GameManager").GetComponent<GameManager>();
-
-        public enum State
-        {
-            LOADING,
-            PLAYING,
-            MENU,
-            LOGIN,
-        }
-
         public void ShowConnectionError()
         {
             SetState(State.LOADING);
-            Loading.INSTANCE.ShowConnectionError();
+            LoadingPage.INSTANCE.ShowConnectionError();
         }
 
-        public int EngageUi()
+        public bool IsTextInputFocused()
         {
-            engagedUIs.Add(uiId);
-            return uiId++;
-        }
-
-        public void UnEngageUi(int id)
-        {
-            engagedUIs.Remove(id);
-        }
-
-        public bool IsUiEngaged()
-        {
-            return engagedUIs.Count != 0;
+            return FocusLayer.Instance == null || FocusLayer.Instance.IsTextInputFocused();
         }
 
         public void Exit()
         {
             if (WebBridge.IsPresent())
-            {
                 WebBridge.Call<object>("moveToHome", null);
-            }
             else
-            {
                 Application.Quit();
-            }
         }
 
         public void OpenMenu()

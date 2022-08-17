@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -49,7 +48,11 @@ namespace Source.Ui.Dialog
             dialog.style.height = config.Height;
             dialog.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
             var dialogLayer = dialogContainer.Q<VisualElement>("layer");
-            dialogLayer.RegisterCallback<MouseDownEvent>(_ => CloseLastOpenedDialog());
+            dialogLayer.RegisterCallback<MouseDownEvent>(_ =>
+            {
+                if (config.CloseOnBackdropClick)
+                    CloseLastOpenedDialog();
+            });
 
             if (config.Title != null)
             {

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Source.Ui.Dialog;
@@ -68,22 +67,13 @@ namespace Source.Ui.Snack
 
             if (config.Duration.HasValue)
             {
-                var closeCoroutine = CloseCoroutine(controller, config.Duration.Value);
-                snack.RegisterCallback<MouseEnterEvent>(evt =>
-                {
-                    StopCoroutine(closeCoroutine);
-                });
-                snack.RegisterCallback<MouseLeaveEvent>(evt => StartCoroutine(closeCoroutine));
-                StartCoroutine(closeCoroutine);
+                var timer = new TimerBar(config.Duration.Value * 1000, () => controller.Close());
+                snack.Add(timer);
+                snack.RegisterCallback<MouseEnterEvent>(evt => timer.Pause());
+                snack.RegisterCallback<MouseLeaveEvent>(evt => timer.ResumeIfNotDetached());
             }
 
             return controller;
-        }
-
-        private IEnumerator CloseCoroutine(SnackController controller, int duration)
-        {
-            yield return new WaitForSeconds(duration);
-            controller.Close();
         }
 
         private void UpdateSnackPosition(SnackConfig config, Snack snack)

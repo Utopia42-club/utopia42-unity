@@ -10,10 +10,45 @@
 }
 
 .social-link__label:hover {
-    color: var(--text-darker-color)
+    color: var(--text-darker-color);
 }
 
 .social-link__icon {
     width: 20;
     height: 20;
+}
+
+.prop-row {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 0;
+    border-color: var(--default-border-color);
+    border-bottom-width: 1px;
+}
+
+.prop-key {
+    min-width: 100px;
+    margin-right: 12px;
+    white-space: normal;
+    min-height: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 150px;
+    height: 100%;
+    -unity-text-align: middle-right;
+    justify-content: center;
+}
+
+.prop-value {
+    white-space: normal;
+    flex-grow: 1;
+    flex-shrink: 0;
+    height: 100%;
+    -unity-text-align: middle-left;
+    width: auto;
+    justify-content: center;
+    max-width: 500px;
 }

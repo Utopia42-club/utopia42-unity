@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Source.Configuration;
 using Source.Model;
-using Source.Service.Ethereum;
+using Source.Service.Auth;
 using Source.Ui.Dialog;
-using Source.Ui.Login;
-using Source.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -15,18 +14,14 @@ namespace Source.Canvas
     {
         private string currentUrl;
 
-        public void EditProfile(Action onDone, Action onCancel)
-        {
-            const string msg = "Edit your profile on your browser. Click RELOAD when it is done.";
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("editProfile", null);
-                OpenDialog(onDone, onCancel, msg);
-            }
-            else
-                CallUrl("editProfile", onDone, onCancel, msg);
-        }
+        public static BrowserConnector INSTANCE => GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>();
 
+        public void OpenDApp(Action onDone, Action onCancel)
+        {
+            const string msg = "Edit your profile on the app. Click RELOAD when it is saved.";
+            Application.OpenURL(Configurations.Instance.dAppUrl);
+            OpenDialog(onDone, onCancel, msg);
+        }
 
         public void Transfer(long landId, Action onDone, Action onCancel)
         {
@@ -36,7 +31,9 @@ namespace Source.Canvas
                 OpenDialog(onDone, onCancel);
             }
             else
+            {
                 CallUrl("transfer", landId.ToString(), onDone, onCancel);
+            }
         }
 
         public void SetNft(long landId, bool value, Action onDone, Action onCancel)
@@ -50,13 +47,16 @@ namespace Source.Canvas
                 OpenDialog(onDone, onCancel);
             }
             else
+            {
                 CallUrl("setNft", $"{landId}_{value}", onDone, onCancel);
+            }
         }
 
         public void Save(Dictionary<long, string> data, Action onDone, Action onCancel)
         {
-            if (data.Count == 0) onDone();
-            if (WebBridge.IsPresent())
+            if (data.Count == 0)
+                onDone();
+            else if (WebBridge.IsPresent())
             {
                 WebBridge.Call<object>("save", data);
                 OpenDialog(onDone, onCancel);
@@ -79,7 +79,7 @@ namespace Source.Canvas
             }
             else
             {
-                List<string> parameters = new List<string>();
+                var parameters = new List<string>();
                 foreach (var l in lands)
                     parameters.Add(string.Join("_",
                         new long[] {l.startCoordinate.x, l.startCoordinate.z, l.endCoordinate.x, l.endCoordinate.z}));
@@ -89,40 +89,27 @@ namespace Source.Canvas
 
         public void ReportGameState(GameManager.State state)
         {
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("reportGameState", state.ToString());
-            }
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("reportGameState", state.ToString());
         }
 
-        public void ReportLoggedInUser(User user)
+        public void ReportSession(Session session)
         {
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("reportLoggedInUser", user);
-            }
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("reportSession", session);
         }
 
         public void ReportPlayerState(AvatarController.PlayerState state)
         {
-            if (WebBridge.IsPresent())
-            {
-                WebBridge.Call<object>("reportPlayerState", JsonConvert.SerializeObject(state));
-            }
+            if (WebBridge.IsPresent()) WebBridge.Call<object>("reportPlayerState", JsonConvert.SerializeObject(state));
         }
 
         private void CallUrl(string method, string parameters, Action onDone, Action onCancel, string message = null)
         {
-            var wallet = AuthService.WalletId();
-            int network = EthereumClientService.INSTANCE.GetNetwork().id;
+            var wallet = AuthService.Instance.WalletId();
+            var contract = AuthService.Instance.CurrentContract;
+            currentUrl =
+                $"{Configurations.Instance.webAppRpcURL}?method={method}&wallet={wallet}&network={contract.network.id}&contract={contract.id}";
             if (parameters != null)
-                currentUrl = string.Format("{0}?method={1}&param={2}&wallet={3}&network={4}",
-                    Constants.WebAppRpcURL, method,
-                    parameters, wallet, network);
-            else
-                currentUrl = string.Format("{0}?method={1}&wallet={2}&network={3}", Constants.WebAppRpcURL,
-                    method, wallet, network);
-
+                currentUrl = $"{currentUrl}&param={parameters}";
             Application.OpenURL(currentUrl);
             OpenDialog(onDone, onCancel, message);
         }
@@ -137,7 +124,7 @@ namespace Source.Canvas
             OpenDialog(message, onDone, onCancel);
         }
 
-        private void OpenDialog(String message, Action onDone, Action onCancel)
+        private void OpenDialog(string message, Action onDone, Action onCancel)
         {
             var label = new Label
             {
@@ -145,12 +132,11 @@ namespace Source.Canvas
             };
             DialogService.INSTANCE.Show(
                 new DialogConfig(label)
+                    .WithCloseOnBackdropClick(false)
                     .WithCancelAction(onCancel)
                     .WithAction(new DialogAction("Reload", onDone.Invoke, "utopia-button-secondary"))
                     .WithOnClose(onCancel)
             );
         }
-
-        public static BrowserConnector INSTANCE => GameObject.Find("BrowserConnector").GetComponent<BrowserConnector>();
     }
 }

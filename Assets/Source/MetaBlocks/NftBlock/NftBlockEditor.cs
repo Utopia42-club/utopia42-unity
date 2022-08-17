@@ -36,13 +36,6 @@ namespace Source.MetaBlocks.NftBlock
             width = root.Q<TextField>("w");
             height = root.Q<TextField>("h");
             detectCollision = root.Q<Toggle>("collisionDetect");
-            TextFields.RegisterUiEngagementCallbacksForTextField(collection);
-            TextFields.RegisterUiEngagementCallbacksForTextField(tokenId);
-            TextFields.RegisterUiEngagementCallbacksForTextField(rotationX);
-            TextFields.RegisterUiEngagementCallbacksForTextField(rotationY);
-            TextFields.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            TextFields.RegisterUiEngagementCallbacksForTextField(width);
-            TextFields.RegisterUiEngagementCallbacksForTextField(height);
         }
 
         public NftBlockProperties GetValue()

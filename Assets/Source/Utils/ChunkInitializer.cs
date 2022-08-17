@@ -2,6 +2,7 @@
 using Source.Canvas;
 using Source.Model;
 using Source.Service;
+using Source.Service.Auth;
 using Source.Ui.Login;
 using Source.Ui.Menu;
 using UnityEngine;
@@ -74,7 +75,7 @@ namespace Source.Utils
                         if (land != null)
                         {
                             body = DIRT.id;
-                            top = AuthService.IsCurrentUser(land.owner) ? DARK_GRASS.id : GRASS.id;
+                            top = AuthService.Instance.IsCurrentUser(land.owner) ? DARK_GRASS.id : GRASS.id;
                         }
                     }
 

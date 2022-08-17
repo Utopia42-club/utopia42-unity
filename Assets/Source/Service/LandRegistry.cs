@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Source.Configuration;
 using Source.Model;
+using Source.Service.Auth;
 using Source.Service.Ethereum;
-using Source.Utils;
 using UnityEngine;
 
 namespace Source.Service
@@ -13,10 +14,14 @@ namespace Source.Service
     internal class LandRegistry
     {
         // private readonly Dictionary<long, Land> ignoredLands = new Dictionary<long, Land>();
-        private readonly HashSet<long> ignoredLands = new HashSet<long>();
-        private readonly Dictionary<string, List<Land>> ownersLands = new Dictionary<string, List<Land>>();
-        private readonly Dictionary<long, Land> validLands = new Dictionary<long, Land>();
-        private readonly Dictionary<Vector2Int, HashSet<Land>> chunkLands = new Dictionary<Vector2Int, HashSet<Land>>();
+        private string landUrl =>
+            $"{Configurations.Instance.apiURL}/world/lands?network={AuthService.Instance.CurrentContract.network.id}" +
+            $"&contract={AuthService.Instance.CurrentContract.id}";
+
+        private readonly HashSet<long> ignoredLands = new();
+        private readonly Dictionary<string, List<Land>> ownersLands = new();
+        private readonly Dictionary<long, Land> validLands = new();
+        private readonly Dictionary<Vector2Int, HashSet<Land>> chunkLands = new();
 
         private IEnumerator SetLands(List<Land> lands)
         {
@@ -57,29 +62,37 @@ namespace Source.Service
             var toRemove = new HashSet<Land>(); // If lands are sorted by time, this list will remain empty.
             foreach (var chunk in ChunksForLand(land))
             {
-                HashSet<Land> currChunkLands;
-                if (chunkLands.TryGetValue(chunk, out currChunkLands))
+                if (!land.IsValid())
                 {
-                    foreach (var oLand in currChunkLands)
-                    {
-                        if (rect.Overlaps(oLand.ToRect()))
-                        {
-                            if (land.time > oLand.time)
-                            {
-                                ignored = true;
-                                ignoredLands.Add(land.id);
-                                break;
-                            }
-
-                            toRemove.Add(oLand);
-                        }
-                    }
-
-                    if (ignored)
-                        break;
-                    landLists.Add(currChunkLands);
+                    ignored = true;
+                    ignoredLands.Add(land.id);
                 }
-                else emptyChunks.Add(chunk);
+                else
+                {
+                    HashSet<Land> currChunkLands;
+                    if (chunkLands.TryGetValue(chunk, out currChunkLands))
+                    {
+                        foreach (var oLand in currChunkLands)
+                        {
+                            if (rect.Overlaps(oLand.ToRect()))
+                            {
+                                if (land.time > oLand.time)
+                                {
+                                    ignored = true;
+                                    ignoredLands.Add(land.id);
+                                    break;
+                                }
+
+                                toRemove.Add(oLand);
+                            }
+                        }
+
+                        if (ignored)
+                            break;
+                        landLists.Add(currChunkLands);
+                    }
+                    else emptyChunks.Add(chunk);
+                }
             }
 
             if (!ignored)
@@ -155,7 +168,7 @@ namespace Source.Service
             var lands = new List<Land>();
 
             bool failed = false;
-            yield return LoadLandsPaginated(Constants.ApiURL + "/world/lands", lands, () =>
+            yield return LoadLandsPaginated(landUrl, lands, () =>
             {
                 onFailed();
                 failed = true;
@@ -170,11 +183,12 @@ namespace Source.Service
             var lands = new List<Land>();
 
             bool failed = false;
-            yield return LoadLandsPaginated($"{Constants.ApiURL}/world/owner/{wallet}/lands", lands, () =>
-            {
-                onFailed();
-                failed = true;
-            });
+            yield return LoadLandsPaginated(
+                $"{landUrl}&owner={wallet}", lands, () =>
+                {
+                    onFailed();
+                    failed = true;
+                });
             if (failed) yield break;
 
             yield return ReSetOwnerLands(wallet, lands, onFailed);
@@ -183,12 +197,13 @@ namespace Source.Service
         private static IEnumerator LoadLandsPaginated(string url, List<Land> lands, Action onFailed)
         {
             const int pageSize = 200;
-            url = url + "?pageSize=" + pageSize;
+            url = $"{url}&pageSize={pageSize}";
             var hasNext = true;
             while (hasNext)
             {
                 var failed = false;
-                yield return RestClient.Post<Land, List<Land>>(url, lands.Count == 0 ? new Land() : lands.Last(),
+                yield return RestClient.Post<Land, List<Land>>(
+                    lands.Count == 0 ? url : $"{url}&lastLandId={lands.Last().id}", null,
                     response =>
                     {
                         if (response != null)

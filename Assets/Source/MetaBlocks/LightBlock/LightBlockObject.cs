@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Generic;
 using Source.Canvas;
-using Source.Model;
 using UnityEngine;
-using LightType = UnityEngine.LightType;
 
 namespace Source.MetaBlocks.LightBlock
 {
@@ -23,7 +20,7 @@ namespace Source.MetaBlocks.LightBlock
             (LightDistance + 1) * Vector3.up + 0.5f * (Vector3.right + Vector3.forward)
         };
 
-        private List<Light> sideLights = new List<Light>();
+        private readonly List<Light> sideLights = new();
 
         public override void OnDataUpdate()
         {
@@ -75,10 +72,7 @@ namespace Source.MetaBlocks.LightBlock
         private void DestroyLights()
         {
             if (sideLights.Count == 0) return;
-            foreach (var side in sideLights)
-            {
-                DestroyImmediate(side.gameObject);
-            }
+            foreach (var side in sideLights) DestroyImmediate(side.gameObject);
 
             sideLights.Clear();
         }

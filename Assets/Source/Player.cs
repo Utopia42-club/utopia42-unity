@@ -6,8 +6,10 @@ using Source.Canvas;
 using Source.MetaBlocks;
 using Source.MetaBlocks.TdObjectBlock;
 using Source.Model;
+using Source.Model.Inventory;
 using Source.Service;
-using Source.Ui.AssetInventory.Models;
+using Source.Service.Auth;
+using Source.Ui.AssetInventory;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -34,18 +36,20 @@ namespace Source
         [SerializeField] public Transform tdObjectHighlightBox;
         [SerializeField] public GameObject avatarPrefab;
         [SerializeField] private float minFreeFallSpeed = 1;
+        [SerializeField] public AnimationClip[] customAvatarAnimations;
+        [SerializeField] private float cameraContainerHeight;
+        [SerializeField] private float cameraZOffset;
+        [SerializeField] private float cameraXOffset;
 
         public BlockType SelectedBlockType { private set; get; }
 
         private bool sprinting;
         private Vector3 velocity = Vector3.zero;
         private Land highlightLand;
-        public Land placeLand;
         private bool jumpRequest;
         private bool floating = false;
         private Vector3Int? lastChunk;
         private List<Land> ownedLands = new List<Land>();
-        private Collider hitCollider;
         private RaycastHit raycastHit;
         private CharacterController characterController;
         private BlockSelectionController blockSelectionController;
@@ -56,10 +60,6 @@ namespace Source
         private Vector3Int playerPos;
 
         private AvatarController avatarController;
-
-        // public string AvatarId { private set; get; } // test only
-        [NonSerialized] public GameObject avatar;
-        [NonSerialized] public Transform focusHighlight;
 
         public bool AvatarNotLoaded => avatarController == null || avatarController.Avatar == null;
 
@@ -73,7 +73,8 @@ namespace Source
 
         public float MinFreeFallSpeed => minFreeFallSpeed;
 
-        public bool ChangeForbidden => AuthService.IsGuest() || viewMode != ViewMode.FIRST_PERSON;
+        public bool ChangeForbidden => AuthService.Instance.HasSession() &&
+                                       (AuthService.Instance.IsGuest() || viewMode != ViewMode.FIRST_PERSON);
 
         private bool DisableRaycast => World.INSTANCE.ObjectScaleRotationController.Active;
 
@@ -91,12 +92,14 @@ namespace Source
             }
         }
 
-        [SerializeField] private float cameraContainerHeight;
-        [SerializeField] private float cameraZOffset;
-        [SerializeField] private float cameraXOffset;
-
         private ViewMode viewMode = ViewMode.FIRST_PERSON;
-        public UnityEvent<ViewMode> viewModeChanged;
+
+        // public string AvatarId { private set; get; } // test only
+        [NonSerialized] public GameObject avatar;
+        [NonSerialized] public Transform focusHighlight;
+        [NonSerialized] public Land placeLand;
+        [NonSerialized] public UnityEvent<ViewMode> viewModeChanged;
+        [NonSerialized] public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport; // test only
 
         public Player(Transform tdObjectHighlightBox, Transform placeBlock, Transform highlightBlock)
         {
@@ -107,34 +110,35 @@ namespace Source
 
         public float Horizontal { get; private set; }
         public float Vertical { get; private set; }
+
+        private int CustomAnimationNumber;
         public Focusable FocusedFocusable { get; private set; }
         public Vector3Int PossiblePlaceBlockPosInt { get; private set; }
         public Vector3 PossiblePlaceMetaBlockPos { get; private set; }
         public Vector3Int PossibleHighlightBlockPosInt { get; set; }
         public Land HighlightLand => highlightLand;
 
-        public UnityEvent<AvatarController.PlayerState> mainPlayerStateReport = new(); // test only
 
         private void Start()
         {
+            mainPlayerStateReport = new UnityEvent<AvatarController.PlayerState>();
             blockSelectionController = GetComponent<BlockSelectionController>();
             placeBlockRenderer = placeBlock.GetComponentInChildren<Renderer>();
 
             Snack.INSTANCE.ShowObject("Owner", null);
 
+            AuthService.Instance.walletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });
             GameManager.INSTANCE.stateChange.AddListener(state =>
             {
                 if (state == GameManager.State.PLAYING)
                     ResetRaycastMemory();
                 else
                     HideCursors();
-
-                if (avatarController != null && !avatarController.Initialized &&
-                    state == GameManager.State.LOADING) // only once 
-                {
-                    avatarController.SetMainPlayer(AuthService.WalletId());
-                    AuthService.WalletIdChanged.AddListener(walletId => { avatarController.SetMainPlayer(walletId); });
-                }
+                // if (avatarController != null && !avatarController.Initialized &&
+                // state == GameManager.State.LOADING) // only once 
+                // {
+                // avatarController.SetMainPlayer(AuthService.Instance.WalletId());
+                // }
             });
 
             // AvatarId = Guid.NewGuid().ToString(); // test only
@@ -183,7 +187,7 @@ namespace Source
             {
                 blockSelectionController.DoUpdate();
                 if (!HammerMode && Input.GetButtonDown("Delete") && !SelectionActiveBeforeAtFrameBeginning)
-                    Ui.AssetInventory.AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
+                    AssetsInventory.INSTANCE.SelectSlotInfo(new SlotInfo());
             }
 
             if (lastChunk == null)
@@ -204,13 +208,19 @@ namespace Source
 
         private void GetInputs()
         {
-            if (GameManager.INSTANCE.IsUiEngaged())
+            if (GameManager.INSTANCE.IsTextInputFocused())
+            {
+                Horizontal = 0;
+                Vertical = 0;
                 return;
+            }
+
             CtrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             CtrlDown = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
             CtrlUp = Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl);
             Horizontal = Input.GetAxis("Horizontal");
             Vertical = Input.GetAxis("Vertical");
+            CustomAnimationNumber = GetCustomAnimationNumber();
 
             if (Input.GetButtonDown("Sprint"))
                 sprinting = true;
@@ -231,6 +241,14 @@ namespace Source
                 ToggleViewMode();
         }
 
+        private int GetCustomAnimationNumber()
+        {
+            if (viewMode == ViewMode.FIRST_PERSON) return AvatarController.NoAnimation;
+            if (Input.GetButton("Avatar Custom Animation 1")) return 1;
+            if (Input.GetButton("Avatar Custom Animation 2")) return 2;
+            return AvatarController.NoAnimation;
+        }
+
         private void FixedUpdate()
         {
             if (GameManager.INSTANCE.GetState() != GameManager.State.PLAYING) return;
@@ -249,7 +267,6 @@ namespace Source
 
             var xzVelocity = moveDirection.normalized * (sprinting ? sprintSpeed : walkSpeed);
             characterController.Move(xzVelocity * Time.fixedDeltaTime);
-
             if (jumpRequest)
             {
                 // if (!floating && isGrounded)
@@ -276,9 +293,9 @@ namespace Source
 
             avatarController.UpdatePlayerState(new AvatarController.PlayerState(
                 // AvatarId, // test only
-                AuthService.WalletId(),
+                AuthService.Instance.WalletId(),
                 new SerializableVector3(pos), floating, jumpRequest, sprinting,
-                Mathf.Abs(reportVelocityY), false));
+                Mathf.Abs(reportVelocityY), false, CustomAnimationNumber));
         }
 
         public void DoReloadAvatar(string avatarUrl)
@@ -299,7 +316,6 @@ namespace Source
             if (Physics.Raycast(cam.position, cam.forward, out raycastHit, 40))
             {
                 var focusable = raycastHit.collider.GetComponent<Focusable>();
-                hitCollider = raycastHit.collider;
                 if (focusable != null)
                 {
                     if (focusable != FocusedFocusable && FocusedFocusable != null)
@@ -338,7 +354,7 @@ namespace Source
         public void ResetLands()
         {
             List<Land> lands = null;
-            if (AuthService.WalletId() != null)
+            if (AuthService.Instance.WalletId() != null)
             {
                 var service = WorldService.INSTANCE;
                 lands = service.GetPlayerLands();
@@ -440,7 +456,7 @@ namespace Source
 
         public bool CanEdit(Vector3Int blockPos, out Land land, bool isMeta = false)
         {
-            if (AuthService.IsGuest())
+            if (AuthService.Instance.IsGuest())
             {
                 land = null;
                 return false;
@@ -515,8 +531,10 @@ namespace Source
 
         public void SetTeleportTarget(Vector3 pos)
         {
+            var contract = AuthService.Instance.CurrentContract;
             avatarController.UpdatePlayerState(
-                AvatarController.PlayerState.CreateTeleportState(AuthService.WalletId(), pos));
+                AvatarController.PlayerState.CreateTeleportState(contract.network.id, contract.id,
+                    AuthService.Instance.WalletId(), pos));
         }
 
         public Vector3 GetPosition()
@@ -583,7 +601,6 @@ namespace Source
             if (FocusedFocusable != null)
                 FocusedFocusable.UnFocus();
             FocusedFocusable = null;
-            hitCollider = null;
         }
 
         public void ResetVelocity()
@@ -593,7 +610,13 @@ namespace Source
 
         public void InitOnSelectedAssetChanged()
         {
-            Ui.AssetInventory.AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
+            AssetsInventory.INSTANCE.selectedSlotChanged.AddListener(OnSelectedAssetChanged);
+        }
+
+        public bool IsPlayerCollider(Collider coll)
+        {
+            return characterController != null &&
+                   coll == characterController.GetComponent<Collider>();
         }
     }
 }

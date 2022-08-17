@@ -7,9 +7,8 @@ namespace Source.Canvas
 {
     public class ImageLoader : MonoBehaviour
     {
-        private string url = "";
-
         [SerializeField] private Sprite emptySprite;
+        private string url = "";
 
         public void SetUrl(string url)
         {
@@ -26,21 +25,23 @@ namespace Source.Canvas
         private IEnumerator LoadFromLikeCoroutine()
         {
             var url = this.url;
-            UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
+            var request = UnityWebRequestTexture.GetTexture(url);
 
             yield return request.SendWebRequest();
             if (!Equals(this.url, url)) yield break;
 
             if (request.result == UnityWebRequest.Result.ProtocolError
                 || request.result == UnityWebRequest.Result.ConnectionError)
+            {
                 GetComponent<Image>().overrideSprite = emptySprite;
+            }
             else
             {
                 // ImageComponent.texture = ((DownloadHandlerTexture) request.downloadHandler).texture;
-                Texture2D tex = ((DownloadHandlerTexture) request.downloadHandler).texture;
+                var tex = ((DownloadHandlerTexture) request.downloadHandler).texture;
                 if (tex != null)
                 {
-                    Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                    var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
                         new Vector2(tex.width / 2, tex.height / 2));
                     GetComponent<Image>().overrideSprite = sprite;
                 }

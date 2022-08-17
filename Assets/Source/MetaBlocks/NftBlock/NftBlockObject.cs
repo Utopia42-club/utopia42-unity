@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Source.Canvas;
+using Source.Configuration;
 using Source.MetaBlocks.ImageBlock;
 using Source.Model;
 using Source.Service;
@@ -93,7 +94,7 @@ namespace Source.MetaBlocks.NftBlock
             StartCoroutine(GetMetadata(props.collection, props.tokenId, md =>
             {
                 metadata = md;
-                // var imageUrl = $"{Constants.ApiURL}/nft-metadata/image/{props.collection}/{props.tokenId}";
+                // var imageUrl = $"{Configuration.Instance.ApiURL}/nft-metadata/image/{props.collection}/{props.tokenId}";
                 var imageUrl = string.IsNullOrWhiteSpace(md.image) ? md.imageUrl : md.image;
                 AddFace(props.ToImageProp(imageUrl));
             }, () => { UpdateState(State.ConnectionError); }));
@@ -124,7 +125,7 @@ namespace Source.MetaBlocks.NftBlock
         private static IEnumerator GetMetadata(string collection, long tokenId, Action<NftMetadata> onSuccess,
             Action onFailure)
         {
-            yield return RestClient.Get($"{Constants.ApiURL}/nft-metadata/{collection}/{tokenId}"
+            yield return RestClient.Get($"{Configurations.Instance.apiURL}/nft-metadata/{collection}/{tokenId}"
                 , onSuccess, onFailure);
         }
 

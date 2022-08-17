@@ -1,6 +1,7 @@
 using Source.Canvas;
 using Source.Model;
 using Source.Service;
+using Source.Service.Auth;
 using Source.Ui.CustomUi;
 using Source.Ui.Popup;
 using UnityEngine.UIElements;
@@ -9,6 +10,7 @@ namespace Source.Ui.Profile
 {
     public class LandProfile : UxmlElement
     {
+        private readonly Map.Map map;
         private static readonly string colorPickerPrefab = "Prefabs/FloatColorPicker";
 
         private Label nameLabel;
@@ -27,10 +29,11 @@ namespace Source.Ui.Profile
         private Land land;
         private readonly VisualElement userProfileContainer;
 
-        public LandProfile(Land land) : base(typeof(LandProfile), true)
+        public LandProfile(Map.Map map, Land land) : base(typeof(LandProfile), true)
         {
+            this.map = map;
             userProfileContainer = this.Q<VisualElement>("userProfileContainer");
-            userProfile = new UserProfile(null);
+            userProfile = new UserProfile();
             userProfileContainer.Add(userProfile);
             editButton = this.Q<Button>("editButton");
             idLabel = this.Q<Label>("idValue");
@@ -43,7 +46,7 @@ namespace Source.Ui.Profile
             transferButton = this.Q<Button>("transferButton");
             toggleNftButton = this.Q<Button>("toggleNftButton");
             transferButton.clickable.clicked += () => GameManager.INSTANCE.Transfer(land.id);
-            toggleNftButton.clickable.clicked += () => GameManager.INSTANCE.SetNFT(land, !land.isNft);
+            toggleNftButton.clickable.clicked += () => GameManager.INSTANCE.SetNFT(map, land, !land.isNft);
             SetLand(land);
             editButton.clicked += OnEditButtonClicked;
             colorValueClickCallback = evt =>
@@ -96,7 +99,7 @@ namespace Source.Ui.Profile
             sizeLabel.text = (rect.width * rect.height).ToString();
             nftLogo.style.display = land.isNft ? DisplayStyle.Flex : DisplayStyle.None;
             transferButton.style.display = land.isNft ? DisplayStyle.None : DisplayStyle.Flex;
-            var isOwner = AuthService.IsCurrentUser(land.owner);
+            var isOwner = AuthService.Instance.IsCurrentUser(land.owner);
             actions.style.display = isOwner ? DisplayStyle.Flex : DisplayStyle.None;
 
             var landColor = Colors.GetLandColor(land);
@@ -111,9 +114,9 @@ namespace Source.Ui.Profile
             editButton.style.display = isOwner ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        public void SetProfile(Model.Profile profile)
+        public void SetProfile(string wallet, Model.Profile profile)
         {
-            userProfile.SetProfile(profile);
+            userProfile.SetProfile(wallet, profile);
         }
     }
 }

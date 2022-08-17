@@ -6,6 +6,7 @@ namespace Source.Model
     public class ConnectionDetail
     {
         public string wallet;
-        public int? network;
+        public int network;
+        public string contractAddress;
     }
 }

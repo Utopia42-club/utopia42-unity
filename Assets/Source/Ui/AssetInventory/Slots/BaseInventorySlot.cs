@@ -1,6 +1,6 @@
 using System;
 using System.Collections;
-using Source.Ui.AssetInventory.Models;
+using Source.Model.Inventory;
 using Source.Ui.Utils;
 using Source.UtopiaException;
 using UnityEngine;

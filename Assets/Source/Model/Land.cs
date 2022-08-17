@@ -48,5 +48,11 @@ namespace Source.Model
                 return properties.name;
             return null;
         }
+
+        public bool IsValid()
+        {
+            return startCoordinate.x < endCoordinate.x &&
+                   startCoordinate.z < endCoordinate.z;
+        }
     }
 }

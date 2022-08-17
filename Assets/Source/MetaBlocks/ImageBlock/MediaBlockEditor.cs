@@ -8,14 +8,14 @@ namespace Source.MetaBlocks.ImageBlock
     public class MediaBlockEditor
     {
         public static readonly int DEFAULT_DIMENSION = 3;
+        private readonly Toggle detectCollision;
+        private readonly TextField height;
+        private readonly TextField rotationX;
+        private readonly TextField rotationY;
+        private readonly TextField rotationZ;
 
-        private TextField url;
-        private TextField rotationX;
-        private TextField rotationY;
-        private TextField rotationZ;
-        private TextField width;
-        private TextField height;
-        private Toggle detectCollision;
+        private readonly TextField url;
+        private readonly TextField width;
 
 
         public MediaBlockEditor(Action<MediaBlockProperties> onSave, int instanceID)
@@ -34,12 +34,6 @@ namespace Source.MetaBlocks.ImageBlock
             width = root.Q<TextField>("w");
             height = root.Q<TextField>("h");
             detectCollision = root.Q<Toggle>("collisionDetect");
-            TextFields.RegisterUiEngagementCallbacksForTextField(url);
-            TextFields.RegisterUiEngagementCallbacksForTextField(rotationX);
-            TextFields.RegisterUiEngagementCallbacksForTextField(rotationY);
-            TextFields.RegisterUiEngagementCallbacksForTextField(rotationZ);
-            TextFields.RegisterUiEngagementCallbacksForTextField(width);
-            TextFields.RegisterUiEngagementCallbacksForTextField(height);
         }
 
         public MediaBlockProperties GetValue()
@@ -85,7 +79,7 @@ namespace Source.MetaBlocks.ImageBlock
             height.value = value.height.ToString();
             detectCollision.value = value.detectCollision;
         }
-        
+
         public void Show()
         {
             PropertyEditor.INSTANCE.Show();

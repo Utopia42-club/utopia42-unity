@@ -4,25 +4,6 @@ namespace Source.Ui.Utils
 {
     public static class TextFields
     {
-        public static void RegisterUiEngagementCallbacksForTextField(TextField textField)
-        {
-            int? engagementId = null;
-            textField.RegisterCallback<FocusInEvent>(evt => { engagementId = GameManager.INSTANCE.EngageUi(); });
-            textField.RegisterCallback<FocusOutEvent>(evt =>
-            {
-                if (engagementId != null)
-                {
-                    GameManager.INSTANCE.UnEngageUi(engagementId.Value);
-                    engagementId = null;
-                }
-            });
-            MouseLook.INSTANCE.cursorLockedStateChanged.AddListener(locked =>
-            {
-                if (locked && engagementId != null)
-                    GameManager.INSTANCE.UnEngageUi(engagementId.Value);
-            });
-        }
-
         public static void SetPlaceHolderForTextField(TextField textField, string placeHolder)
         {
             var label = new Label(placeHolder)

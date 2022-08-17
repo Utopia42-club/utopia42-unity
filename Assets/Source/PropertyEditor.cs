@@ -28,7 +28,7 @@ namespace Source
         private void Update()
         {
             var focusable = Player.INSTANCE.FocusedFocusable;
-            if (!GameManager.INSTANCE.IsUiEngaged() && Input.GetKeyDown(KeyCode.E) && IsActive
+            if (!GameManager.INSTANCE.IsTextInputFocused() && Input.GetKeyDown(KeyCode.E) && IsActive
                 && (focusable == null || focusable is ChunkFocusable or MetaFocusable {Focused: false}))
                 Hide();
         }
@@ -40,12 +40,17 @@ namespace Source
 
         public VisualElement Setup(string uxmlPath, string header, Action onSave, int referenceObjectID)
         {
+            return Setup(Ui.Utils.Utils.Create(uxmlPath), header, onSave, referenceObjectID);
+        }
+
+        public T Setup<T>(T editor, string header, Action onSave, int referenceObjectID)
+            where T : VisualElement
+        {
             root = GetComponent<UIDocument>().rootVisualElement;
             body = root.Q<ScrollView>("body");
             Scrolls.IncreaseScrollSpeed(body);
             label = root.Q<Label>("label");
             label.text = header;
-            var editor = Ui.Utils.Utils.Create(uxmlPath);
             body.Clear();
             body.Add(editor);
 
@@ -79,6 +84,7 @@ namespace Source
         {
             root = GetComponent<UIDocument>().rootVisualElement;
             root.style.display = active ? DisplayStyle.Flex : DisplayStyle.None;
+            root.SetEnabled(active);
         }
 
         public static PropertyEditor INSTANCE => instance;

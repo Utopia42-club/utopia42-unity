@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using Source.Canvas;
-using Source.Model;
 using UnityEngine;
 
 namespace Source.MetaBlocks.LinkBlock
@@ -9,6 +7,12 @@ namespace Source.MetaBlocks.LinkBlock
     public class LinkBlockObject : MetaBlockObject
     {
         private GameObject placeHolder;
+
+        protected override void OnDestroy()
+        {
+            DestroyPlaceHolder(false);
+            base.OnDestroy();
+        }
 
         public override void OnDataUpdate()
         {
@@ -21,7 +25,7 @@ namespace Source.MetaBlocks.LinkBlock
 
         private void OpenLink()
         {
-            LinkBlockProperties props = (LinkBlockProperties) Block.GetProps();
+            var props = (LinkBlockProperties) Block.GetProps();
             if (props.pos == null)
                 Application.OpenURL(props.url);
             else
@@ -97,7 +101,7 @@ namespace Source.MetaBlocks.LinkBlock
             {
                 if (CanEdit && Input.GetKeyDown(KeyCode.E))
                     TryOpenEditor(EditProps);
-                
+
                 if (props != null && !props.IsEmpty() && Input.GetKeyDown(KeyCode.O))
                     OpenLink();
             });
@@ -105,7 +109,7 @@ namespace Source.MetaBlocks.LinkBlock
 
         private void EditProps()
         {
-            var editor = new LinkBlockEditor((value) =>
+            var editor = new LinkBlockEditor(value =>
             {
                 if (value.pos != null) value.url = null;
                 if (value.IsEmpty()) value = null;
@@ -121,12 +125,6 @@ namespace Source.MetaBlocks.LinkBlock
             if (placeHolder == null) return;
             DeepDestroy3DObject(placeHolder, immediate);
             placeHolder = null;
-        }
-
-        protected override void OnDestroy()
-        {
-            DestroyPlaceHolder(false);
-            base.OnDestroy();
         }
     }
 }

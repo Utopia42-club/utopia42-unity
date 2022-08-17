@@ -1,4 +1,9 @@
 using System;
+using System.Collections.Generic;
+using Source.Model;
+using Source.Service;
+using Source.Service.Auth;
+using Source.Ui.Snack;
 using Source.Ui.Utils;
 using UnityEngine.UIElements;
 
@@ -6,63 +11,31 @@ namespace Source.MetaBlocks.TeleportBlock
 {
     public class TeleportBlockEditor
     {
-        private TextField posX;
-        private TextField posY;
-        private TextField posZ;
+        private readonly TeleportPropertiesEditor editorElement;
 
         public TeleportBlockEditor(Action<TeleportBlockProperties> onSave, int instanceID)
         {
-            var root = PropertyEditor.INSTANCE.Setup("Ui/PropertyEditors/TeleportBlockEditor",
+            editorElement = PropertyEditor.INSTANCE.Setup(new TeleportPropertiesEditor(),
                 "Teleport Block Properties", () =>
                 {
                     onSave(GetValue());
                     PropertyEditor.INSTANCE.Hide();
                 }, instanceID);
-            posX = root.Q<TextField>("x");
-            posY = root.Q<TextField>("y");
-            posZ = root.Q<TextField>("z");
-            TextFields.RegisterUiEngagementCallbacksForTextField(posX);
-            TextFields.RegisterUiEngagementCallbacksForTextField(posY);
-            TextFields.RegisterUiEngagementCallbacksForTextField(posZ);
         }
-        
+
         public TeleportBlockProperties GetValue()
         {
-            if (HasValue(posX) && HasValue(posY) && HasValue(posZ))
-            {
-                return new TeleportBlockProperties
-                {
-                    destination = new[]
-                    {
-                        int.Parse(posX.text), int.Parse(posY.text),
-                        int.Parse(posZ.text)
-                    }
-                };
-            }
-
-            return null;
+            return editorElement.GetValue();
         }
 
         public void SetValue(TeleportBlockProperties value)
         {
-            if (value == null) return;
-
-            if (value.destination != null)
-            {
-                posX.value = value.destination[0].ToString();
-                posY.value = value.destination[1].ToString();
-                posZ.value = value.destination[2].ToString();
-            }
+            editorElement.SetValue(value);
         }
 
         public void Show()
         {
             PropertyEditor.INSTANCE.Show();
-        }
-
-        private bool HasValue(TextField f)
-        {
-            return !string.IsNullOrEmpty(f.text);
         }
     }
 }

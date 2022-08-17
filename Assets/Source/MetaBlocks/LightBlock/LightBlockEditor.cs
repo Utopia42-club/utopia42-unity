@@ -12,6 +12,7 @@ namespace Source.MetaBlocks.LightBlock
 
         [SerializeField] private InputField intensity;
         [SerializeField] private InputField range;
+
         [SerializeField] private Image colorImage;
         // [SerializeField] private FlexibleColorPicker colorPicker;
 

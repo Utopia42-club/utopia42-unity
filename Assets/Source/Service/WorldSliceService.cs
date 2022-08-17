@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Source.Configuration;
 using Source.MetaBlocks;
 using Source.Model;
+using Source.Service.Auth;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -11,18 +13,14 @@ namespace Source.Service
 {
     internal class WorldSliceService
     {
-        internal static WorldSliceService INSTANCE = new WorldSliceService();
-
         /**
          * Written using expression so no one can change the properties
          */
         internal static Vector3Int SLICE_SIZE => Chunk.CHUNK_SIZE * 64;
 
-        private readonly Dictionary<Vector3Int, SliceData> slices = new Dictionary<Vector3Int, SliceData>();
+        private readonly Dictionary<Vector3Int, SliceData> slices = new();
 
-        private readonly Dictionary<Vector3Int, UnityEvent<SliceData>> loadingSlices =
-            new Dictionary<Vector3Int, UnityEvent<SliceData>>();
-
+        private readonly Dictionary<Vector3Int, UnityEvent<SliceData>> loadingSlices = new();
 
         internal ChunkData GetChunkIfLoaded(Vector3Int coordinate)
         {
@@ -53,7 +51,9 @@ namespace Source.Service
 
         private IEnumerator DoLoad(SerializableVector3Int start)
         {
-            string url = Constants.ApiURL + "/world/slice";
+            var contract = AuthService.Instance.CurrentContract;
+            string url =
+                $"{Configurations.Instance.apiURL}/world/slice?network={contract.network.id}&contract={contract.id}";
             bool success = false;
             var timeout = 0.2f;
             while (!success)

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using Source.Configuration;
 using Source.Model;
 using Source.Service;
-using Source.Ui.Login;
-using Source.Ui.Menu;
+using Source.Service.Auth;
 using Source.Ui.Profile;
 using Source.Utils;
 using TMPro;
@@ -14,36 +14,37 @@ namespace Source.Canvas
 {
     public class Owner : MonoBehaviour
     {
-        private static Owner instance;
         public TextMeshProUGUI label;
         public ActionButton openProfileButton;
         [SerializeField] private GameObject view;
         [SerializeField] private ImageLoader profileIcon;
 
-        private SnackItem snackItem; // TODO ?
+        public readonly UnityEvent<object> currentLandChanged = new();
+        private Land currentLand;
+        private Profile currentProfile;
+        private string currentWallet;
 
         private GameManager manager;
         private Land prevLand;
         private string prevWallet;
-        private Profile currentProfile;
-        private Land currentLand;
-        private string currentWallet;
         private ProfileLoader profileLoader;
 
-        public readonly UnityEvent<object> currentLandChanged = new UnityEvent<object>();
+        private SnackItem snackItem; // TODO ?
 
-        void Start()
+        public static Owner INSTANCE { get; private set; }
+
+        private void Start()
         {
-            instance = this;
+            INSTANCE = this;
             manager = GameManager.INSTANCE;
             profileLoader = ProfileLoader.INSTANCE;
-            openProfileButton.AddListener(() => manager.ShowProfile(currentProfile, null));
-            
+            // openProfileButton.AddListener(() => manager.ShowProfile(currentProfile, null));
+
             view.SetActive(false); // TODO ?
             ShowShortcutsSnack();
         }
 
-        void Update()
+        private void Update()
         {
             if (manager.GetState() == GameManager.State.PLAYING)
             {
@@ -51,14 +52,14 @@ namespace Source.Canvas
                 var changed = IsLandChanged(player.GetPosition());
                 if (changed)
                     currentLandChanged.Invoke(currentLand);
-                if (changed || !view.activeSelf && currentWallet != null)
+                if (changed || (!view.activeSelf && currentWallet != null))
                     OnOwnerChanged();
 
-                if (Input.GetButtonDown("Profile")
-                    && currentWallet != null
-                    && !profileLoader.IsWalletLoading(currentWallet)
-                    && !manager.IsUiEngaged())
-                    manager.ShowProfile(currentProfile, currentLand);
+                // if (Input.GetButtonDown("Profile")
+                //     && currentWallet != null
+                //     && !profileLoader.IsWalletLoading(currentWallet)
+                //     && !manager.IsUiEngaged())
+                // manager.ShowProfile(currentProfile, currentLand);
             }
             else
             {
@@ -89,18 +90,18 @@ namespace Source.Canvas
                 // view.SetActive(true);
                 ShowShortcutsSnack();
                 currentProfile = profile;
-                profileIcon.SetUrl(profile.imageUrl == null
-                    ? null
-                    : Constants.ApiURL + "/profile/image/" + profile.imageUrl);
+                // profileIcon.SetUrl(profile.imageUrl == null
+                    // ? null
+                    // : Configurations.Instance.apiURL + "/profile/image/" + profile.imageUrl);
                 label.SetText(profile.name);
             }
         }
 
         internal void OnProfileEdited()
         {
-            var owner = AuthService.WalletId();
+            var owner = AuthService.Instance.WalletId();
             profileLoader.InvalidateProfile(owner);
-            if (AuthService.IsCurrentUser(currentWallet))
+            if (AuthService.Instance.IsCurrentUser(currentWallet))
                 LoadProfile();
         }
 
@@ -114,7 +115,7 @@ namespace Source.Canvas
                 SetCurrentProfile(profile);
                 if (profile != null)
                 {
-                    HorizontalLayoutGroup layout = view.GetComponentInChildren<HorizontalLayoutGroup>();
+                    var layout = view.GetComponentInChildren<HorizontalLayoutGroup>();
                     LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform) layout.transform);
                 }
             }, () => { SetCurrentProfile(Profile.FAILED_TO_LOAD_PROFILE); });
@@ -142,7 +143,7 @@ namespace Source.Canvas
             currentWallet = land?.owner;
             return true;
         }
-        
+
         private void ShowShortcutsSnack()
         {
             snackItem?.Remove();
@@ -158,11 +159,6 @@ namespace Source.Canvas
             if (snackItem == null) return;
             snackItem.Remove();
             snackItem = null;
-        }
-
-        public static Owner INSTANCE
-        {
-            get { return instance; }
         }
     }
 }

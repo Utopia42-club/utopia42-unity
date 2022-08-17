@@ -11,24 +11,20 @@ namespace Source
 {
     public class Chunk
     {
-        /**
-         * Written using expression so no one can change the properties
-         */
-        public static Vector3Int CHUNK_SIZE => new Vector3Int(16, 32, 16);
-
-        private Dictionary<MetaLocalPosition, MetaBlock> metaBlocks;
-        private readonly uint[,,] voxels = new uint[CHUNK_SIZE.x, CHUNK_SIZE.y, CHUNK_SIZE.z];
-        private World world;
-        public GameObject chunkObject;
+        public readonly Vector3Int coordinate;
 
         public readonly Vector3Int position;
-        public readonly Vector3Int coordinate;
-        public MeshRenderer meshRenderer;
-        public MeshFilter meshFilter;
-        public MeshCollider meshCollider;
-        private bool initStarted = false;
-        private bool inited = false;
+        private readonly uint[,,] voxels = new uint[CHUNK_SIZE.x, CHUNK_SIZE.y, CHUNK_SIZE.z];
         private bool active = true;
+        public GameObject chunkObject;
+        private bool inited;
+        private bool initStarted;
+        public MeshCollider meshCollider;
+        public MeshFilter meshFilter;
+        public MeshRenderer meshRenderer;
+
+        private Dictionary<MetaLocalPosition, MetaBlock> metaBlocks;
+        private readonly World world;
 
         public Chunk(Vector3Int coordinate, World world)
         {
@@ -37,6 +33,11 @@ namespace Source
             position = coordinate;
             position.Scale(CHUNK_SIZE);
         }
+
+        /**
+         * Written using expression so no one can change the properties
+         */
+        public static Vector3Int CHUNK_SIZE => new(16, 32, 16);
 
         public bool IsInitialized()
         {
@@ -73,7 +74,7 @@ namespace Source
             chunkObject.name = "Chunk " + coordinate;
 
             ChunkInitializer.InitializeChunk(coordinate, voxels);
-            WorldService.INSTANCE.GetChunkData(coordinate, (data) =>
+            WorldService.INSTANCE.GetChunkData(coordinate, data =>
             {
                 if (data?.blocks != null)
                     foreach (var change in data.blocks)
@@ -94,10 +95,8 @@ namespace Source
         private void DrawMetaBlocks()
         {
             if (metaBlocks != null)
-            {
                 foreach (var entry in metaBlocks)
                     entry.Value.RenderAt(chunkObject.transform, entry.Key.position, this);
-            }
         }
 
         private void DrawVoxels()
@@ -112,12 +111,13 @@ namespace Source
             CreateMesh(vertices, triangles, coloredTriangles, uvs, colors);
         }
 
-        void CreateMeshData(List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles, List<Vector2> uvs,
+        private void CreateMeshData(List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles,
+            List<Vector2> uvs,
             List<Color32> colors)
         {
-            for (int y = 0; y < voxels.GetLength(1); y++)
-            for (int x = 0; x < voxels.GetLength(0); x++)
-            for (int z = 0; z < voxels.GetLength(2); z++)
+            for (var y = 0; y < voxels.GetLength(1); y++)
+            for (var x = 0; x < voxels.GetLength(0); x++)
+            for (var z = 0; z < voxels.GetLength(2); z++)
                 if (Blocks.GetBlockType(voxels[x, y, z]).isSolid)
                     AddVisibleFaces(new Vector3Int(x, y, z), vertices, triangles, coloredTriangles, uvs, colors);
         }
@@ -157,7 +157,8 @@ namespace Source
             return GetBlock(localPos).isSolid;
         }
 
-        void AddVisibleFaces(Vector3Int pos, List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles,
+        private void AddVisibleFaces(Vector3Int pos, List<Vector3> vertices, List<int> triangles,
+            List<int> coloredTriangles,
             List<Vector2> uvs, List<Color32> colors)
         {
             Vector3Int[] verts =
@@ -180,7 +181,6 @@ namespace Source
             var color = type.color ?? Color.white;
 
             foreach (var face in Voxels.Face.FACES)
-            {
                 if (!IsPositionSolidIfLoaded(pos + face.direction))
                 {
                     var idx = vertices.Count;
@@ -198,7 +198,9 @@ namespace Source
                         uvs.Add(Vector2.zero);
                     }
                     else
+                    {
                         AddTexture(type.GetTextureID(face), uvs);
+                    }
 
                     colors.Add(color);
                     colors.Add(color);
@@ -212,7 +214,6 @@ namespace Source
                     targetTriangles.Add(idx + 1);
                     targetTriangles.Add(idx + 3);
                 }
-            }
         }
 
         private void CreateMesh(List<Vector3> vertices, List<int> triangles, List<int> coloredTriangles,
@@ -237,16 +238,16 @@ namespace Source
             meshCollider.sharedMesh = mesh;
         }
 
-        void AddTexture(int textureID, List<Vector2> uvs)
+        private void AddTexture(int textureID, List<Vector2> uvs)
         {
             float y = textureID / Voxels.TextureAtlasSizeInBlocks;
-            float x = textureID - (y * Voxels.TextureAtlasSizeInBlocks);
+            var x = textureID - y * Voxels.TextureAtlasSizeInBlocks;
 
             x *= Voxels.NormalizedBlockTextureSize;
             y *= Voxels.NormalizedBlockTextureSize;
 
             y = 1f - y - Voxels.NormalizedBlockTextureSize;
-            float eps = 0.005f;
+            var eps = 0.005f;
             uvs.Add(new Vector2(x + eps, y + eps));
             uvs.Add(new Vector2(x + eps, y + Voxels.NormalizedBlockTextureSize - eps));
             uvs.Add(new Vector2(x + Voxels.NormalizedBlockTextureSize - eps, y + eps));
@@ -260,7 +261,7 @@ namespace Source
             WorldService.INSTANCE.AddChange(pos, land);
             OnChanged(pos);
         }
-        
+
         public void DeleteMeta(MetaPosition pos) // TODO [detach metablock]: add land param?
         {
             var block = metaBlocks[pos.local];
@@ -293,6 +294,7 @@ namespace Source
             WorldService.INSTANCE.AddChange(pos, type, land);
             OnChanged(pos);
         }
+
         public void PutVoxels(Dictionary<VoxelPosition, Tuple<BlockType, Land>> blocks)
         {
             var neighbourChunks = new HashSet<Chunk>();
@@ -374,7 +376,7 @@ namespace Source
         public override bool Equals(object obj)
         {
             if (obj == this) return true;
-            if ((obj == null) || this.GetType() != obj.GetType())
+            if (obj == null || GetType() != obj.GetType())
                 return false;
 
             return coordinate.Equals(((Chunk) obj).coordinate);
@@ -388,10 +390,8 @@ namespace Source
         public void Destroy()
         {
             if (metaBlocks != null)
-            {
                 foreach (var metaBlock in metaBlocks.Values)
                     metaBlock.DestroyView();
-            }
 
             Object.Destroy(meshRenderer.sharedMaterials[1]);
             Object.Destroy(meshFilter.sharedMesh);

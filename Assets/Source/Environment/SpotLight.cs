@@ -6,7 +6,7 @@ namespace Source.Environment
     {
         public Light spotLight;
 
-        void Start()
+        private void Start()
         {
             spotLight.range = 20;
             GameManager.INSTANCE.stateChange.AddListener(state =>
@@ -16,12 +16,10 @@ namespace Source.Environment
             );
         }
 
-        void Update()
+        private void Update()
         {
-            if (!GameManager.INSTANCE.IsUiEngaged() && Input.GetButtonDown("Light"))
-            {
+            if (!GameManager.INSTANCE.IsTextInputFocused() && Input.GetButtonDown("Light"))
                 spotLight.range = spotLight.range > 0 ? 0 : 20;
-            }
         }
     }
 }

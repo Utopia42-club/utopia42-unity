@@ -1,4 +1,4 @@
-using Source.Ui.AssetInventory.Models;
+using Source.Model.Inventory;
 using UnityEngine.UIElements;
 
 namespace Source.Ui.AssetInventory.Slots

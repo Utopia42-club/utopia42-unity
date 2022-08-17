@@ -5,6 +5,7 @@ using System.Numerics;
 using Nethereum.JsonRpc.UnityClient;
 using Nethereum.Util;
 using Source.Model;
+using Source.Service.Auth;
 using Source.Service.Ethereum.ContractDefinition;
 using Land = Source.Model.Land;
 
@@ -14,34 +15,18 @@ namespace Source.Service.Ethereum
     {
         public static readonly EthereumClientService INSTANCE = new();
 
-        private EthNetwork network;
-
         private EthereumClientService()
         {
         }
 
-        public bool IsInitialized()
-        {
-            return network != null;
-        }
-
-        public EthNetwork GetNetwork()
-        {
-            return network;
-        }
-
-        public void SetNetwork(EthNetwork network)
-        {
-            this.network = network;
-        }
-
-        public IEnumerator GetLastLandId(Action<BigInteger> consumer, Action onFailed)
+        private IEnumerator GetLastLandId(Action<BigInteger> consumer, Action onFailed)
         {
             // consumer(6); yield break; // for test only 
+            var contract = AuthService.Instance.CurrentContract;
             var request =
-                new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(network.provider,
-                    network.contractAddress);
-            yield return request.Query(new LastLandIdFunction() { }, network.contractAddress);
+                new QueryUnityRequest<LastLandIdFunction, LastLandIdOutputDTO>(contract.network.rpcProvider,
+                    contract.id);
+            yield return request.Query(new LastLandIdFunction() { }, contract.id);
             if (request.Result != null)
                 consumer(request.Result.ReturnValue1);
             else onFailed();
@@ -49,53 +34,31 @@ namespace Source.Service.Ethereum
 
         public IEnumerator GetLandPrice(long x1, long x2, long y1, long y2, Action<decimal> consumer, Action onFailed)
         {
+            var contract = AuthService.Instance.CurrentContract;
             var request =
-                new QueryUnityRequest<LandPriceFunction, LandPriceOutputDTO>(network.provider, network.contractAddress);
+                new QueryUnityRequest<LandPriceFunction, LandPriceOutputDTO>(contract.network.rpcProvider,
+                    contract.id);
             yield return request.Query(new LandPriceFunction()
             {
                 X1 = x1,
                 X2 = x2,
                 Y1 = y1,
                 Y2 = y2
-            }, network.contractAddress);
+            }, contract.id);
             if (request.Result != null)
                 consumer(UnitConversion.Convert.FromWei(request.Result.ReturnValue1));
             else onFailed();
         }
 
 
-        public IEnumerator ABS(Action<BigInteger> consumer, Action onFailed)
-        {
-            var request =
-                new QueryUnityRequest<AbsFunction, AbsOutputDTO>(network.provider, network.contractAddress);
-            yield return request.Query(new AbsFunction() {X = -22}, network.contractAddress);
-            // Debug.Log(request.Exception);
-            // Debug.Log(request.DefaultAccount);
-            // Debug.Log(request.Result.ReturnValue1);
-
-            if (request.Result != null)
-                consumer(request.Result.ReturnValue1);
-            else onFailed();
-            // consumer(MapLands(request.Result.Lands));
-        }
-
-        public IEnumerator GetLandsForOwner(string owner, Action<List<Land>> consumer, Action onFailed)
-        {
-            var request =
-                new QueryUnityRequest<GetLandsFunction, GetLandsOutputDTO>(network.provider, network.contractAddress);
-            yield return request.Query(new GetLandsFunction() {Owner = owner}, network.contractAddress);
-            if (request.Result != null)
-                consumer(MapLands(request.Result.Lands));
-            else onFailed();
-        }
-
         public IEnumerator GetLandsByIds(List<BigInteger> ids, Action<List<Land>> consumer, Action onFailed)
         {
+            var contract = AuthService.Instance.CurrentContract;
             var request =
-                new QueryUnityRequest<GetLandsByIdsFunction, GetLandsByIdsOutputDTO>(network.provider,
-                    network.contractAddress);
+                new QueryUnityRequest<GetLandsByIdsFunction, GetLandsByIdsOutputDTO>(contract.network.rpcProvider,
+                    contract.id);
             //TODO add exception handling
-            yield return request.Query(new GetLandsByIdsFunction() {Ids = ids}, network.contractAddress);
+            yield return request.Query(new GetLandsByIdsFunction() {Ids = ids}, contract.id);
             if (request.Result != null)
                 consumer(MapLands(request.Result.Lands));
             else onFailed();
@@ -158,20 +121,6 @@ namespace Source.Service.Ethereum
                     ids = ids.GetRange(0, (int) (lastId - currentLast));
                 for (var i = 0; i < ids.Count; i++) ids[i] = i + currentLast + 1;
             }
-        }
-
-
-        public IEnumerator GetTokenUri(string collection, BigInteger tokenId, Action<string> consumer, Action onFailed)
-        {
-            var request =
-                new QueryUnityRequest<TokenUriFunction, TokenUriOutputDto>(network.provider, collection);
-            yield return request.Query(new TokenUriFunction()
-            {
-                TokenId = tokenId
-            }, collection);
-            if (request.Result != null)
-                consumer(request.Result.ReturnValue1);
-            else onFailed();
         }
     }
 }

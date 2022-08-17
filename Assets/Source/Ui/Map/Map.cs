@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Source.Model;
+using Source.Reactive.Producer;
 using Source.Ui.Dialog;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -10,8 +11,8 @@ namespace Source.Ui.Map
 {
     public class Map : UxmlElement
     {
-        private static Map instance;
-        public static Map INSTANCE => instance;
+        private readonly Subject<float> scaleSubject = new();
+        public Observable<float> scaleObservable => scaleSubject.AsObservable();
 
         private readonly MapLandLayer lands;
         private readonly MapViewportController viewportController;
@@ -21,8 +22,7 @@ namespace Source.Ui.Map
 
         public Map() : base(typeof(Map), true)
         {
-            instance = this;
-            var root = this.Q("Root");
+            var root = this.Q("MapRoot");
             var grid = new MapGrid(this);
             root.Add(grid);
             root.Add(lands = new MapLandLayer(this));
@@ -34,6 +34,7 @@ namespace Source.Ui.Map
                 lands.transform.position = new Vector3(-e.rect.x, -e.rect.y, 0);
                 lands.transform.scale = new Vector3(e.scale, e.scale, 1);
                 grid.UpdateViewport(e.scale);
+                scaleSubject.Next(e.scale);
             });
 
             mapActionsLayer = new MapActionsLayer(this);

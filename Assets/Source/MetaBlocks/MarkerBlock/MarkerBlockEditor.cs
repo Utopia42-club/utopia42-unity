@@ -6,7 +6,7 @@ namespace Source.MetaBlocks.MarkerBlock
 {
     public class MarkerBlockEditor
     {
-        private TextField name;
+        private readonly TextField name;
 
         public MarkerBlockEditor(Action<MarkerBlockProperties> onSave, int instanceID)
         {
@@ -17,19 +17,16 @@ namespace Source.MetaBlocks.MarkerBlock
                     PropertyEditor.INSTANCE.Hide();
                 }, instanceID);
             name = root.Q<TextField>("name");
-            TextFields.RegisterUiEngagementCallbacksForTextField(name);
         }
 
 
         public MarkerBlockProperties GetValue()
         {
             if (HasValue(name))
-            {
                 return new MarkerBlockProperties
                 {
                     name = name.text.Trim()
                 };
-            }
 
             return null;
         }

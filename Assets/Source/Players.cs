@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Source.Service.Auth;
 using UnityEngine;
 
 namespace Source
@@ -25,8 +27,14 @@ namespace Source
 
         private void Update()
         {
-            if (destroyQueue.Count > 0 && destroyQueue.TryDequeue(out var go))
-                DestroyImmediate(go);
+            while (destroyQueue.Count > 0 && destroyQueue.TryDequeue(out var go))
+            {
+                if (go != null)
+                {
+                    DestroyImmediate(go);
+                    break;
+                }
+            }
 
             if (Time.unscaledTimeAsDouble - lastInActivityCheck > maxInactivityDelay)
             {
@@ -72,6 +80,7 @@ namespace Source
         public void ReportOtherPlayersStateFromWeb(string state)
         {
             var s = JsonConvert.DeserializeObject<AvatarController.PlayerState>(state);
+            var contract = AuthService.Instance.CurrentContract;
             if (s?.walletId == null) return;
             s.walletId = s.walletId?.ToLower();
             ReportOtherPlayersState(s);
@@ -79,7 +88,7 @@ namespace Source
 
         public void ReportOtherPlayersState(AvatarController.PlayerState playerState)
         {
-            if (AuthService.IsCurrentUser(playerState.walletId))
+            if (AuthService.Instance.IsCurrentUser(playerState.walletId))
             {
                 Debug.LogWarning(
                     $"Cannot add another player with the same wallet ({playerState.walletId}). Ignoring state...");
@@ -140,6 +149,16 @@ namespace Source
         {
             yield return null;
             controller.UpdatePlayerState(playerState);
+        }
+
+        public void Clear()
+        {
+            var controllers = playersMap.Values.ToList();
+            playersMap.Clear();
+            foreach (var controller in controllers)
+                destroyQueue.Enqueue(controller.gameObject);
+            states.Clear();
+            walletsUpdateStateQueue.Clear();
         }
 
         public static Players INSTANCE => GameObject.Find("Players").GetComponent<Players>();

@@ -7,37 +7,30 @@
 @import "StyleSheets/SliderStyleSheet.uss";
 
 * {
-    -unity-background-scale-mode: scale-to-fit
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 :root {
     --text-darker-color: rgb(172, 172, 172);
     --text-color: rgb(240, 240, 240);
-
     --background-color: rgb(24, 36, 48);
     --lit-background-color: rgba(24, 36, 48, 0.7);
     --opacity-background-color: rgba(24, 36, 48, 0.3);
-
     --primary-color: rgb(52, 73, 94);
     --darker-primary-color: rgb(42, 60, 77);
     --lighter-primary-color: rgb(76, 97, 118);
-
-    --secondary-color: rgb(52, 152, 219);
-    --darker-secondary-color: rgb(41, 122, 176);
-    --lighter-secondary-color: rgb(91, 162, 210);
-
+    --secondary-color: rgb(30, 136, 229);
+    --darker-secondary-color: rgb(0, 92, 178);
+    --lighter-secondary-color: rgb(106, 183, 255);
     --accent-color: rgb(146, 213, 91);
     --darker-accent-color: rgb(101, 150, 61);
     --lighter-accent-color: rgb(173, 220, 135);
-
     --danger-color: rgb(243, 92, 92);
     --darker-danger-color: rgb(211, 81, 81);
     --warn-color: rgb(174, 177, 28);
     --transparent: rgba(0, 0, 0, 0);
-
     --default-border-radius: 4px;
     --default-border-color: var(--lighter-primary-color);
-
     --default-font-size: 14px;
     --small-font-size: 11px;
     --h1-font-size: 16px;
@@ -46,6 +39,28 @@
 .utopia-panel {
     background-color: var(--background-color);
     border-radius: var(--default-border-radius);
+}
+
+.utopia-background {
+    background-color: var(--background-color);
+}
+
+.utopia-primary-background {
+    background-color: var(--primary-color);
+}
+
+.utopia-darker-primary-background {
+    background-color: var(--darker-primary-color);
+}
+
+.utopia-lighter-primary-background {
+    background-color: var(--lighter-primary-color);
+}
+
+.utopia-border {
+    border-width: 1px;
+    border-radius: var(--default-border-radius);
+    border-color: var(--default-border-color);
 }
 
 .utopia-panel:disabled {
@@ -96,6 +111,14 @@
 
 .utopia-toast {
     opacity: 0.8;
+}
+
+.utopia-primary-background {
+    background-color: var(--primary-color);
+}
+
+.utopia-accent-background {
+    background-color: var(--accent-color);
 }
 
 .utopia-background {

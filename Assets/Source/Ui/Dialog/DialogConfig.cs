@@ -13,6 +13,7 @@ namespace Source.Ui.Dialog
         [CanBeNull] private Action onClose;
         [CanBeNull] private string title;
         private List<DialogAction> actions = new();
+        private bool closeOnBackdropClick = true;
 
         public DialogConfig(VisualElement content)
         {
@@ -56,6 +57,12 @@ namespace Source.Ui.Dialog
             return this;
         }
 
+        public DialogConfig WithCloseOnBackdropClick(bool value = true)
+        {
+            closeOnBackdropClick = value;
+            return this;
+        }
+
         public StyleLength Width => width;
 
         public StyleLength Height => height;
@@ -65,6 +72,7 @@ namespace Source.Ui.Dialog
         [CanBeNull] public string Title => title;
 
         public List<DialogAction> Actions => actions;
+        public bool CloseOnBackdropClick => closeOnBackdropClick;
 
         [CanBeNull] public Action OnClose => onClose;
     }

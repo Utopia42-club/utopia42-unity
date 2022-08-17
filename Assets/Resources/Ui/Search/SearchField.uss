@@ -1,0 +1,7 @@
+.utopia-search-field-value-view {
+    position: absolute;
+    bottom: 0;
+    left: 8;
+    right: 8;
+    overflow: hidden;
+}

@@ -1,7 +1,9 @@
-using System.Collections.Generic;
 using Source.Canvas;
+using Source.Reactive.Producer;
+using Source.Service;
+using Source.Service.Auth;
+using Source.Ui.Loading;
 using Source.Ui.Utils;
-using Source.Utils;
 using Source.UtopiaException;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -15,111 +17,134 @@ namespace Source.Ui.Profile
         private Label nameLabel;
         private ScrollView body;
         private Texture2D loadedProfileImage;
+        private LoadingController imgLoading;
+        private Subscription imgSubscription;
 
-        public UserProfile(Model.Profile profile) : base(typeof(UserProfile), true)
+        public UserProfile() : base(typeof(UserProfile), true)
         {
-            SetProfile(profile);
+            RegisterCallback<DetachFromPanelEvent>(e => { ClearImageLoadingResources(); });
         }
 
-        public void SetProfile(Model.Profile profile)
+        private void ClearImageLoadingResources()
         {
+            imgLoading?.Close();
+            imgLoading = null;
+            imgSubscription?.Unsubscribe();
+            imgSubscription = null;
+        }
+
+        public void SetProfile(string wallet, Model.Profile profile)
+        {
+            ClearImageLoadingResources();
             if (loadedProfileImage != null)
             {
                 Object.Destroy(loadedProfileImage);
                 loadedProfileImage = null;
             }
 
-            if (profile == null)
-                return;
-
             imageElement = this.Q<VisualElement>("profileImage");
-            if (profile.imageUrl != null)
+            if (profile?.avatarUrl != null)
             {
-                var url = Constants.ApiURL + "/profile/image/" + profile.imageUrl;
-                GameManager.INSTANCE.StartCoroutine(
-                    UiImageUtils.SetBackGroundImageFromUrl(url, emptyUserIcon, false, imageElement, () =>
-                    {
-                        if (loadedProfileImage != null)
-                        {
-                            Object.Destroy(loadedProfileImage);
-                            loadedProfileImage = null;
-                        }
+                imgLoading = LoadingLayer.Show(imageElement);
+                var urlObs = ProfileRestClient.INSTANCE.GetProfileImageUrl(profile.avatarUrl);
+                imgSubscription = urlObs.Subscribe(url =>
+                {
+                    ClearImageLoadingResources();
+                    if (url == null)
+                        UiImageUtils.SetBackground(imageElement, emptyUserIcon, false);
+                    else
+                        GameManager.INSTANCE.StartCoroutine(
+                            UiImageUtils.SetBackGroundImageFromUrl(url, emptyUserIcon, false, imageElement, () =>
+                            {
+                                if (loadedProfileImage != null)
+                                {
+                                    Object.Destroy(loadedProfileImage);
+                                    loadedProfileImage = null;
+                                }
 
-                        var texture = imageElement.style.backgroundImage.value.texture;
-                        if (texture == null)
-                            throw new IllegalStateException();
-                        loadedProfileImage = texture;
-                    }));
+                                var texture = imageElement.style.backgroundImage.value.texture;
+                                if (texture == null)
+                                    throw new IllegalStateException();
+                                loadedProfileImage = texture;
+                            }));
+                }, e => ClearImageLoadingResources(), ClearImageLoadingResources);
             }
             else
                 UiImageUtils.SetBackground(imageElement, emptyUserIcon, false);
 
             nameLabel = this.Q<Label>("name");
-            if (profile.name != null)
-                nameLabel.text = profile.name;
+            nameLabel.text = profile?.name;
+
+            this.Q<Label>("CtizenId").text = profile == null ? "No Citizen Id!" : $"Citizen #{profile.citizenId}";
 
             body = this.Q<ScrollView>("body");
             Scrolls.IncreaseScrollSpeed(body);
-            body.Clear();
-            if (profile.bio != null)
+            var bio = body.Q<Label>("Bio");
+            bio.text = profile?.bio;
+            var props = body.Q("AdditionalProps");
+            props.Clear();
+            if (profile?.properties != null)
             {
-                var bioLabel = new Label
-                {
-                    text = profile.bio,
-                    style =
-                    {
-                        flexWrap = new StyleEnum<Wrap>(Wrap.Wrap),
-                        width = new StyleLength(new Length(100f, LengthUnit.Percent)),
-                        whiteSpace = WhiteSpace.Normal,
-                    }
-                };
-                body.Add(bioLabel);
+                foreach (var property in profile.properties)
+                    props.Add(new PropertyView(property));
             }
 
-            if (profile.links == null || profile.links.Count == 0)
-            {
-                profile.links = new List<Model.Profile.Link>();
-                foreach (var media in Model.Profile.Link.medias)
-                    profile.links.Add(new Model.Profile.Link
-                    {
-                        media = media.Key,
-                        link = null
-                    });
-            }
+            // if (profile?.links == null || profile.links.Count == 0)
+            // {
+            //     profile.links = new List<Model.Profile.Link>();
+            //     foreach (var media in Model.Profile.Link.medias)
+            //         profile.links.Add(new Model.Profile.Link
+            //         {
+            //             media = media.Key,
+            //             link = null
+            //         });
+            // }
 
             var socialLinks = this.Q<VisualElement>("socialLinks");
             socialLinks.Clear();
-            for (var index = 0; index < profile.links.Count; index++)
+            if (profile?.links != null)
             {
-                var link = profile.links[index];
-                var socialLink = new SocialLink(link);
-                socialLinks.Add(socialLink);
+                for (var index = 0; index < profile.links.Count; index++)
+                {
+                    var link = profile.links[index];
+                    var socialLink = new SocialLink(link);
+                    socialLinks.Add(socialLink);
+                }
             }
 
             var editButton = this.Q<Button>("userEditButton");
-            var designerButton = this.Q<Button>("openAvatarDesigner");
-            if (!AuthService.IsGuest() && AuthService.IsCurrentUser(profile.walletId))
+            if (wallet != null &&
+                !AuthService.Instance.IsGuest() && AuthService.Instance.IsCurrentUser(wallet))
             {
                 editButton.clickable = new Clickable(() => { });
-                editButton.clickable.clicked += () => BrowserConnector.INSTANCE.EditProfile(() =>
+                editButton.clickable.clicked += () => BrowserConnector.INSTANCE.OpenDApp(() =>
                 {
-                    ProfileLoader.INSTANCE.InvalidateProfile(profile.walletId);
-                    ProfileLoader.INSTANCE.load(profile.walletId, p =>
+                    ProfileLoader.INSTANCE.InvalidateProfile(wallet);
+                    ProfileLoader.INSTANCE.load(wallet, p =>
                     {
-                        SetProfile(p);
+                        SetProfile(wallet, p);
                         Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
                     }, () =>
                     {
                         //FIXME Show error snack
                     });
                 }, () => { });
-                designerButton.clickable = new Clickable(() => { });
-                designerButton.clickable.clicked += () => Application.OpenURL(Constants.AvatarDesignerURL);
             }
             else
-            {
                 editButton.style.display = DisplayStyle.None;
-                designerButton.style.display = DisplayStyle.None;
+        }
+
+        private class PropertyView : VisualElement
+        {
+            public PropertyView(Model.Profile.Property property)
+            {
+                AddToClassList("prop-row");
+                var key = new Label(property.key);
+                key.AddToClassList("prop-key");
+                Add(key);
+                var value = new Label(property.value);
+                value.AddToClassList("prop-value");
+                Add(value);
             }
         }
     }

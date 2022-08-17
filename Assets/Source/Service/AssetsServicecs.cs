@@ -1,7 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Source.Ui.AssetInventory.Models;
+using Source.Configuration;
+using Source.Model;
+using Source.Model.Inventory;
+using Source.Service.Auth;
 using Source.Utils;
 using UnityEngine;
 
@@ -11,13 +14,13 @@ namespace Source.Service
     {
         public IEnumerator GetCategories(SearchCriteria searchCriteria, Action<List<Category>> consumer, Action failed)
         {
-            var url = Constants.ApiURL + "/assets/categories";
+            var url = Configurations.Instance.apiURL + "/assets/categories";
             yield return RestClient.Post(url, searchCriteria, consumer, failed);
         }
 
         public IEnumerator GetPacks(SearchCriteria searchCriteria, Action<List<Pack>> consumer, Action failed)
         {
-            var url = Constants.ApiURL + "/assets/packs";
+            var url = Configurations.Instance.apiURL + "/assets/packs";
             yield return RestClient.Post(url, searchCriteria, consumer, failed);
         }
 
@@ -48,7 +51,7 @@ namespace Source.Service
 
         public IEnumerator GetAssets(SearchCriteria searchCriteria, Action<List<Asset>> consumer, Action failed)
         {
-            var url = Constants.ApiURL + "/assets";
+            var url = Configurations.Instance.apiURL + "/assets";
             yield return RestClient.Post(url, searchCriteria, consumer, failed);
         }
 
@@ -82,13 +85,13 @@ namespace Source.Service
         {
             var done = false;
             string token = null;
-            AuthService.GetAuthToken(t =>
+            AuthService.Instance.GetAuthToken(t =>
             {
                 done = true;
                 token = t;
             });
             yield return new WaitUntil(() => done);
-            var url = Constants.ApiURL + "/assets/favorite-items";
+            var url = Configurations.Instance.apiURL + "/assets/favorite-items";
             yield return RestClient.Post(url, searchCriteria, consumer, failed, token);
         }
 
@@ -96,13 +99,13 @@ namespace Source.Service
         {
             var done = false;
             string token = null;
-            AuthService.GetAuthToken(t =>
+            AuthService.Instance.GetAuthToken(t =>
             {
                 done = true;
                 token = t;
             });
             yield return new WaitUntil(() => done);
-            var url = Constants.ApiURL + "/assets/favorite-items/create";
+            var url = Configurations.Instance.apiURL + "/assets/favorite-items/create";
             yield return RestClient.Post(url, favoriteItem, consumer, failed, token);
         }
 
@@ -110,13 +113,13 @@ namespace Source.Service
         {
             var done = false;
             string token = null;
-            AuthService.GetAuthToken(t =>
+            AuthService.Instance.GetAuthToken(t =>
             {
                 done = true;
                 token = t;
             });
             yield return new WaitUntil(() => done);
-            var url = Constants.ApiURL + "/assets/favorite-items/update";
+            var url = Configurations.Instance.apiURL + "/assets/favorite-items/update";
             yield return RestClient.Post(url, favoriteItem, success, failed, token);
         }
 
@@ -124,13 +127,13 @@ namespace Source.Service
         {
             var done = false;
             string token = null;
-            AuthService.GetAuthToken(t =>
+            AuthService.Instance.GetAuthToken(t =>
             {
                 done = true;
                 token = t;
             });
             yield return new WaitUntil(() => done);
-            var url = Constants.ApiURL + "/assets/favorite-items/" + id;
+            var url = Configurations.Instance.apiURL + "/assets/favorite-items/" + id;
             yield return RestClient.Delete(url, success, failed, token);
         }
     }

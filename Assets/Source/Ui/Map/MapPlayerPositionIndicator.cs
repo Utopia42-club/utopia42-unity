@@ -1,5 +1,4 @@
-﻿using System;
-using Source.Ui.Utils;
+﻿using Source.Ui.Utils;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,16 +15,29 @@ namespace Source.Ui.Map
             this.map = map;
             AddToClassList("map-position-indicator");
             UiImageUtils.SetBackground(this, icon, false);
-            geomListener = evt => UpdatePosition();
+            pickingMode = PickingMode.Ignore;
+            geomListener = evt => GeometryChanged();
             RegisterCallback(geomListener);
+            RegisterCallback<AttachToPanelEvent>(e =>
+            {
+                var subs = map.scaleObservable.Subscribe(scale => UpdatePosition(30 / scale, 30 / scale));
+                RegisterCallback<DetachFromPanelEvent>(e => subs.Unsubscribe());
+            });
         }
 
-        private void UpdatePosition()
+        private void GeometryChanged()
         {
             UnregisterCallback(geomListener);
+            UpdatePosition(30, 30);
+        }
+
+        private void UpdatePosition(float width, float height)
+        {
             var playerPos = Player.INSTANCE.GetPosition();
-            style.left = playerPos.x - contentRect.width / 2;
-            style.top = -playerPos.z - contentRect.height / 2;
+            style.width = width;
+            style.height = height;
+            style.left = playerPos.x - width / 2;
+            style.top = -playerPos.z - height / 2;
         }
     }
 }

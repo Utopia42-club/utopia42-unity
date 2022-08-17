@@ -22,7 +22,6 @@ namespace Source.MetaBlocks.TeleportBlock
         protected override void SetupDefaultSnack()
         {
             if (snackItem != null) snackItem.Remove();
-            var props = (TeleportBlockProperties) Block.GetProps();
             snackItem = Snack.INSTANCE.ShowLines(GetSnackLines(), () =>
             {
                 if (CanEdit && Input.GetKeyDown(KeyCode.E))
