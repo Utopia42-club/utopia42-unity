@@ -6,7 +6,6 @@ using Source.Configuration;
 using Source.MetaBlocks.ImageBlock;
 using Source.Model;
 using Source.Service;
-using Source.Utils;
 using UnityEngine;
 
 namespace Source.MetaBlocks.NftBlock

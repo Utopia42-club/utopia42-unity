@@ -25,7 +25,7 @@ namespace Source.Configuration
                 return cachedInstance = new Configurations(
                     conf["webAppBaseURL"], conf["apiURL"],
                     conf["ipfsServerURL"], conf["avatarDesignerURL"],
-                    conf["dAppUrl"], conf["avatarRenderApi"]
+                    conf["dAppUrl"], conf["avatarRenderApi"], conf["publicIpfsGateway"]
                 );
             }
         }
@@ -34,13 +34,15 @@ namespace Source.Configuration
         public readonly string apiURL;
         public readonly string webAppRpcURL;
         public readonly string ipfsServerURL;
+        public readonly string publicIpfsGateway;
         public readonly string avatarDesignerURL;
         public readonly string dAppUrl;
         public readonly string avatarRenderApi;
 
         internal Configurations(string webAppBaseURL, string apiURL, string ipfsServerURL, string avatarDesignerURL,
-            string dAppUrl, string avatarRenderApi)
+            string dAppUrl, string avatarRenderApi, string publicIpfsGateway)
         {
+            this.publicIpfsGateway = publicIpfsGateway;
             this.webAppBaseURL = webAppBaseURL;
             this.apiURL = apiURL;
             webAppRpcURL = webAppBaseURL + "/rpc";

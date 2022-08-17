@@ -15,14 +15,19 @@ namespace Source.Service
         {
         }
 
-        public static string ToUrl(string key)
+        public static string ToPublicGatewayUrl(string key)
+        {
+            return $"{Configurations.Instance.publicIpfsGateway}/ipfs/{key}";
+        }
+        
+        public static string ToUtopiaIpfsServerUrl(string key)
         {
             return Configurations.Instance.ipfsServerURL + "/cat?arg=/ipfs/" + key;
         }
 
         public IEnumerator DownloadJson<TR>(string key, Action<TR> onSuccess, Action onFailure)
         {
-            yield return RestClient.Get(ToUrl(key), onSuccess, onFailure);
+            yield return RestClient.Get(ToUtopiaIpfsServerUrl(key), onSuccess, onFailure);
         }
 
         public IEnumerator UploadJson<TB>(TB body, Action<string> onSuccess, Action onFailure)

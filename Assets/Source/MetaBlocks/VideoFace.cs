@@ -1,6 +1,7 @@
 using System.Collections;
 using Source.MetaBlocks;
 using Source.MetaBlocks.VideoBlock;
+using Source.Service;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -24,7 +25,7 @@ namespace Source
             block.UpdateState(State.Loading);
             this.prevTime = prevTime;
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
-            videoPlayer.url = url;
+            videoPlayer.url = FileService.ResolveUrl(url);
             videoPlayer.playOnAwake = false;
             videoPlayer.Pause();
             videoPlayer.Prepare();
