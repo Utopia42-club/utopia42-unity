@@ -24,10 +24,10 @@ namespace Source.Ui.Map
             this.map = map;
             
 
-            UpdateLandStyle();
             AddToClassList("map-land");
             Add(backgroundLayer = new VisualElement());
             backgroundLayer.AddToClassList("map-land-background-layer");
+            UpdateLandStyle();
             UpdateRect();
 
             if (land is {isNft: true})

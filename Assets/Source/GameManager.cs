@@ -63,15 +63,25 @@ namespace Source
                         ProfileLoader.INSTANCE.load(authService.WalletId(), profile =>
                         {
                             if (profile == null)
-                                BrowserConnector.INSTANCE.OpenDApp(() =>
-                                {
-                                    ProfileLoader.INSTANCE.InvalidateProfile(authService.WalletId());
-                                    ProfileLoader.INSTANCE.load(authService.WalletId(),
-                                        p =>
+                            {
+                                DialogService.INSTANCE
+                                    .Show(new DialogConfig("No profile found",
+                                            new Label("You can edit your profile on the DApp."))
+                                        .WithAction(new DialogAction("Cancel", () => { }))
+                                        .WithAction(new DialogAction("Edit profile", () =>
                                         {
-                                            if (p != null) Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
-                                        }, () => { });
-                                }, () => { });
+                                            BrowserConnector.INSTANCE.OpenDApp(() =>
+                                            {
+                                                ProfileLoader.INSTANCE.InvalidateProfile(authService.WalletId());
+                                                ProfileLoader.INSTANCE.load(authService.WalletId(),
+                                                    p =>
+                                                    {
+                                                        if (p != null) Player.INSTANCE.DoReloadAvatar(p.avatarUrl);
+                                                    }, () => { });
+                                            }, () => { });
+                                        }, "utopia-button-secondary")));
+
+                            }
                         }, () => { });
                 }
             });
