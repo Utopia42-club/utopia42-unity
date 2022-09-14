@@ -9,7 +9,7 @@ namespace Source.Model
     {
         public string v;
         public string wallet;
-        public Dictionary<string, MetaBlockData> metadata;   
+        public Dictionary<string, MetaBlockData> metadata;
         public Dictionary<string, Block> changes;
         public LandProperties properties;
 
@@ -18,9 +18,10 @@ namespace Source.Model
             var coords = key.Split('_');
             return new Vector3Int(int.Parse(coords[0]), int.Parse(coords[1]), int.Parse(coords[2]));
         }
-        
+
         public static MetaLocalPosition ParseKey(string key)
         {
+            key = key.Replace(",", ".");
             var coords = key.Split('_');
             return new MetaLocalPosition(float.Parse(coords[0]), float.Parse(coords[1]), float.Parse(coords[2]));
         }
@@ -29,9 +30,8 @@ namespace Source.Model
         {
             return $"{pos.x}_{pos.y}_{pos.z}";
         }
-        
-        public static string 
-            FormatKey(Vector3 pos)
+
+        public static string FormatKey(Vector3 pos)
         {
             return $"{pos.x:0.00}_{pos.y:0.00}_{pos.z:0.00}";
         }
