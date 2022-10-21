@@ -7,6 +7,7 @@ using Source.MetaBlocks;
 using Source.MetaBlocks.MarkerBlock;
 using Source.Model;
 using Source.Service;
+using Source.Service.Auth;
 using Source.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -29,7 +30,14 @@ namespace Source
         {
             var pos = JsonConvert.DeserializeObject<SerializableVector3Int>(request).ToVector3();
             var vp = new VoxelPosition(pos);
-            return WorldService.INSTANCE.GetBlockTypeIfLoaded(vp)?.name;
+
+            var type = WorldService.INSTANCE.GetBlockTypeIfLoaded(vp);
+            if (type != null)
+                return type.name;
+            var land = WorldService.INSTANCE.GetLandForPosition(vp.ToWorld());
+            var hasLand = land != null;
+            return ChunkInitializer.GetDefaultAt(vp, hasLand,
+                hasLand && AuthService.Instance.IsCurrentUser(land.owner)).name;
         }
 
         public List<Marker> GetMarkers()
