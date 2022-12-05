@@ -23,6 +23,12 @@
                 <ui:Label text="Unlock Cursor: " display-tooltip-when-elided="true" enable-rich-text="true" style="width: 130px; -unity-text-align: upper-right; margin-top: 2px;" />
                 <Shortcut value="ESC" focusable="true" />
             </ui:VisualElement>
+            <ui:VisualElement name="ctrl-alt" style="flex-direction: row; align-items: center; margin-left: 5px; margin-right: 5px; margin-top: 5px; margin-bottom: 5px;">
+                <ui:Label text="Toggle microphone:" display-tooltip-when-elided="true" enable-rich-text="true" style="width: 130px; -unity-text-align: upper-right; margin-top: 2px;" />
+                <Shortcut value="Ctrl" />
+                <ui:TextField picking-mode="Ignore" value="+" text="+" style="-unity-font-style: bold; font-size: 14px; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
+                <Shortcut value="Alt" />
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
